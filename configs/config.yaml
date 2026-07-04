@@ -1,0 +1,18 @@
+# Root Hydra config: composes the groups below and sets run-wide options.
+defaults:
+  - data: chem_v1
+  - model: default
+  - train: default
+  - infer: default
+  - eval: full
+  - _self_
+
+seed: 0
+device: cuda                      # cpu | cuda
+
+paths:
+  artifacts_root: artifacts       # run dirs are created under here
+  gene_panel: configs/panels/hvg2000_v1.txt   # frozen feature order (see panels/README)
+
+logging:
+  level: INFO

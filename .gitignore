@@ -1,0 +1,43 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+.eggs/
+build/
+dist/
+*.so
+
+# --- Virtual envs ---
+.venv/
+venv/
+env/
+.python-version
+
+# --- Test / lint / type caches ---
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# --- CellFate-Rx run artefacts (datasets, bundles, reports are generated, not committed) ---
+artifacts/
+artefacts/
+_cc_cache/
+reports/
+outputs/
+*.parquet
+*.ckpt
+
+# --- Experiment tracking / secrets ---
+wandb/
+.env
+*.log
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

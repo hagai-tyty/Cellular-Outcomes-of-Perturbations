@@ -1,0 +1,7 @@
+# Network hyper-parameters (Document 3).
+g: 2000               # input genes (must match the frozen panel length)
+d_cell: 256           # cell-encoder output width
+d_u: 256              # shared perturbation-latent width
+latent_dim: 256       # shared-trunk output width
+p_drop: 0.2           # dropout (also used by MC-dropout at inference)
+modalities: [chem]    # v1 ships chemical; [chem, genetic, tf] for v2

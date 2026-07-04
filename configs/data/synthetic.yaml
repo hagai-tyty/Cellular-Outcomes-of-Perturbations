@@ -1,0 +1,26 @@
+# Synthetic dataset (Document 2): runnable end-to-end with NO downloads/deps.
+# Use for CI, smoke tests, and wiring checks:  build_dataset.py data=synthetic
+name: synthetic
+source_specs:
+  - {name: synthetic, source_name: synth, n_lines: 2, n_compounds: 4, n_cells_per_condition: 8, seed: 1}
+  - {name: synthetic, source_name: tahoe, n_lines: 2, n_compounds: 4, n_cells_per_condition: 8, seed: 2}
+
+gene_panel: ${paths.gene_panel}
+n_genes: 160
+
+qc:
+  max_mito_frac: 0.5
+  min_genes: 5
+  max_counts: null
+
+labels:
+  tau: 0.5
+  clock: random                   # synthetic smoke run; ages are placeholders
+  deconfound_proliferation: true
+
+splits:
+  fracs: [0.6, 0.2, 0.1, 0.1]
+  regimes: [scaffold, cell_line, both]
+  primary: scaffold
+
+out: artifacts/synthetic

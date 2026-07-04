@@ -1,0 +1,17 @@
+# Full evaluation across all three held-out regimes (Document 5).
+# The test split is touched only by the evaluator; thresholds are tuned on val and
+# the conformal quantile on calib, which is what makes these gates trustworthy.
+regimes: [scaffold, cell_line, both]
+baselines: [mean, ridge, x_only, u_only, knn, predict_control]
+out: reports
+
+# acceptance-gate thresholds (map to the Document-1 success criteria)
+thresholds:
+  max_ece: 0.05        # crit 1: calibrated after temperature scaling
+  level: 0.90          # crit 6: nominal conformal coverage
+  cov_tol: 0.03        # crit 6: |coverage - level| tolerance
+  min_spearman: 0.3    # crit 5: RES ranking vs measured rejuvenation
+
+# external ΔAge anchors (crit 2). Require real data; left null for synthetic runs,
+# in which case the evaluator records external validation as "not_available".
+external: null

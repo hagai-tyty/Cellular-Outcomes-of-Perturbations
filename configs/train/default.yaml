@@ -1,0 +1,19 @@
+# Optimisation + ensembling + calibration (Document 3).
+lr: 3.0e-4
+wd: 1.0e-5
+epochs: 60
+patience: 8
+min_delta: 1.0e-4
+clip: 1.0
+batch_size: 512
+ensemble_size: 5
+base_seed: 0
+device: ${device}
+
+focal:
+  gamma: 2.0
+  class_weight_beta: 0.999
+
+huber_delta: 2.0
+
+conformal_level: 0.90

@@ -1,0 +1,9 @@
+# example panel (test fixture only)
+GENE1
+GENE2
+GENE3
+GENE4
+GENE5
+GENE6
+GENE7
+GENE8

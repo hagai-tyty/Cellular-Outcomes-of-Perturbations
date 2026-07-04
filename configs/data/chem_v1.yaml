@@ -1,0 +1,25 @@
+# Chemical-perturbation dataset (v1): Tahoe-100M + sci-Plex (Document 2).
+name: chem_v1
+sources:
+  - {name: tahoe,   weight: 1.0}
+  - {name: sciplex, weight: 1.0}
+
+gene_panel: ${paths.gene_panel}   # frozen; its hash is checked downstream
+
+qc:
+  max_mito_frac: 0.10
+  min_genes: 500
+  max_counts: null
+  drop_doublets: true
+
+labels:
+  tau: 1.0                        # soft-label temperature
+  clock: clocks/fleischer_clock.json   # fit via scripts/fit_clock.py on GSE113957; fails loud if absent
+  deconfound_proliferation: true
+
+splits:
+  fracs: [0.7, 0.1, 0.1, 0.1]     # train / val / calib / test
+  regimes: [scaffold, cell_line, both]
+  primary: scaffold               # regime whose TRAIN split fits the scalers
+
+out: artifacts/chem_v1
