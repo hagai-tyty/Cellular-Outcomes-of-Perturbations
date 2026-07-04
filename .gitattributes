@@ -1,0 +1,32 @@
+# Normalize all text files to LF in the repo (silences the CRLF warnings on Windows).
+* text=auto eol=lf
+
+# Explicitly treat these as text with LF
+*.py    text eol=lf
+*.pyi   text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
+*.toml  text eol=lf
+*.cfg   text eol=lf
+*.ini   text eol=lf
+*.json  text eol=lf
+*.ipynb text eol=lf
+*.sh    text eol=lf
+
+# Binary files: never alter line endings
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.pdf   binary
+*.gz    binary
+*.zip   binary
+*.tar   binary
+*.h5ad  binary
+*.parquet binary
+*.pt    binary
+*.ckpt  binary
+*.npy   binary
+*.npz   binary
