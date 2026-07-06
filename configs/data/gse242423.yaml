@@ -1,0 +1,31 @@
+# GSE242423 (Kundaje lab) -- human fibroblast OSKM reprogramming, 10x scRNA-seq.
+# The single-cell VOLUME arm: D0 (control) -> D14 -> iPSC, per-cell fate labels.
+# Raw Cell Ranger MTX -> empty droplets dropped at load; doublets NOT removed
+# (documented caveat; Scrublet is a future upgrade). TF-cocktail modality.
+name: gse242423
+sources:
+  - {name: gse242423, weight: 1.0}   # GSE242423SingleCellSource(samples, genes_file)
+
+gene_panel: ${paths.gene_panel}
+
+modality: tf                          # OSKM factor cocktail
+
+qc:
+  max_mito_frac: 0.20                # single-cell: drop apoptotic/high-mito debris
+  min_genes: 500                     # single-cell: drop empty droplets / low-quality
+  max_counts: null
+  drop_doublets: false               # NOTE: not implemented (no-op); Option C caveat
+
+labels:
+  tau: 0.7
+  clock: clocks/fleischer_clock.json  # human clock; ~20.8k gene overlap
+  deconfound_proliferation: true
+
+splits:
+  # one donor line -> cell_line/scaffold regimes are degenerate here; use a random
+  # or timepoint split. Cross-dataset generalization uses Gill + this together.
+  fracs: [0.7, 0.1, 0.1, 0.1]
+  regimes: [cell_line]
+  primary: cell_line
+
+out: artifacts/gse242423

@@ -1,0 +1,23 @@
+{
+  "n_samples": 13025,
+  "n_shards": 1,
+  "n_age_labeled": 13025,
+  "gene_panel_hash": "11a894a0205f1bd8",
+  "panel_size": 2000,
+  "label_distribution": {
+    "safe": 2900,
+    "loss": 9916,
+    "death": 209
+  },
+  "regimes": [
+    "random"
+  ],
+  "primary_regime": "random",
+  "split_sizes": {
+    "train": 9108,
+    "calib": 1359,
+    "test": 1288,
+    "val": 1270
+  },
+  "created_at": 1783322248.4356136
+}

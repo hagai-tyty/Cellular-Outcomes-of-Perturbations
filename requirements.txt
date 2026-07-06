@@ -1,0 +1,26 @@
+# Pinned versions for reproducibility (the stack CellFate-Rx was developed and
+# tested against; 171 tests pass, ruff clean). pyproject.toml holds the loose
+# floors used for `pip install -e .`; this file locks exact versions.
+#
+# Core runtime (needed for build -> train -> serve -> evaluate):
+numpy==2.4.4
+pandas==3.0.2
+scipy==1.17.1
+scikit-learn==1.8.0
+pyarrow==24.0.0
+pydantic==2.13.4
+omegaconf==2.3.1
+hydra-core==1.3.3
+torch==2.12.1
+
+# Figures / notebooks:
+matplotlib==3.10.8
+
+# Dev / CI:
+pytest==9.1.1
+ruff==0.15.20
+
+# Real-data connectors + serving are optional extras (install as needed):
+#   pip install -e ".[data]"    # anndata, scanpy, rdkit, huggingface-hub, datasets
+#   pip install -e ".[serve]"   # fastapi, uvicorn
+# rdkit is optional: without it, fingerprints fall back to a hashed descriptor.

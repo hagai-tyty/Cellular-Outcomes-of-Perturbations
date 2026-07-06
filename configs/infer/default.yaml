@@ -1,0 +1,13 @@
+# Inference configuration (Document 4). The RES params below mirror the training
+# defaults; at serving time the *bundle's* res_params.json is the source of truth,
+# so a Predictor always scores with exactly the parameters shipped in the bundle.
+mode: ensemble          # ensemble (primary) | mc_dropout (single-member fallback)
+T: 50                   # MC-dropout passes (mc_dropout mode only)
+conformal_level: 0.90   # which stored conformal quantile to use for the interval
+res:
+  tau_safe: 0.85        # safety floor: P(identity preserved) must clear this
+  w: 0.03               # softness of the safety floor (sigmoid width)
+  k: 2.0                # safety exponent (super-linear reward for high P_safe)
+  kappa: 5.0            # rejuvenation half-saturation (years)
+  z_conf: 1.0           # uncertainty discount: credit only mu + z_conf*sigma < 0
+  lam: 0.0              # optional extra penalty on P(identity loss)

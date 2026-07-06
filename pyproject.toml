@@ -1,0 +1,82 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cellfate-rx"
+version = "0.1.0"
+description = "CellFate-Rx: predicting cellular outcomes of perturbations (foundation / common layer)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Hagai Aviv" }]
+
+# Core runtime dependencies shared across every stage. This file is the single
+# source of truth for the environment (System Architecture & Handbook, S5).
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "scipy>=1.11",
+    "scikit-learn>=1.3",
+    "pyarrow>=14.0",
+    "pydantic>=2.5",
+    "omegaconf>=2.3",
+    "hydra-core>=1.3",
+]
+
+[project.optional-dependencies]
+# Heavy, stage-specific extras. The 'common' foundation does NOT require these;
+# they are pulled in by the packages specified in Documents 2-5.
+data = ["anndata>=0.10", "scanpy>=1.9", "rdkit>=2023.9", "huggingface-hub>=0.20", "datasets>=2.16"]
+model = ["torch>=2.1"]
+serve = ["fastapi>=0.110", "uvicorn>=0.27"]
+dev = ["pytest>=7.4", "ruff>=0.3", "black>=24.0", "mypy>=1.8", "pre-commit>=3.6"]
+all = ["cellfate-rx[data,model,serve,dev]"]
+
+[project.scripts]
+cellfate-build-dataset = "cellfate.data.build_dataset:cli"
+cellfate-train = "cellfate.training.train_cli:cli"
+cellfate-serve = "cellfate.inference.service:cli"
+cellfate-evaluate = "cellfate.evaluation.evaluate_cli:cli"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+cellfate = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N"]
+# E501: line length is handled by the formatter.
+# N812: we alias the constants module as `C` throughout for readable formulae
+#       (e.g. ``C.N_CLASSES``) -- a deliberate, pervasive convention.
+# N818: a few exceptions are named as conditions (ContractViolation,
+#       GenePanelMismatch, ...) and are referenced by these names in the design
+#       documents; renaming them to ``*Error`` would create cross-document drift.
+# N803: dose_uM is a domain term (micromolar) matching the data schema's columns
+# N806: the RES/inference formulae use canonical math symbols as locals (S, R_eff,
+#       P_loss, X, Z) taken straight from the Technical Architecture; lowercasing
+#       them would obscure the mathematics. Existing code uses none, so this is safe.
+# N815: dose_uM as a Request field mirrors the same domain term (see N803).
+ignore = ["E501", "N812", "N818", "N803", "N806", "N815"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_ignores = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]

@@ -1,0 +1,27 @@
+# Gill 2022 (GSE165176) transient-reprogramming dataset -- the age-valid arm.
+# OSKM (Sendai) fibroblast reprogramming time course; TF-cocktail modality.
+name: gill
+sources:
+  - {name: gill, weight: 1.0}     # GillReprogrammingSource(expr_tsv, series_matrix)
+
+gene_panel: ${paths.gene_panel}   # frozen; its hash is checked downstream
+
+modality: tf                      # OSKM factor cocktail, not a chemical fingerprint
+
+qc:
+  max_mito_frac: 1.0              # bulk RNA-seq: do not filter on mito fraction
+  min_genes: 100
+  max_counts: null
+  drop_doublets: false
+
+labels:
+  tau: 0.7                        # fate-label softmax temperature
+  clock: clocks/fleischer_clock.json   # real symbol-keyed clock (full-profile ΔAge)
+  deconfound_proliferation: true
+
+splits:
+  fracs: [0.5, 0.2, 0.15, 0.15]   # train / val / calib / test (only 6 donors -> small)
+  regimes: [cell_line]            # leave-donor-out
+  primary: cell_line
+
+out: artifacts/gill
