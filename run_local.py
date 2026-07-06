@@ -29,7 +29,10 @@ warnings.filterwarnings("ignore")
 # Config — the two values that broke the last run are set correctly here.      #
 # --------------------------------------------------------------------------- #
 DATA_DIR = sys.argv[1] if len(sys.argv) > 1 else r"D:\GSE242423"
-MAX_CELLS = 1500          # per timepoint. NOT 5. Lower to 3000/2000 if GPU/RAM is tight.
+MAX_CELLS = 5000          # per timepoint (total volume). Sub-batching keeps RAM safe.
+CELLS_PER_RUN = 1000      # densify only this many cells at a time (bounds peak RAM).
+                          #   -> loads 1000, saves, next 1000 ... until MAX_CELLS reached.
+                          #   Lower if RAM is tight; raise for fewer/larger shards.
 REGIME = "random"         # cell-level split -> fills train/val/calib/test on 1 donor
 N_GENES = 2000
 EPOCHS = 80
@@ -80,9 +83,9 @@ def main() -> None:
     if os.path.isdir(ROOT):
         shutil.rmtree(ROOT)
 
-    print(f"\n[1/5] BUILD dataset (MAX_CELLS={MAX_CELLS}/timepoint) — streams droplets, ~10-20 min ...")
-    src = GSE242423SingleCellSource(samples, genes, cell_line="HFF",
-                                    min_genes=500, max_cells_per_sample=MAX_CELLS, seed=0)
+    print(f"\n[1/5] BUILD dataset (MAX_CELLS={MAX_CELLS}/tp, {CELLS_PER_RUN} cells/batch) — streaming, ~10-20 min ...")
+    src = GSE242423SingleCellSource(samples, genes, cell_line="HFF", min_genes=500,
+                                    max_cells_per_sample=MAX_CELLS, cells_per_run=CELLS_PER_RUN, seed=0)
     build_run(DataConfig(
         out=ROOT, gene_panel=f"{ROOT}/panel.json", n_genes=N_GENES,
         clock=CLOCK, modality="tf",

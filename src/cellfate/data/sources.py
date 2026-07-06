@@ -482,6 +482,7 @@ class GSE242423SingleCellSource(ReprogrammingSource):
         cell_line: str = "HFF",
         min_genes: int = 500,
         max_cells_per_sample: int | None = None,
+        cells_per_run: int | None = None,
         ipsc_day: float = 21.0,
         seed: int = 0,
     ) -> None:
@@ -491,8 +492,11 @@ class GSE242423SingleCellSource(ReprogrammingSource):
         self.cell_line = cell_line
         self.min_genes = min_genes
         self.max_cells_per_sample = max_cells_per_sample
+        self.cells_per_run = cells_per_run     # dense sub-batch size; None = one chunk
         self.ipsc_day = ipsc_day
         self.seed = seed
+        self._prepared: tuple | None = None    # cached (sparse counts, genes, pert, time)
+        self._batch_idx: dict[str, np.ndarray] = {}   # chunk_id -> cell indices
 
     def _symbols(self) -> list[str]:
         import gzip
@@ -563,11 +567,15 @@ class GSE242423SingleCellSource(ReprogrammingSource):
         M = csc_matrix((vals, (rows, cols)), shape=(n_genes, len(keep)), dtype=np.float32)
         return M, len(keep)
 
-    def plan(self) -> list[CellChunk]:
-        # one chunk: the whole fibroblast line, so D0 controls anchor the baseline
-        return [CellChunk(id=f"{self.name}:{self.cell_line}", cell_line=self.cell_line)]
+    def _prepare(self) -> tuple:
+        """Load + filter + subsample + symbol-dedup ONCE, keeping the result SPARSE.
 
-    def fetch(self, chunk: CellChunk) -> RawChunk:
+        The heavy streaming happens here a single time; the (cells x genes) sparse
+        matrix is held (light), and each sub-batch densifies only its own slice in
+        :meth:`fetch`. Cached so ``plan`` and ``fetch`` share one load.
+        """
+        if self._prepared is not None:
+            return self._prepared
         from scipy.sparse import hstack
 
         rng = np.random.default_rng(self.seed)
@@ -580,9 +588,10 @@ class GSE242423SingleCellSource(ReprogrammingSource):
             time_h.extend([day * 24.0] * n)
 
         genes_all = self._symbols()
-        combined = hstack(blocks).tocsr()                   # genes x all_kept_cells
+        combined = hstack(blocks).tocsr()                         # genes x all_kept_cells
         if combined.shape[0] != len(genes_all):
-            raise DataSourceError(f"matrix has {combined.shape[0]} genes but genes.tsv has {len(genes_all)}")
+            raise DataSourceError(
+                f"matrix has {combined.shape[0]} genes but genes.tsv has {len(genes_all)}")
 
         # dedup duplicate symbols: keep the highest-expressed gene row per symbol
         totals = np.asarray(combined.sum(axis=1)).ravel()
@@ -595,10 +604,46 @@ class GSE242423SingleCellSource(ReprogrammingSource):
                 keep_rows.append(int(i))
         keep_rows.sort()
         genes = [genes_all[i] for i in keep_rows]
-        counts = combined[keep_rows, :].T.toarray().astype(np.float32)   # cells x unique symbols
+        counts = combined[keep_rows, :].T.tocsr()                # cells x symbols, still SPARSE
+        self._prepared = (counts, genes, np.array(pert), np.array(time_h, dtype=np.float32))
+        return self._prepared
 
-        return self.build_chunk(chunk["id"], counts, genes, self.cell_line,
-                                pert, time_h, factor_as_token=True)
+    def _batch_indices(self, is_control: np.ndarray) -> list[np.ndarray]:
+        """Stratified sub-batches: each gets a proportional share of control and
+        treated cells, so every batch can anchor its own control-relative baseline."""
+        n = len(is_control)
+        if not self.cells_per_run or self.cells_per_run >= n:
+            return [np.arange(n)]
+        rng = np.random.default_rng(self.seed + 1)
+        ctrl = np.where(is_control)[0]
+        trt = np.where(~is_control)[0]
+        rng.shuffle(ctrl)
+        rng.shuffle(trt)
+        n_batches = max(1, int(np.ceil(n / self.cells_per_run)))
+        cg = np.array_split(ctrl, n_batches)
+        tg = np.array_split(trt, n_batches)
+        out = [np.concatenate([cg[k], tg[k]]) for k in range(n_batches)]
+        return [b for b in out if len(b)]
+
+    def plan(self) -> list[CellChunk]:
+        # One logical line, emitted as stratified sub-batches so no single densified
+        # array exceeds ~cells_per_run x genes (bounds peak RAM). Each batch still
+        # carries D0 controls, so the control-relative ΔAge/fate baseline holds.
+        counts, _genes, pert, _time = self._prepare()
+        batches = self._batch_indices(pert == "control")
+        chunks: list[CellChunk] = []
+        for k, idx in enumerate(batches):
+            cid = f"{self.name}:{self.cell_line}:b{k}" if len(batches) > 1 else f"{self.name}:{self.cell_line}"
+            self._batch_idx[cid] = idx
+            chunks.append(CellChunk(id=cid, cell_line=self.cell_line))
+        return chunks
+
+    def fetch(self, chunk: CellChunk) -> RawChunk:
+        counts, genes, pert, time_h = self._prepare()
+        idx = self._batch_idx.get(chunk["id"], np.arange(counts.shape[0]))
+        dense = counts[idx].toarray().astype(np.float32)         # ONLY this batch densified
+        return self.build_chunk(chunk["id"], dense, genes, self.cell_line,
+                                list(pert[idx]), list(time_h[idx]), factor_as_token=True)
 
 
 # Registry used by the orchestrator to build sources from config.
