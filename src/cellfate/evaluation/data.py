@@ -48,14 +48,18 @@ def gather_split(paths: ArtifactPaths, regime: str, split: str) -> SplitData:
     acc: dict[str, list] = {k: [] for k in _ARRAY_KEYS}
     for shard in sorted(paths.shards_dir.glob("*.parquet")):
         arr = io.shard_to_numpy(io.read_shard(shard))
-        if arr["u_chem_fp"] is None:
+        # perturbation vector: chemical fingerprint OR, for the TF modality, the
+        # factor embedding. Only skip a shard if neither is present.
+        pert = arr["u_chem_fp"] if arr["u_chem_fp"] is not None else arr.get("u_tf_emb")
+        if pert is None:
             continue
         ids = arr["cell_id"]
         keep = np.fromiter((c in wanted for c in ids), bool, len(ids))
         if not keep.any():
             continue
         for k in _ARRAY_KEYS:
-            acc[k].append(np.asarray(arr[k])[keep])
+            src = pert if k == "u_chem_fp" else arr[k]
+            acc[k].append(np.asarray(src)[keep])
 
     def cat(k, dtype=None):
         if not acc[k]:
