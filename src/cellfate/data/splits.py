@@ -26,24 +26,41 @@ CONTROL_SCAFFOLD = "CONTROL"
 
 
 def _partition_groups(groups: list[str], fracs: tuple[float, ...], seed: int) -> dict[str, str]:
-    """Assign each unique group to one of train/val/calib/test by ``fracs``."""
+    """Assign each unique group to one of train/val/calib/test by ``fracs``.
+
+    Uses per-split integer counts (not cumulative floors, whose float noise can
+    collapse adjacent cuts and starve a split). When there are at least as many
+    groups as splits, every split is guaranteed >=1 group -- required so
+    leave-cell-line-out always has a held-out test donor.
+    """
     if len(fracs) != 4 or abs(sum(fracs) - 1.0) > 1e-6:
         raise ValueError("fracs must be four numbers summing to 1")
     uniq = sorted(set(groups))
     rng = np.random.default_rng(seed)
-    perm = rng.permutation(len(uniq))
-    ordered = [uniq[i] for i in perm]
+    ordered = [uniq[i] for i in rng.permutation(len(uniq))]
     n = len(ordered)
-    cuts = np.floor(np.cumsum(fracs) * n).astype(int)
+
+    raw = np.array(fracs, dtype=float) * n
+    counts = np.floor(raw).astype(int)
+    rem = int(n - counts.sum())                       # groups left by flooring
+    for i in np.argsort(-(raw - counts))[:rem]:       # give them to largest remainders
+        counts[i] += 1
+    if n >= len(counts):                              # guarantee no split is empty
+        for i in range(len(counts)):
+            if counts[i] == 0:
+                counts[int(counts.argmax())] -= 1
+                counts[i] += 1
+
     assign: dict[str, str] = {}
     start = 0
-    for split_name, end in zip(_FOUR, cuts, strict=True):
-        for g in ordered[start:end]:
+    for split_name, cnt in zip(_FOUR, counts, strict=True):
+        for g in ordered[start:start + int(cnt)]:
             assign[g] = split_name
-        start = end
-    for g in ordered[start:]:  # rounding remainder -> train
+        start += int(cnt)
+    for g in ordered[start:]:                         # any leftover -> train
         assign[g] = Split.TRAIN.value
     return assign
+
 
 
 def _held_out(groups: list[str], frac: float, seed: int) -> set[str]:
