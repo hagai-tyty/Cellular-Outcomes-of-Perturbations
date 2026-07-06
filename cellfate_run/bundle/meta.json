@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0",
   "n_members": 5,
-  "gene_panel_hash": "11a894a0205f1bd8",
+  "gene_panel_hash": "783f269a214aa972",
   "classes": [
     "safe",
     "loss",
@@ -10,7 +10,7 @@
   "conformal_levels": [
     0.9
   ],
-  "created_at": 1783322532.3785079,
-  "deps_hash": "9524e063ee58",
+  "created_at": 1783355619.5476577,
+  "deps_hash": "25a9b31a7ef0",
   "config_hash": "b3c9ec795fb3"
 }
