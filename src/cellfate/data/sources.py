@@ -445,6 +445,15 @@ class GillReprogrammingSource(ReprogrammingSource):
     def plan(self) -> list[CellChunk]:
         self._load()
         donors = sorted({self._meta[c]["donor"] for c in self._rpm.columns if c in self._meta})
+        if not donors:
+            preview = list(self._rpm.columns[:3])
+            raise DataSourceError(
+                f"{self.name}: parsed 0 donors from expression file '{self.expr_tsv}'. Its sample "
+                f"columns {preview}... do not match any series-matrix sample title. The expression "
+                "file must be the SeqMonk Log2-RPM report (gene SYMBOLS in column 1, sample columns "
+                "named like 'N2_d11_CD13_Sendai_Exp1') -- e.g. "
+                "GSE165176_Log2_RPM_Sendai_reprogramming.txt.gz. A raw-count matrix keyed by Entrez "
+                "Gene IDs with GSM##### column headers will NOT parse and silently drops out.")
         return [CellChunk(id=f"{self.name}:{d}", cell_line=str(d)) for d in donors]
 
     def fetch(self, chunk: CellChunk) -> RawChunk:

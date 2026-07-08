@@ -121,6 +121,14 @@ def main() -> None:
     # ---- composition: which cell line (donor) landed in which split ----
     paths = ArtifactPaths.of(ROOT)
     man = io.manifest_rows(io.load_manifest(paths))
+    cell_lines = sorted({r.cell_line for r in man})
+    if len(cell_lines) < 4:
+        raise SystemExit(
+            f"\n[FATAL] only {len(cell_lines)} cell line(s) built: {cell_lines}\n"
+            "Leave-cell-line-out needs >=4 (HFF + several Gill donors). The Gill donors did not "
+            "make it into the dataset -- check the [data] lines above and confirm the Gill "
+            "expression file is the SeqMonk Log2-RPM report (sample columns like "
+            "'N2_d11_CD13_Sendai_Exp1'), not a raw-count / Entrez-ID matrix.")
     splits = io.load_splits(paths, REGIME)
     cl_of = {r.cell_id: r.cell_line for r in man}
     n_by = defaultdict(int)
