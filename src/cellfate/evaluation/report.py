@@ -82,7 +82,7 @@ def reliability_diagram(y_true, p, path, n_bins: int = 15) -> bool:
 def write_report(regime: str, R: dict, out_dir) -> Path:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    (out / f"{regime}.json").write_text(json.dumps(R, indent=2, default=float))
+    (out / f"{regime}.json").write_text(json.dumps(R, indent=2, default=float), encoding="utf-8")
 
     estimator_metrics = {k: v for k, v in R.items() if isinstance(v, dict) and "ece" in v}
     rows = leaderboard(estimator_metrics)
@@ -94,7 +94,7 @@ def write_report(regime: str, R: dict, out_dir) -> Path:
     if "ranking" in R:
         md.append(f"**RES ranking (model):** Spearman {_fmt(R['ranking']['spearman'])}, "
                   f"precision@k {_fmt(R['ranking']['precision_at_k'])}\n")
-    (out / f"{regime}.md").write_text("".join(md))
+    (out / f"{regime}.md").write_text("".join(md), encoding="utf-8")
 
     if "model" in estimator_metrics and "_y_true" in R and "_p_model" in R:
         reliability_diagram(R["_y_true"], np.asarray(R["_p_model"]), out / f"{regime}_reliability.png")
@@ -108,7 +108,7 @@ def write_summary(results: dict, gates: dict, out_dir) -> Path:
                "regimes": {r: {k: v for k, v in R.items() if not k.startswith("_")}
                            for r, R in results.items() if r != "external"},
                "external": results.get("external", {})}
-    (out / "summary.json").write_text(json.dumps(payload, indent=2, default=float))
+    (out / "summary.json").write_text(json.dumps(payload, indent=2, default=float), encoding="utf-8")
 
     lines = ["# CellFate-Rx - acceptance summary\n"]
     for regime, g in gates.items():
@@ -118,5 +118,5 @@ def write_summary(results: dict, gates: dict, out_dir) -> Path:
             lines.append(f"- {'[x]' if ok else '[ ]'} {crit}\n")
     ext = results.get("external", {})
     lines.append(f"\n## external validation\n- status: {ext.get('status', 'n/a')}\n")
-    (out / "summary.md").write_text("".join(lines))
+    (out / "summary.md").write_text("".join(lines), encoding="utf-8")
     return out / "summary.json"

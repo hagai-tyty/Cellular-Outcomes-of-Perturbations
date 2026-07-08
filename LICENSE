@@ -1,21 +1,67 @@
-MIT License
+DUAL LICENSING AGREEMENT
 
-Copyright (c) 2026 Hagai Aviv
+This software is available under two distinct licenses:
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+================================================================================
+1. ACADEMIC & NON-COMMERCIAL LICENSE
+================================================================================
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+For academic research, educational purposes, and non-commercial use:
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+This software is licensed under the GNU General Public License v3.0 (GPLv3).
+You are free to use, modify, and distribute this software for academic and 
+non-commercial purposes under the terms of the GPLv3 license.
+
+For the full GPLv3 license text, see: https://www.gnu.org/licenses/gpl-3.0.txt
+
+Attribution Required: You must cite this work in any academic papers or 
+publications that use this software.
+
+================================================================================
+2. COMMERCIAL LICENSE
+================================================================================
+
+For any commercial use, including but not limited to:
+- Commercial products or services
+- Profit-generating applications
+- Use by for-profit organizations
+- Revenue-generating deployments
+
+A separate commercial license agreement is REQUIRED.
+
+Commercial users MUST:
+1. Contact the copyright holder at hagay.aviv.home@gmail.com for a commercial 
+   license agreement
+2. Negotiate and execute a formal commercial license agreement
+3. Comply with the terms specified in the commercial license, which may 
+   include royalty arrangements or other commercial terms
+
+WITHOUT A SEPARATE COMMERCIAL LICENSE AGREEMENT, COMMERCIAL USE IS PROHIBITED.
+
+================================================================================
+3. LICENSE DETERMINATION
+================================================================================
+
+If you are unsure which license applies to your use case, please contact:
+hagay.aviv.home@gmail.com
+
+Examples:
+- Academic research at a university: Use GPLv3 (Academic License)
+- Publishing in a peer-reviewed journal: Use GPLv3 (Academic License)
+- Commercial product incorporating this code: Requires Commercial License
+- Startup/company using this code: Requires Commercial License
+
+================================================================================
+4. DISCLAIMER
+================================================================================
+
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE 
+USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+================================================================================

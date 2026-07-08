@@ -16,6 +16,7 @@ import numpy as np
 
 from cellfate.common.constants import Split
 from cellfate.common.io import ArtifactPaths
+from cellfate.common.logging import get_logger, log_event
 from cellfate.inference import Predictor, compute_res_batch
 
 from .baselines import BASELINE_NAMES, ModelEstimator, make_baselines
@@ -35,6 +36,7 @@ from .regimes import REGIMES, iter_regimes
 from .report import write_report, write_summary
 
 NAN = float("nan")
+log = get_logger("cellfate.evaluation")
 
 
 @dataclass
@@ -105,9 +107,15 @@ def evaluate(cfg: EvalConfig) -> dict:
         R["_p_model"] = p_model.tolist()
 
         for name, est in baselines.items():
-            est.fit(train)
-            p, age = est.predict(test.X, test.fp, test.dose_time)
-            R[name] = _estimator_metrics(test, p, age)
+            try:
+                est.fit(train)
+                p, age = est.predict(test.X, test.fp, test.dose_time)
+                R[name] = _estimator_metrics(test, p, age)
+            except Exception as exc:  # noqa: BLE001 - a baseline that can't fit
+                # (e.g. a single fate class in this split) must not sink the whole
+                # evaluation; skip it so the model's own gates still compute.
+                log_event(log, "baseline.skipped", regime=regime, baseline=name, err=repr(exc))
+                R[name] = {"_skipped": repr(exc)}
 
         lo, hi = age_model - pred.q, age_model + pred.q
         R["coverage"] = coverage(test.y_age, lo, hi, test.mask)
@@ -136,8 +144,9 @@ def check_gates(results: dict, cfg: EvalConfig) -> dict:
 
         beats = bool(np.isfinite(model_prauc))
         for b in cfg.baselines:
-            bp = _mean_prauc(R[b])
-            bmae = R[b].get("reg_mae", NAN)
+            Rb = R.get(b, {})                    # a skipped baseline -> NaN metrics -> ignored
+            bp = _mean_prauc(Rb)
+            bmae = Rb.get("reg_mae", NAN)
             if np.isfinite(bp) and not (model_prauc > bp):
                 beats = False
             if np.isfinite(bmae) and np.isfinite(model_mae) and not (model_mae <= bmae):

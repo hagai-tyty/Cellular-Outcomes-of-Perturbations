@@ -62,7 +62,7 @@ class LinearClock(AgingClock):
     @classmethod
     def from_json(cls, path: str | Path) -> LinearClock:
         """Load a fitted clock: ``{"weights": {gene: w}, "intercept": b, ...}``."""
-        d = json.loads(Path(path).read_text())
+        d = json.loads(Path(path).read_text(encoding="utf-8"))
         if "weights" not in d:
             raise ValueError(f"clock file {path} has no 'weights' key")
         weights = {str(k): float(v) for k, v in d["weights"].items()}
@@ -75,7 +75,7 @@ class LinearClock(AgingClock):
         payload = {"weights": self.weights, "intercept": self.intercept}
         if meta:
             payload["meta"] = meta
-        Path(path).write_text(json.dumps(payload, indent=2))
+        Path(path).write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
 def _control_baseline(values: np.ndarray, lines: np.ndarray, is_ctrl: np.ndarray) -> np.ndarray:

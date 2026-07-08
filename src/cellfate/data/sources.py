@@ -28,6 +28,22 @@ from .chunking import CellChunk
 OBS_COLUMNS = ("cell_id", "cell_line", "pert_id", "smiles", "scaffold_id",
                "dose_uM", "time_h", "is_control")
 
+# Text encoding for all external data files. GEO series-matrix / TSV files often
+# carry stray latin-1 / Windows-1252 bytes (e.g. accented author names) that are
+# invalid UTF-8. We decode as UTF-8 but REPLACE undecodable bytes instead of
+# crashing -- the fields we actually parse are ASCII, so replacement is harmless.
+# This also stops Python from falling back to the OS locale encoding (e.g. cp1255
+# on a Hebrew Windows install), which is the real cause of UnicodeDecodeError here.
+_TEXT_KW = {"encoding": "utf-8", "errors": "replace"}
+_CSV_KW = {"encoding": "utf-8", "encoding_errors": "replace"}
+
+
+def _open_text(path, mode: str = "rt"):
+    """Open a possibly-gzipped text file with UTF-8 + error replacement."""
+    import gzip
+    opener = gzip.open if str(path).endswith(".gz") else open
+    return opener(path, mode, **_TEXT_KW)
+
 
 @dataclass
 class RawChunk:
@@ -391,10 +407,8 @@ class GillReprogrammingSource(ReprogrammingSource):
         self._meta: dict | None = None
 
     def _parse_series(self) -> dict:
-        import gzip
         rows: dict[str, list[str]] = {}
-        opener = gzip.open if str(self.series_matrix).endswith(".gz") else open
-        with opener(self.series_matrix, "rt") as f:
+        with _open_text(self.series_matrix) as f:
             for line in f:
                 if line.startswith("!Sample_title"):
                     rows["title"] = [x.strip('"') for x in line.rstrip().split("\t")[1:]]
@@ -415,7 +429,7 @@ class GillReprogrammingSource(ReprogrammingSource):
         if self._rpm is not None:
             return
         self._meta = self._parse_series()
-        df = pd.read_csv(self.expr_tsv, sep="\t")
+        df = pd.read_csv(self.expr_tsv, sep="\t", **_CSV_KW)
         gene_col = df.columns[0]                       # "Probe" == HGNC symbol
         sample_cols = list(df.columns[self._ANNOT_COLS:])
         log2 = df[sample_cols].to_numpy(dtype=np.float64)
@@ -499,10 +513,8 @@ class GSE242423SingleCellSource(ReprogrammingSource):
         self._batch_idx: dict[str, np.ndarray] = {}   # chunk_id -> cell indices
 
     def _symbols(self) -> list[str]:
-        import gzip
-        opener = gzip.open if str(self.genes_file).endswith(".gz") else open
         syms: list[str] = []
-        with opener(self.genes_file, "rt") as f:
+        with _open_text(self.genes_file) as f:
             for line in f:
                 p = line.rstrip("\n").split("\t")
                 syms.append(p[1] if len(p) > 1 else p[0])   # col 2 = HGNC symbol
@@ -520,10 +532,8 @@ class GSE242423SingleCellSource(ReprogrammingSource):
 
     def _header_rows(self, path: str) -> tuple[int, int, int, int]:
         """Return (n_skip, n_genes, n_barcodes, nnz) for a MatrixMarket file."""
-        import gzip
-        opener = gzip.open if str(path).endswith(".gz") else open
         n_skip = 0
-        with opener(path, "rt") as f:
+        with _open_text(path) as f:
             for line in f:
                 n_skip += 1
                 if not line.startswith("%"):
@@ -543,7 +553,7 @@ class GSE242423SingleCellSource(ReprogrammingSource):
         # pass 1: genes-per-barcode
         per_bc = np.zeros(n_bc + 1, dtype=np.int32)
         for ch in pd.read_csv(matrix_path, sep=r"\s+", skiprows=n_skip, header=None,
-                              names=names, dtype=dt, chunksize=5_000_000):
+                              names=names, dtype=dt, chunksize=5_000_000, **_CSV_KW):
             np.add.at(per_bc, ch["b"].to_numpy(), 1)
         keep = np.where(per_bc >= self.min_genes)[0]          # 1-indexed barcode ids
         if self.max_cells_per_sample and len(keep) > self.max_cells_per_sample:
@@ -553,7 +563,7 @@ class GSE242423SingleCellSource(ReprogrammingSource):
         # pass 2: collect only kept-barcode entries
         gs, cs, vs = [], [], []
         for ch in pd.read_csv(matrix_path, sep=r"\s+", skiprows=n_skip, header=None,
-                              names=names, dtype=dt, chunksize=5_000_000):
+                              names=names, dtype=dt, chunksize=5_000_000, **_CSV_KW):
             b = ch["b"].to_numpy()
             nc = newcol[b]
             m = nc >= 0

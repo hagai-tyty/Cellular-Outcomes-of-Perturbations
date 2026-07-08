@@ -55,7 +55,8 @@ def assemble_bundle(
     save_ood(paths, ood)
 
     (paths.bundle_dir / C.BUNDLE_CONFIG_FILENAME).write_text(
-        OmegaConf.to_yaml(OmegaConf.create({"model": model_cfg, "train": train_cfg}))
+        OmegaConf.to_yaml(OmegaConf.create({"model": model_cfg, "train": train_cfg})),
+        encoding="utf-8",
     )
 
     meta = BundleMeta(

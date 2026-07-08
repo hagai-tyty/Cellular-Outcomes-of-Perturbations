@@ -131,7 +131,7 @@ def cli() -> None:
               f"P_safe={r['p_identity_preserved']:<5} ΔAge={r['delta_age_mean']:<7} "
               f"{r['delta_age_interval']}  {r['cell_id']}")
     if args.out:
-        Path(args.out).write_text(json.dumps(rows, indent=2))
+        Path(args.out).write_text(json.dumps(rows, indent=2), encoding="utf-8")
         print(f"wrote {len(rows)} rows -> {args.out}")
 
 
