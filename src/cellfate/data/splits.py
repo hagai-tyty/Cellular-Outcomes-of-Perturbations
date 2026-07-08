@@ -135,14 +135,53 @@ _REGIMES = {
 }
 
 
+def holdout_split(
+    rows: list[ManifestRow],
+    holdout_cell_lines: set[str],
+    fracs: tuple[float, ...],
+    seed: int,
+) -> dict[str, str]:
+    """Leave-one-(or-more)-cell-line-out for the TEST set only.
+
+    The named cell lines go entirely to ``test`` (a leak-free generalization probe:
+    the model never trains on them). Every *other* cell is split at the cell level
+    into train/val/calib, so a large single-cell line (e.g. HFF) both trains the
+    model AND provides a real calibration set -- instead of one giant group landing
+    wholesale in a single split and starving the others.
+    """
+    rng = np.random.default_rng(seed)
+    tvc = np.array(fracs[:3], dtype=float)
+    tvc = tvc / tvc.sum()                       # renormalise train/val/calib (drop test frac)
+    names = [Split.TRAIN.value, Split.VAL.value, Split.CALIB.value]
+    out: dict[str, str] = {}
+    for r in rows:
+        if r.cell_line in holdout_cell_lines:
+            out[r.cell_id] = Split.TEST.value
+        else:
+            out[r.cell_id] = names[int(rng.choice(3, p=tvc))]
+    return out
+
+
 def make_splits(
     rows: list[ManifestRow],
     fracs: tuple[float, ...],
     regimes: tuple[str, ...],
     seed: int,
+    holdout_cell_lines: tuple[str, ...] = (),
 ) -> dict[str, dict[str, str]]:
-    """Build the cell_id -> split mapping for each requested regime."""
-    unknown = [r for r in regimes if r not in _REGIMES]
+    """Build the cell_id -> split mapping for each requested regime.
+
+    The pseudo-regime ``"holdout"`` uses :func:`holdout_split` with
+    ``holdout_cell_lines`` (those cell lines -> test, the rest cell-level split).
+    """
+    known = set(_REGIMES) | {"holdout"}
+    unknown = [r for r in regimes if r not in known]
     if unknown:
-        raise ValueError(f"unknown regimes {unknown}; choose from {list(_REGIMES)}")
-    return {regime: _REGIMES[regime](rows, fracs, seed) for regime in regimes}
+        raise ValueError(f"unknown regimes {unknown}; choose from {sorted(known)}")
+    out: dict[str, dict[str, str]] = {}
+    for regime in regimes:
+        if regime == "holdout":
+            out[regime] = holdout_split(rows, set(holdout_cell_lines), fracs, seed)
+        else:
+            out[regime] = _REGIMES[regime](rows, fracs, seed)
+    return out

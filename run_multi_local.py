@@ -25,7 +25,7 @@ import re
 import shutil
 import sys
 import warnings
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 
 warnings.filterwarnings("ignore")
@@ -40,7 +40,8 @@ GILL_SERIES: str | None = None    # set explicitly if auto-discovery is wrong
 
 MAX_CELLS = 5000          # GSE242423 cells per timepoint (volume)
 CELLS_PER_RUN = 1000      # densify only this many at a time (bounds RAM)
-REGIME = "cell_line"      # leave-cell-line-out -> real cross-donor generalization
+REGIME = "holdout"        # hold out ONE Gill donor as test; HFF + rest -> train/val/calib
+HOLDOUT_DONOR: str | None = None   # None -> auto-pick (first 'old' donor, else first). Set e.g. "O1".
 N_GENES = 2000
 EPOCHS = 80
 ENSEMBLE = 5
@@ -107,18 +108,27 @@ def main() -> None:
     gse = GSE242423SingleCellSource(gse_samples, gse_genes, cell_line="HFF", min_genes=500,
                                     max_cells_per_sample=MAX_CELLS, cells_per_run=CELLS_PER_RUN, seed=0)
     gill = GillReprogrammingSource(gill_expr, gill_series)
+    gill_donors = [c["cell_line"] for c in gill.plan()]        # e.g. ['N2','N3','O1','O2','Y1','Y2']
+    # pick the held-out test donor: honour HOLDOUT_DONOR, else prefer an 'old' (O*) donor
+    # (rejuvenation signal is largest there), else the first donor.
+    if HOLDOUT_DONOR and HOLDOUT_DONOR in gill_donors:
+        test_donor = HOLDOUT_DONOR
+    else:
+        test_donor = next((d for d in gill_donors if d.upper().startswith("O")), gill_donors[0])
+    print(f"[data] Gill donors: {gill_donors}  ->  holding out '{test_donor}' as TEST")
 
     if os.path.isdir(ROOT):
         shutil.rmtree(ROOT)
-    print(f"\n[1/5] BUILD combined dataset (regime={REGIME}) — streaming, ~15-25 min ...")
-    # GSE242423 first so the gene panel is fit on rich single-cell data.
+    print(f"\n[1/5] BUILD combined dataset (regime={REGIME}, holdout={test_donor}) — streaming ...")
+    # GSE242423 first so the gene panel is fit on rich single-cell data. HFF + the
+    # non-test donors split at the cell level (train/val/calib); test_donor -> test.
     build_run(DataConfig(
         out=ROOT, gene_panel=f"{ROOT}/panel.json", n_genes=N_GENES, clock=CLOCK, modality="tf",
         qc=QCConfig(min_genes=500, max_mito_frac=0.20), label_tau=0.7,
-        split_fracs=(0.7, 0.1, 0.1, 0.1), split_regimes=(REGIME,), primary_regime=REGIME,
-        deconfound=True, seed=0), sources=[gse, gill])
+        split_fracs=(0.8, 0.1, 0.1, 0.0), split_regimes=(REGIME,), primary_regime=REGIME,
+        holdout_cell_lines=(test_donor,), deconfound=True, seed=0), sources=[gse, gill])
 
-    # ---- composition: which cell line (donor) landed in which split ----
+    # ---- composition: how each cell line is distributed across splits ----
     paths = ArtifactPaths.of(ROOT)
     man = io.manifest_rows(io.load_manifest(paths))
     cell_lines = sorted({r.cell_line for r in man})
@@ -131,11 +141,9 @@ def main() -> None:
             "'N2_d11_CD13_Sendai_Exp1'), not a raw-count / Entrez-ID matrix.")
     splits = io.load_splits(paths, REGIME)
     cl_of = {r.cell_id: r.cell_line for r in man}
-    n_by = defaultdict(int)
-    split_by = {}
+    per_cl_split: dict[str, Counter] = defaultdict(Counter)
     for r in man:
-        n_by[r.cell_line] += 1
-        split_by[r.cell_line] = splits.get(r.cell_id, "?")
+        per_cl_split[r.cell_line][splits.get(r.cell_id, "?")] += 1
 
     rows = []
     for sh in sorted(glob.glob(f"{ROOT}/shards/*.parquet")):
@@ -146,16 +154,14 @@ def main() -> None:
     df = pd.DataFrame(rows)
     df["cell_line"] = df.cell_id.map(cl_of)
 
-    print("\n[sanity] per cell line (donor)  ->  split | n | mean P_loss | mean ΔAge")
-    for cl in sorted(n_by):
+    print("\n[sanity] per cell line  ->  n | split distribution | mean P_loss | mean ΔAge")
+    for cl in cell_lines:
         sub = df[df.cell_line == cl]
         age = sub[sub.age_mask]["y_age"]
-        print(f"   {cl:<18} {split_by[cl]:<6} n={n_by[cl]:<6} "
-              f"P_loss={sub.P_loss.mean():.3f}  ΔAge={age.mean():+.2f}"
-              if len(age) else
-              f"   {cl:<18} {split_by[cl]:<6} n={n_by[cl]:<6} P_loss={sub.P_loss.mean():.3f}  ΔAge=n/a")
-    heldout = [cl for cl, sp in split_by.items() if sp == "test"]
-    print(f"\n   >>> HELD-OUT (test) donor(s): {heldout}  <<<  (model never trains on these)")
+        dist = " ".join(f"{k}={v}" for k, v in sorted(per_cl_split[cl].items()))
+        age_s = f"{age.mean():+.2f}" if len(age) else "n/a"
+        print(f"   {cl:<8} n={len(sub):<6} [{dist:<28}] P_loss={sub.P_loss.mean():.3f}  ΔAge={age_s}")
+    print(f"\n   >>> HELD-OUT (test) donor: '{test_donor}'  <<<  (model never trains on it)")
 
     from cellfate.training.train_model import TrainConfig
     from cellfate.training.train_model import run as train_run
@@ -181,14 +187,37 @@ def main() -> None:
             v = [x for k, x in d.items() if k.startswith("prauc_")]
             return sum(v) / len(v) if v else float("nan")
         ests = [k for k in R if isinstance(R[k], dict) and any(kk.startswith("prauc_") for kk in R[k])]
-        print("\n===== MODEL vs BASELINES (held-out donor) =====")
-        print(f"{'estimator':<18}{'PR-AUC':>10}{'ECE':>8}{'reg_MAE':>10}")
-        for name in ["model", *[e for e in ests if e != "model"]]:
-            if name in R:
-                d = R[name]
-                print(f"{name:<18}{prauc(d):>10.3f}{d.get('ece', float('nan')):>8.3f}"
-                      f"{d.get('reg_mae', float('nan')):>10.2f}")
-        print(f"\ncoverage@0.90: {R.get('coverage', 'n/a')}   "
+        m_pr = prauc(R["model"]) if "model" in R else float("nan")
+        m_ece = R.get("model", {}).get("ece", float("nan"))
+        m_mae = R.get("model", {}).get("reg_mae", float("nan"))
+
+        import math
+
+        def verdict(model_v, base_v, lower_is_better):
+            if not (math.isfinite(model_v) and math.isfinite(base_v)):
+                return "  -  "
+            win = (model_v < base_v) if lower_is_better else (model_v > base_v)
+            return " WIN " if win else " loss"
+
+        print("\n===== MODEL vs BASELINES (held-out donor) — per-metric win/loss =====")
+        print(f"{'estimator':<16}{'PR-AUC':>9}{'beatsPR':>9}{'ECE':>8}{'beatsECE':>10}"
+              f"{'reg_MAE':>10}{'beatsMAE':>10}")
+        print(f"{'model':<16}{m_pr:>9.3f}{'  -  ':>9}{m_ece:>8.3f}{'  -  ':>10}"
+              f"{m_mae:>10.2f}{'  -  ':>10}")
+        beats_all = {"pr": True, "ece": True, "mae": True}
+        for name in [e for e in ests if e != "model"]:
+            d = R[name]
+            bp, be, bm = prauc(d), d.get("ece", float("nan")), d.get("reg_mae", float("nan"))
+            vp = verdict(m_pr, bp, lower_is_better=False)
+            ve = verdict(m_ece, be, lower_is_better=True)
+            vm = verdict(m_mae, bm, lower_is_better=True)
+            if vp.strip() == "loss":
+                beats_all["pr"] = False
+            if vm.strip() == "loss":
+                beats_all["mae"] = False
+            print(f"{name:<16}{bp:>9.3f}{vp:>9}{be:>8.3f}{ve:>10}{bm:>10.2f}{vm:>10}")
+        print(f"\nmodel beats ALL baselines -> PR-AUC: {beats_all['pr']}  |  reg_MAE: {beats_all['mae']}")
+        print(f"coverage@0.90: {R.get('coverage', 'n/a')}   "
               f"ranking spearman: {R.get('ranking', {}).get('spearman', 'n/a')}")
 
     print("\n[4/5] SAVE checkpoint ...")

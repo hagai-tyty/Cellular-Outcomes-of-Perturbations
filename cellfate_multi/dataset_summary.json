@@ -1,20 +1,23 @@
 {
-  "n_samples": 42481,
-  "n_shards": 45,
-  "n_age_labeled": 42481,
+  "n_samples": 42605,
+  "n_shards": 51,
+  "n_age_labeled": 42605,
   "gene_panel_hash": "783f269a214aa972",
   "panel_size": 2000,
   "label_distribution": {
-    "safe": 12213,
+    "safe": 12280,
     "death": 880,
-    "loss": 29388
+    "loss": 29445
   },
   "regimes": [
     "cell_line"
   ],
   "primary_regime": "cell_line",
   "split_sizes": {
-    "train": 981
+    "calib": 981,
+    "test": 21,
+    "train": 84,
+    "val": 19
   },
-  "created_at": 1783533897.2347004
+  "created_at": 1783543257.5107162
 }

@@ -12,6 +12,7 @@ REGIMES = {
     "cell_line": "leave-cell-line-out (unseen cell lines)",
     "both": "both-unseen (unseen scaffold x unseen cell line)",
     "random": "random cell-level split (fit validation, NOT generalization)",
+    "holdout": "leave-named-cell-line(s)-out for test; rest cell-level train/val/calib",
 }
 
 
