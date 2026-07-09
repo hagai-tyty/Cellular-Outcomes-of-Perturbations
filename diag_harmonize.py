@@ -2,16 +2,6 @@
 Harmonization diagnostic: split ΔAge into CONTROL vs REPROGRAMMED per dataset,
 and breakdown by phase-dependent timepoint.
 
-The [sanity] table shows whole-donor means, which mix day-0 controls with day-8+
-reprogrammed cells. That cannot tell us whether the harmonization worked. This does:
-
-  * Acceptance A1 = control ΔAge ≈ 0 in BOTH datasets (bulk and single-cell).
-  * Acceptance A3 = no scale gap: the two datasets' CONTROL means overlap.
-
-If the Gill CONTROLS sit near 0 (like HFF), A1/A3 pass and the +14..+32 in the
-sanity table is just reprogramming signal (leaving only a sign question). If the
-Gill CONTROLS are themselves at +14, there is a true residual batch gap.
-
 USAGE (repo root, venv active):
     python diag_harmonize.py                 # defaults to dataset dir 'cellfate_multi'
     python diag_harmonize.py cellfate_multi
@@ -34,6 +24,9 @@ def dataset_of(cell_line: str) -> str:
 
 
 def main() -> None:
+    # Force standard output to support UTF-8 characters like 'Δ' in PowerShell
+    sys.stdout.reconfigure(encoding='utf-8')
+    
     paths = ArtifactPaths.of(ROOT)
     man = io.manifest_rows(io.load_manifest(paths))
 
@@ -41,7 +34,7 @@ def main() -> None:
     # Safely extract timepoint from manifest (fallback to '?' if missing)
     meta = {}
     for r in man:
-        tp = getattr(r, 'timepoint', getattr(r, 'time', '?'))
+        tp = getattr(r, 'dose_time', getattr(r, 'timepoint', getattr(r, 'time', '?')))
         meta[r.cell_id] = (r.cell_line, r.pert_id, str(tp))
 
     # cell_id -> ΔAge (age-valid only)
@@ -51,9 +44,10 @@ def main() -> None:
     for sh in sorted(glob.glob(f"{ROOT}/shards/*.parquet")):
         a = io.shard_to_numpy(io.read_shard(sh))
         
-        # Check if timepoint is stored in the parquet columns instead
+        # Check for the correct timepoint column name
         has_tp_col = "timepoint" in a
         has_time_col = "time" in a
+        has_dose_col = "dose_time" in a
         
         for i in range(len(a["cell_id"])):
             if bool(a["age_mask"][i]):
@@ -61,7 +55,9 @@ def main() -> None:
                 age[cid] = float(a["y_age"][i])
                 
                 # Extract timepoint from shard if available
-                if has_tp_col:
+                if has_dose_col:
+                    timepoints_from_shard[cid] = str(a["dose_time"][i])
+                elif has_tp_col:
                     timepoints_from_shard[cid] = str(a["timepoint"][i])
                 elif has_time_col:
                     timepoints_from_shard[cid] = str(a["time"][i])
