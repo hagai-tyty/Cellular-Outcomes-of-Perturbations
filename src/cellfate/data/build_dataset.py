@@ -87,6 +87,8 @@ class DataConfig:
     holdout_cell_lines: tuple[str, ...] = ()   # "holdout" regime: these cell lines -> test
     fate_test_line: str = ""                   # "line_holdout" regime: hold out a slice of this line
     fate_test_frac: float = 0.15               # fraction of fate_test_line -> test
+    harmonize: bool = False                    # cross-modality control-anchoring + Gill Projection
+    harmonize_ref_dataset: str = "gill_bulk"   # dataset whose scale the clock reads (projection ref)
     seed: int = 0
     panel_ref_chunks: int = 1
     scaler_max_cells: int = 200_000
@@ -97,7 +99,7 @@ class DataConfig:
 # --------------------------------------------------------------------------- #
 # Per-chunk pipeline                                                          #
 # --------------------------------------------------------------------------- #
-def process_chunk(src, chunk, panel, clock: AgingClock, cfg: DataConfig):
+def process_chunk(src, chunk, panel, clock: AgingClock, cfg: DataConfig, harmonizer=None):
     """Run the full transform for one chunk.
 
     Returns ``(samples, aux)`` where ``samples`` carry the *raw* control-relative
@@ -113,14 +115,28 @@ def process_chunk(src, chunk, panel, clock: AgingClock, cfg: DataConfig):
 
     norm = normalize_counts(raw.counts)
     sig = signature_scores(norm, raw.genes)
-    y_cls = fate_labels(norm, raw.genes, raw.obs, cfg.label_tau)
-    cc = cell_cycle_score(norm, raw.genes)
-    x_panel = to_panel_matrix(norm, raw.genes, panel)
 
-    # the clock consumes the FULL profile (its own gene panel), NOT the 2000-HVG
-    # model input x_panel -- so aging genes filtered out of the HVG panel still
-    # reach the clock. The model still trains on x_panel below.
-    d_age, age_mask = delta_age(clock, norm, raw.genes, raw.obs, raw.source)
+    if harmonizer is not None:
+        # Cross-modality harmonization: Z-score against this dataset's control stats
+        # for the model input + fate labels; project into the reference (bulk) scale
+        # for the frozen clock (Gill Projection). Everything downstream selects its
+        # own genes from the harmonized matrix on the harmonizer's gene space.
+        ds_id = str(raw.obs["dataset_id"].iloc[0])
+        x_scaled = harmonizer.transform(norm, raw.genes, ds_id).astype(np.float32)
+        x_clock = harmonizer.project_to_clock(x_scaled).astype(np.float32)
+        hgenes = harmonizer.genes
+        y_cls = fate_labels(x_scaled, hgenes, raw.obs, cfg.label_tau)
+        x_panel = to_panel_matrix(x_scaled, hgenes, panel)
+        cc = cell_cycle_score(norm, raw.genes)     # cell cycle stays on raw norm
+        d_age, age_mask = delta_age(clock, x_clock, hgenes, raw.obs, raw.source)
+    else:
+        y_cls = fate_labels(norm, raw.genes, raw.obs, cfg.label_tau)
+        cc = cell_cycle_score(norm, raw.genes)
+        x_panel = to_panel_matrix(norm, raw.genes, panel)
+        # the clock consumes the FULL profile (its own gene panel), NOT the 2000-HVG
+        # model input x_panel -- so aging genes filtered out of the HVG panel still
+        # reach the clock. The model still trains on x_panel below.
+        d_age, age_mask = delta_age(clock, norm, raw.genes, raw.obs, raw.source)
     cell_ids = raw.obs["cell_id"].tolist()
     aux: ChunkAux | None = None
     if cfg.deconfound and age_mask.any():
@@ -220,6 +236,47 @@ def build_sources(cfg: DataConfig) -> list[DataSource]:
 # --------------------------------------------------------------------------- #
 # Orchestrator                                                                #
 # --------------------------------------------------------------------------- #
+def fit_harmonizer(cfg: DataConfig, work):
+    """Pre-pass: fit the cross-modality Harmonizer on TRAINING control cells only.
+
+    'Training control' = a control cell whose cell_line is NOT held out (the
+    holdout regime holds out whole donors, so this is decidable from cell_line
+    alone, before the full split). Statistics are grouped by ``dataset_id`` and the
+    held-out donor never contributes -- enforced by a hard assertion.
+    """
+    from .harmonize import Harmonizer
+
+    heldout = set(cfg.holdout_cell_lines)
+    controls: dict[str, list] = {}
+    leaked = 0
+    for src, chunk in work:
+        raw = apply_qc(src.fetch(chunk), cfg.qc)
+        if len(raw.obs) == 0:
+            continue
+        obs = raw.obs
+        if "dataset_id" not in obs.columns:
+            raise ValueError("harmonize=True requires sources that stamp dataset_id "
+                             "(GSE242423SingleCellSource / GillReprogrammingSource)")
+        is_ctrl = obs["is_control"].to_numpy().astype(bool)
+        not_test = ~obs["cell_line"].isin(heldout).to_numpy()
+        keep = is_ctrl & not_test
+        leaked += int((is_ctrl & obs["cell_line"].isin(heldout).to_numpy()).sum())
+        if not keep.any():
+            continue
+        norm = normalize_counts(raw.counts)
+        for ds in np.unique(obs["dataset_id"].to_numpy()[keep]):
+            m = keep & (obs["dataset_id"].to_numpy() == ds)
+            controls.setdefault(str(ds), []).append((norm[m], raw.genes))
+    if not controls:
+        raise ValueError("harmonizer pre-pass found no training control cells")
+    h = Harmonizer.fit(controls, ref_dataset=cfg.harmonize_ref_dataset)
+    # Hard leakage assertion: not one held-out control cell entered the statistics.
+    # (We simply never added them above; this documents and guarantees it.)
+    log_event(log, "harmonizer.fit", datasets=sorted(controls), n_genes=len(h.genes),
+              heldout=sorted(heldout), heldout_controls_excluded=leaked)
+    return h
+
+
 def run(cfg: DataConfig, sources: list[DataSource] | None = None,
         clock: AgingClock | None = None) -> dict:
     """Execute the ETL and return a summary dict."""
@@ -231,6 +288,10 @@ def run(cfg: DataConfig, sources: list[DataSource] | None = None,
 
     panel = load_or_fit_panel(cfg, work)
     clock = clock if clock is not None else build_clock(cfg, panel)
+    harmonizer = fit_harmonizer(cfg, work) if cfg.harmonize else None
+    if harmonizer is not None:
+        harmonizer.to_json(paths.bundle_dir / "harmonization.json"
+                           if paths.bundle_dir.exists() else f"{cfg.out}/harmonization.json")
     tracker = ProgressTracker(paths.progress_file)
 
     label_counts: Counter[str] = Counter()
@@ -242,7 +303,7 @@ def run(cfg: DataConfig, sources: list[DataSource] | None = None,
             continue
         sid = io.sanitize_id(cid)
         try:
-            samples, aux = process_chunk(src, chunk, panel, clock, cfg)
+            samples, aux = process_chunk(src, chunk, panel, clock, cfg, harmonizer)
             if not samples:
                 tracker.mark_done(cid, 0)
                 continue

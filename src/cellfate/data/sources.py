@@ -318,6 +318,7 @@ class ReprogrammingSource(DataSource):
         control_value: str = "control",
         factor_as_token: bool = True,
         source: str = "reprogramming",
+        dataset_id: str = "reprogramming",
     ) -> RawChunk:
         """Assemble a valid RawChunk from per-cell reprogramming metadata.
 
@@ -344,6 +345,7 @@ class ReprogrammingSource(DataSource):
                 "dose_uM": 0.0 if is_ctrl else float(doses[i]),
                 "time_h": float(time_h[i]),
                 "is_control": is_ctrl,
+                "dataset_id": dataset_id,
             })
         return RawChunk(chunk_id=chunk_id, source=source,
                         counts=np.asarray(counts), genes=list(genes),
@@ -470,7 +472,7 @@ class GillReprogrammingSource(ReprogrammingSource):
             pert.append("control" if is_ctrl else "OSKM")
             time_h.append(m["day"] * 24.0)
         return self.build_chunk(chunk["id"], counts, list(self._genes), donor,
-                                pert, time_h, factor_as_token=True)
+                                pert, time_h, factor_as_token=True, dataset_id="gill_bulk")
 
 
 class GSE242423SingleCellSource(ReprogrammingSource):
@@ -662,7 +664,7 @@ class GSE242423SingleCellSource(ReprogrammingSource):
         idx = self._batch_idx.get(chunk["id"], np.arange(counts.shape[0]))
         dense = counts[idx].toarray().astype(np.float32)         # ONLY this batch densified
         return self.build_chunk(chunk["id"], dense, genes, self.cell_line,
-                                list(pert[idx]), list(time_h[idx]), factor_as_token=True)
+                                list(pert[idx]), list(time_h[idx]), factor_as_token=True, dataset_id="hff_sc")
 
 
 # Registry used by the orchestrator to build sources from config.

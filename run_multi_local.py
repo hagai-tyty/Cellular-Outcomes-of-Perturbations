@@ -42,6 +42,7 @@ MAX_CELLS = 5000          # GSE242423 cells per timepoint (volume)
 CELLS_PER_RUN = 1000      # densify only this many at a time (bounds RAM)
 REGIME = "holdout"        # hold out ONE Gill donor as test; HFF + rest -> train/val/calib
 HOLDOUT_DONOR: str | None = None   # None -> auto-pick (first 'old' donor, else first). Set e.g. "O1".
+HARMONIZE = True          # cross-modality control-anchoring + Gill Projection (fixes ΔAge scale)
 N_GENES = 2000
 EPOCHS = 80
 ENSEMBLE = 5
@@ -119,14 +120,16 @@ def main() -> None:
 
     if os.path.isdir(ROOT):
         shutil.rmtree(ROOT)
-    print(f"\n[1/5] BUILD combined dataset (regime={REGIME}, holdout={test_donor}) — streaming ...")
+    print(f"\n[1/5] BUILD combined dataset (regime={REGIME}, holdout={test_donor}, "
+          f"harmonize={'ON' if HARMONIZE else 'off'}) — streaming ...")
     # GSE242423 first so the gene panel is fit on rich single-cell data. HFF + the
     # non-test donors split at the cell level (train/val/calib); test_donor -> test.
     build_run(DataConfig(
         out=ROOT, gene_panel=f"{ROOT}/panel.json", n_genes=N_GENES, clock=CLOCK, modality="tf",
         qc=QCConfig(min_genes=500, max_mito_frac=0.20), label_tau=0.7,
         split_fracs=(0.8, 0.1, 0.1, 0.0), split_regimes=(REGIME,), primary_regime=REGIME,
-        holdout_cell_lines=(test_donor,), deconfound=True, seed=0), sources=[gse, gill])
+        holdout_cell_lines=(test_donor,), harmonize=HARMONIZE, harmonize_ref_dataset="gill_bulk",
+        deconfound=True, seed=0), sources=[gse, gill])
 
     # ---- composition: how each cell line is distributed across splits ----
     paths = ArtifactPaths.of(ROOT)
@@ -162,6 +165,9 @@ def main() -> None:
         age_s = f"{age.mean():+.2f}" if len(age) else "n/a"
         print(f"   {cl:<8} n={len(sub):<6} [{dist:<28}] P_loss={sub.P_loss.mean():.3f}  ΔAge={age_s}")
     print(f"\n   >>> HELD-OUT (test) donor: '{test_donor}'  <<<  (model never trains on it)")
+    if HARMONIZE:
+        print("   [acceptance] with harmonization ON, the Gill donors' mean ΔAge above should now be")
+        print("   on a comparable scale to HFF (no +16..+64 artifact) -- that is A1-A3 from the spec.")
 
     from cellfate.training.train_model import TrainConfig
     from cellfate.training.train_model import run as train_run
