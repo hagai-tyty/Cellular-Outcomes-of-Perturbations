@@ -10,14 +10,14 @@
     "loss": 29445
   },
   "regimes": [
-    "cell_line"
+    "holdout"
   ],
-  "primary_regime": "cell_line",
+  "primary_regime": "holdout",
   "split_sizes": {
-    "calib": 981,
-    "test": 21,
-    "train": 84,
-    "val": 19
+    "train": 852,
+    "calib": 115,
+    "val": 117,
+    "test": 21
   },
-  "created_at": 1783543257.5107162
+  "created_at": 1783547030.718377
 }

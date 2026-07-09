@@ -13,6 +13,7 @@ REGIMES = {
     "both": "both-unseen (unseen scaffold x unseen cell line)",
     "random": "random cell-level split (fit validation, NOT generalization)",
     "holdout": "leave-named-cell-line(s)-out for test; rest cell-level train/val/calib",
+    "line_holdout": "hold out a random slice of one cell line for test (fate-classification probe)",
 }
 
 

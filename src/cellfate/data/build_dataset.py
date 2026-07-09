@@ -84,7 +84,9 @@ class DataConfig:
     split_fracs: tuple[float, ...] = (0.7, 0.1, 0.1, 0.1)
     split_regimes: tuple[str, ...] = ("scaffold", "cell_line", "both")
     primary_regime: str = "scaffold"
-    holdout_cell_lines: tuple[str, ...] = ()   # for the "holdout" regime: these -> test
+    holdout_cell_lines: tuple[str, ...] = ()   # "holdout" regime: these cell lines -> test
+    fate_test_line: str = ""                   # "line_holdout" regime: hold out a slice of this line
+    fate_test_frac: float = 0.15               # fraction of fate_test_line -> test
     seed: int = 0
     panel_ref_chunks: int = 1
     scaler_max_cells: int = 200_000
@@ -266,7 +268,8 @@ def run(cfg: DataConfig, sources: list[DataSource] | None = None,
     io.consolidate_manifest(paths)
     rows = io.manifest_rows(io.load_manifest(paths))
     splits = make_splits(rows, tuple(cfg.split_fracs), tuple(cfg.split_regimes), cfg.seed,
-                         holdout_cell_lines=tuple(cfg.holdout_cell_lines))
+                         holdout_cell_lines=tuple(cfg.holdout_cell_lines),
+                         fate_test_line=cfg.fate_test_line, fate_test_frac=cfg.fate_test_frac)
     for regime, mapping in splits.items():
         io.write_splits(paths, regime, mapping)
 

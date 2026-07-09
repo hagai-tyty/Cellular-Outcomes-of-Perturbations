@@ -9,7 +9,7 @@ model:
 train:
   dataset_dir: cellfate_multi
   out: cellfate_multi
-  regime: cell_line
+  regime: holdout
   d_cell: 256
   d_u: 256
   latent_dim: 256

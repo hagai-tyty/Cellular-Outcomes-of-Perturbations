@@ -146,16 +146,46 @@ def holdout_split(
     The named cell lines go entirely to ``test`` (a leak-free generalization probe:
     the model never trains on them). Every *other* cell is split at the cell level
     into train/val/calib, so a large single-cell line (e.g. HFF) both trains the
-    model AND provides a real calibration set -- instead of one giant group landing
-    wholesale in a single split and starving the others.
+    model AND provides a real calibration set.
     """
     rng = np.random.default_rng(seed)
     tvc = np.array(fracs[:3], dtype=float)
-    tvc = tvc / tvc.sum()                       # renormalise train/val/calib (drop test frac)
+    tvc = tvc / tvc.sum()
     names = [Split.TRAIN.value, Split.VAL.value, Split.CALIB.value]
     out: dict[str, str] = {}
     for r in rows:
         if r.cell_line in holdout_cell_lines:
+            out[r.cell_id] = Split.TEST.value
+        else:
+            out[r.cell_id] = names[int(rng.choice(3, p=tvc))]
+    return out
+
+
+def line_holdout_split(
+    rows: list[ManifestRow],
+    test_line: str,
+    test_frac: float,
+    fracs: tuple[float, ...],
+    seed: int,
+) -> dict[str, str]:
+    """Hold out a random ``test_frac`` of ONE cell line's cells as the TEST set.
+
+    For evaluating **fate classification**: the test set must contain multiple fate
+    classes (positives AND negatives per class) or PR-AUC is undefined. A single
+    small bulk donor has no fate diversity; a random slice of a single-cell line that
+    spans D0->iPSC does. Everything not chosen for test (the rest of ``test_line`` plus
+    all other cell lines) is split at the cell level into train/val/calib.
+
+    NOTE: this is a *held-out-cells* test on one line, not a cross-donor test -- it
+    answers "does the fate head classify?", not "does it generalise to a new donor".
+    """
+    rng = np.random.default_rng(seed)
+    tvc = np.array(fracs[:3], dtype=float)
+    tvc = tvc / tvc.sum()
+    names = [Split.TRAIN.value, Split.VAL.value, Split.CALIB.value]
+    out: dict[str, str] = {}
+    for r in rows:
+        if r.cell_line == test_line and rng.random() < test_frac:
             out[r.cell_id] = Split.TEST.value
         else:
             out[r.cell_id] = names[int(rng.choice(3, p=tvc))]
@@ -168,13 +198,17 @@ def make_splits(
     regimes: tuple[str, ...],
     seed: int,
     holdout_cell_lines: tuple[str, ...] = (),
+    fate_test_line: str = "",
+    fate_test_frac: float = 0.15,
 ) -> dict[str, dict[str, str]]:
     """Build the cell_id -> split mapping for each requested regime.
 
-    The pseudo-regime ``"holdout"`` uses :func:`holdout_split` with
-    ``holdout_cell_lines`` (those cell lines -> test, the rest cell-level split).
+    Pseudo-regimes:
+      * ``"holdout"``      -> :func:`holdout_split` (``holdout_cell_lines`` -> test).
+      * ``"line_holdout"`` -> :func:`line_holdout_split` (random ``fate_test_frac``
+        of ``fate_test_line`` -> test; for measuring fate classification).
     """
-    known = set(_REGIMES) | {"holdout"}
+    known = set(_REGIMES) | {"holdout", "line_holdout"}
     unknown = [r for r in regimes if r not in known]
     if unknown:
         raise ValueError(f"unknown regimes {unknown}; choose from {sorted(known)}")
@@ -182,6 +216,8 @@ def make_splits(
     for regime in regimes:
         if regime == "holdout":
             out[regime] = holdout_split(rows, set(holdout_cell_lines), fracs, seed)
+        elif regime == "line_holdout":
+            out[regime] = line_holdout_split(rows, fate_test_line, fate_test_frac, fracs, seed)
         else:
             out[regime] = _REGIMES[regime](rows, fracs, seed)
     return out
