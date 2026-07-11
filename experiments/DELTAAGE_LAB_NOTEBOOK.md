@@ -241,6 +241,10 @@ confirmation, not necessity. We stop when the cause is cracked, not when we run 
   is fine. And the clock is **linear**, so ΔAge is **linear in expression by construction** →
   ridge is the optimal tool → the model tying ridge is the **CORRECT, EXPECTED** result, NOT
   a failure. **H4 confirmed. There is nothing to "fix" about the model's ΔAge prediction.**
+- **After Test 5.0 (reopened by user):** the apparent "worse than ridge" (14.29 vs 14.05) is
+  **statistically NOT distinguishable from zero** (paired 95% CI [−2.16, +2.64], model wins
+  2/6 folds). The model is **statistically TIED** with ridge — now demonstrated with a paired
+  test, not assumed. This closes the "why worse, not tied" gap: there is no real deficit.
 
 ## FINAL DIAGNOSIS (the whole picture, consistent)
 
@@ -323,6 +327,118 @@ floor (12.06), but the *real* model at ~47% gets ~9–14 — above ideal, below 
 correlated**, so the visible 47% *partially proxies* the hidden 53%. Synthetic therefore
 *overestimates* the degradation; real is milder. This is exactly why real ΔAge MAE (~9–14)
 sits **between** the full-coverage ideal (~3) and the predict-mean floor (~13). All consistent.
+
+---
+
+## Test 5 — REOPENED: why is the model *worse* than ridge, not tied? (new question)  ⏳
+
+**Why reopened (user caught this).** The "closed" conclusion said the model *ties* ridge
+because ΔAge is linear. But the real LOOCV numbers are **model 14.29 ± 9.67 vs ridge
+14.05 ± 8.03 — the model is WORSE by 0.24**, not equal. The linearity story explains why the
+model doesn't *beat* ridge; it does NOT explain why the model is *worse*. A model that can
+represent any linear function ridge can should never *lose* to it on a linear target. So the
+0.24 deficit is a genuinely unexplained observation. Not closed.
+
+### Test 5.0 — is the 0.24 deficit REAL, or noise? (do this first)
+
+**Hypothesis.** With std ±8–9 across only 6 folds, a 0.24 mean difference may not be
+statistically distinguishable from zero. Per-fold the model won O1 (5.39 vs 8.25) and the
+aggregate is nearly equal — smells like noise + donor effects, not a systematic deficit.
+
+**Prediction (before running).** The paired difference (model − ridge) across the 6 folds is
+NOT significantly different from 0 (CI includes 0; wins/losses mixed). → honest statement
+becomes "statistically tied," and there is no deficit to explain.
+
+**Method.** Read per-fold model & ridge reg_MAE from all 6 `cellfate_loocv_*/reports/
+holdout.json`, compute the paired per-fold difference, mean, a paired test, and win/loss
+count. Uses data already on disk. Run once.
+
+**Decision branches (before data):**
+- **Difference indistinguishable from 0 (mixed wins)** → 0.24 is noise → "statistically tied"
+  → the linearity story stands, investigation closes honestly. No Test 5.1 needed.
+- **Difference is consistent & real (model loses on most folds systematically)** → a genuine
+  deficit → proceed to Test 5.1 to find the cause.
+
+**Result (actual).** _[TO FILL — user runs test5_ridge_gap.py]_
+
+**Verdict.** _[TO FILL]_
+
+### Test 5.0 RESULT (user ran it — real per-fold data)
+
+| fold | model MAE | ridge MAE | model−ridge | who wins |
+|---|---|---|---|---|
+| N2 | 21.79 | 21.59 | +0.21 | ridge |
+| N3 | 29.69 | 26.27 | +3.42 | ridge |
+| O1 | 5.39 | 8.25 | −2.87 | model |
+| O2 | 7.54 | 9.31 | −1.77 | model |
+| Y1 | 7.28 | 6.44 | +0.83 | ridge |
+| Y2 | 14.06 | 12.45 | +1.61 | ridge |
+
+mean(model − ridge) = **+0.24**, std of diffs = 2.28, **95% CI = [−2.16, +2.64]** (includes 0),
+paired t = +0.26. Model wins 2/6, ridge wins 4/6.
+
+**Verdict — prediction RIGHT: the 0.24 is NOISE.** The 95% CI comfortably includes 0 and the
+per-fold diffs swing widely (model wins O1 by 2.87, loses N3 by 3.42). The difference is not
+statistically distinguishable from zero. **Honest statement: the model is STATISTICALLY TIED
+with ridge on ΔAge MAE** — exactly what a linear target predicts. No systematic deficit
+exists, so **Test 5.1 is not needed** (per the pre-committed branch). This turns the earlier
+hand-wave ("ties ridge") into a demonstrated, reviewer-proof claim.
+
+### Test 5.1 — [only if 5.0 says the deficit is REAL] is it the multi-task tradeoff?
+
+**Hypothesis.** The model optimizes fate + ΔAge *jointly*; ridge optimizes ΔAge *alone*. The
+shared representation may sacrifice a little ΔAge accuracy to serve fate classification — so a
+ΔAge-only model should match ridge while the multi-task model is slightly worse.
+
+**Prediction (before running).** _[state before running]_
+
+**Method.** Train the model on ΔAge only (drop/zero the fate loss), compare its held-out
+ΔAge MAE to ridge and to the multi-task model. Gap closes → it's the fate/age tradeoff (a
+real, explainable *cost*, not a bug). Gap persists → optimization gap (→ Test 5.1.1: train
+longer / lower LR / less dropout on the age head, chosen a priori, once).
+
+**Result (actual).** _[TO FILL]_
+
+---
+
+## Test 6 — can ANY model beat ridge on the REAL ΔAge? (the empirical test, not assumed)  ⏳
+
+**Why this test (user caught the real hole).** Tests 3/4.1 used *synthetic* data and a
+*structural* argument (clock is linear → ΔAge linear → ridge optimal). But that argument has
+a gap: the model predicts ΔAge from x_pert *without* being given x_ctrl, so it must **infer
+the per-donor control offset** from x_pert — and inferring which donor / what baseline need
+NOT be linear. So it is *possible* a more powerful model beats ridge on real ΔAge by better
+offset inference. We never measured this on real data. The stakes:
+- **If nothing beats ridge on real ΔAge** → ridge is genuinely at the ceiling; the neural net
+  tying it is correct; its ΔAge contribution is honestly "matches the linear optimum." Closed
+  empirically.
+- **If something beats ridge** → real exploitable structure exists → our net only tying ridge
+  is a REAL underperformance to diagnose (optimization / multi-task / architecture).
+
+**Method.** On the REAL Gill x_pert → ΔAge pairs, under the SAME leave-one-donor-out protocol,
+compare off-the-shelf, deterministic, no-GPU models:
+1. **ridge** (linear incumbent)
+2. **gradient-boosted trees** + **random forest** (nonlinearity + interactions)
+3. **kernel ridge (RBF)** (smooth nonlinearity)
+Report per-fold + aggregate MAE, and whether any nonlinear model beats ridge by more than
+noise (reuse the paired logic from Test 5.0).
+
+**Prediction (before running, on record).** I lean that trees/kernels will **NOT**
+meaningfully beat ridge on real ΔAge — because the per-donor offset, though nonlinear in
+principle, is hard to infer from only ~5 training donors (too few to learn donor structure).
+But I genuinely don't know; that's why we run it. If a tree/kernel DOES beat ridge, I'm wrong
+and there's a real lead.
+
+**Decision branches (before data):**
+- **No nonlinear model beats ridge (within noise)** → ridge is at the ceiling; ΔAge is
+  linearly predictable from this input; neural-net tie is correct → **closed empirically.**
+- **A nonlinear model beats ridge (beyond noise)** → real structure exists → the neural net
+  underperforms → REOPEN with a concrete target (Test 6.1: why doesn't the net capture what a
+  tree can? optimization vs multi-task vs architecture).
+
+**Result (actual).** _[TO FILL — user runs test6_beat_ridge.py]_
+
+**Verdict.** _[TO FILL]_
 
 ---
 
