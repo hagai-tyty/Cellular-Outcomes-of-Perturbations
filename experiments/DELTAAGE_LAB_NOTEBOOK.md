@@ -476,6 +476,47 @@ CORRECT — not an underperformance — now demonstrated on real data, not assum
 
 ---
 
+## Test 7 — does the model's RANKING beat ranking-by-ridge-ΔAge? (does the model earn its keep on ranking?)  ⏳
+
+**Why (user's question).** We proved ridge matches the model on ΔAge *magnitude* (Test 6). But
+the model's headline is RANKING (Spearman 0.69) via its RES score (combined fate + ΔAge). The
+honest question: does that RES ranking actually beat simply **sorting perturbations by ridge's
+predicted ΔAge**? If not, the RES machinery isn't earning its keep for ranking either.
+
+**The subtlety (state it so the test is fair).** "Ranking quality" = how well a predicted
+ordering matches the TRUE ordering by actual ΔAge (which perturbation rejuvenates most). Ridge
+predicts ΔAge directly, so "sort by ridge ΔAge" is a STRONG baseline — it's ordering by an
+estimate of the exact quantity. That's the right bar: if the model's RES can't beat sorting by
+a linear ΔAge prediction, RES adds nothing for ranking.
+
+**Method.** Under the SAME leave-one-donor-out protocol, on the held-out donor's cells:
+- **Model ranking:** rank by the model's RES score → Spearman vs true ΔAge.
+- **Ridge ranking:** rank by ridge's predicted ΔAge → Spearman vs true ΔAge.
+- (Also try ridge-ΔAge directly as the score, and the model's own ΔAge as a score, to
+  separate "RES vs ΔAge-sort" from "model vs ridge".)
+Report per-fold Spearman for each, aggregate mean ± std, and the paired difference
+(model − ridge) across the 6 folds with a 95% CI (same paired logic as Test 5/6).
+
+**Prediction (before running, on record).** My honest lean: **model_RES will be roughly TIED
+with ranking-by-ridge-ΔAge**, because ΔAge is the dominant ranking signal and ridge predicts
+it as well as the model (Test 6). I expect model_RES ≈ model_dAge ≈ ridge_dAge, all near the
+~0.69 aggregate. If model_RES clearly beats ridge_dAge, the fate/uncertainty in RES adds
+ranking value; if it clearly loses, RES is over-engineered for ranking. Prediction: tied (CI
+includes 0).
+
+**Decision branches (before data):**
+- **Model RES ranking beats ridge-ΔAge ranking (beyond noise)** → the model earns its keep on
+  ranking; RES's fate+ΔAge combination genuinely helps ordering. Real contribution confirmed.
+- **Tied** → ranking is driven by ΔAge, which ridge predicts equally well → the model's ranking
+  is NOT a unique contribution over a linear baseline (honest, important finding).
+- **Model loses** → RES actively hurts ranking vs a simple ΔAge sort → reconsider RES for ranking.
+
+**Result (actual).** _[TO FILL — user runs test7_ranking.py]_
+
+**Verdict.** _[TO FILL]_
+
+---
+
 ## The decision tree (one glance)
 
 ```
