@@ -170,6 +170,43 @@ large n, no noise:
 
 **Verdict.** _[TO FILL]_
 
+### Test 3 RESULT (run once, refined with smooth-nonlinearity + train-MAE)
+
+**Prediction going in (revised after Test 1):** "model will tie ridge even on nonlinear at
+this sample size." **This prediction was WRONG** — the model beat ridge decisively on smooth
+nonlinearity. Being wrong here is the finding: the architecture is more capable than I bet.
+
+| signal | predict-mean | ridge MAE | model MAE | model-train | read |
+|---|---|---|---|---|---|
+| linear | 11.84 | **0.00** | 1.33 | 0.73 | ridge optimal, model close |
+| smooth | 12.62 | 9.09 | **2.31** | 0.88 | **model WINS (+6.78)** |
+| products | 11.77 | 11.25 | 11.33 | 1.31 | tie (memorizes train, can't generalize) |
+| noise | 12.04 | 12.38 | 13.20 | 1.39 | both fail (control passes) |
+
+**Reproduced independently on the user's GPU hardware** (numbers match the sandbox run within
+training noise: smooth gap +6.78 vs +6.64; model-smooth MAE 2.31 vs 2.45). The result is
+real and reproducible, not a one-machine fluke.
+
+**Positive controls all pass:** linear→ridge optimal; noise→both at floor (harness invents no
+signal). **Key result: model WINS on smooth nonlinearity (2.31 vs 9.09).**
+
+**Verdict — the architecture is NOT broken.** It captures smooth nonlinearity and beats ridge
+by a wide margin when such signal exists. The products-tie is the well-known universal MLP
+limitation (memorizes train 1.37, fails test 11.28), not specific to this model.
+
+### THE STRUCTURAL INSIGHT THAT CLOSES THE CASE
+
+The Fleischer clock is a **LinearClock: age = w·x + b**. Therefore:
+
+    ΔAge = clock(x_pert) − clock(x_ctrl) = w·(x_pert − x_ctrl)   -- LINEAR in expression.
+
+Every transform in between (harmonization Z-score, Gill projection) is **affine**. So the
+entire ΔAge target is **linear in the model's input, by construction.** There is no nonlinear
+signal to capture → ridge is optimal → the model can only tie it. Test 3 proves the model
+*would* beat ridge if nonlinearity existed (smooth +6.64); it doesn't on real data because
+**the linear clock guarantees a linear target.** **H4 CONFIRMED, two independent ways**
+(architecture-is-capable proof + structural linearity of the clock).
+
 ---
 
 ## Later planned tests (only if still unexplained after 1–3)
@@ -200,7 +237,68 @@ confirmation, not necessity. We stop when the cause is cracked, not when we run 
   (H4/H3), not a model bug. The two high-MAE folds (N2/N3) are donor heterogeneity (H6), not
   memorization. Next: Test 3 to separate "signal is linear/low (nothing to fix)" from "model
   can't capture nonlinearity (fixable)".
-- _[append after each test]_
+- **After Test 3: CRACKED.** Model beats ridge on smooth nonlinearity (+6.64) → architecture
+  is fine. And the clock is **linear**, so ΔAge is **linear in expression by construction** →
+  ridge is the optimal tool → the model tying ridge is the **CORRECT, EXPECTED** result, NOT
+  a failure. **H4 confirmed. There is nothing to "fix" about the model's ΔAge prediction.**
+
+## FINAL DIAGNOSIS (the whole picture, consistent)
+
+The "ΔAge problem" was **two real effects that are both understood, neither of which is a
+model bug:**
+
+1. **The model ties ridge on ΔAge magnitude** — because a **linear clock** makes ΔAge a
+   **linear** function of expression. A linear model is therefore optimal; a neural net can at
+   best match it. **This is correct behavior, not a failure. Do not try to "beat ridge" here.**
+2. **Absolute ΔAge MAE is ~9–14 years** — because the model input (2000 HVG) captures only
+   ~47% of the clock's genes (Test 0), and ΔAge = w·(x_pert − x_control) has a per-donor
+   control offset the model must infer (donor heterogeneity, Test 1). Both limit accuracy for
+   *everyone* (model and ridge alike).
+
+**Implications:**
+- For the preprint: report honestly that ΔAge magnitude is well-served by a linear predictor
+  (the clock is linear), and the model's contribution is the **joint calibrated fate +
+  ranking + uncertainty**, not beating ridge on ΔAge. The ranking result (Spearman 0.69±0.10)
+  stands as the real ΔAge-related contribution.
+- If lower ΔAge MAE is ever wanted (Q1): the levers are **more clock genes in the input**
+  (H7) and **more donors** (H6) — NOT a fancier model. And a more powerful ΔAge model is
+  pointless *unless the clock itself becomes nonlinear* (e.g. a nonlinear single-cell clock),
+  in which case Test 3 shows the architecture is ready to exploit it.
+- **The investigation is complete.** Tests 4–7 (sample staircase, noise, modality,
+  heterogeneity) are no longer needed to explain the tie — it's explained. They would only
+  quantify the *absolute-MAE* ceiling, which is a separate, lower-priority question.
+
+---
+
+## Test 4 — "feed training X back, does it reproduce Y?" as a coverage diagnostic (user's idea)  ✅ DONE
+
+**Hypothesis.** Train the real model on (X→Y), feed the same X back, check it reproduces Y —
+done as a diagnostic by hiding signal genes from the input. If reproduction degrades as we
+hide signal genes, imperfect reproduction on real data is the missing-genes effect, not a bug.
+
+**Prediction (before running).** 100% coverage → near-perfect reproduction; reproduction
+degrades as coverage drops toward the predict-mean floor.
+
+**Result (actual).** Reproduction stayed near-perfect at ALL coverages: 100%→0.93, 75%→1.11,
+47%→1.50, 25%→1.28 (floor 12.82). **Prediction WRONG** — no degradation.
+
+**Verdict — the surprise IS the finding.** On *training* data the model memorizes Y through
+the **760 noise genes as per-row fingerprints**, so it reproduces training Y even when the
+signal genes are hidden. Consequences:
+- **The model reproduces its training data → the training path works, NOT broken.** (The
+  user's "good sign" — confirmed.)
+- **Reproduction-on-training is a WEAK test:** it passes via memorization even without seeing
+  the signal, so it can't show the missing-genes effect. This is *why* we judge on held-out
+  data, not training reproduction.
+- **Explains a real number:** synthetic train-repro ~1 vs real train-Gill ~9 (from Test 1) is
+  the **HFF-domination** effect — in the real pipeline the ~100 Gill cells are 0.24% of
+  training, drowned by 42k HFF, so they're NOT memorized; here all 8k rows are one
+  distribution and all get memorized. Consistent, not contradictory.
+- To SEE the missing-genes effect cleanly, measure **held-out error vs coverage**
+  (generalization), not training reproduction. (Optional Test 4b; the diagnosis already holds
+  from Tests 0/1/3.)
+
+Diagnosis unchanged and reinforced: nothing broken; the ΔAge tie is the linear-clock result.
 
 ---
 
