@@ -90,6 +90,9 @@ def main() -> None:
     import pandas as pd
     import torch
 
+    from cellfate.common.console import install_pretty_console
+    install_pretty_console()   # cosmetic: progress bars + clean lines instead of JSON spam
+
     print(f"[env] torch {torch.__version__} | CUDA: {torch.cuda.is_available()}"
           + (f" | GPU: {torch.cuda.get_device_name(0)}" if torch.cuda.is_available() else ""))
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -157,13 +160,21 @@ def main() -> None:
     df = pd.DataFrame(rows)
     df["cell_line"] = df.cell_id.map(cl_of)
 
-    print("\n[sanity] per cell line  ->  n | split distribution | mean P_loss | mean ΔAge")
+    from cellfate.common.console import render_table
+    print("\n[sanity] where each cell line's cells landed, and their average predictions")
+    srows = []
     for cl in cell_lines:
         sub = df[df.cell_line == cl]
         age = sub[sub.age_mask]["y_age"]
         dist = " ".join(f"{k}={v}" for k, v in sorted(per_cl_split[cl].items()))
         age_s = f"{age.mean():+.2f}" if len(age) else "n/a"
-        print(f"   {cl:<8} n={len(sub):<6} [{dist:<28}] P_loss={sub.P_loss.mean():.3f}  ΔAge={age_s}")
+        tag = "  <- TEST" if cl == test_donor else ""
+        srows.append([cl, f"{len(sub):,}", dist, f"{sub.P_loss.mean():.3f}", age_s + tag])
+    print(render_table(
+        ["cell line", "cells", "where they went (train/val/calib/test)", "P(loss)", "ΔAge (yrs)"],
+        srows, aligns=["l", "r", "l", "r", "r"]))
+    print("   P(loss) = avg predicted chance the cell loses its identity (0-1).  "
+          "ΔAge = avg years younger(−)/older(+).")
     print(f"\n   >>> HELD-OUT (test) donor: '{test_donor}'  <<<  (model never trains on it)")
     if HARMONIZE:
         print("   [acceptance] with harmonization ON, the Gill donors' mean ΔAge above should now be")
@@ -177,13 +188,21 @@ def main() -> None:
                           epochs=EPOCHS, patience=10, batch_size=BATCH, ensemble_size=ENSEMBLE,
                           base_seed=0, conformal_levels=(0.90,), device=device))
     m = json.load(open(f"{ROOT}/bundle/metrics.json"))
-    print(f"\n[check] n_train={m['n_train']} n_val={m['n_val']} n_calib={m['n_calib']} "
-          f"temp={m['temperature']:.3f} conformal_q={m['conformal_q']}")
+    print(f"\n[check] trained on {m['n_train']:,} cells | validated on {m['n_val']:,} | "
+          f"calibrated on {m['n_calib']:,}")
+    print(f"        (temperature {m['temperature']:.2f} = confidence rescaling; "
+          f"conformal_q {list(m['conformal_q'].values())[0]:.2f} = ±interval width in years)")
 
     from cellfate.evaluation.evaluate_cli import EvalConfig, evaluate
-    print("\n[3/5] EVALUATE — leave-cell-line-out gates + baselines ...")
+    print("\n[3/5] EVALUATE  (held-out donor — model never saw it) ...")
     gates = evaluate(EvalConfig(bundle=ROOT, dataset=ROOT, regimes=(REGIME,), out=f"{ROOT}/reports"))
-    print(json.dumps(gates, indent=2, default=str))
+    g = gates.get(REGIME, gates)
+    _tick = lambda ok: "PASS" if ok else "----"   # noqa: E731
+    print("\n   gates:  "
+          f"ranking {_tick(g.get('ranking_ok'))}   "
+          f"calibration {_tick(g.get('ece_ok'))}   "
+          f"coverage {_tick(g.get('coverage_ok'))}   "
+          f"beats-all {_tick(g.get('beats_all_baselines'))}")
 
     rep = Path(ROOT, "reports", f"{REGIME}.json")
     if rep.exists():
@@ -196,41 +215,64 @@ def main() -> None:
         m_pr = prauc(R["model"]) if "model" in R else float("nan")
         m_ece = R.get("model", {}).get("ece", float("nan"))
         m_mae = R.get("model", {}).get("reg_mae", float("nan"))
+        spearman = R.get("ranking", {}).get("spearman", float("nan"))
+        coverage = R.get("coverage", float("nan"))
 
         import math
 
-        def verdict(model_v, base_v, lower_is_better):
-            if not (math.isfinite(model_v) and math.isfinite(base_v)):
-                return "  -  "
-            win = (model_v < base_v) if lower_is_better else (model_v > base_v)
-            return " WIN " if win else " loss"
+        def cell(v, width=8, prec=3):
+            return (f"{v:>{width}.{prec}f}" if isinstance(v, (int, float)) and math.isfinite(v)
+                    else f"{'n/a':>{width}}")
 
-        print("\n===== MODEL vs BASELINES (held-out donor) — per-metric win/loss =====")
-        print(f"{'estimator':<16}{'PR-AUC':>9}{'beatsPR':>9}{'ECE':>8}{'beatsECE':>10}"
-              f"{'reg_MAE':>10}{'beatsMAE':>10}")
-        print(f"{'model':<16}{m_pr:>9.3f}{'  -  ':>9}{m_ece:>8.3f}{'  -  ':>10}"
-              f"{m_mae:>10.2f}{'  -  ':>10}")
-        beats_all = {"pr": True, "ece": True, "mae": True}
+        def mark(model_v, base_v, lower_is_better):
+            if not (math.isfinite(model_v) and math.isfinite(base_v)):
+                return "  · "
+            win = (model_v < base_v) if lower_is_better else (model_v > base_v)
+            return " win" if win else "  · "
+
+        # ---- readable table: model row on top, baselines below, aligned --------- #
+        # ---- readable box table with a note column ----------------------------- #
+        beats_all = {"pr": True, "mae": True}
+        trows = [["model", cell(m_pr, 6), cell(m_ece, 6), cell(m_mae, 8, 2), "← our model"]]
         for name in [e for e in ests if e != "model"]:
             d = R[name]
             bp, be, bm = prauc(d), d.get("ece", float("nan")), d.get("reg_mae", float("nan"))
-            vp = verdict(m_pr, bp, lower_is_better=False)
-            ve = verdict(m_ece, be, lower_is_better=True)
-            vm = verdict(m_mae, bm, lower_is_better=True)
-            if vp.strip() == "loss":
+            vp, vm = mark(m_pr, bp, False), mark(m_mae, bm, True)
+            if math.isfinite(m_pr) and math.isfinite(bp) and not (m_pr > bp):
                 beats_all["pr"] = False
-            if vm.strip() == "loss":
+            if math.isfinite(m_mae) and math.isfinite(bm) and not (m_mae < bm):
                 beats_all["mae"] = False
-            print(f"{name:<16}{bp:>9.3f}{vp:>9}{be:>8.3f}{ve:>10}{bm:>10.2f}{vm:>10}")
-        print(f"\nmodel beats ALL baselines -> PR-AUC: {beats_all['pr']}  |  reg_MAE: {beats_all['mae']}")
-        print(f"coverage@0.90: {R.get('coverage', 'n/a')}   "
-              f"ranking spearman: {R.get('ranking', {}).get('spearman', 'n/a')}")
+            note = " ".join(x for x in [("model wins PR-AUC" if vp.strip() == "win" else ""),
+                                        ("model wins MAE" if vm.strip() == "win" else "")] if x)
+            trows.append([name, cell(bp, 6), cell(be, 6), cell(bm, 8, 2), note])
+        print("\n" + render_table(
+            ["estimator", "PR-AUC", "ECE", "ΔAge MAE", "vs model"], trows,
+            aligns=["l", "r", "r", "r", "l"],
+            title="   MODEL vs BASELINES on the held-out donor:"))
+        print("   PR-AUC: fate accuracy, higher better (0-1).   "
+              "ECE: calibration error, lower better (<0.05 good).")
+        print("   ΔAge MAE: avg error in years, lower better.   "
+              "'model' is our tool; the rest are simple baselines to beat.")
+
+        # ---- plain-language verdict (so the numbers interpret themselves) ------- #
+        def rank_word(s):
+            return "STRONG" if s >= 0.6 else "moderate" if s >= 0.4 else "weak"
+        print("\n   WHAT THIS MEANS:")
+        print(f"     • Ranking (the tool's main job): {rank_word(spearman)}  "
+              f"(Spearman {cell(spearman,0,2).strip()}) — can it order perturbations correctly?")
+        print(f"     • ΔAge magnitude: MAE {cell(m_mae,0,1).strip()}  "
+              f"— {'beats' if beats_all['mae'] else 'ties/loses to'} the linear baseline (ridge)")
+        cov_word = ("good" if isinstance(coverage, float) and coverage >= 0.85
+                    else "off-target (in-distribution only)")
+        print(f"     • Calibration on this unseen donor: {cov_word}  "
+              f"(coverage {cell(coverage,0,2).strip()}, ECE {cell(m_ece,0,2).strip()})")
+        print("     Note: one held-out donor is noisy; the leave-one-donor-out run "
+              "(run_loocv.py) gives the honest mean±std.")
 
     print("\n[4/5] SAVE checkpoint ...")
     shutil.make_archive("cellfate_multi_bundle", "zip", f"{ROOT}/bundle")
     print(f"   bundle -> {os.path.abspath('cellfate_multi_bundle.zip')}")
-    print("\n[5/5] DONE. This is the leave-cell-line-out result — send back the [sanity]")
-    print("composition, the [check] line, the GATES, and the MODEL vs BASELINES table.")
+    print("\n[5/5] DONE.  (one held-out donor — run_loocv.py rotates all 6 for the honest mean±std)")
 
 
 if __name__ == "__main__":

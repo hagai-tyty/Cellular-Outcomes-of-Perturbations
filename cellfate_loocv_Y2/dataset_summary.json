@@ -1,0 +1,23 @@
+{
+  "n_samples": 42605,
+  "n_shards": 51,
+  "n_age_labeled": 42605,
+  "gene_panel_hash": "783f269a214aa972",
+  "panel_size": 2000,
+  "label_distribution": {
+    "safe": 22635,
+    "death": 1095,
+    "loss": 18875
+  },
+  "regimes": [
+    "holdout"
+  ],
+  "primary_regime": "holdout",
+  "split_sizes": {
+    "train": 852,
+    "calib": 115,
+    "val": 117,
+    "test": 21
+  },
+  "created_at": 1783707276.641193
+}
