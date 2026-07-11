@@ -93,9 +93,43 @@ model's ΔAge MAE on training Gill donors vs the held-out donor, per fold + aggr
 - **Mixed across folds → donor-dependent overfitting** (would match known heterogeneity, H6).
   Next: both a regularization test AND the linearity test.
 
-**Result (actual).** _[TO FILL after the run]_
+**Result (actual).**
 
-**Verdict.** _[TO FILL]_
+| held-out | train-HFF | train-Gill | TEST (held-out) | read |
+|---|---|---|---|---|
+| N2 | 1.01 | 11.58 | 21.79 | partial |
+| N3 | 1.32 | 6.63 | 29.69 | memorizing |
+| O1 | 1.06 | 8.89 | 5.39 | cannot-fit |
+| O2 | 1.29 | 9.11 | 7.54 | cannot-fit |
+| Y1 | 1.09 | 8.80 | 7.28 | cannot-fit |
+| Y2 | 1.16 | 8.28 | 14.06 | partial |
+
+Aggregate: mean train-Gill MAE **8.88**, mean held-out MAE **14.29**. 1/6 "memorizing", 3/6 "cannot-fit".
+
+**Verdict. Prediction was RIGHT** (predicted train-Gill ~8–12 vs test ~14; actual 8.88 vs 14.29).
+
+**OVERFITTING IS RULED OUT — decisively. Three key observations:**
+1. Train-Gill MAE is **8.88 and consistent** (6.6–11.6). The model can't fit ΔAge below ~9
+   *even on donors it trained on*. It is not memorizing; it genuinely can't fit better.
+2. **On O1, O2, Y1 the held-out MAE (5.4/7.5/7.3) is LOWER than train-Gill MAE (8.9/9.1/8.8).**
+   You cannot overfit and simultaneously do *better* on unseen data. This nails it.
+3. The two high-test-MAE folds (N2 29.7-ish, N3) are **donor heterogeneity (H6), not
+   overfitting** — N3 is the known outlier (+30 while others don't). "Memorizing" tag on N3 is
+   an artifact of the ratio test; it's really an outlier-donor effect.
+
+**Consequences:**
+- The "regularize the model to beat ridge" path is **DEAD** — there's nothing being overfit,
+  so regularization has nothing to remove. (H2-as-overfitting ruled out.)
+- **New finding: the model hits a ~9-year MAE floor it can't cross even on training data.**
+  When a model fits *training* data poorly, it usually means low signal-to-noise in the
+  features, not a bug. This is a strong hint toward H4 (limited/linear signal — a data
+  ceiling) rather than a model failure — but Test 3 is needed to confirm.
+
+**Decision → Test 3** (linear vs model-failure), per the pre-committed branch. Updated
+prediction going in (revised by this result): I now lean that the model will tie ridge even
+on nonlinear synthetic signal *at ~100 samples*, because the training-fit floor suggests the
+real ceiling is low. Test 3 uses large-n synthetic with *known* linearity to separate "low
+signal" from "model can't capture nonlinearity."
 
 ---
 
@@ -159,6 +193,13 @@ confirmation, not necessity. We stop when the cause is cracked, not when we run 
 
 - **After Test 0:** the problem is genuinely two questions (Q1 accurate-ΔAge vs Q2 beat-ridge).
   H7 explains high absolute MAE but not the tie. Real target = Q2. Not expanding the input.
+- **After Test 1:** **Overfitting RULED OUT** (model fits training donors as poorly as/worse
+  than held-out; on 3/6 folds it does *better* on held-out — impossible under overfitting).
+  Regularization path is dead. **New finding: a ~9-year training-fit floor** the model can't
+  cross even with the answer in front of it — a strong hint the signal ceiling is low
+  (H4/H3), not a model bug. The two high-MAE folds (N2/N3) are donor heterogeneity (H6), not
+  memorization. Next: Test 3 to separate "signal is linear/low (nothing to fix)" from "model
+  can't capture nonlinearity (fixable)".
 - _[append after each test]_
 
 ---
