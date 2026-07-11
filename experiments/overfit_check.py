@@ -63,15 +63,26 @@ def one_run(root: str) -> dict | None:
     }
 
 
+def resolve_root(name: str) -> str:
+    """Find a run folder whether it's at repo root or moved into runs/.
+    Lets you reorganize outputs into runs/ without breaking this script."""
+    from pathlib import Path
+    for base in (".", "runs", ".."):
+        p = Path(base) / name
+        if p.exists():
+            return str(p)
+    return name  # fall through (will error informatively downstream)
+
+
 def main() -> None:
     from cellfate.common.console import install_pretty_console, render_table
     install_pretty_console()
 
     # single-run mode if a folder is named explicitly
     if len(sys.argv) > 1 and not sys.argv[1].startswith("-"):
-        roots = [(sys.argv[1], sys.argv[1])]
+        roots = [(sys.argv[1], resolve_root(sys.argv[1]))]
     else:
-        roots = [(d, f"cellfate_loocv_{d}") for d in DONORS]
+        roots = [(d, resolve_root(f"cellfate_loocv_{d}")) for d in DONORS]
 
     print("\nΔAge OVERFITTING CHECK — model error on TRAINING Gill donors vs the HELD-OUT donor")
     print("(train-Gill << test  => memorizing; train-Gill ~= test  => genuinely can't fit better)")

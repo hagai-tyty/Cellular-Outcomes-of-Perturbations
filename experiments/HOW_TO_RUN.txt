@@ -1,0 +1,73 @@
+HOW TO RUN THE SCRIPTS IN THIS FOLDER
+=====================================
+
+Short version
+-------------
+Before running any script from `experiments\` or `local_runners\`, make sure you
+run it with the REPO ROOT (D:\cellfate-rx) as your working directory.
+
+The simplest way: copy the script to the repo root, then run it there.
+
+
+Why this matters
+----------------
+These scripts use RELATIVE paths. They expect to find, relative to wherever you
+launch them:
+  - src\            (the cellfate package)
+  - configs\        (clock + config files)
+  - cellfate_multi\, cellfate_loocv_*\, runs\...  (the run outputs they read)
+
+If you launch a script from inside `experiments\` (so the working directory is
+`...\experiments`), it looks for `src\`, `configs\`, and the output folders
+INSIDE `experiments\`, doesn't find them, and fails — usually with a
+ModuleNotFoundError or a "not found" message. Nothing is actually broken; it's
+just looking in the wrong place.
+
+
+Two ways to run correctly
+-------------------------
+Say you want to run `experiments\test5_ridge_gap.py`.
+
+Option A — copy to root (simplest):
+    1. Copy test5_ridge_gap.py into D:\cellfate-rx
+    2. In PowerShell:  cd D:\cellfate-rx
+    3. Run:            python test5_ridge_gap.py
+
+Option B — run in place, from root (no copy):
+    1. In PowerShell:  cd D:\cellfate-rx
+    2. Run:            python experiments\test5_ridge_gap.py
+
+Both work. The rule is not "the file must sit at root" — it's "your working
+directory (the PowerShell prompt) must be D:\cellfate-rx when you run it."
+
+
+Before EVERY run, check two things
+----------------------------------
+1. The virtual environment is active. The prompt must show (.venv-cellfate).
+   If it doesn't, activate it:
+       D:\.venv-cellfate\Scripts\Activate.ps1
+   (Skipping this gives "ModuleNotFoundError: pandas" — that's the venv, not a bug.)
+
+2. You are at the repo root. The prompt must show:
+       (.venv-cellfate) PS D:\cellfate-rx>
+
+
+Readers vs writers (why moving outputs is safe)
+-----------------------------------------------
+- WRITER scripts (run_multi_local.py, run_loocv.py, run_fate_local.py) CREATE
+  output folders. They write to wherever their ROOT variable points (currently the
+  repo root). So: run them, then move the new output folder into runs\ if you like.
+
+- READER scripts (overfit_check.py, test5_ridge_gap.py) READ existing output
+  folders. These two already look in BOTH the repo root AND runs\, so moving the
+  output folders into runs\ will NOT break them.
+
+  (diag.py and diag_harmonize.py are older and are NOT runs\-aware yet — if you run
+  them against moved outputs, pass the runs\... path explicitly.)
+
+
+Quick reference
+---------------
+  activate venv : D:\.venv-cellfate\Scripts\Activate.ps1
+  go to root    : cd D:\cellfate-rx
+  run a script  : python <script>.py        (copy it to root first, or use Option B)
