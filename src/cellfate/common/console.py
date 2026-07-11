@@ -60,13 +60,27 @@ class _PrettyHandler(logging.Handler):
             else:
                 render = _PRETTY.get(msg)
                 if render is not None:
-                    out.write(f"   \u2713 {render(fields)}\n")
+                    out.write(f"   [ok] {render(fields)}\n")
                 else:                                      # generic clean fallback (no raw JSON)
                     extra = "  ".join(f"{k}={v}" for k, v in fields.items())
-                    out.write(f"   \u00b7 {msg}{('  ' + extra) if extra else ''}\n")
+                    out.write(f"   - {msg}{('  ' + extra) if extra else ''}\n")
             out.flush()
         except Exception:  # never let logging crash the run
             self.handleError(record)
+
+
+def baselines_legend() -> str:
+    """One-line-each explanation of the baseline estimators + why they exist."""
+    return (
+        "\n   what each row is (our 'model' should beat them all):\n"
+        "     mean   = ignore everything, just guess the average   (the floor - beating this is the bare minimum)\n"
+        "     ridge  = a simple linear formula                     (the real baseline worth beating)\n"
+        "     x_only = uses the cell's state only, ignores treatment\n"
+        "     u_only = uses the treatment only, ignores the cell\n"
+        "     knn    = copies the most similar cells it has seen   (pure memorization)\n"
+        "     predict_control = just guesses 'no change from control'\n"
+        "   -> beating x_only AND u_only is the key: it proves the model uses the cell state\n"
+        "      AND the treatment TOGETHER, not just one of them.")
 
 
 def render_table(headers: list[str], rows: list[list[str]], title: str = "",
@@ -130,10 +144,10 @@ def _demo() -> None:
     log = get_logger("cellfate.data")
     tlog = get_logger("cellfate.training")
 
-    print("  (this is a PREVIEW of the console UI — no real run, numbers are illustrative)\n")
+    print("  (this is a PREVIEW of the console UI - no real run, numbers are illustrative)\n")
     print("[env] torch 2.5.1+cu121 | CUDA: True | GPU: NVIDIA GeForce GTX 1080")
     print("[data] Gill donors: ['N2','N3','O1','O2','Y1','Y2']  ->  holding out 'O1' as TEST")
-    print("\n[1/5] BUILD combined dataset (regime=holdout, holdout=O1, harmonize=ON) — streaming ...")
+    print("\n[1/5] BUILD combined dataset (regime=holdout, holdout=O1, harmonize=ON) - streaming ...")
     log_event(log, "panel.fit", n=2000, hash="783f269a214aa972")
     log_event(log, "harmonizer.fit", datasets=["gill_bulk", "hff_sc"], n_genes=5328,
               heldout=["O1"], heldout_controls_excluded=1)
@@ -155,7 +169,7 @@ def _demo() -> None:
         ["cell line", "cells", "where they went (train/val/calib/test)", "P(loss)", "ΔAge (yrs)"],
         srows, aligns=["l", "r", "l", "r", "r"]))
     print("   P(loss) = avg predicted chance the cell loses its identity (0-1).  "
-          "ΔAge = avg years younger(−)/older(+).")
+          "ΔAge = avg years younger(-)/older(+).")
     print("\n   >>> HELD-OUT (test) donor: 'O1'  <<<  (model never trains on it)")
 
     print("\n[2/5] TRAIN 5-member ensemble on cuda (leave-cell-line-out) ...")
@@ -166,12 +180,12 @@ def _demo() -> None:
     log_event(tlog, "bundle.done", n_members=5, temperature=0.5454)
     print("\n[check] trained on 33,688 cells | validated on 4,406 | calibrated on 4,490")
     print("        (temperature 0.55 = confidence rescaling; "
-          "conformal_q 9.68 = ±interval width in years)")
+          "conformal_q 9.68 = +/-interval width in years)")
 
     # ---- sample evaluation output ------------------------------------------ #
-    print("\n[3/5] EVALUATE  (held-out donor — model never saw it) ...")
+    print("\n[3/5] EVALUATE  (held-out donor - model never saw it) ...")
     print("\n   gates:  ranking PASS   calibration ----   coverage PASS   beats-all ----")
-    trows = [["model", "n/a", "0.274", "5.39", "← our model"],
+    trows = [["model", "n/a", "0.274", "5.39", "<- our model"],
              ["mean", "n/a", "0.280", "28.38", ""],
              ["ridge", "n/a", "0.108", "8.25", "model wins MAE"],
              ["x_only", "n/a", "0.105", "8.03", "model wins MAE"],
@@ -184,14 +198,15 @@ def _demo() -> None:
           "ECE: calibration error, lower better (<0.05 good).")
     print("   ΔAge MAE: avg error in years, lower better.   "
           "'model' is our tool; the rest are simple baselines to beat.")
+    print(baselines_legend())
     print("\n   WHAT THIS MEANS:")
-    print("     • Ranking (the tool's main job): STRONG  (Spearman 0.68) — "
+    print("     - Ranking (the tool's main job): STRONG  (Spearman 0.68) - "
           "can it order perturbations correctly?")
-    print("     • ΔAge magnitude: MAE 5.4  — beats the linear baseline (ridge) on this donor")
-    print("     • Calibration on this unseen donor: good  (coverage 0.81, ECE 0.27)")
+    print("     - ΔAge magnitude: MAE 5.4  - beats the linear baseline (ridge) on this donor")
+    print("     - Calibration on this unseen donor: good  (coverage 0.81, ECE 0.27)")
     print("     Note: one held-out donor is noisy; the leave-one-donor-out run "
-          "(run_loocv.py) gives the honest mean±std.")
-    print("\n[5/5] DONE.  (this was a preview — run 'python run_multi_local.py ...' for the real thing)")
+          "(run_loocv.py) gives the honest mean+/-std.")
+    print("\n[5/5] DONE.  (this was a preview - run 'python run_multi_local.py ...' for the real thing)")
 
 
 if __name__ == "__main__":

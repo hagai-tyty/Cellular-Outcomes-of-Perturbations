@@ -1,5 +1,5 @@
 """
-CellFate-Rx — Multi-donor training run (Gill + GSE242423), leave-cell-line-out.
+CellFate-Rx - Multi-donor training run (Gill + GSE242423), leave-cell-line-out.
 
 This is the publishable generalization test. It combines:
   * GSE242423 (Kundaje) : 1 single-cell line "HFF"  (D0->iPSC, ~volume)
@@ -124,7 +124,7 @@ def main() -> None:
     if os.path.isdir(ROOT):
         shutil.rmtree(ROOT)
     print(f"\n[1/5] BUILD combined dataset (regime={REGIME}, holdout={test_donor}, "
-          f"harmonize={'ON' if HARMONIZE else 'off'}) — streaming ...")
+          f"harmonize={'ON' if HARMONIZE else 'off'}) - streaming ...")
     # GSE242423 first so the gene panel is fit on rich single-cell data. HFF + the
     # non-test donors split at the cell level (train/val/calib); test_donor -> test.
     build_run(DataConfig(
@@ -174,7 +174,7 @@ def main() -> None:
         ["cell line", "cells", "where they went (train/val/calib/test)", "P(loss)", "ΔAge (yrs)"],
         srows, aligns=["l", "r", "l", "r", "r"]))
     print("   P(loss) = avg predicted chance the cell loses its identity (0-1).  "
-          "ΔAge = avg years younger(−)/older(+).")
+          "ΔAge = avg years younger(-)/older(+).")
     print(f"\n   >>> HELD-OUT (test) donor: '{test_donor}'  <<<  (model never trains on it)")
     if HARMONIZE:
         print("   [acceptance] with harmonization ON, the Gill donors' mean ΔAge above should now be")
@@ -191,10 +191,10 @@ def main() -> None:
     print(f"\n[check] trained on {m['n_train']:,} cells | validated on {m['n_val']:,} | "
           f"calibrated on {m['n_calib']:,}")
     print(f"        (temperature {m['temperature']:.2f} = confidence rescaling; "
-          f"conformal_q {list(m['conformal_q'].values())[0]:.2f} = ±interval width in years)")
+          f"conformal_q {list(m['conformal_q'].values())[0]:.2f} = +/-interval width in years)")
 
     from cellfate.evaluation.evaluate_cli import EvalConfig, evaluate
-    print("\n[3/5] EVALUATE  (held-out donor — model never saw it) ...")
+    print("\n[3/5] EVALUATE  (held-out donor - model never saw it) ...")
     gates = evaluate(EvalConfig(bundle=ROOT, dataset=ROOT, regimes=(REGIME,), out=f"{ROOT}/reports"))
     g = gates.get(REGIME, gates)
     _tick = lambda ok: "PASS" if ok else "----"   # noqa: E731
@@ -226,14 +226,14 @@ def main() -> None:
 
         def mark(model_v, base_v, lower_is_better):
             if not (math.isfinite(model_v) and math.isfinite(base_v)):
-                return "  · "
+                return "  - "
             win = (model_v < base_v) if lower_is_better else (model_v > base_v)
-            return " win" if win else "  · "
+            return " win" if win else "  - "
 
         # ---- readable table: model row on top, baselines below, aligned --------- #
         # ---- readable box table with a note column ----------------------------- #
         beats_all = {"pr": True, "mae": True}
-        trows = [["model", cell(m_pr, 6), cell(m_ece, 6), cell(m_mae, 8, 2), "← our model"]]
+        trows = [["model", cell(m_pr, 6), cell(m_ece, 6), cell(m_mae, 8, 2), "<- our model"]]
         for name in [e for e in ests if e != "model"]:
             d = R[name]
             bp, be, bm = prauc(d), d.get("ece", float("nan")), d.get("reg_mae", float("nan"))
@@ -253,26 +253,28 @@ def main() -> None:
               "ECE: calibration error, lower better (<0.05 good).")
         print("   ΔAge MAE: avg error in years, lower better.   "
               "'model' is our tool; the rest are simple baselines to beat.")
+        from cellfate.common.console import baselines_legend
+        print(baselines_legend())
 
         # ---- plain-language verdict (so the numbers interpret themselves) ------- #
         def rank_word(s):
             return "STRONG" if s >= 0.6 else "moderate" if s >= 0.4 else "weak"
         print("\n   WHAT THIS MEANS:")
-        print(f"     • Ranking (the tool's main job): {rank_word(spearman)}  "
-              f"(Spearman {cell(spearman,0,2).strip()}) — can it order perturbations correctly?")
-        print(f"     • ΔAge magnitude: MAE {cell(m_mae,0,1).strip()}  "
-              f"— {'beats' if beats_all['mae'] else 'ties/loses to'} the linear baseline (ridge)")
+        print(f"     - Ranking (the tool's main job): {rank_word(spearman)}  "
+              f"(Spearman {cell(spearman,0,2).strip()}) - can it order perturbations correctly?")
+        print(f"     - ΔAge magnitude: MAE {cell(m_mae,0,1).strip()}  "
+              f"- {'beats' if beats_all['mae'] else 'ties/loses to'} the linear baseline (ridge)")
         cov_word = ("good" if isinstance(coverage, float) and coverage >= 0.85
                     else "off-target (in-distribution only)")
-        print(f"     • Calibration on this unseen donor: {cov_word}  "
+        print(f"     - Calibration on this unseen donor: {cov_word}  "
               f"(coverage {cell(coverage,0,2).strip()}, ECE {cell(m_ece,0,2).strip()})")
         print("     Note: one held-out donor is noisy; the leave-one-donor-out run "
-              "(run_loocv.py) gives the honest mean±std.")
+              "(run_loocv.py) gives the honest mean+/-std.")
 
     print("\n[4/5] SAVE checkpoint ...")
     shutil.make_archive("cellfate_multi_bundle", "zip", f"{ROOT}/bundle")
     print(f"   bundle -> {os.path.abspath('cellfate_multi_bundle.zip')}")
-    print("\n[5/5] DONE.  (one held-out donor — run_loocv.py rotates all 6 for the honest mean±std)")
+    print("\n[5/5] DONE.  (one held-out donor - run_loocv.py rotates all 6 for the honest mean+/-std)")
 
 
 if __name__ == "__main__":
