@@ -300,6 +300,30 @@ signal genes are hidden. Consequences:
 
 Diagnosis unchanged and reinforced: nothing broken; the ΔAge tie is the linear-clock result.
 
+## Test 4.1 — HELD-OUT error vs gene coverage (the clean version of Test 4)  ✅ DONE
+
+**Hypothesis.** Measuring *generalization* (not training reproduction, which memorization
+masks), held-out MAE should degrade as we hide signal genes — the direct signature of the
+missing-genes effect.
+
+**Prediction (before running).** 100% → low test MAE; degrades smoothly toward the
+predict-mean floor as coverage drops; ~near floor by 25%.
+
+**Result (actual).** **Prediction RIGHT.** model TEST MAE: 100%→2.99, 75%→9.16, 47%→12.06,
+25%→12.95 (floor 12.80). Ridge tracks alongside (9.31/10.53/11.82/12.51). At 100% the model
+crushes ridge (2.99 vs 9.31) — architecture confirmed again.
+
+**Verdict — missing-genes effect DIRECTLY confirmed.** Held-out error rises toward the floor
+as signal genes are hidden: you cannot predict unseen rows from genes you can't see. Both
+model and ridge climb together — the ceiling is the *visible signal*, not the estimator.
+
+**Honest nuance that completes the picture.** At 47% synthetic coverage the model is ~at the
+floor (12.06), but the *real* model at ~47% gets ~9–14 — above ideal, below floor. Reason:
+**synthetic genes are independent** (hiding one loses it entirely), whereas **real genes are
+correlated**, so the visible 47% *partially proxies* the hidden 53%. Synthetic therefore
+*overestimates* the degradation; real is milder. This is exactly why real ΔAge MAE (~9–14)
+sits **between** the full-coverage ideal (~3) and the predict-mean floor (~13). All consistent.
+
 ---
 
 ## The decision tree (one glance)
