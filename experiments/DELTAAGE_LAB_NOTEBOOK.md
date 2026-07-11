@@ -517,6 +517,72 @@ includes 0).
 
 ---
 
+**Result (actual).** _[TO FILL — user runs test7_ranking.py]_
+
+**Verdict.** _[TO FILL]_
+
+### Test 7 RESULT (user ran it)
+
+| fold | model_RES | model_dAge | ridge_dAge |
+|---|---|---|---|
+| N2 | +0.742 | +0.910 | +0.957 |
+| N3 | +0.804 | +0.909 | +0.925 |
+| O1 | +0.684 | +0.990 | +0.960 |
+| O2 | +0.507 | +0.970 | +0.952 |
+| Y1 | +0.706 | +0.960 | +0.951 |
+| Y2 | +0.674 | +0.947 | +0.983 |
+
+Aggregate Spearman: **model_RES 0.686 ± 0.091**, **model_dAge 0.948 ± 0.030**,
+**ridge_dAge 0.955 ± 0.017**. Paired (model_RES − ridge_dAge) = −0.268, 95% CI
+[−0.381, −0.155]. model_RES loses on 6/6 folds.
+
+**Verdict — prediction WRONG (I said tied; it's clearly worse). BIG finding.** Two facts:
+1. **ridge_dAge (0.955) beats model_RES (0.686) on ALL 6 folds** — a simple linear ΔAge sort
+   ranks far better than the RES score.
+2. **model_dAge (0.948) ≈ ridge_dAge** — ranking by the model's OWN ΔAge is also ~0.95. So the
+   model's ΔAge predictions rank beautifully; **it is RES that destroys the ranking**, dragging
+   0.95 down to 0.69.
+
+So the "0.69 headline" is the RES ranking — the WORST of the three. The model's predictions are
+fine; the RES *score* is the problem. RES = φ·S^k·g·exp(−λ·P_loss) multiplies ΔAge by fate
+terms, and that scrambles the clean ΔAge ordering.
+
+**CRUCIAL caveat before concluding RES is "bad".** Test 7 scores every ranking against **true
+ΔAge only** (quality = −ΔAge). But RES is deliberately NOT trying to rank by ΔAge alone — it
+ranks by **SAFE rejuvenation** (rejuvenating AND safe), down-weighting cells that rejuvenate
+but are unsafe. So Test 7 may be penalizing RES for doing its job — measuring it against a
+target it was explicitly designed NOT to optimize. Two competing explanations, must
+distinguish: (a) RES genuinely adds noise and is bad for ranking; (b) RES optimizes a
+different, better objective (safe rejuvenation) and Test 7 used the wrong ground truth. → Test 7.1.
+
+### Test 7.1 — score the rankings against SAFE REJUVENATION (RES's actual objective)  ⏳
+
+**Hypothesis.** RES ranks by *safe rejuvenation*, not raw ΔAge. If we score the three rankings
+against a ground truth that rewards cells that are BOTH rejuvenating AND safe (not just
+most-negative ΔAge), RES may win — because it deliberately penalizes unsafe-but-rejuvenating
+cells that a pure ΔAge sort ranks too high. If RES still loses even against safe-rejuvenation,
+RES genuinely doesn't work and we should rank by ΔAge.
+
+**Prediction (before running).** Genuinely uncertain, but my honest lean: **RES will STILL lose (or at best tie) even against safe-rejuvenation.** Two reasons: (1) the held-out Gill cells may be mostly one fate class (little "unsafe" to exploit → degenerates to Test 7), and (2) the model's OUT-OF-DONOR fate calibration was poor in LOOCV (ECE 0.26), so RES's fate weighting likely injects noise rather than aligning with true safety. If RES loses here too → "RES doesn't earn its keep for ranking; rank by ΔAge." If RES wins → it does its job and Test 7 used the wrong target. (I've been wrong repeatedly here, so low confidence.)
+
+**Method.** Under leave-one-donor-out, define a "safe-rejuvenation quality" ground truth on the
+held-out cells — e.g. reward = rejuvenation magnitude but ZEROED/penalized for cells whose true
+fate is loss/death (unsafe). Rank the same three scores (model_RES, model_dAge, ridge_dAge)
+against this target; report per-fold + aggregate Spearman + paired (model_RES − best_ΔAge_sort).
+Try a couple of reasonable safe-rejuvenation definitions to avoid gaming one.
+
+**Decision branches (before data):**
+- **RES beats the ΔAge sorts against safe-rejuvenation** → RES does its job; Test 7 was unfair
+  (wrong target); report the *right* metric. Model earns its keep on the objective it targets.
+- **RES still loses even against safe-rejuvenation** → RES genuinely doesn't help ranking →
+  honest finding: rank by ΔAge, reconsider/redesign or drop RES.
+
+**Result (actual).** _[TO FILL]_
+
+**Verdict.** _[TO FILL]_
+
+---
+
 ## The decision tree (one glance)
 
 ```
