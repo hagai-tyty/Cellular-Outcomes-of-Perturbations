@@ -896,6 +896,33 @@ the model's STRONGEST claim to earning its keep, and a linear baseline does NOT 
 
 ---
 
+## Test 11 RESULT (input ablation) — perturbation adds ~nothing; the interaction isn't load-bearing HERE.
+
+ΔAge MAE x_only vs x+u (nearly identical, diffs 0.1–0.4 = noise):
+N2 21.80/21.59 · N3 26.59/26.27 · O1 8.03/8.25 · O2 8.90/9.31 · Y1 6.54/6.44 · Y2 12.85/12.45.
+u_only is TERRIBLE (17–51) → for ΔAge all signal is in CELL STATE, ~none in perturbation.
+Fate PR-AUC x_only vs x+u: IDENTICAL to 3 decimals every fold (0.997/0.997, 0.639/0.639, ...).
+
+**Reading: the state×perturbation INTERACTION is NOT load-bearing on this data.** cell+perturbation
+does no better than cell alone, for BOTH targets. Undercuts the "jointly models cell×perturbation"
+framing.
+
+**Structural cause (the LinAlgWarning): the perturbation is ~CONSTANT.** Essentially every
+reprogrammed cell got OSKM; which-factors/dose/time barely varies → ill-conditioned u matrix,
+u_only can't predict. If everyone gets the same treatment, treatment can't explain DIFFERENCES
+between cells; cell state (trajectory position) carries all discriminative signal.
+
+**Honest interpretation (nuanced, important for the pitch):** NOT "modeling perturbations is
+worthless" — rather, on THIS dataset the perturbation doesn't VARY, so the interaction has nothing
+to exploit and cell-state alone suffices. The model was BUILT for dose-response ACROSS varied
+perturbations, but the validation data (HFF+Gill) is "OSKM applied, sampled over time" — the
+perturbation dimension it was designed to exploit IS NOT VARIED in the data. So the model's core
+thesis (predict outcomes across different perturbations) is UNTESTED here; its one edge (fate
+discrimination) rides on CELL STATE, not the perturbation interaction. Data–capability mismatch,
+honest to state.
+
+---
+
 ## The decision tree (one glance)
 
 ```
