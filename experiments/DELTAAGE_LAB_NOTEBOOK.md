@@ -856,6 +856,46 @@ re-run the RES-isolation with Platt-recalibrated fate probabilities.
 
 ---
 
+## Test 8 RESULT (fate: model vs logistic regression) — read past the "tied" verdict.
+
+| fold | model PR-AUC | logreg PR-AUC | margin |
+|---|---|---|---|
+| N3 | 0.997 | 0.997 | tie |
+| O1 | 1.000 | 0.968 | +0.032 |
+| O2 | 1.000 | 0.984 | +0.016 |
+| Y1 | 0.961 | 0.636 | **+0.325 (model wins big)** |
+| Y2 | 1.000 | 0.964 | +0.036 |
+
+Aggregate model 0.992 vs logreg 0.910 (+0.082). Paired CI [−0.087,+0.251] includes 0 → script
+says "tied". **But reading the folds: the model WINS or TIES on all 5, never loses.** The
+non-significance is the WIDE CI on n=5 with 4 folds SATURATED (~1.0, task easy there), not a
+genuine tie.
+
+**The Y1 fold is the tell:** on the HARD fold, logreg COLLAPSES to 0.636 while the neural net
+holds at 0.961. When fate is easy both saturate; when it gets hard, the LINEAR model breaks and
+the net does NOT — the signature of the net capturing nonlinear structure logreg can't. This is
+the OPPOSITE of the ΔAge/ranking story (where simple baselines matched/beat the model everywhere).
+
+**Honest call:** NOT a statistically significant win (5 folds, saturation, ~21 pts/fold), so cannot
+claim "model significantly beats logreg on fate." BUT the direction is genuinely favorable — wins/
+ties every fold, never loses, clearly beats logreg on the one hard fold. **Fate discrimination is
+the model's STRONGEST claim to earning its keep, and a linear baseline does NOT cleanly match it**
+(unlike ΔAge). Caveat: rides heavily on Y1; more donors would confirm or wash it out.
+
+## WHERE THE INVESTIGATION STANDS (all tests so far)
+- ΔAge magnitude: linear; ridge optimal; NN ties ridge (proven, incl. trees/kernels/GenBio-lit).
+  In-dist MAE ~4 (good); ~14 aggregate was averaging in 2 atypical donors (N2/N3). Not a model win.
+- Ranking: rank by ΔAge (~0.95); RES formula HURTS ranking (7.2), cause = fate MIScalibration.
+- Fate DISCRIMINATION: GOOD (~0.93 in-dist on thousands; holds out-of-donor) and the ONE place the
+  NN leans better than linear (Test 8, Y1). The model's best claim.
+- Fate CALIBRATION: bad (ECE ~0.28) but ~half-fixable by Platt recal (8.2).
+- Main limitation: generalization to ATYPICAL donors from a 6-donor cohort (heterogeneity), NOT
+  in-distribution capability.
+- OPEN: Test 11 (input ablation), Test 9/9.1 (embeddings), Test 7.3 (recalibrated-RES retest),
+  Test 10 (full transcriptome, pending target def).
+
+---
+
 ## The decision tree (one glance)
 
 ```
