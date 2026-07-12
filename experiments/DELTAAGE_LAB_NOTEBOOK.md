@@ -643,9 +643,26 @@ per-fold + aggregate Spearman + paired (B − A) 95% CI. Same cells, same ΔAge,
 - **B > A (RES helps when fed good ΔAge)** → RES formula is sound; Test 7's loss was the model's
   worse ΔAge, not RES → pair RES with the better ΔAge and re-evaluate. (Would flip the verdict.)
 
-**Result (actual).** _[TO FILL — user runs test7_2_res_isolation.py]_
+### Test 7.2 RESULT (user ran it)
 
-**Verdict.** _[TO FILL]_
+Same ΔAge (ridge) fed to both; only the RES transform differs.
+
+| target | A = ridge ΔAge | B = RES(ridge ΔAge) | paired (B−A) 95% CI | verdict |
+|---|---|---|---|---|
+| vs TRUE ΔAge | 0.955 | 0.654 | −0.300 [−0.473,−0.128] | **RES WORSE (6/6 folds)** |
+| vs SAFE-REJUV | 0.295 | 0.116 | −0.179 [−0.420,+0.061] | tied (noise); RES wins N3/Y1 only |
+
+**Verdict — prediction RIGHT: the RES FORMULA ITSELF degrades ranking.** With ΔAge held
+identical, wrapping it in RES drops Spearman-vs-true-ΔAge from 0.955 to 0.654 on ALL 6 folds
+(CI excludes 0). Clean isolation Test 7 could not do: UNAMBIGUOUSLY the RES transform, not the
+ΔAge feeding it. Against safe-rejuvenation RES is a wash (CI includes 0, wins N3/Y1), so RES
+adds no value on either target and actively hurts pure-ΔAge ranking.
+
+**RES ranking question CLOSED (Tests 7 + 7.1 + 7.2 converge):** RES multiplies ΔAge by fate
+terms (S, P_loss); those fate predictions are unreliable out-of-donor (ECE 0.26), so the
+multiplication SCRAMBLES a clean ΔAge ordering. RES takes good information and makes it worse.
+**Honest action: for ranking, use ΔAge directly (Spearman ~0.95 vs true ΔAge); do NOT use RES
+for ranking.** Salvage depends on whether fate is recalibratable (Test 8.2).
 
 ---
 
