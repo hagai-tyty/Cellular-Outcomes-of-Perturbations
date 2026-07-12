@@ -577,9 +577,178 @@ Try a couple of reasonable safe-rejuvenation definitions to avoid gaming one.
 - **RES still loses even against safe-rejuvenation** → RES genuinely doesn't help ranking →
   honest finding: rank by ΔAge, reconsider/redesign or drop RES.
 
-**Result (actual).** _[TO FILL]_
+### Test 7.1 RESULT (user ran it)
+
+Fate composition of held-out age-valid cells (unsafe = loss/death): N2 0/21, N3 3/21,
+O1 4/21, O2 5/21, Y1 8/19, Y2 5/21 — so most folds DO have unsafe cells (safety can matter).
+
+| target | model_RES | model_dAge | ridge_dAge | paired (RES−ridge) 95% CI |
+|---|---|---|---|---|
+| GATED | −0.005 | 0.292 | 0.295 | −0.300 [−0.567,−0.034] RES WORSE |
+| PENALIZED | 0.137 | 0.414 | 0.414 | −0.277 [−0.525,−0.030] RES WORSE |
+
+precision@5 (top-5 truly safe & rejuvenating): RES 0.20, model_dAge 0.27, ridge_dAge 0.30.
+
+**Verdict — prediction RIGHT: RES loses even against safe-rejuvenation, its OWN objective.**
+The Test 7 caveat is resolved: RES isn't losing due to a wrong target; it genuinely doesn't
+help ranking. **But the per-fold pattern PINPOINTS the cause:** RES quality tracks INVERSELY
+with the number of unsafe cells —
+  N2(0 unsafe): +0.742 · N3(3): +0.676 · O1(4): −0.257 · O2(5): −0.431 · Y1(8): −0.534.
+The MORE unsafe cells a fold has, the WORSE RES does. If the model's fate predictions were
+right, RES should get BETTER with more unsafe cells to correctly penalize. The opposite means
+**the model's fate predictions are WRONG on held-out donors — RES down-weights the wrong
+cells**, scrambling the ranking exactly when safety matters. Consistent with the LOOCV
+out-of-donor calibration failure (ECE 0.26).
+
+**Conclusions (two, both evidenced):**
+1. **RES does NOT earn its keep for ranking** — worse than a plain ΔAge sort against BOTH raw
+   ΔAge (Test 7) and safe-rejuvenation (Test 7.1), on ~every fold, by Spearman AND precision@5.
+   The RES machinery SUBTRACTS value. Honest action: for ranking, rank by ΔAge (model or ridge,
+   ~equal); reconsider/redesign RES.
+2. **Root cause = the fate predictions, not the RES formula per se.** RES is only as good as the
+   fate probabilities feeding it, and those don't generalize across donors. This PREVIEWS the
+   next question (does fate classification work?) — early signal: not well enough out-of-donor
+   to be useful in RES. → run the fate-classification test next.
+
+**Reframes the headline honestly:** the defensible ranking number is ranking-by-ΔAge (~0.95 vs
+true ΔAge, ~0.30–0.41 vs safe-rejuvenation), NOT the RES 0.69. The model's *value* narrows to:
+calibrated-in-distribution fate + ΔAge that matches linear + honest uncertainty — with RES and
+out-of-donor fate flagged as not-yet-working.
+
+---
+
+## Test 7.2 — RES formula vs plain ΔAge, SAME ΔAge input (clean isolation, user's design)  ⏳
+
+**Why (user).** Test 7 had a confound: model_RES used the MODEL's ΔAge while ridge_dAge used
+RIDGE's ΔAge, so two things varied (the RES formula AND ΔAge quality). Fix: hold ΔAge constant.
+Feed the SAME ΔAge (ridge's — the best predictor, Test 6, ranks ~0.95) into both:
+  A = rank by that ΔAge directly.
+  B = rank by RES(that same ΔAge, model fate S/P_loss, uncertainty, OOD).
+Now the ONLY difference is the RES formula. If B loses to A, it is unambiguously the RES
+formula hurting — not a ΔAge-quality difference.
+
+**Prediction (before running, on record).** B (RES) loses to A — the RES formula, fed even a
+GOOD ΔAge, still hurts ranking, because the model's out-of-donor fate predictions inject noise
+(matches Test 7.1's pattern: RES worse where more unsafe cells). If B ties/wins, that FLIPS the
+earlier verdict: RES is fine and Test 7's loss was just the model's worse ΔAge feeding it.
+
+**Method.** Per held-out donor, build A = ridge ΔAge, B = RES(ridge ΔAge + model fate +
+uncertainty + OOD). Score both against (i) true ΔAge and (ii) safe-rejuvenation (gated). Report
+per-fold + aggregate Spearman + paired (B − A) 95% CI. Same cells, same ΔAge, one variable.
+
+**Decision branches (before data):**
+- **B < A (RES hurts even with good ΔAge)** → the RES FORMULA degrades ranking → for ranking,
+  use ΔAge directly; RES needs redesign (or is for a different purpose than ranking).
+- **B ≈ A** → RES neither helps nor hurts ranking → it is redundant for ranking; ΔAge suffices.
+- **B > A (RES helps when fed good ΔAge)** → RES formula is sound; Test 7's loss was the model's
+  worse ΔAge, not RES → pair RES with the better ΔAge and re-evaluate. (Would flip the verdict.)
+
+**Result (actual).** _[TO FILL — user runs test7_2_res_isolation.py]_
 
 **Verdict.** _[TO FILL]_
+
+---
+
+## TESTS 8-12 — does the model earn its keep, do embeddings help, and where do failures come from?
+
+**Numbering rule:** a genuinely different question gets the next whole integer; a zoom-in on an existing question gets a decimal under it. Map to subcommands: Test 8 = `fate_baseline` (8.1 = `indist_vs_donor`, 8.2 = `fate_cal_disc`); Test 9 = `string_dage` (9.1 = `string_fate`); Test 10 = full-transcriptome [pending]; Test 11 = `input_ablation`; Test 12 = `per_donor`.
+
+  ⏳
+
+**Context / honest guardrails baked in:**
+- **Data-scale law (critical):** more-flexible models need MORE data to beat linear. Beating
+  ridge on huge data (GenBio 2026, 4 lines × 2000 perts) does NOT imply beating it on 6 donors
+  — the opposite is typical (flexibility overfits noise at small n; Test 6 showed exactly this).
+  So NONE of these tests are assumed wins; each is a real question.
+- **STRING unreachable from build env** → using **gene2vec** (200-dim, co-expression-based,
+  external/frozen, covers 94% of panel) as a proxy for the prior-knowledge-embedding principle.
+  Not identical to STRING (protein-interaction); if a signal appears, confirm with STRING later.
+- **Epistemic-extrapolation warning:** the clock was trained on NATURAL aging; reprogramming is
+  EXTREME rejuvenation outside its training domain — read all clock-based results with that caveat.
+
+### Test 8 — does the model's FATE classification beat a simple baseline (logistic regression)?
+**Hypothesis.** Fate (safe/loss/death) may be where the NN earns its keep (classification,
+possibly pathway/interaction-dependent) — or it may only tie logistic regression, esp.
+out-of-donor (LOOCV ECE was 0.26). **Prediction:** model ~ties logistic regression on held-out
+donors (maybe wins in-distribution); no decisive out-of-donor win. **Branches:** model beats
+LogReg beyond noise → fate is a real contribution; tie → fate head not earning its keep vs linear.
+
+### Test 10 — can RIDGE predict the FULL transcriptome response of reprogramming? (feasibility)  [PENDING target def]
+**Hypothesis.** The GenBio-style task (predict all genes' change) is where nonlinearity CAN help
+— but first, can linear ridge even do it, as the baseline? **Prediction:** ridge captures the
+bulk linear response (decent global R²) but misses the sparse/nonlinear DEGs. **Branches:** sets
+the baseline that 9.3 (embeddings) must beat. NOTE: target definition needs care (predict
+perturbed-vs-control expression change); flag if data structure doesn't support clean pairing.
+
+### Test 9 — do gene embeddings (gene2vec) help on ΔAge? (ridge-raw vs ridge-emb vs MLP-emb)
+**Hypothesis.** ΔAge is LINEAR (proven). Embeddings encode gene INTERACTIONS, which a linear
+target ignores — so embeddings likely add nothing; a linear projection X@E is strictly lossy vs
+raw X, and MLP-on-emb risks overfitting at n≈100. **Prediction (strong):** NO improvement on
+ΔAge; ridge-raw ≥ both embedding variants. **Branches:** if embeddings DON'T help → confirms
+ΔAge signal is purely linear, interaction structure irrelevant (clean finding). If they DO →
+surprising, investigate.
+
+### Test 9.1 — do gene embeddings help FATE? (logreg-raw vs logreg-emb vs MLP-emb)  [zoom-in on Test 9]
+**Hypothesis.** Fate is classification, plausibly interaction-dependent — the place embeddings
+COULD help if anywhere. **Prediction (uncertain, low confidence):** slight help at best;
+out-of-donor generalization likely still limited by 6 donors. **Branches:** embeddings improve
+held-out fate beyond noise → real, field-consistent lever → pursue STRING specifically; no help
+→ fate limited by data/donors, not representation.
+
+### Test 10.1 — do gene embeddings help FULL transcriptome response? (zoom-in on Test 10)  [PENDING]
+**Hypothesis.** This is the task where the 2026 literature shows embeddings win — AT SCALE.
+**Prediction:** on 6 donors, embeddings give little/no gain over ridge (data-scale law); a gain
+here would be the strongest pro-embedding signal. **Branches:** as 9.1/9.2. Depends on 8.2 target.
+
+**Results (actual).** _[TO FILL — user runs test_suite.py <subcommand>]_
+
+---
+
+## FAILURE-ISOLATION TESTS — isolate ONE factor at a time, across all 6 folds  ⏳
+
+**Principle:** the earlier tests MEASURE gaps; these PINPOINT causes. Each holds everything
+fixed and varies exactly ONE thing, so a moving number names its own cause. Every test reports
+per-fold + aggregate across all 6 LODO folds and states explicitly WHAT HELPED / WHAT DIDN'T.
+
+### Test 8.1 — IN-DISTRIBUTION vs OUT-OF-DONOR (zoom-in: fate/ΔAge failure = fitting or generalization?)
+**Vary only: what is held out.** Compare model & baselines on (a) held-out CELLS from training
+donors (in-distribution) vs (b) held-out DONOR (LODO), for BOTH fate and ΔAge.
+**Question:** is the failure in *fitting* (bad even in-distribution) or *generalization* (fine
+in-dist, breaks across donors)? **Prediction:** ΔAge ~same both ways (linear, no gen. gap);
+fate GOOD in-distribution but COLLAPSES out-of-donor (the ECE 0.26 story). **What it pinpoints:**
+if fate is in-dist-good/out-of-donor-bad → the problem is DONOR SHIFT, not the fate head design
+→ fix = more donors / donor adaptation, not architecture.
+
+### Test 11 — INPUT ABLATION (does the model use cell×perturbation together?)  [distinct question]
+**Vary only: what the model is given.** For fate & ΔAge, compare a baseline trained on
+{cell-state only} vs {perturbation only} vs {both}. **Question:** does using BOTH beat using
+either alone? (If not, the "joint" modeling adds nothing.) **Prediction:** perturbation is ~fixed
+(OSKM) so u_only is weak; x_only ~ x+u → the model rides cell state, perturbation adds little
+here. **What it pinpoints:** whether the state×perturbation interaction — the model's core thesis
+— is actually load-bearing on THIS data, per fold.
+
+### Test 8.2 — CALIBRATION vs DISCRIMINATION for fate (zoom-in: which kind of fate failure?)
+**Vary only: the metric axis.** For fate, separately measure DISCRIMINATION (PR-AUC / ROC — does
+it rank safe vs unsafe correctly?) and CALIBRATION (ECE / reliability — are the probabilities
+right?), in-dist and out-of-donor. **Question:** does the fate head rank correctly but report
+miscalibrated probabilities (fixable by recalibration), or is the ranking itself bad (needs a
+better classifier)? **Prediction:** decent discrimination, poor calibration out-of-donor →
+recalibration (temperature/Platt per donor) is the cheap fix; RES could then use recalibrated
+fate. **What it pinpoints:** whether RES's failure (Test 7.1) is fixable by fate recalibration
+without touching the model.
+
+### Test 12 — PER-DONOR JACKKNIFE (are aggregates robust or hostage to specific donors?)  [distinct question]
+**Vary only: which donor is excluded from the aggregate.** Recompute the headline metrics
+dropping one donor at a time (jackknife over the 6). **Question:** are the poor aggregates driven
+by 1-2 outlier donors (e.g. N3, +30 ΔAge, 0 unsafe cells) or broadly true? **Prediction:** N3 (and
+maybe N2) dominate the bad numbers; dropping them changes the story. **What it pinpoints:** whether
+conclusions are robust or hostage to specific donors — essential before any claim in the writeup.
+
+**Cross-cutting reporting rule:** every test prints a "WHAT HELPED / WHAT DIDN'T" line per factor,
+and a per-fold table so no aggregate hides a fold-level effect. Guardrail unchanged: each run once,
+nothing tuned against results.
+
+**Results (actual).** _[TO FILL — user runs test_suite.py <subcommand>]_
 
 ---
 
