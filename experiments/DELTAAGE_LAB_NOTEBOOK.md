@@ -769,6 +769,66 @@ nothing tuned against results.
 
 ---
 
+## Test 12 RESULT (per-donor jackknife) — read from RAW per-fold numbers, not the script verdict
+
+Per-fold: ΔAge MAE N2=21.79 N3=29.69 O1=5.39 O2=7.54 Y1=7.28 Y2=14.06 (ALL=14.29).
+Fate PR-AUC N2=n/a(0 unsafe) N3=0.997 O1=1.000 O2=1.000 Y1=0.961 Y2=1.000.
+
+**ΔAge MAE is bimodal, inflated by 2 atypical donors.** Good folds cluster 5.4–7.5; bad folds
+N2=21.8, N3=29.7 are 3–4× worse. Dropping N3 → 11.21 (−22% off the 14.29 headline); dropping N2
+→ 12.79; dropping a GOOD fold makes it worse (drop O1 → 16.07). So the "MAE~14" story is really
+"~6 for typical donors, ~25 for the 2 atypical ones (N2 zero-unsafe, N3 +30 outlier)." Quantified
+donor-heterogeneity (H6): remove the 2 weird donors and MAE ≈ 10, not 14.
+
+**SURPRISE — fate DISCRIMINATION is near-perfect out-of-donor (PR-AUC ~0.96–1.00 every fold).**
+This PARTIALLY CONTRADICTS the earlier "fate fails out-of-donor" claim. High PR-AUC means the
+classifier RANKS safe-vs-unsafe almost perfectly on held-out donors — discrimination is NOT the
+problem. (Caveat: ~21 cells/fold with few unsafe → PR-AUC=1.0 is easy to hit and may overstate;
+the PATTERN of strong discrimination is still real.) This means the fate issue (ECE 0.26) is most
+likely CALIBRATION, not discrimination — fate ranks right but reports miscalibrated probabilities.
+Strong preview of Test 8.2; and it means RES's failure (multiplying by fate) is plausibly fixable
+by RECALIBRATING fate, since the fate ranking it needs is actually good.
+
+**Process note (user correction):** read effect sizes from raw per-fold numbers; the script's
+one-line verdict uses a hardcoded threshold and can mislead. Applies to all tests.
+
+---
+
+## Test 8.1 RESULT (in-dist vs out-of-donor) — read from raw numbers. CLARIFYING.
+
+| fold | fate PR in-dist | ΔAge MAE in-dist | fate PR out-donor | ΔAge MAE out-donor |
+|---|---|---|---|---|
+| N2 | 0.940 | 3.21 | n/a | 21.79 |
+| N3 | 0.931 | 4.36 | 0.997 | 29.69 |
+| O1 | 0.929 | 4.53 | 1.000 | 5.39 |
+| O2 | 0.933 | 4.44 | 1.000 | 7.54 |
+| Y1 | 0.934 | 4.00 | 0.961 | 7.28 |
+| Y2 | 0.935 | 4.46 | 1.000 | 14.06 |
+
+**CORRECTION to earlier claims (user forced this by checking data scale):**
+1. **Fate DISCRIMINATION is genuinely GOOD** — in-dist PR-AUC 0.929–0.940 on THOUSANDS of held-out
+   HFF cells (not 21). Steady ~0.93. And it does NOT collapse out-of-donor (0.96–1.00). So the
+   earlier "fate fails out-of-donor" narrative was WRONG. Fate discriminates safe-vs-unsafe well,
+   confirmed at real sample volume. (The out-of-donor 1.0 is mildly inflated by ~21 pts, but the
+   in-dist 0.93 is trustworthy.)
+2. **ΔAge FITTING is genuinely GOOD** — in-dist MAE ~4 years, tight (3.2–4.5) across all folds. The
+   model predicts ΔAge well when test cells resemble training. The "~14 MAE" we kept quoting is an
+   ARTIFACT of averaging in donor-generalization failure on 2 atypical donors.
+
+**The clean fitting-vs-generalization split (what this test was for):**
+- Fitting: FINE (ΔAge ~4 in-dist; fate ~0.93 in-dist).
+- Generalization: the real limit — out-of-donor ΔAge is ~5–7 for TYPICAL donors (O1/O2/Y1) but
+  22–30 for ATYPICAL ones (N2 zero-unsafe, N3 +30 outlier). So the model is GOOD on typical
+  held-out donors and BREAKS on the 2 weird ones. Donor-heterogeneity (H6), quantified.
+
+**Reframe of the whole picture (more accurate + more positive):** the model WORKS in-distribution
+(fate discrimination ~0.93, ΔAge ~4); its weakness is generalizing to ATYPICAL donors from a
+6-donor cohort. That is a data-scale/heterogeneity story, not "the model can't predict." Unchanged:
+ridge matches model on ΔAge (linear target); RES hurts ranking (but now known NOT to be a fate-
+discrimination problem → must be fate CALIBRATION → Test 8.2).
+
+---
+
 ## The decision tree (one glance)
 
 ```
