@@ -829,6 +829,33 @@ discrimination problem → must be fate CALIBRATION → Test 8.2).
 
 ---
 
+## Test 8.2 RESULT (fate discrimination vs calibration) — diagnosis CONFIRMED, fixable kind.
+
+| fold | ROC-AUC (rank) | ECE raw (calib) | ECE recal | reduction |
+|---|---|---|---|---|
+| N3 | 0.981 | 0.275 | 0.145 | 47% |
+| O1 | 1.000 | 0.316 | 0.147 | 53% |
+| O2 | 1.000 | 0.271 | 0.099 | 63% |
+| Y1 | 0.932 | 0.271 | 0.243 | 10% (stubborn) |
+| Y2 | 1.000 | 0.270 | 0.132 | 51% |
+
+**Confirmed (as Test 8.1 predicted): fate RANKS well but is MISCALIBRATED.** ROC-AUC 0.93–1.00
+(near-perfect discrimination) but ECE 0.27–0.32 (probabilities ~30% off). The two are decoupled →
+the classic "good discrimination, bad calibration" pattern = the CHEAP-to-fix kind (recalibration),
+NOT the "need a better classifier" kind.
+
+**Platt recalibration roughly HALVES ECE on 4/5 folds** (0.28→0.13 typical; Y1 barely moves).
+Doesn't reach the 0.05 bar, but a trivial post-hoc fix that touches nothing in the model cuts
+calibration error ~half. Caveat: ~21 out-of-donor pts/fold → noisy; Y1 stubborn = not magic.
+
+**UNLOCKS a real path to salvage RES (first in a while):** RES hurt ranking (7.2) by multiplying
+ΔAge by fate probabilities; those probs are miscalibrated (8.2); recalibration halves the error.
+So **recalibrate fate BEFORE feeding RES** might stop RES scrambling the ranking. PLAUSIBLE, not
+proven (recal only halved error; must re-test 7.2 with recalibrated fate). Concrete next step:
+re-run the RES-isolation with Platt-recalibrated fate probabilities.
+
+---
+
 ## The decision tree (one glance)
 
 ```
