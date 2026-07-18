@@ -1311,9 +1311,65 @@ high-mu folds. Moderate confidence — my last four predictions in this thread w
   model.
 - **MIXED** → read per-fold: high `frac true<0` + low `frac pred<0` = bias; both low = truth.
 
-**Result (actual).** _[TO FILL — user runs test7_4_3_bias_or_truth.py]_
+**Result (actual).** Ran on real data, all 6 folds.
 
-**Verdict.** _[TO FILL]_
+| fold | med TRUE | med PRED | **error** | offset(calib) | frac true<0 | spearman | appr PRED | appr ORACLE |
+|---|---|---|---|---|---|---|---|---|
+| N2 | −11.35 | +8.76 | **+20.11** | −0.02 | 0.76 | +0.957 | 3/21 | 4/21 |
+| N3 | +29.00 | +4.60 | **−24.40** | −0.01 | 0.00 | +0.925 | **7/21** | **0/21** |
+| O1 | +12.43 | +18.14 | **+5.71** | −0.06 | 0.24 | +0.960 | 1/21 | 2/21 |
+| O2 | +7.40 | +20.44 | **+13.04** | +0.00 | 0.24 | +0.952 | 0/21 | 3/21 |
+| Y1 | +15.96 | +11.69 | **−4.27** | −0.06 | 0.32 | +0.951 | 2/19 | 2/19 |
+| Y2 | +29.92 | +21.12 | **−8.80** | −0.05 | 0.14 | +0.983 | 1/21 | 0/21 |
+
+**totals: PRED=14, CORRECTED=14, ORACLE=11. Median calib offset = −0.03 yr.
+Mean TRUE-eligible fraction = 0.27.**
+
+**Verdict — my "systematic offset" hypothesis is WRONG as stated, and the truth is worse.**
+
+**(1) There is NO global bias.** The calib-estimated offset is −0.03 yr — essentially zero. The
+predictor is **unbiased in-distribution**. Hence CORRECTED = PRED exactly (14=14) and MAE is
+unchanged (21.59→21.61). Part 3 was a null **by construction**: there was nothing to correct.
+
+**(2) The error is DONOR-SPECIFIC, huge, and SIGNED BOTH WAYS — so it cancels.**
+Per-donor error (med PRED − med TRUE): N2 **+20.11**, N3 **−24.40**, O1 +5.71, O2 +13.04,
+Y1 −4.27, Y2 −8.80.
+**Mean = +0.23 yr (cancels). Mean ABSOLUTE = 12.72 yr. Std = 14.71 yr.**
+This is hypothesis **H6 (donor heterogeneity) quantified precisely** — not a bias that can be
+subtracted, but a per-donor level shift that is **unknowable from calib** (calib is
+in-distribution, where the model is fine). No global correction can ever fix this.
+
+**(3) ORACLE (11) is LOWER than PRED (14) — the model OVER-approves.** Feeding RES the TRUE ΔAge
+yields FEWER approvals than feeding it predictions. So RES's approvals are not merely sparse,
+they are **wrong in composition**.
+
+**(4) N3 is a FALSE-POSITIVE FACTORY — the safety-relevant failure.** True median ΔAge **+29.00**,
+**frac true<0 = 0.00, TRUE-eligible = 0.00** — not a single cell genuinely rejuvenates. Yet the
+model predicts +4.60 and **approves 7 cells**. The system would recommend 7 conditions that
+actually AGE the cells. (And N3's Spearman is still 0.925 — it ranks correctly while being
+catastrophically wrong about the level.)
+
+**(5) NOT truth-dominated: real rejuvenation IS present.** Mean TRUE-eligible = 0.27; N2 is 0.76.
+So the clock does register genuine rejuvenation in this data — the earlier "maybe nothing
+rejuvenates" worry is ruled out.
+
+**THE UNIFYING PICTURE (replaces the offset hypothesis).** The model has **excellent
+within-donor ordering (Spearman 0.925–0.983 on every fold) but badly shifted per-donor absolute
+levels (±12.7 yr typical).** That single fact explains everything observed:
+- ranking ~0.95 ✓ (rank is invariant to a per-donor level shift)
+- ΔAge MAE ~14 ✓ (the level shift IS the error)
+- RES dead / wrong ✓ (RES thresholds are ABSOLUTE, so a shifted level makes them meaningless)
+
+**ACTIONABLE CONSEQUENCE.** The honest product statement: the model is usable for
+**within-donor RANKING** of conditions (which is the realistic use case — rank conditions for one
+patient), and is **NOT reliable for absolute-threshold decisions out-of-donor** (RES approval).
+The fix direction is **per-donor calibration**: with a few labelled reference samples from a new
+donor, the level shift becomes estimable and absolute decisions become possible. Without them,
+report ranks, not approvals.
+
+**Prediction scorecard:** I predicted "MIXED, bias on N2, truth on O1/O2/Y2" — roughly right on
+the per-fold pattern (first decent prediction in a while), but I **missed the two biggest facts**:
+that the errors CANCEL (no global offset) and that the model **over-approves** (oracle < pred).
 
 ## WHERE THE INVESTIGATION STANDS — canonical current summary (updated 2026-07-13)
 
