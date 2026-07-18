@@ -1071,7 +1071,161 @@ metrics that are NOT rank-invariant:
 - **C ≥ A** → recalibrated RES matches/beats a plain ΔAge sort on the actionable metric → RES
   salvageable for thresholded triage (even if not for ranking).
 
-**Result (actual).** _[TO FILL — user runs test7_4_res_threshold.py]_
+**Result (actual).** Ran on real data. Only **4/6 folds usable** (N3, Y2 degenerate — no
+variation in "truly safe AND rejuvenating" among their test cells).
+
+SCORE CALIBRATION error (lower better):
+
+| fold | A ridge | B RES raw | C RES recal | C−B |
+|---|---|---|---|---|
+| N2 | 0.319 | 0.762 | 0.744 | −0.018 (helped) |
+| O1 | 0.208 | 0.095 | 0.088 | −0.007 (helped) |
+| O2 | 0.105 | 0.143 | 0.143 | +0.000 (nothing) |
+| Y1 | 0.249 | 0.104 | 0.132 | **+0.028 (HURT)** |
+
+paired C−B = +0.001, 95% CI [−0.031, +0.032] (n=4) → **tied**.
+
+PRECISION/RECALL at the calib cutoff: **identical B vs C on every fold**, C−B = +0.000,
+CI [+0.000, +0.000] (n=3).
+
+**DESIGN ERROR IN THIS TEST (own it).** The precision/recall half is **structurally void** — the
+same flaw as 7.3 in a new costume. I defined the cutoff as a **calib-set QUANTILE**, but a
+quantile is **monotone-equivariant**: Platt shifts the scores and the 70th percentile shifts
+identically, so **exactly the same cells are flagged** by construction. Verified explicitly. The
+zero-width CI [+0.000,+0.000] is the fingerprint of a forced result, not a measurement. A genuine
+test needs a **fixed absolute value** cutoff on the native RES scale (→ Test 7.4.1).
+
+**Verdict — prediction WRONG again (I predicted C > B on value metrics; it is tied).** On the ONE
+valid half (score calibration, verified value-sensitive), recalibration moves RES in **both
+directions**: helps on N2/O1, nothing on O2, **hurts on Y1 by more than it helped anywhere**. That
+is noise, not a small consistent benefit.
+
+**This directly tests the user's hypothesis** ("recal always changed the result for good, just at
+small scale"). On a metric that *can* see monotonic changes, **it does not always help**. The
+always-≥0 pattern in 7.3 was itself an artifact of the rank-blind metric.
+
+**Status of the RES question:** two different metric families (rank in 7.3, value-calibration in
+7.4) both show no systematic recalibration benefit → the "drop RES for ranking" conclusion is
+broader-based than before. **Caveats:** n=4 only, and half of 7.4 was void — not bulletproof.
+**Side finding:** RES calibration is wildly fold-dependent (0.095 on O1 vs **0.762** on N2) — RES
+is not uniformly miscalibrated, it is catastrophically miscalibrated on specific donors.
+
+### Test 7.4.1 — PATCH: fixed ABSOLUTE cutoff + the APPROVED gate  ⏳
+
+**Why.** 7.4's decision cutoff was a calib QUANTILE — monotone-equivariant, so Platt could not
+change which cells were flagged (verified: identical sets). RES is documented as living in
+**[0, 1)**, so a FIXED numeric cutoff is meaningful and IS sensitive to recalibration (verified
+synthetically: 5–9 cell decision flips at cutoffs 0.05–0.50, vs 0 flips for the quantile).
+
+**Extra lever found in the source:** `compute_res_batch` also returns a **status**, and
+`REJECTED_UNSAFE` fires on the ABSOLUTE test `S < tau_safe - 3*w`. Platt changes S, so it moves
+this gate — this is the product's real accept/reject decision, not a proxy.
+
+**Method.** Same isolation (ΔAge held = ridge; only fate calibration differs).
+B = RES(raw fate), C = RES(recal fate). Report at fixed cutoffs {0.05, 0.10, 0.20, 0.30, 0.50}:
+cells flagged, precision/recall for truly safe-AND-rejuvenating cells; plus the same for the
+APPROVED gate. **Built-in sensitivity check** (7.4's lesson): the script reports how many
+cell-level decisions actually FLIP between B and C, and refuses to report "tied" if the answer
+is zero — it declares itself blind instead.
+
+**Prediction (before running, on record).** The sets WILL differ (recal shifts S, so the fixed
+gate moves), but **precision will be tied** — recalibration moves the decision boundary without
+improving the decision, because the damage is the multiplicative formula, not its inputs (the
+7.3/7.4 pattern). Low-moderate confidence; I have been wrong on 7.3 and 7.4 predictions.
+
+**Scope limit (state up front):** 7.3 already showed recalibrated RES ranks far BELOW a plain
+ΔAge sort (C−A = −0.298, CI excludes 0). This test can only change *how much* RES
+underperforms, not whether it does.
+
+**Result (actual).** Ran on real data. 4/6 folds usable (N3, Y2 skipped — no safe-rejuv
+variation). Sensitivity check PASSED: 18 cell-level decision flips → the metric can see recal.
+
+**THE HEADLINE IS THE SCORE-RANGE TABLE:**
+
+| fold | B RES range (raw) | C RES range (recal) | good cells |
+|---|---|---|---|
+| N2 | [0.000, 0.000] | [0.000, 0.232] | 16/21 |
+| O1 | [0.000, 0.000] | [0.000, 0.121] | 2/21 |
+| O2 | [0.000, 0.000] | [0.000, 0.000] | 3/21 |
+| Y1 | [0.000, 0.007] | [0.000, 0.535] | 2/19 |
+
+**RAW RES IS DEGENERATE — collapsed to ~0 for every cell on every fold.**
+
+APPROVED gate (the product's real accept/reject decision):
+
+| fold | n approved B | n approved C | prec C | rec C |
+|---|---|---|---|---|
+| N2 | **0/21** | 3/21 | 1.00 | 0.19 |
+| O1 | **0/21** | 1/21 | 1.00 | 0.50 |
+| O2 | **0/21** | 0/21 | — | 0.00 |
+| Y1 | **0/19** | 2/19 | 0.50 | 0.50 |
+
+**Raw RES approves ZERO cells on every fold** — as shipped it rejects 100% of candidates
+out-of-donor. Recalibrated RES approves 6 cells total, 5 of them truly safe-and-rejuvenating.
+
+**SCRIPT BUG (own it):** every `paired C-B precision ... (n=0) -> tied` line is an ARTIFACT.
+Precision for B is n/a everywhere because B flagged nothing, so there were zero pairs; with n=0
+the code falls through to "tied". It should read "cannot compare — B flagged nothing." Ignore
+those verdict lines; the score-range and APPROVED tables carry the information.
+
+**Verdict — prediction WRONG (3rd time); the user was RIGHT, and more specifically than claimed.**
+User's words: "it always changed the result for good — just the scale isn't good." That is exactly
+the finding: **the SCALE was the whole problem.** Raw RES sits at ~1e-4 or below; recalibration
+lifts it into a usable [0, 0.5] range.
+
+**MECHANISM (deduced, not guessed).** RES = Φ(S)·S^k·g(R_eff)·exp(−λ·P_loss), with
+Φ(S)=sigmoid((S−τ_safe)/w). Recalibration changes ONLY S and P_loss — it never touches µ_age or
+σ_age, so g(R_eff) is IDENTICAL in both arms. Since C reaches 0.535, g must be > 0. Therefore the
+collapse in B comes entirely from the SAFETY terms: **raw out-of-donor S sits far below τ_safe,
+and the double penalty (sigmoid floor × S^k) annihilates the score.** This ties directly to Test
+8.2 (fate systematically under-confident out-of-donor, ECE 0.28): **RES's safety gate is
+mis-tuned relative to the model's out-of-donor calibration.**
+
+**REVISED RES CONCLUSION (supersedes the 7.3/7.4 reading):**
+- **As a GATE/decision score: raw RES is broken (approves nothing); recalibration is not optional,
+  it is REQUIRED for RES to function at all.** This is a real, actionable fix.
+- **As a RANKING: unchanged — RES still loses to a plain ΔAge sort** (7.3: C−A = −0.298, CI
+  excludes 0). Ranking and gating are different questions; recalibration fixes the second, not the
+  first.
+
+**CAVEATS (do not overclaim):** n=4 folds; approvals are 1–3 cells per fold (precision 1.00 on 3
+cells is weak evidence); recall is LOW (C finds only 3 of N2's 16 good cells); O2 stays collapsed
+even after recal. This shows RES becomes *functional*, not that it becomes *good*.
+
+### Test 7.4.2 — MEASURE the mechanism: decompose RES into its four factors  ⏳
+
+**Why.** 7.4.1's mechanism (raw S below tau_safe → safety floor annihilates RES) was **deduced**,
+not measured. This measures it by decomposing
+`RES = Phi(S) * S^k * g(R_eff) * exp(-lam*P_loss)` and reporting each factor's magnitude, raw vs
+recalibrated. Phi and S^k change under recalibration; **g is IDENTICAL in both arms** (it depends
+only on mu_age/sigma_age), so whichever factor is ~0 in the raw arm names the defect.
+
+**Four candidate diagnoses (pre-registered):**
+1. **Phi(S) ~ 0** → out-of-donor S below tau_safe; narrow safety floor kills RES. CALIBRATION defect.
+2. **g(R_eff) ~ 0** → sigma_age so large the upper age bound is never negative; never *confidently*
+   rejuvenating. UNCERTAINTY defect — recalibration could not have helped (but it did, so unlikely).
+3. **in_dist mostly False** → the OOD gate rejects everything. OOD defect.
+4. **exp(-lam*P_loss) ~ 0** → risk penalty dominates (only possible if lam > 0).
+
+Also reports the **STATUS breakdown** (APPROVED / REJECTED_OOD / REJECTED_UNSAFE /
+REJECTED_NO_REJUVENATION) — the rejection reason named directly.
+
+**Pre-flight checks done (sandbox):**
+- The decomposition reproduces `compute_res_batch` **exactly** (verified numerically).
+- With defaults `tau_safe=0.85, w=0.03, k=2.0`, the floor is razor-sharp:
+  S=0.60 → Phi·S^k = **8.65e-05** (displays as "RES = 0.000"); S=0.85 → 0.361.
+  **A 0.25 shift in S changes RES by ~4000x.** So mild under-confidence is sufficient to
+  annihilate RES — the 7.4.1 mechanism is numerically plausible before we even run it.
+- **`lam` defaults to 0.0** → `exp(-lam*P_loss) = 1` always → the P_loss term is **INERT**, so
+  recalibrating P_loss in 7.3/7.4/7.4.1 was a **no-op by construction**. The test reports whether
+  this holds in the actual bundles. (If so: only S ever mattered.)
+
+**Prediction (on record).** Diagnosis 1: Phi(S) median ~1e-3 or smaller in the raw arm while
+g stays healthy (>0.1), most raw cells REJECTED_UNSAFE, and lam == 0 confirming the P_loss no-op.
+Moderate confidence — but note this prediction is *entailed* by 7.4.1's result (recal helped, and
+recal cannot touch g), so it is closer to a consistency check than an open question.
+
+**Result (actual).** _[TO FILL — user runs test7_4_2_res_decompose.py]_
 
 **Verdict.** _[TO FILL]_
 
