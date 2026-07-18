@@ -1225,7 +1225,93 @@ g stays healthy (>0.1), most raw cells REJECTED_UNSAFE, and lam == 0 confirming 
 Moderate confidence — but note this prediction is *entailed* by 7.4.1's result (recal helped, and
 recal cannot touch g), so it is closer to a consistency check than an open question.
 
-**Result (actual).** _[TO FILL — user runs test7_4_2_res_decompose.py]_
+**Result (actual).** Ran on real data, all 6 folds.
+`RES PARAMS: tau_safe=0.85 w=0.03 k=2.0 kappa=5.0 z_conf=1.0 lam=0.0` → **lam=0 CONFIRMED**:
+the P_loss term is inert, so recalibrating P_loss in 7.3/7.4/7.4.1 was a **no-op by
+construction**. Only S ever mattered.
+
+| fold | Phi B | Phi C | S^k B | S^k C | **g (both)** | med mu_age | med sigma | med R_eff |
+|---|---|---|---|---|---|---|---|---|
+| N2 | 5.00e-04 | 1.97e-01 | 0.387 | 0.653 | **0.000** | **+8.76** | 2.23 | 0.00 |
+| N3 | 9.72e-03 | 8.95e-01 | 0.506 | 0.836 | **0.000** | **+4.60** | 2.54 | 0.00 |
+| O1 | 4.60e-03 | 7.78e-01 | 0.474 | 0.788 | **0.000** | **+18.14** | 2.69 | 0.00 |
+| O2 | 1.20e-02 | 8.95e-01 | 0.515 | 0.836 | **0.000** | **+20.44** | 2.39 | 0.00 |
+| Y1 | 2.09e-03 | 6.45e-01 | 0.442 | 0.753 | **0.000** | **+11.69** | 2.62 | 0.00 |
+| Y2 | 6.26e-02 | 9.45e-01 | 0.591 | 0.875 | **0.000** | **+21.12** | 2.14 | 0.00 |
+
+**Verdict — prediction WRONG (4th time). My 7.4.1 mechanism ("safety floor is the killer") was
+INCOMPLETE.** The real structure is TWO STACKED BLOCKERS:
+
+1. **PRIMARY — no predicted rejuvenation.** `med mu_age is POSITIVE on every fold` (+4.6 to
+   +21 yr). `R_eff = max(0, -(mu + z*sigma))` needs mu < -2.4 for ANY credit; we are 7–23 years
+   away. So **g = 0 and RES is zero BEFORE the safety floor gets a vote.** Recalibration
+   **cannot** touch this (g depends only on age terms).
+2. **SECONDARY — the safety floor.** Phi is 5e-4–6e-2 raw, 0.20–0.95 recalibrated. Recalibration
+   DOES fix this — which is why 7.4.1 saw a *few* approvals (the minority of cells that do have
+   R_eff > 0; medians hide that tail).
+
+**The STATUS table proves the handoff.** Status order is OOD → UNSAFE → NO_REJUVENATION →
+APPROVED. N3 raw: 15 UNSAFE, 0 no-rejuv. N3 recal: 4 UNSAFE, **6 no-rejuv**. Cells did not become
+approved — they **moved from "rejected as unsafe" to "rejected as not rejuvenating."**
+Recalibration lifted them past gate 1, exposing gate 2 behind it.
+
+**THE UNIFYING HYPOTHESIS (new, important).** `mu_age` positive while ranking is excellent
+(Spearman 0.95) is the signature of a **systematic OFFSET**, not noise. One offset would explain
+three separate results simultaneously:
+- ΔAge MAE ~14 yr — an offset directly inflates MAE;
+- ranking works (0.95) — rank correlation is offset-INVARIANT;
+- RES is dead — RES uses the ABSOLUTE value, so an offset zeroes the rejuvenation credit.
+
+**COMPETING EXPLANATION — must distinguish before acting.** Is positive mu_age model BIAS or
+biological TRUTH?
+- **N2 says BIAS:** 16/21 cells are truly safe-and-rejuvenating (true ΔAge < 0) yet ridge
+  predicts +8.76.
+- **O1 may say TRUTH:** only 2/21 are truly safe-and-rejuvenating, so a positive prediction may
+  be CORRECT there.
+If the cells genuinely are not rejuvenating by the Fleischer clock, **RES is correctly approving
+nothing** and the defect is in the DATA/clock (cf. the epistemic-extrapolation warning: clocks
+trained on natural aging, applied to reprogramming), not in RES. → **Test 7.4.3** must compare the
+TRUE ΔAge distribution against the predicted one, per fold.
+
+**SIDE FINDING (OOD preview).** The OOD gate flags 34/124 held-out cells (~27%) — 4–10 per fold.
+Unexamined until now; relevant to the pending OOD-detector test.
+
+### Test 7.4.3 — BIAS or TRUTH? (the decisive discriminator)  ⏳
+
+**Why.** 7.4.2 proved RES dies because predicted ΔAge is positive (g=0), but could not say WHY.
+The two causes need OPPOSITE fixes: model **BIAS** (fix the offset → RES revives) vs biological
+**TRUTH** (cells really do not rejuvenate by this clock → RES is correctly rejecting; the defect
+is the DATA/CLOCK and fixing RES is the wrong target).
+
+**Method (3 parts).**
+1. TRUE vs PREDICTED ΔAge distributions per fold + the offset. Large positive offset WITH good
+   rank correlation = bias signature.
+2. **ORACLE RES** — feed RES the **TRUE** ΔAge (model's sigma, recalibrated fate, real OOD flags).
+   **This is decisive.**
+3. **OFFSET-CORRECTED RES** — subtract each fold's offset, estimated on **CALIB only** (never on
+   the held-out donor → leak-free; will UNDER-correct if the offset is donor-specific).
+
+**Discriminator verified in sandbox** (both scenarios give PRED=0, matching the real data, but
+the oracle column separates them):
+- BIAS scenario (truth rejuvenates, prediction offset +12): PRED=0, CORRECTED=19, **ORACLE=19**.
+- TRUTH scenario (cells genuinely age): PRED=0, CORRECTED=0, **ORACLE=0**.
+
+**Prediction (on record).** **MIXED, leaning BIAS on N2 and TRUTH on O1/O2/Y2.** Rationale: N2 has
+16/21 truly safe-and-rejuvenating cells yet a +8.76 prediction (bias); O1 has only 2/21 truly
+safe-and-rejuvenating (truth). Expect oracle approvals clearly > predicted on N2, and ≈ 0 on the
+high-mu folds. Moderate confidence — my last four predictions in this thread were wrong.
+
+**Decision branches.**
+- **ORACLE >> PRED** → BIAS-dominated → RES logic sound, ΔAge prediction is the bottleneck →
+  fixing the offset revives the product AND explains MAE~14 with ranking~0.95.
+- **ORACLE ≈ PRED and TRUE-eligible fraction low** → TRUTH-dominated → RES correctly approves
+  nothing; the honest finding is that **this dataset does not exhibit clock-measurable
+  rejuvenation**, so no scoring fix can help. This would be the single most consequential result
+  in the whole investigation — it would mean the product claim needs different DATA, not a better
+  model.
+- **MIXED** → read per-fold: high `frac true<0` + low `frac pred<0` = bias; both low = truth.
+
+**Result (actual).** _[TO FILL — user runs test7_4_3_bias_or_truth.py]_
 
 **Verdict.** _[TO FILL]_
 
