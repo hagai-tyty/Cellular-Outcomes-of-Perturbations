@@ -1467,6 +1467,156 @@ for want of the right data.**
 
 ---
 
+## Test 13 — ΔAge TRAJECTORY SHAPE, and is the per-donor error time-varying?  ⏳ PLANNED
+
+**Provenance (important).** An external review of the master plan asserted that the MPTR protocol
+produces a **biphasic** trajectory (early transcriptomic stress reading as **+30 to +50 years**,
+then late-phase rejuvenation), and that "fixing" the per-donor level shift would mathematically
+erase that biology.
+
+**That claim is NOT established anywhere in this notebook.** We have never analysed ΔAge as a
+function of time. Partial consistency exists — Test 7.4.3 measured true median ΔAge of **+29.00
+(N3)** and **+29.92 (Y2)**, and MPTR is the correct protocol for GSE165176 — but "biphasic"
+requires showing the curve **comes back down**, which we have not measured, and "+50" appears
+nowhere in our data. So it enters as a **hypothesis with a test attached**, not as a premise.
+
+**Two questions, one test.**
+
+**Q1 (biology).** Is the true ΔAge trajectory **biphasic** (rise then fall) or monotonic?
+
+**Q2 (methodology — the one that actually gates the plan).** Test 16 (per-donor calibration)
+assumes the per-donor error is a **constant scalar offset**. Is it? If the error instead **varies
+with time**, a scalar correction is **misspecified** and would distort trajectories — subtracting
+real biological signal rather than model error. **This matters regardless of whether Q1 is true.**
+
+**Method (per donor, on its held-out time-course; time = `dose_time[:,1]` = log time_h).**
+- **Part 1** — TRUE ΔAge vs time: fit linear + quadratic; a significant **negative** quadratic
+  coefficient with an **interior vertex** = hump = biphasic.
+- **Part 2** — PREDICTED ΔAge vs time, same fits: does the model reproduce the shape or flatten it?
+- **Part 3** — **RESIDUAL (pred − true) vs time. THE TEST-16 GATE.**
+
+**Prediction (on record, before running).**
+- **Q1:** **MIXED, not a clean universal hump.** Donor heterogeneity is extreme (N2 is 76%
+  truly-rejuvenating; N3 is 0%), and ~21 cells over ~12 timepoints is low-powered. I expect a hump
+  on some donors at most.
+- **Q2:** **the residual IS time-dependent on ≥2 folds — and CURVED rather than sloped.**
+  Reasoning: within-donor Spearman is 0.925–0.983, high but **not 1.0**. A perfectly constant
+  offset preserves rank *exactly* (Spearman = 1.0), so the shortfall implies genuine shape
+  distortion. If the model flattens a humped trajectory, the residual humps.
+  → **I expect Test 16 to need redesign.** Moderate confidence.
+
+**Decision branches (set before data).**
+
+| Part 3 result | Consequence for Test 16 |
+|---|---|
+| no significant slope **or** curve on ≥5/6 folds | **Test 16 as designed is VALID** — scalar per-donor correction is well-specified |
+| significant slope **or** curve on ≥2 folds | **REDESIGN Test 16** — time-aware correction, or calibrate only on *matched timepoints*; never a single global scalar |
+
+| Part 1 result | Consequence |
+|---|---|
+| hump on ≥half the folds | biphasic supported **on our data** → RES's absolute per-cell gating is *biologically* misspecified (it scores trajectory points in isolation) → state this in the writeup |
+| hump on 0 folds | **do not build the plan on the biphasic claim** (low power: "not demonstrated" ≠ "disproven") |
+| some folds only | donor-specific, not a universal protocol effect |
+
+**Pre-flight verification (sandbox, before running on real data).**
+- Shape detector correctly identified all four synthetic cases: hump (`quad_t = −9.96`),
+  monotonic-down, monotonic-up, and no-trend.
+- **Gate design flaw found and fixed:** the first version tested only the residual's **linear
+  slope**. A **curved** residual (`slope_t = −0.05`, `curve_t = −7.65`) was wrongly reported as
+  "~constant" — and that is *exactly* the shape produced if the model flattens a biphasic
+  trajectory. The gate now fires on **either** a significant slope **or** a significant curve.
+
+**Caveat carried in the output:** ~21 cells per donor. These fits are low-powered; a
+non-significant quadratic means **"not demonstrated"**, not "monotonic proven".
+
+**Result (actual).** _[TO FILL — user runs `python tests_13_16.py`]_
+
+**Verdict.** _[TO FILL]_
+
+---
+
+## Test 14 — CONFORMAL INTERVAL VALIDATION  ⏳ PLANNED (never measured before)
+
+**Why.** RES consumes `sigma_age` inside `R_eff = max(0, -(mu + z*sigma))`, and Test 7.4.2 showed
+`R_eff = 0` on every fold. If the uncertainty is miscalibrated, that is an **independent upstream
+cause** of RES's collapse, separate from the level shift. We have never measured it.
+
+**Method.** Per fold: coverage = fraction of TRUE ΔAge inside `[mu - q, mu + q]`, compared with
+the nominal conformal level. Also interval width, and width relative to the data's own spread
+(a ratio >> 1 means the interval is wider than the variation it is meant to describe).
+
+**Prediction (on record).** **Intervals will UNDER-cover out-of-donor**, and substantially.
+Mechanism: `q` is fitted on the **calib** split, which is *in-distribution*, where ΔAge MAE is
+~4 yr (Test 8.1). It is then applied to held-out donors where MAE is ~14 yr (Test 5/6). An
+interval sized for a 4-year error cannot cover a 14-year error. **Moderate-high confidence** —
+this one follows from numbers already measured.
+
+**Decision branches.** UNDER-covers → uncertainty is a *second* independent cause of RES failure;
+fix before judging RES further. CALIBRATED → uncertainty ruled out; the level shift stands alone.
+OVER-covers → honest but uninformative; check the width/2sd ratio.
+
+---
+
+## Test 15 — OOD DETECTOR VALIDATION  ⏳ PLANNED (never measured before)
+
+**Why.** `res = where(in_dist, res, 0)` — the OOD gate **zeroes RES outright**, and Test 7.4.2
+found it flags **34/124 (~27%)** of held-out cells. Never validated. If it fires on cells that are
+*not* actually erroneous, it is a third independent cause of RES's collapse.
+
+**Method.** Per fold: OOD rate; mean \|error\| for flagged vs kept cells; and
+**AUC(error → flagged)** — does the prediction error actually predict which cells get flagged?
+AUC 0.5 = flags are random with respect to error.
+
+**Prediction (on record).** **AUC ≈ 0.5–0.6 — uninformative to mildly informative.** Reasoning:
+every held-out donor is out-of-distribution in some sense, so flagging exactly 27% looks like a
+threshold artifact rather than a discovered property. **Low confidence** — genuinely unmeasured.
+
+**Decision branches.** AUC > 0.6 → detector works, zeroing RES on those cells is defensible.
+AUC < 0.45 → **misleading**: it discards cells that are not the erroneous ones → fix or disable
+the OOD gate in the RES path. ≈ 0.5 → discards ~27% of cells for no measurable benefit.
+
+---
+
+## Test 16 — PER-DONOR CALIBRATION FEASIBILITY  ⏳ PLANNED  ***the gate for the main fix***
+
+**Why.** Test 7.4.3 established a per-donor level shift (±12.7 yr) that cancels on average and is
+invisible from calib. The only way to estimate it for a new donor is from **labelled reference
+cells of that donor**. This test asks how many are needed — which decides whether the main fix is
+a practical protocol change or an unusable one.
+
+**Method.** Per fold, sweep k = 1, 3, 5, 10 with **40 random draws** each. Estimate the offset from
+k reference cells, correct the **remaining** cells, and evaluate only on those — **reference cells
+are always excluded from evaluation, so there is no leakage.** Two variants:
+- **SCALAR** — one global offset from the k cells.
+- **MATCHED** — per-cell offset from the reference cell nearest in **time** (handles a
+  time-varying error, i.e. the case Test 13 Part 3 is testing for).
+
+**PRE-REGISTERED CRITERION (from MASTER_PLAN §7b, fixed before running):**
+\|shift\| reduced **≥50% on ≥4/6 folds at k ≤ 5** → PASS → implement.
+Only at k ≥ 10 → BORDERLINE → document the cost, decide on practicality.
+Not even at k = 10 → **FAIL → STOP**; report as a within-donor ranker.
+
+**Prediction (on record).** **PASS at k = 3–5 on the scalar criterion, BUT the MATCHED variant
+will be notably better** — indicating the error is time-varying and the implemented fix should be
+time-aware rather than a single scalar. This is consistent with my Test 13 prediction (curved
+residual). **Moderate confidence.**
+
+**Pre-flight verification (sandbox).** The k-sweep logic was checked against two synthetic
+regimes: with a genuinely CONSTANT offset, scalar reduced \|shift\| by **94–97%** and matched added
+nothing; with a TIME-VARYING error, scalar plateaued at **60–74%** (4.6–7.2 yr residual) while
+matched reached **1.3–2.4 yr**. So the scalar-vs-matched gap is a working detector of
+misspecification, not decoration.
+
+---
+
+## Tests 13–16 — ONE RUN
+
+All four are in `tests_13_16.py`; `python tests_13_16.py` runs the whole pre-change battery and
+prints a FINAL SUMMARY mapping the results onto the master-plan decisions. **This is the last
+testing step before code changes begin.**
+
+---
+
 ## The decision tree (one glance) — updated 2026-07-13 (actual path + outcomes)
 
 ```
