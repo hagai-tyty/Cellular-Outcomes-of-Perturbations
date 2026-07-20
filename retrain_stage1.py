@@ -32,6 +32,7 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+import sys
 import time
 from pathlib import Path
 
@@ -86,6 +87,12 @@ def main() -> None:
 
     from cellfate.common.console import install_pretty_console
     install_pretty_console()
+    # cp1255 (Hebrew) console can't encode some glyphs; emit UTF-8 so a stray print
+    # can never kill a multi-hour training run. (JSON results are written per fold.)
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:  # noqa: BLE001
+        pass
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     xdonor = not args.no_xdonor

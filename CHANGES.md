@@ -11,6 +11,33 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-07-20 — Tooling: JSON output + UTF-8 console fix for the Stage 1 scripts
+
+**Status:** ⏳ **Patched; execution in progress.** The UTF-8 fix is **confirmed working** — the first
+live run of `verify_1a.py` on the data machine printed the `—` in its header instead of crashing,
+which is the exact code path that failed before. The `verify_1a_results.json` write has not yet been
+confirmed (the run was still in its load phase when this was recorded).
+
+**Why.** The first real execution of the Stage 1 CLIs surfaced a blocker the "never executed"
+implementation could not have caught: this machine's console codepage is **cp1255 (Hebrew)**, which
+cannot encode the box-drawing characters in `render_table` (or `Δ`). Every script that prints one of
+those tables raised `UnicodeEncodeError` at the first table and aborted mid-run. (Found when two
+copies of `verify_1a.py` ran at once; the captured crash pointed at `cp1255.py`, "position 0–63" —
+the table's top border, which is entirely box-drawing.) The user also asked for `verify_1a`'s result
+to be saved to a file, as JSON, rather than only printed.
+
+| File | Change | Why |
+|---|---|---|
+| `verify_1a.py` | writes **`verify_1a_results.json`** — per-fold checks plus a machine-readable `verdict.status` (`PASS` / `STOP` / `FAIL` / `CANNOT_VERIFY`), assembled and saved **before** any console table; plus `sys.stdout.reconfigure(encoding="utf-8", errors="replace")` | the verdict must survive a console that cannot print it, and the run must not die on a `print` |
+| `retrain_stage1.py` | same UTF-8 `reconfigure` guard (it already wrote `retrain_stage1_results.json` per fold) | a stray non-ASCII print must not kill a multi-hour training run |
+| `scorecard.py` | **deliberately untouched** | it works and owns `scorecard/baseline.json`; it already writes its snapshot JSON before printing, so its data survives a console crash. It still needs `$env:PYTHONUTF8 = "1"` for console output, since its `compare` subcommand only prints |
+
+**Operational note.** Set `$env:PYTHONUTF8 = "1"` once per PowerShell session: the two patched
+scripts no longer require it, but the untouched `scorecard.py` still does for its console tables.
+Result files stay JSON (not Markdown) per the user's request — `compare` reads them as JSON.
+
+---
+
 ## 2026-07-20 — Stage 1: cross-donor calibration (Change A)
 
 **Plan:** `plans/STAGE_1_CALIBRATION.md` · **Deviations:** `plans/STAGE_1_DEVIATIONS.md`

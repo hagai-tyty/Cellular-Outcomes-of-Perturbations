@@ -33,6 +33,9 @@ USAGE (repo root, venv active; needs the cellfate_loocv_* dataset artefacts).
 """
 from __future__ import annotations
 
+import json
+import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -126,6 +129,13 @@ def main() -> None:
     from cellfate.common.console import install_pretty_console, render_table
 
     install_pretty_console()
+    # This machine's console codepage (cp1255, Hebrew) cannot encode the box-drawing
+    # tables printed below; emit UTF-8 so a print can never abort the run. The JSON
+    # report is written regardless of what the console can display.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:  # noqa: BLE001
+        pass
 
     print("\nSTAGE 1a VERIFICATION — donor labels in the training tensors")
     print("the question that gates 1b: does `cell_line` distinguish donors, or is it constant?")
@@ -163,6 +173,48 @@ def main() -> None:
             "yes" if tr.get("dtype_ok") and tr.get("len_ok") else "NO",
             "OK" if tr.get("n_donors", 0) >= 2 else "** INNER-LODO IMPOSSIBLE **",
         ])
+
+    # ---- SAVE the verdict as JSON BEFORE any console table ----
+    # The box-drawing tables below can crash on a non-UTF-8 console; the JSON must
+    # survive that, so it is written here while `results` is fully populated.
+    ok_folds = [d for d in DONORS if "_error" not in results.get(d, {"_error": 1})]
+    n_donors = [results[d]["splits"].get("train", {}).get("n_donors", 0) for d in ok_folds]
+    all_cols_ok = all(
+        results[d].get("empty_n_cols") == N_COLS
+        and all(s.get("n_cols") == N_COLS
+                for s in results[d]["splits"].values() if "_error" not in s)
+        for d in ok_folds
+    )
+    if not ok_folds:
+        status, reason = "CANNOT_VERIFY", "No fold loaded."
+    elif not all_cols_ok:
+        status, reason = "FAIL", "A split returns != 7 columns (check the empty-split branch)."
+    elif min(n_donors) < 2:
+        bad = [d for d, n in zip(ok_folds, n_donors, strict=True) if n < 2]
+        status, reason = "STOP", f"Folds {bad} have <2 training donors; inner-LODO cannot run."
+    else:
+        status = "PASS"
+        reason = (f"7 columns everywhere; {min(n_donors)}-{max(n_donors)} training "
+                  f"donors per fold. Inner-LODO is possible.")
+
+    report = {
+        "script": "verify_1a",
+        "utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "verdict": {
+            "status": status,
+            "reason": reason,
+            "min_train_donors": min(n_donors) if n_donors else None,
+            "max_train_donors": max(n_donors) if n_donors else None,
+            "expected_train_donors": EXPECTED_TRAIN_DONORS,
+            "all_splits_7_cols": all_cols_ok,
+            "ok_folds": ok_folds,
+        },
+        "raw_shard_peek": peek,
+        "folds": results,
+    }
+    out_path = Path("verify_1a_results.json")
+    out_path.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+    print(f"\n  saved -> {out_path}   |   VERDICT: {status} - {reason}")
 
     print("\n  PER-FOLD CHECK  (train split unless noted)")
     print(render_table(
