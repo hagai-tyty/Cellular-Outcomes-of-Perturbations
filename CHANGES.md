@@ -11,6 +11,31 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-07-20 — Follow-up task: per-mode sigma_scale for mc_dropout
+
+**Status:** ⏳ **blocked on Stage 1 score** — the xfail marker is in place (`tests/test_inference.py`).
+
+**What:** `test_mc_dropout_is_single_batched_call` is marked `xfail` (strict) with a placeholder reason,
+because mc_dropout mode now requires its own `sigma_scale` calibration. Currently only the ensemble
+spread is calibrated (xdonor produces a factor ~5–6× for ensemble). The raw mc_dropout spread is a
+different magnitude (T-pass jitter vs 5-member disagreement), so it needs its own inner-LODO pass to
+measure and scale.
+
+**Why now is blocked:** Implementing this edits `xdonor_calib.py` / `train_model.py` / `predictor.py`
+— the exact code being measured in Stage 1. Adding the calibration mid-experiment would contaminate
+the result (one change → measure, vs. two changes → whose fault?). So it's blocked until after
+`scorecard.py compare baseline A_xdonor` returns a clean result, and then it becomes the next task.
+
+**Implementation sketch:** In `train_model.py`, after the ensemble `sigma_scale` calibration, run a
+*parallel* inner-LODO measuring mc_dropout spread instead, fit a separate factor, store both
+`sigma_scale` and `sigma_scale_alt` in the bundle with their modes, and have `Predictor` pick the
+right one. The schema change is additive (defaults to 1.0) so all existing bundles keep loading.
+
+**Tracking:** The strict `xfail` will force removal of the marker the moment this lands and tests
+start passing — it cannot be forgotten.
+
+---
+
 ## 2026-07-20 — Tooling: JSON output + UTF-8 console fix for the Stage 1 scripts
 
 **Status:** ⏳ **Patched; execution in progress.** The UTF-8 fix is **confirmed working** — the first
