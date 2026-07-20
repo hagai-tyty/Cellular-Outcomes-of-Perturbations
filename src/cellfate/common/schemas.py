@@ -213,10 +213,20 @@ class ResParams(BaseModel):
 
 
 class ConformalParams(BaseModel):
+    """Conformal quantiles, plus the Stage 1b rescaling of the ensemble spread.
+
+    ``sigma_scale`` and ``sigma_scale_mode`` are DEFAULTED on purpose: they are additive,
+    so every bundle written before Stage 1b still validates and still loads, and
+    ``SCHEMA_VERSION`` is deliberately NOT bumped (a bump would make ``Predictor`` reject
+    every existing bundle -- see the Stage 1 deviation log).
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     levels: list[float]
     q: dict[str, float]      # keyed by str(level), e.g. {"0.9": 1.83}
+    sigma_scale: float = 1.0          # multiplier on sigma_age; 1.0 == uncalibrated
+    sigma_scale_mode: str = "ensemble"  # inference mode the factor was calibrated for
 
     @model_validator(mode="after")
     def _ok(self) -> ConformalParams:
@@ -225,6 +235,13 @@ class ConformalParams(BaseModel):
                 raise ValueError(f"conformal level {lvl} must be in (0, 1)")
             if str(lvl) not in self.q:
                 raise ValueError(f"missing quantile for level {lvl} (key {str(lvl)!r})")
+        if not (self.sigma_scale > 0 and math.isfinite(self.sigma_scale)):
+            raise ValueError(f"sigma_scale must be finite and > 0, got {self.sigma_scale}")
+        if self.sigma_scale_mode not in ("ensemble", "mc_dropout"):
+            raise ValueError(
+                "sigma_scale_mode must be 'ensemble' or 'mc_dropout', "
+                f"got {self.sigma_scale_mode!r}"
+            )
         return self
 
 

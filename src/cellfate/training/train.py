@@ -23,7 +23,7 @@ from cellfate.models import (
     huber_age_loss,
 )
 
-from .dataset import YC_I, loader
+from .dataset import AM_I, DT_I, FP_I, X_I, YA_I, YC_I, loader
 
 log = get_logger("cellfate.training")
 
@@ -79,7 +79,9 @@ def _eval_loss(model, dl, class_w, gamma, huber_delta, device) -> float:
     model.eval()
     tot, n = 0.0, 0
     with torch.no_grad():
-        for x, fp, dt, yc, ya, am in dl:
+        for batch in dl:   # indexed, not unpacked: the schema grows (donor column)
+            x, fp, dt = batch[X_I], batch[FP_I], batch[DT_I]
+            yc, ya, am = batch[YC_I], batch[YA_I], batch[AM_I]
             lg, ag, _ = model(x.to(device), fp.to(device), dt.to(device))
             l_cls = focal_loss(lg, yc.to(device), class_w, gamma)
             l_age = huber_age_loss(ag, ya.to(device), am.to(device), huber_delta)
@@ -104,8 +106,9 @@ def train_member(make_model, train_ds, val_ds, cfg, seed: int, device: str):
     best, best_state, bad = float("inf"), None, 0
     for _epoch in range(cfg.epochs):
         model.train()
-        for x, fp, dt, yc, ya, am in train_dl:
-            x, fp, dt, yc, ya, am = (t.to(device) for t in (x, fp, dt, yc, ya, am))
+        for batch in train_dl:   # indexed, not unpacked: the schema grows (donor column)
+            x, fp, dt, yc, ya, am = (batch[i].to(device)
+                                     for i in (X_I, FP_I, DT_I, YC_I, YA_I, AM_I))
             lg, ag, _ = model(x, fp, dt)
             l_cls = focal_loss(lg, yc, class_w, cfg.focal_gamma)
             l_age = huber_age_loss(ag, ya, am, cfg.huber_delta)

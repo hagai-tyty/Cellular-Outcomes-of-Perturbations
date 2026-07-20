@@ -22,6 +22,7 @@ from .train import (
     train_member,
 )
 from .train_model import TrainConfig, run
+from .xdonor_calib import XDonorStats, crossdonor_stats, n_train_donors, sigma_scale_factor
 
 __all__ = [
     "TrainConfig", "run",
@@ -31,4 +32,5 @@ __all__ = [
     "fit_temperature", "fit_conformal", "coverage",
     "fit_ood", "mahalanobis", "save_ood", "load_ood",
     "assemble_bundle", "ece", "soft_nll",
+    "crossdonor_stats", "sigma_scale_factor", "n_train_donors", "XDonorStats",
 ]

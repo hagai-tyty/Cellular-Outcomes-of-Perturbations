@@ -234,6 +234,21 @@ def test_loader_actually_standardizes_train_features(tmp_path):
     dt = ds.tensors[1 + 1].numpy()  # DT column index is 2
     assert abs(dt.mean()) < 0.4
 
+    # -- Stage 1a: the donor column, without which inner-LODO calibration is impossible.
+    # Sourced from `cell_line`; SyntheticSource above built n_lines=2, so we expect 2 codes.
+    from cellfate.training.dataset import DONOR_I
+
+    donor = ds.tensors[DONOR_I]
+    assert len(ds.tensors) == 7, "donor column missing from the training tensors"
+    assert donor.dtype == torch.long, "donor codes must be integer"
+    assert len(donor) == len(ds.tensors[0]), "donor column length mismatch"
+    assert len(set(donor.tolist())) == 2, "expected one code per synthetic cell line"
+
+    # the empty-split branch builds its own tensors -- it must grow the column too
+    empty = load_split_tensors(paths, sc, "scaffold", "__no_such_split__")
+    assert len(empty.tensors) == 7, "empty-split branch still returns 6 columns"
+    assert len(empty) == 0
+
 
 # --------------------------------------------------------------------------- #
 # 8. run() is reproducible end-to-end                                         #

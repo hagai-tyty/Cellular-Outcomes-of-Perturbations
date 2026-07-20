@@ -98,7 +98,7 @@ def test_ood_scores_far_point_higher_and_roundtrips(tmp_path):
 # --------------------------------------------------------------------------- #
 # determinism                                                                 #
 # --------------------------------------------------------------------------- #
-def _toy_dataset(n=64, g=8):
+def _toy_dataset(n=64, g=8, n_donors=1):
     rng = np.random.default_rng(3)
     x = torch.tensor(rng.normal(size=(n, g)), dtype=torch.float32)
     fp = torch.tensor(rng.integers(0, 2, size=(n, 2048)), dtype=torch.float32)
@@ -106,7 +106,8 @@ def _toy_dataset(n=64, g=8):
     yc = torch.tensor(rng.dirichlet(np.ones(3), size=n), dtype=torch.float32)
     ya = torch.tensor(rng.normal(size=n), dtype=torch.float32)
     am = torch.ones(n)
-    return torch.utils.data.TensorDataset(x, fp, dt, yc, ya, am)
+    donor = torch.arange(n) % n_donors            # Stage 1a: the 7th column
+    return torch.utils.data.TensorDataset(x, fp, dt, yc, ya, am, donor)
 
 
 def _tiny_cfg(**kw):
@@ -209,5 +210,157 @@ def test_e2e_calibration_artifacts_valid(trained_bundle):
 
     assert (paths.bundle_dir / C.BUNDLE_CONFIG_FILENAME).exists()
     assert (paths.bundle_dir / C.BUNDLE_METRICS_FILENAME).exists()
-    # temperature scaling never worsens NLL
-    assert summary["nll_after_temp"] <= summary["nll_before_temp"] + 1e-6
+
+    # Temperature scaling never worsens NLL -- ON THE SPLIT IT WAS FITTED ON.
+    # Before Stage 1b that was calib/val; it is now the cross-donor pool, so the guarantee
+    # moved with it. Asserting it on the in-distribution split would be asserting something
+    # fit_temperature never promised: the model is under-confident in-distribution (T<1,
+    # sharpening) and over-confident out-of-donor (T>1, softening), and one scalar cannot
+    # serve both. In-distribution NLL rising is the expected cost of that trade.
+    fitted_on = ("xdonor_nll_before_temp" if summary.get("xdonor_calibrated")
+                 else "nll_before_temp")
+    before = summary[fitted_on]
+    after = summary[fitted_on.replace("before", "after")]
+    assert after <= before + 1e-6, (
+        f"temperature worsened NLL on the split it was fitted on ({fitted_on}): "
+        f"{before:.6f} -> {after:.6f}"
+    )
+
+
+# --------------------------------------------------------------------------- #
+# Stage 1b -- cross-donor calibration                                         #
+# --------------------------------------------------------------------------- #
+def test_sigma_scale_widens_an_overconfident_ensemble_spread():
+    """The defect this exists for: members agree (~2.4 yr) while collectively wrong (~14 yr)."""
+    from cellfate.training import XDonorStats, sigma_scale_factor
+
+    stats = XDonorStats(
+        abs_residuals=np.full(200, 14.0), logits=np.zeros((0, 3)), targets=np.zeros((0, 3)),
+        sigma_pred=np.full(200, 2.4), n_donors=5, feats=np.zeros((0, 1)),
+    )
+    s = sigma_scale_factor(stats, z_conf=1.0, level=0.90)
+    assert s == pytest.approx(14.0 / 2.4, rel=1e-6)
+    assert 2.4 * s == pytest.approx(14.0, rel=1e-6)   # the scaled spread now matches reality
+
+
+def test_sigma_scale_never_shrinks_an_already_adequate_spread():
+    """Clamped at 1.0: over-wide makes RES conservative, which is the safe direction."""
+    from cellfate.training import XDonorStats, sigma_scale_factor
+
+    stats = XDonorStats(
+        abs_residuals=np.full(50, 1.0), logits=np.zeros((0, 3)), targets=np.zeros((0, 3)),
+        sigma_pred=np.full(50, 9.0), n_donors=5, feats=np.zeros((0, 1)),
+    )
+    assert sigma_scale_factor(stats, z_conf=1.0) == 1.0
+
+
+def test_sigma_scale_is_identity_without_statistics():
+    from cellfate.training import XDonorStats, sigma_scale_factor
+
+    empty = XDonorStats(
+        abs_residuals=np.array([]), logits=np.zeros((0, 3)), targets=np.zeros((0, 3)),
+        sigma_pred=np.array([]), n_donors=0, feats=np.zeros((0, 1)),
+    )
+    assert sigma_scale_factor(empty, z_conf=1.0) == 1.0
+    # z_conf=0 would divide by zero; must not raise or return a non-finite factor
+    stats = XDonorStats(
+        abs_residuals=np.full(10, 5.0), logits=np.zeros((0, 3)), targets=np.zeros((0, 3)),
+        sigma_pred=np.full(10, 1.0), n_donors=3, feats=np.zeros((0, 1)),
+    )
+    assert sigma_scale_factor(stats, z_conf=0.0) == 1.0
+
+
+def test_crossdonor_stats_refuses_a_single_donor():
+    """Inner-LODO with one donor would silently produce in-distribution calibration wearing
+    a cross-donor label -- the exact defect Stage 1 exists to fix. It must raise instead."""
+    from cellfate.training import crossdonor_stats, n_train_donors
+
+    ds = _toy_dataset(n_donors=1)
+    assert n_train_donors(ds) == 1
+    with pytest.raises(ValueError, match="inner-LODO"):
+        crossdonor_stats(ds, ds, lambda: CellFateNet(g=8, d_cell=8, d_u=8, latent_dim=8),
+                         _tiny_cfg(), "cpu")
+
+
+def test_sigma_scale_mode_label_must_match_what_was_computed():
+    """The bundle's mode label describes what was COMPUTED, not what the caller declared.
+
+    Without this, setting inference_mode="mc_dropout" would write an ensemble-derived factor
+    under an mc_dropout label -- and Predictor's guard, seeing a matching label, would wave it
+    through. That is the exact silent failure the label exists to prevent.
+    """
+    from cellfate.common.errors import ConfigError
+    from cellfate.training.xdonor_calib import SIGMA_SCALE_MODE, assert_mode_matches
+
+    assert SIGMA_SCALE_MODE == "ensemble"
+    assert_mode_matches(5.83, "ensemble")            # computed and declared agree
+    assert_mode_matches(1.0, "mc_dropout")           # unit factor is mode-agnostic
+    with pytest.raises(ConfigError, match="mc_dropout"):
+        assert_mode_matches(5.83, "mc_dropout")      # a real factor under the wrong label
+
+
+def test_conformal_schema_still_loads_pre_stage1b_bundles(tmp_path):
+    """Every bundle in runs/ was written before sigma_scale existed. They must keep loading --
+    which is why the field is defaulted and SCHEMA_VERSION was deliberately NOT bumped."""
+    paths = ArtifactPaths.of(tmp_path)
+    paths.bundle_dir.mkdir(parents=True, exist_ok=True)
+    io.write_json(paths.bundle_conformal_file, {"levels": [0.9], "q": {"0.9": 8.86}})
+
+    conf = io.load_conformal(paths)
+    assert conf.q["0.9"] == 8.86
+    assert conf.sigma_scale == 1.0            # identity: old bundles behave exactly as before
+    assert conf.sigma_scale_mode == "ensemble"
+
+
+def test_e2e_calibration_was_fitted_cross_donor(trained_bundle):
+    """The bundle must record WHETHER cross-donor calibration actually happened, so a silent
+    fallback to in-distribution is auditable after the fact."""
+    _, _, summary = trained_bundle
+
+    assert summary["xdonor_calibrated"] is True
+    assert summary["xdonor_n_donors"] >= 2, "inner-LODO needs at least two donors"
+    # SyntheticSource names lines "<NAME>_L<i>", so the two sources give
+    # SYNTH_L0/L1 + TAHOE_L0/L1 -- all four should reach the inner-LODO pool
+    assert summary["xdonor_n_donors"] == 4, (
+        f"expected 4 synthetic cell lines in the inner-LODO pool, got "
+        f"{summary['xdonor_n_donors']} -- a donor was skipped for having no cells "
+        f"on one side of the split"
+    )
+    assert summary["xdonor_n_residuals"] > 0
+    assert summary["sigma_scale"] >= 1.0
+    assert summary["sigma_scale_mode"] == "ensemble"
+
+
+def test_e2e_sigma_scale_reaches_the_predictor(trained_bundle):
+    from cellfate.inference import Predictor
+
+    root, _, summary = trained_bundle
+    pred = Predictor(root)
+    assert pred.sigma_scale == pytest.approx(summary["sigma_scale"])
+
+
+def test_predictor_refuses_a_sigma_scale_calibrated_for_another_mode(trained_bundle, tmp_path):
+    """Applying an ensemble-calibrated factor to MC-dropout spread calibrates the wrong
+    quantity, and would do it silently. Fail loudly instead."""
+    import shutil
+
+    from cellfate.common.errors import ConfigError
+    from cellfate.inference import Predictor
+
+    root, _, _ = trained_bundle
+    copy_root = tmp_path / "bundle_copy"
+    shutil.copytree(root, copy_root)
+    paths = ArtifactPaths.of(copy_root)
+
+    conf = io.load_conformal(paths)
+    io.save_conformal(paths, conf.model_copy(
+        update={"sigma_scale": 5.0, "sigma_scale_mode": "ensemble"}))
+
+    Predictor(copy_root, mode="ensemble")                     # matching mode: fine
+    with pytest.raises(ConfigError, match="sigma_scale"):
+        Predictor(copy_root, mode="mc_dropout")
+
+    # a unit factor is mode-agnostic -- it must NOT trip the guard
+    io.save_conformal(paths, conf.model_copy(
+        update={"sigma_scale": 1.0, "sigma_scale_mode": "ensemble"}))
+    Predictor(copy_root, mode="mc_dropout")

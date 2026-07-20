@@ -15,8 +15,13 @@ import numpy as np
 from cellfate.common.schemas import ConformalParams
 
 
-def fit_conformal(abs_residuals, levels, default_q: float = 1e3) -> ConformalParams:
-    """Build ConformalParams from absolute age residuals on the calibration split.
+def fit_conformal(abs_residuals, levels, default_q: float = 1e3,
+                  sigma_scale: float = 1.0,
+                  sigma_scale_mode: str = "ensemble") -> ConformalParams:
+    """Build ConformalParams from absolute age residuals.
+
+    From Stage 1b these residuals are CROSS-DONOR (inner leave-one-donor-out), not the
+    in-distribution calib residuals -- see ``xdonor_calib``.
 
     If there are no age-valid calibration cells (e.g. an all-cancer dataset), a
     large ``default_q`` is stored so the bundle stays valid and intervals are
@@ -24,6 +29,10 @@ def fit_conformal(abs_residuals, levels, default_q: float = 1e3) -> ConformalPar
     ``n/(n+1)``; a requested level above that cannot be met with this many
     calibration points, so we warn and return the widest finite interval (the
     largest residual) rather than silently under-covering.
+
+    ``sigma_scale`` rides along in this artefact rather than in one of its own: it is
+    calibration, it is fitted at the same moment, and adding a defaulted field keeps every
+    pre-Stage-1b bundle loadable.
     """
     r = np.asarray(abs_residuals, dtype=np.float64)
     n = r.size
@@ -43,7 +52,8 @@ def fit_conformal(abs_residuals, levels, default_q: float = 1e3) -> ConformalPar
             )
         k = min(max(rank, 1), n)
         q[str(lvl)] = float(rs[k - 1])
-    return ConformalParams(levels=levels, q=q)
+    return ConformalParams(levels=levels, q=q, sigma_scale=float(sigma_scale),
+                           sigma_scale_mode=str(sigma_scale_mode))
 
 
 def coverage(abs_residuals, q: float) -> float:

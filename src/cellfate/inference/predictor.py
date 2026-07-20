@@ -95,6 +95,20 @@ class Predictor:
         self.conformal_level = float(key)
         self.mode, self.T = mode, int(T)
 
+        # Stage 1b: sigma_age is the ENSEMBLE SPREAD (~2.4 yr) while true out-of-donor error is
+        # ~14 yr, and RES consumes sigma -- not q -- so it needs its own rescaling. The factor is
+        # calibrated against one specific spread, so applying it under the other mode would
+        # silently calibrate the wrong quantity. getattr keeps pre-Stage-1b bundles loading.
+        self.sigma_scale = float(getattr(conf, "sigma_scale", 1.0))
+        scale_mode = str(getattr(conf, "sigma_scale_mode", "ensemble"))
+        if self.sigma_scale != 1.0 and scale_mode != self.mode:
+            raise ConfigError(
+                f"bundle's sigma_scale={self.sigma_scale:.3f} was calibrated for "
+                f"mode={scale_mode!r} but this Predictor runs mode={self.mode!r}. "
+                f"Re-run with mode={scale_mode!r}, or recompute the factor against "
+                f"{self.mode!r} samples -- it calibrates a different spread in each mode."
+            )
+
     # -- core stochastic passes -------------------------------------------- #
     @torch.no_grad()
     def _raw_batch(self, X: torch.Tensor, fp: torch.Tensor, dt: torch.Tensor):
@@ -130,7 +144,7 @@ class Predictor:
             "P_loss": pbar[:, 1].cpu().numpy(),
             "P_death": pbar[:, 2].cpu().numpy(),
             "mu_age": age.mean(0).cpu().numpy(),
-            "sigma_age": age.std(0, unbiased=False).cpu().numpy(),
+            "sigma_age": age.std(0, unbiased=False).cpu().numpy() * self.sigma_scale,
             "entropy": ent.cpu().numpy(),
             "in_dist": self.ood.in_distribution_mask(Z),
             "latent": Z,

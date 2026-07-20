@@ -1652,3 +1652,187 @@ Test 11  (input ablation)                    ✅ x+u ≈ x_only; u_only bad for 
 OPEN: Test 11.1 (time isolation, needs data) · Test 10 / 10.1 (full transcriptome) ·
       Test 7.3 (recalibrated-RES retest)
 ```
+
+---
+---
+
+# PART II — CODE CHANGES BEGIN HERE
+
+**Everything above this line is a MEASUREMENT.** Tests 0–18 changed no behaviour; they recorded
+what the system already did. Everything below **modifies the system**, and is therefore held to
+the change protocol in `plans/REF_GROUND_RULES.md` §2: snapshot, one change, snapshot, compare,
+accept only on a paired CI that excludes zero.
+
+**Baseline frozen 2026-07-20** (`scorecard.py snapshot --tag baseline`). Every number below is
+measured against it.
+
+---
+
+## STAGE 1 — Cross-donor calibration (Change A)  ⏳ IMPLEMENTED, NOT YET RUN
+
+### Hypothesis
+
+**One architectural mistake, four manifestations.** Every calibration parameter in the bundle is
+fitted on data from donors the model trained alongside, then applied to a held-out donor whose
+error regime is completely different:
+
+| Parameter | Fitted on | Symptom out-of-donor | Test |
+|---|---|---|---|
+| `temperature` | `val` split | fate ECE **0.281** | T8.2 |
+| `conformal.q` | `calib` residuals | coverage **0.401 vs 0.90**; **0.000** on N2/N3 | T14 |
+| `sigma_age` | ensemble spread, never calibrated | **~2.4 yr** vs true error **~14 yr** | T7.4.2 |
+| `ood` reference | `train` trunk features | AUC **0.47** ≈ chance | T15 |
+
+If the hypothesis is right, refitting the first three on **cross-donor** statistics (inner
+leave-one-donor-out within the training donors) should move all three toward honesty **without
+touching discrimination or point predictions** — because nothing about the model changes, only
+what the calibrators were shown.
+
+### Prediction, made BEFORE running
+
+| Metric | Baseline | Predicted after | Basis |
+|---|---|---|---|
+| `conformal_coverage` | 0.401 | **0.85–0.95** | arithmetic on T14 |
+| `conformal_q` | 8.86 | **~30–40 yr** | P90 ≈ 2.5–3.0× mean error (14.29) |
+| `conformal_width` (= 2q) | 17.72 | **~70–86 yr** | 2× the above |
+| `fate_ece` | 0.281 | **~0.13, bar ≲0.17** | measured, T8.2 (Platt) |
+| `sigma_scale` | — (1.0) | **~5–6** | 14 yr error / 2.4 yr spread |
+| `ood_rate` | 0.273 | **unchanged** | OOD refit deliberately not implemented |
+| `res_approvals` | 3 (oracle 0) | **0** | honest σ ⇒ `R_eff` = 0, MASTER_PLAN §5b-ter |
+| `dage_mae_model` | 14.291 | **unchanged** | same weights |
+| `rank_model_dage` | 0.948 | **unchanged** | same weights |
+| `fate_prauc` | 0.992 | **unchanged** | temperature preserves argmax |
+
+**Sub-stage 1a is predicted to be BIT-IDENTICAL, not merely "noise."** It appends a column that
+the network never sees (`forward` takes x, u, dose_time only); indices 0–5 are unchanged, and
+adding a tensor consumes no RNG, so shuffle order and weights are identical.
+
+### What each outcome lets us conclude — branches fixed before seeing data
+
+| Outcome | Conclusion | Next |
+|---|---|---|
+| Coverage 0.85–0.95 **and** ECE drops ≥40%, guards all `noise` | **Hypothesis CONFIRMED.** In-distribution calibration was the root cause. The generalizable methodological finding stands | Stage 2 decision (reference cells?) |
+| Coverage overshoots >0.95 | `q` inflated by the N2/N3 outliers — **expected, record it.** Do NOT tune `q` down; that is fitting the test | accept, note in limitations |
+| Coverage still ≈0.40 | cross-donor residuals are not representative — most likely too few inner donors | check `xdonor_n_donors == 5` before anything else |
+| ECE unchanged | logits pooled from too few donors, or the defect is not calibration | diagnose separately; the three refits are independent |
+| **Any of `fate_prauc`, `fate_roc`, `rank_model_dage`, `dage_mae_model` REGRESSES** | the change reached something it must not | **REVERT.** A bug, not a trade-off |
+| 1a moves any metric at all | the column edit did more than add a column | **REVERT and re-audit** |
+
+**`rank_res` and `res_approvals` are NOT guards.** RES is expected to move — see below.
+
+### Two ambiguities in the plan, resolved BEFORE the run (user ruling, 2026-07-20)
+
+The plan contradicts itself on one bar and is silent on a near-miss. Both were decided in advance,
+because deciding after seeing the numbers is how every change comes to look like an improvement
+(ground rules §5).
+
+**1. Coverage above 0.95 → FAIL.** §3 sets the bar at 0.85–0.95; §1b.4 calls overshoot "expected"
+and forbids tuning `q` down. Those cannot both govern. **Ruling: the bar is the bar.** Coverage of
+0.97 is recorded as a failed target, not a qualified success.
+
+> **This is likely to bite, and the reason is structural.** `q` is fitted on residuals from inner
+> models trained on **4** donors, then applied to a deployed model trained on **5**. Fewer training
+> donors ⇒ weaker generalization ⇒ larger residuals ⇒ `q` biased high. This is the standard
+> pessimistic bias of cross-validation (CV estimates the error of a model trained on *n(k−1)/k*
+> samples, not *n*), compounded by N2/N3 inflating the P90. **Predicted before running: overshoot
+> is more likely than landing inside the window.**
+>
+> If it fails this way, the honest response is a **new test with a new pre-registered bar** —
+> correcting the donor-count bias explicitly, which is a principled fix. Shrinking `q` until
+> coverage lands in the window is **fitting the test** and is forbidden by §1b.4.
+
+**2. `fate_ece` between 0.17 and 0.22 → FAIL, then fix.** A real improvement that misses the ≥40%
+bar is recorded as a **failed target**, not accepted retroactively. The fix is then a *separate
+change with its own snapshot and its own bar* — most likely a Platt calibrator, which already
+demonstrated **0.153** on this data (baseline `fate_ece_platt`), versus a single temperature
+scalar which is strictly less flexible.
+
+**§3 states the three refits are independent**, so a `fate_ece` failure does not invalidate the
+coverage and `sigma_scale` results; they are adopted or rejected on their own evidence.
+
+### Sharper prediction on the guards than the plan requires
+
+The plan asks for `noise`. The deployed ensemble trains **before** `crossdonor_stats`, with the
+same seeds and data, and `set_global_seed` enables `cudnn.deterministic` and
+`use_deterministic_algorithms`. So the deployed weights should reproduce **bit-for-bit**:
+
+| Guard | Predicted |
+|---|---|
+| `dage_mae_model` | **exactly 14.291** |
+| `rank_model_dage` | **exactly 0.948** |
+| `level_shift_model` | **exactly** the baseline per-donor values |
+| `ood_rate` | **exactly 0.273** |
+
+**Any movement at all in these — even in the third decimal — means the change reached something it
+must not.** That is a strictly harder test than "the CI includes zero", and it should be applied.
+
+### The RES prediction, stated in advance so it cannot be read as a regression
+
+`sigma_scale` widens `sigma_age` ~5×, and `R_eff = max(0, −(mu + z·σ))` consumes σ. Per-cell RES
+should therefore approve **nothing**, and that is the **correct** result: honest per-cell
+uncertainty (~19 yr) exceeds the real effect (~11 yr). This is `MASTER_PLAN` §5b-ter's central
+arithmetic playing out, and it is a finding — per-cell confident rejuvenation is unreachable at
+this data scale. The RES verdict itself stays deferred to Change C (Stage 4).
+
+### What was built
+
+- **1a** — donor column (7th tensor) sourced from the shard's `cell_line`; two positional unpacks
+  in `training/train.py` converted to indexed access.
+- **1b** — `training/xdonor_calib.py`: inner-LODO over training donors, pooling residuals, logits
+  and ensemble spread; `temperature`, `q` and `sigma_scale` fitted on those. `sigma_scale`
+  persisted in `ConformalParams` (defaulted, so pre-existing bundles still load) and applied in
+  `Predictor`.
+- **Rollback** — `TrainConfig.xdonor_calibration = False` restores every in-distribution path.
+
+**Four defects were found in the plan and fixed; one plan step was found to be unimplementable and
+deliberately skipped.** All five are recorded in `plans/STAGE_1_DEVIATIONS.md`. The two that
+affect interpretation:
+
+1. **The inner-LODO as specified leaked** — it passed the held-out donor as the early-stopping
+   monitor, which would have made the residuals best-case and understated `q`. Fixed.
+2. **The OOD refit is not implementable** — the plan pools trunk features across independently
+   seeded inner models, whose latent bases differ by arbitrary rotation, while `OODDetector`
+   compares the *deployed* model's features. Pooling them makes the Mahalanobis distance
+   meaningless. Left unchanged; `ood_rate` is predicted not to move, and the gate's fate is
+   deferred to the Stage 3d disable decision (`STAGE_1` §1b.4 anticipates exactly this).
+
+### Load-bearing precondition, unverified at time of writing
+
+**Does `cell_line` carry donor identity, at donor granularity?** `python verify_1a.py` answers it.
+Expect **exactly 5** distinct donors in a LOOCV training split.
+
+- fewer → smaller inner-LODO pool, noisier fit
+- **more → `cell_line` is finer than donor** (donor × timepoint, say). Holding out such a group is
+  *not* holding out a donor; the same donor's cells stay in training, residuals understate true
+  cross-donor error, and `q` comes out too small. **This failure looks like success.** Stop and
+  inspect the values before proceeding.
+
+### RESULT (actual) — PENDING
+
+> Nothing has been executed. The implementation was written on a machine with no Python, no
+> dataset shards and no venv; not even an import check has run. Fill this in from the first real
+> run, verbatim, whatever it says.
+
+```
+python verify_1a.py                    ->  [paste]
+python -m pytest tests/ -q             ->  [paste]
+python scorecard.py snapshot --tag A_xdonor
+python scorecard.py compare baseline A_xdonor   ->  [paste]
+```
+
+| Metric | Baseline | Predicted | Actual | Verdict |
+|---|---|---|---|---|
+| `conformal_coverage` | 0.401 | 0.85–0.95 | | |
+| `fate_ece` | 0.281 | ≲0.17 | | |
+| `conformal_width` | 17.72 | ~70–86 | | |
+| `sigma_scale` | 1.0 | ~5–6 | | |
+| `ood_rate` | 0.273 | unchanged | | |
+| `dage_mae_model` | 14.291 | noise | | |
+| `rank_model_dage` | 0.948 | noise | | |
+| `fate_prauc` | 0.992 | noise | | |
+
+### VERDICT — PENDING
+
+*Was the prediction right? If yes, the root cause is confirmed and Stage 2's go/no-go is next. If
+no, the surprise is the finding — and per §6 of the ground rules, the first assumption is a bug in
+the change, not a discovery.*
