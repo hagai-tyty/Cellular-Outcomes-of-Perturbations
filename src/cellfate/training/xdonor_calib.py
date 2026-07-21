@@ -59,18 +59,20 @@ class XDonorStats:
     sigma_pred: np.ndarray      # (M,)  ENSEMBLE spread     -> fits sigma_scale
     sigma_pred_mc: np.ndarray   # (M,)  MC-DROPOUT spread   -> fits sigma_scale_mc
     n_donors: int               # inner-LODO donors actually used
-    # How many residuals each donor contributed. `q` is a QUANTILE of the pooled residuals, so
-    # a donor holding most of the pool sets it almost alone -- the pooled statistic then
-    # describes that donor, not cross-donor error. That is exactly how run 1 failed (HFF: 99.8%
-    # of 33,688), and the >50% skip only catches the extreme case. Recorded so the milder
-    # version is visible in metrics.json instead of silently shaping `q`.
-    residuals_per_donor: dict[int, int] = field(default_factory=dict)
     # DIAGNOSTIC ONLY -- deliberately not used to fit the OOD reference. These come from
     # independently-seeded INNER models, whose latent bases differ by arbitrary rotation, while
     # OODDetector compares the DEPLOYED member[0]'s z against the stored Gaussian. Pooling them
     # would make the Mahalanobis distance meaningless. See train_model.run and the Stage 1
     # deviation log.
     feats: np.ndarray           # (M,D) trunk features, out-of-donor
+
+    # How many residuals each donor contributed. `q` is a QUANTILE of the pooled residuals, so
+    # a donor holding most of the pool sets it almost alone -- the pooled statistic then
+    # describes that donor, not cross-donor error. That is exactly how run 1 failed (HFF: 99.8%
+    # of 33,688), and the >50% skip only catches the extreme case. Recorded so the milder
+    # version is visible in metrics.json instead of silently shaping `q`.
+    # LAST, and defaulted: every field after a defaulted one must also have a default.
+    residuals_per_donor: dict[int, int] = field(default_factory=dict)
 
     @property
     def has_residuals(self) -> bool:

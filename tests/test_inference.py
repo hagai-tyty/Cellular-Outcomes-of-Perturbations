@@ -348,7 +348,13 @@ def test_both_inference_modes_carry_their_own_sigma_scale(bundle):
 
 
 def test_predictor_refuses_a_mode_the_bundle_was_never_calibrated_for(bundle, tmp_path):
-    """A calibrated bundle missing THIS mode's factor must fail loudly, not serve raw sigma."""
+    """A bundle not calibrated for THIS mode must fail loudly, not serve raw sigma.
+
+    Status comes from `sigma_calibrated_modes`, never from the factor's value: the factor is
+    clamped at 1.0, so 1.0 means EITHER "measured, spread already adequate" OR "never
+    measured". The second case below is the one that distinction exists for -- inferring from
+    the value would refuse a correctly-calibrated bundle.
+    """
     import shutil
 
     from cellfate.common.errors import ConfigError
@@ -356,13 +362,25 @@ def test_predictor_refuses_a_mode_the_bundle_was_never_calibrated_for(bundle, tm
     copy_root = tmp_path / "bundle_copy"
     shutil.copytree(bundle, copy_root)
     paths = ArtifactPaths.of(copy_root)
-
     conf = io.load_conformal(paths)
-    io.save_conformal(paths, conf.model_copy(update={"sigma_scale_mc": 1.0}))
 
-    Predictor(copy_root, mode="ensemble")                    # its own factor is intact
+    # (a) mode genuinely absent from the calibrated set -> refuse
+    io.save_conformal(paths, conf.model_copy(
+        update={"sigma_calibrated_modes": ["ensemble"]}))
+    Predictor(copy_root, mode="ensemble")
     with pytest.raises(ConfigError, match="mc_dropout"):
         Predictor(copy_root, mode="mc_dropout")
+
+    # (b) mode calibrated but its factor clamped to 1.0 -> must STILL load
+    io.save_conformal(paths, conf.model_copy(
+        update={"sigma_calibrated_modes": ["ensemble", "mc_dropout"], "sigma_scale_mc": 1.0}))
+    p = Predictor(copy_root, mode="mc_dropout", T=4)
+    assert p.sigma_scale == 1.0
+
+    # (c) legacy bundle with no per-mode record -> unchanged behaviour, both modes load
+    io.save_conformal(paths, conf.model_copy(update={"sigma_calibrated_modes": []}))
+    Predictor(copy_root, mode="ensemble")
+    Predictor(copy_root, mode="mc_dropout", T=4)
 
 
 def test_mc_dropout_is_single_batched_call(bundle):

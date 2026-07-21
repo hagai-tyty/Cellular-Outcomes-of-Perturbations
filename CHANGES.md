@@ -49,6 +49,64 @@ temperature change.
 
 ---
 
+## 2026-07-21 — **EXECUTED.** Python installed locally; 199 tests + 26 smoke checks pass
+
+**Status:** ✅ **RUN, not just written.** This supersedes every "IMPLEMENTED, NEVER EXECUTED"
+caveat below for the unit tests and the smoke test. The *real-data* Stage 1 run is still pending.
+
+Installed Python 3.11.9 (winget) and a venv at `C:\cfv` — short path deliberately: torch's nested
+license directories exceed Windows `MAX_PATH` from this repo's depth, and the install fails with
+`WinError 206`. torch is the CPU wheel from the PyTorch index.
+
+### What running it immediately caught — a total blocker
+
+```
+TypeError: non-default argument 'feats' follows default argument
+```
+
+`XDonorStats.residuals_per_donor` was added *before* `feats`, and a defaulted dataclass field
+cannot precede a non-defaulted one. **The package did not import at all.** Every claim in the
+preceding entries — reviewed three times, "lint clean", "syntax verified" — was made against code
+that could not be loaded.
+
+Fixed by moving the field last, with a comment naming the constraint.
+
+### Then one stale test
+
+`test_predictor_refuses_a_mode_the_bundle_was_never_calibrated_for` set `sigma_scale_mc = 1.0`
+and expected a raise — the *old* value-inference contract, written before status moved to
+`sigma_calibrated_modes`. Updated to the new contract, and extended with the two cases the old
+form could not express: (b) a calibrated mode whose factor clamped to 1.0 must **still load**,
+and (c) a legacy bundle must behave exactly as before.
+
+### Results
+
+```
+tests/          199 passed
+smoke_stage1.py  26/26 checks, 10s
+```
+
+Selected smoke output, on the run-1 geometry:
+
+| | |
+|---|---|
+| bulk corpus skipped | `SKIPPING donor 0 -- leaves 96 of 216 cells (44.4%, below the 50% floor)` |
+| donors rotated | 6, corpus excluded |
+| residual pool | `{1:16, 2:16, 3:16, 4:16, 5:16, 6:16}` — balanced, corpus contributes **nothing** |
+| per-mode factors | ensemble **4.22**, mc_dropout **2.62** — distinct, each from its own spread |
+| degenerate temperature | correctly refused (T=1.0 instead of a collapse to the 0.01 bound) |
+| **reproducibility** | sigma_scale, q and temperature **identical** across two runs |
+
+That last row **measures** the claim that mc_dropout's dropout passes don't disturb training
+reproducibility — previously argued from "train_member re-seeds", never tested.
+
+> **Honest limit:** the synthetic corpus is 55.6% of the training split; the real one (HFF) is
+> 99.8%. The mechanism is exercised, but at a milder ratio than production. A donor sitting just
+> under the 50% floor would be neither skipped nor flagged by the >50% pool warning — a real gap
+> in the threshold design, not covered by this test.
+
+---
+
 ## 2026-07-21 — End-to-end smoke test, and the bug writing it exposed
 
 **Status:** ✅ Written, not run. `smoke_stage1.py` at repo root, CPU, ~2 min.
