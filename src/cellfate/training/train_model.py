@@ -211,7 +211,8 @@ def run(cfg: TrainConfig) -> dict:
     )
 
     metrics = _report(members, val_losses, train_ds, val_ds, calib_ds,
-                      cal_logits, cal_target, temperature, conformal, abs_res, xstats)
+                      cal_logits, cal_target, temperature, conformal, abs_res, xstats,
+                      cfg.mc_dropout_T)
     io.write_json(paths.bundle_dir / C.BUNDLE_METRICS_FILENAME, metrics)
     log_event(log, "bundle.done", bundle=str(paths.bundle_dir),
               n_members=len(members), temperature=round(temperature.temperature, 4))
@@ -223,7 +224,8 @@ def _jsonable(d: dict) -> dict:
 
 
 def _report(members, val_losses, train_ds, val_ds, calib_ds,
-            cal_logits, cal_target, temperature, conformal, abs_res, xstats=None) -> dict:
+            cal_logits, cal_target, temperature, conformal, abs_res, xstats=None,
+            mc_T: int = 50) -> dict:
     from scipy.special import softmax  # available via the data-stage deps
 
     out = {
@@ -237,6 +239,7 @@ def _report(members, val_losses, train_ds, val_ds, calib_ds,
         "conformal_q": dict(conformal.q),
         "sigma_scale": float(conformal.sigma_scale),          # mode="ensemble"
         "sigma_scale_mc": float(conformal.sigma_scale_mc),    # mode="mc_dropout"
+        "sigma_scale_mc_T": int(mc_T),   # the T it was fitted at; see mc_dropout_spread
         "sigma_scale_mode": conformal.sigma_scale_mode,
         # whether the calibrators actually saw cross-donor data. Recorded in the bundle so a
         # fallback is auditable after the fact rather than only visible in a log line.

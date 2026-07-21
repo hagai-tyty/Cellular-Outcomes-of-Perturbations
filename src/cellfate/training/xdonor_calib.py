@@ -79,16 +79,27 @@ def _subset(ds: TensorDataset, mask: torch.Tensor) -> TensorDataset:
     return TensorDataset(*[t[mask] for t in ds.tensors])
 
 
+MC_ROW_BUDGET = 8192          # tiled rows per forward; batch = budget // T
+
+
 @torch.no_grad()
 def mc_dropout_spread(model, ds: TensorDataset, device: str, T: int,
-                      batch_size: int = 256) -> np.ndarray:
+                      row_budget: int = MC_ROW_BUDGET) -> np.ndarray:
     """Std of ΔAge across T dropout passes -- what `sigma_age` IS in mode="mc_dropout".
 
     Mirrors ``Predictor._raw_batch``'s mc_dropout branch exactly: only Dropout modules go to
     train mode, the T passes are ONE tiled forward, and the spread is ``std(0, unbiased=False)``.
     A mismatch here would calibrate a quantity inference never produces.
 
-    Batched modestly because the tiled input is T x batch rows.
+    ⚠ T COUPLING. ``std(0, unbiased=False)`` over T samples is biased LOW, and the bias grows as
+    T shrinks (~4% at T=8, <1% at T=50). The factor is therefore only exact for the T it was
+    fitted at -- ``TrainConfig.mc_dropout_T``, recorded in the bundle metrics. Running
+    ``Predictor(T=...)`` far from that value shifts sigma by a few percent: second-order against
+    the ~5x miscalibration this exists to remove, but real. Keep them equal when it matters.
+
+    The tiled input is T x batch rows, so the batch is sized from a ROW budget rather than
+    fixed -- a fixed batch of 256 at T=50 is 12,800 rows, which can exhaust a small GPU on a
+    large held-out fold.
     """
     from torch.utils.data import DataLoader
 
@@ -100,7 +111,7 @@ def mc_dropout_spread(model, ds: TensorDataset, device: str, T: int,
             m.train()
     try:
         out = []
-        for batch in DataLoader(ds, batch_size=batch_size):
+        for batch in DataLoader(ds, batch_size=max(1, row_budget // max(T, 1))):
             x, fp, dt = (batch[i].to(device) for i in (X_I, FP_I, DT_I))
             n = x.shape[0]
             _, ag, _ = model(x.repeat(T, 1), fp.repeat(T, 1), dt.repeat(T, 1))
