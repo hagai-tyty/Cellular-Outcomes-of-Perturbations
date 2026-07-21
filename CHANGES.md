@@ -49,6 +49,65 @@ temperature change.
 
 ---
 
+## 2026-07-21 — Dress rehearsal on the real layout; two more defects found
+
+**Status:** ✅ **RUN.** 211 tests pass. The three Stage 1 scripts were executed end-to-end
+against synthetic `cellfate_loocv_*` folds built to mirror the production layout: a bulk corpus
+at **94.4%** of the training split (real HFF: 99.8%) plus six donors held out one at a time.
+
+### `verify_1a.py` — correct on the real geometry
+
+```
+6 labels -> 5 usable ;  BULK_L0=840(SKIP), DONOR_L1..L5=10 each
+VERDICT: PASS -- exactly 5 usable training donors per fold (['BULK_L0'] skipped as bulk corpora)
+```
+
+### `retrain_stage1.py` — the skip fires where it matters
+
+```
+SKIPPING donor 0 -- holding it out leaves 50 of 890 training cells (5.6%, below the 50% floor)
+xdonor.done  n_donors=5  n_residuals=50  residuals_per_donor={1:10, 2:10, 3:10, 4:10, 5:10}
+temperature 1.498 | q 0.477 | sigma_scale 7.796
+```
+
+**Temperature came out 1.498 — above 1, i.e. SOFTENING.** Run 1 produced 0.28–0.60 (sharpening),
+because the pool was 99.8% HFF. Softening is the direction theory predicts for a model that is
+over-confident out-of-donor, so the fix moves this quantity the way it should.
+
+### Defect 1 — one missing bundle destroyed the whole snapshot (`scorecard.py`)
+
+`measure_fold` wraps the split loading in `try/except` and returns `{"_error": ...}` per fold —
+but `Predictor(root)` sat **outside** that block. A single fold with a missing, incomplete or
+schema-mismatched bundle raised out of `cmd_snapshot` and **discarded every fold already
+measured**. A 6-fold retrain that dies at hour 3, or a deliberate partial retrain, would cost all
+the surviving results. Bundle loading is now inside the same error contract.
+
+*(This is in the user's file, changed because the fold-level `_error` contract already existed —
+the call had simply landed on the wrong side of it.)*
+
+### Defect 2 — the gate's decision table had only ever run its PASS branch
+
+Every STOP/FAIL path in `verify_1a.py` lived inside `main()`, reachable only by constructing a
+whole dataset. That is precisely how run 1 proceeded: the one branch that ever executed was the
+one that said PASS. Extracted `bulk_and_usable()` and `decide_verdict()` as pure functions and
+added `tests/test_verify_1a.py` — 12 tests driving **every** branch, including:
+
+- the run-1 geometry (corpus present → PASS, and the corpus is **named**)
+- `cell_line` finer-grained than donor → STOP
+- too few donors surviving the skip → STOP
+- folds disagreeing on donor count → STOP
+- a corpus is skipped across 51%–99% dominance, not just the extreme
+
+The last test pins the **known gap**: a donor at 49% is kept (holding it out leaves 51%, above
+the floor) yet supplies ~49% of the pooled residuals, tripping neither the skip nor the >50% pool
+warning. Whether 50% is the right floor is a threshold decision — the test exists so changing it
+is deliberate rather than accidental.
+
+*Writing that test also caught an error in the test itself: I first asserted 51% was not skipped,
+when it is. The boundary is now asserted in both directions.*
+
+---
+
 ## 2026-07-21 — **EXECUTED.** Python installed locally; 199 tests + 26 smoke checks pass
 
 **Status:** ✅ **RUN, not just written.** This supersedes every "IMPLEMENTED, NEVER EXECUTED"

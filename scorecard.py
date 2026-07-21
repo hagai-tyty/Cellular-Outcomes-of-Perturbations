@@ -141,7 +141,15 @@ def measure_fold(donor: str):
     if m.sum() < 3:
         return {"_error": "too few age-valid cells"}
 
-    pred = Predictor(root)
+    # Loading the bundle belongs in the SAME error contract as loading the splits above: a
+    # missing, incomplete or schema-mismatched bundle is a per-fold condition, not a reason to
+    # abandon the snapshot. Outside the try, one un-retrained fold aborted the whole run and
+    # discarded the folds that had already succeeded -- which is how a partial retrain (or a
+    # single crashed fold) costs you every other measurement.
+    try:
+        pred = Predictor(root)
+    except Exception as exc:  # noqa: BLE001
+        return {"_error": repr(exc)[:120]}
     est = ModelEstimator(pred)
     p = pred.res_params
 

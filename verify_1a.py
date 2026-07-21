@@ -85,6 +85,54 @@ def peek_shard(root: str) -> dict | None:
     }
 
 
+def bulk_and_usable(results: dict, ok_folds: list[str], inv_code) -> tuple[dict, dict]:
+    """Per fold: which donors `crossdonor_stats` will SKIP, and how many remain usable.
+
+    Mirrors xdonor_calib's rule exactly, using the imported threshold rather than restating
+    it -- a donor is skipped when holding it out would leave less than MIN_INNER_TRAIN_FRAC
+    of the training split.
+    """
+    bulk, usable = {}, {}
+    for d in ok_folds:
+        tr = results[d]["splits"].get("train", {})
+        counts, n_rows = tr.get("counts", {}), tr.get("n_rows", 0) or 1
+        skipped = {inv_code(c): n for c, n in counts.items()
+                   if (n_rows - n) < MIN_INNER_TRAIN_FRAC * n_rows}
+        if skipped:
+            bulk[d] = skipped
+        usable[d] = len(counts) - len(skipped)
+    return bulk, usable
+
+
+def decide_verdict(ok_folds: list[str], all_cols_ok: bool,
+                   usable: dict, bulk: dict) -> tuple[str, str]:
+    """The decision table, as a pure function so every branch is testable.
+
+    It lived inside ``main`` and only its PASS branch was ever exercised -- which is how run 1
+    proceeded on data that should have stopped it. Kept separate from all I/O so a test can
+    drive it directly.
+    """
+    n_usable = list(usable.values())
+    if not ok_folds:
+        return "CANNOT_VERIFY", "No fold loaded."
+    if not all_cols_ok:
+        return "FAIL", "A split returns != 7 columns (check the empty-split branch)."
+    if min(n_usable, default=0) < 2:
+        bad = [d for d, n in usable.items() if n < 2]
+        return "STOP", (f"Folds {bad} have <2 donors left after bulk corpora are skipped; "
+                        "inner-LODO cannot run.")
+    if min(n_usable) != EXPECTED_TRAIN_DONORS or max(n_usable) != EXPECTED_TRAIN_DONORS:
+        return "STOP", (
+            f"expected exactly {EXPECTED_TRAIN_DONORS} usable donors per fold (six minus the "
+            f"held-out one), saw {min(n_usable)}-{max(n_usable)} after skipping bulk corpora. "
+            "`cell_line` does not correspond 1:1 to donor; inspect it."
+        )
+    skip_note = (f" ({sorted({k for v in bulk.values() for k in v})} skipped as bulk corpora, "
+                 "as crossdonor_stats will)" if bulk else "")
+    return "PASS", (f"7 columns everywhere; exactly {EXPECTED_TRAIN_DONORS} usable training "
+                    f"donors per fold{skip_note}. Inner-LODO is possible.")
+
+
 def check_fold(donor: str) -> dict:
     root = resolve_root(f"cellfate_loocv_{donor}")
     paths = ArtifactPaths.of(root)
@@ -177,16 +225,7 @@ def main() -> None:
     # residuals then swamp the pool. That is what invalidated Stage 1 run 1. So the number that
     # matters is the count of donors that SURVIVE the skip, and the threshold is imported rather
     # than restated, so the two files cannot drift apart.
-    bulk, usable = {}, {}
-    for d in ok_folds:
-        tr = results[d]["splits"].get("train", {})
-        counts, n_rows = tr.get("counts", {}), tr.get("n_rows", 0) or 1
-        skipped = {inv_code(c): n for c, n in counts.items()
-                   if (n_rows - n) < MIN_INNER_TRAIN_FRAC * n_rows}
-        if skipped:
-            bulk[d] = skipped
-        usable[d] = len(counts) - len(skipped)
-
+    bulk, usable = bulk_and_usable(results, ok_folds, inv_code)
     n_usable = list(usable.values())
 
     # per-fold summary rows, judged on USABLE donors -- the same number the verdict uses
@@ -214,26 +253,7 @@ def main() -> None:
     # The box-drawing tables below can crash on a non-UTF-8 console; the JSON must
     # survive that, so it is written here while `results` is fully populated.
     n_donors = [results[d]["splits"].get("train", {}).get("n_donors", 0) for d in ok_folds]
-    if not ok_folds:
-        status, reason = "CANNOT_VERIFY", "No fold loaded."
-    elif not all_cols_ok:
-        status, reason = "FAIL", "A split returns != 7 columns (check the empty-split branch)."
-    elif min(n_usable, default=0) < 2:
-        bad = [d for d, n in usable.items() if n < 2]
-        status = "STOP"
-        reason = (f"Folds {bad} have <2 donors left after bulk corpora are skipped; "
-                  "inner-LODO cannot run.")
-    elif min(n_usable) != EXPECTED_TRAIN_DONORS or max(n_usable) != EXPECTED_TRAIN_DONORS:
-        status = "STOP"
-        reason = (f"expected exactly {EXPECTED_TRAIN_DONORS} usable donors per fold (six minus "
-                  f"the held-out one), saw {min(n_usable)}-{max(n_usable)} after skipping bulk "
-                  "corpora. `cell_line` does not correspond 1:1 to donor; inspect it.")
-    else:
-        status = "PASS"
-        skip_note = (f" ({sorted({k for v in bulk.values() for k in v})} skipped as bulk "
-                     f"corpora, as crossdonor_stats will)" if bulk else "")
-        reason = (f"7 columns everywhere; exactly {EXPECTED_TRAIN_DONORS} usable training "
-                  f"donors per fold{skip_note}. Inner-LODO is possible.")
+    status, reason = decide_verdict(ok_folds, all_cols_ok, usable, bulk)
 
     report = {
         "script": "verify_1a",
