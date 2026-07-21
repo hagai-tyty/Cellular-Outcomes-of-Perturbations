@@ -383,6 +383,49 @@ def test_predictor_refuses_a_mode_the_bundle_was_never_calibrated_for(bundle, tm
     Predictor(copy_root, mode="mc_dropout", T=4)
 
 
+def test_pre_stage1_bundles_measure_IDENTICALLY_under_the_new_code(bundle, tmp_path):
+    """`scorecard/baseline.json` was measured with the pre-Stage-1 library. Comparing it to a
+    Stage 1 snapshot is only honest if the new code reproduces the OLD numbers on an OLD bundle
+    -- otherwise the comparison silently mixes a library change into the measurement.
+
+    The only inference-path change Stage 1 makes is `sigma_age *= sigma_scale`. This pins that
+    it is EXACTLY a no-op when the bundle predates the field, by checking against the raw
+    ensemble spread computed independently.
+    """
+    import shutil
+
+    copy_root = tmp_path / "legacy_bundle"
+    shutil.copytree(bundle, copy_root)
+    paths = ArtifactPaths.of(copy_root)
+
+    # strip every Stage 1 field -> exactly what a pre-Stage-1 conformal.json looks like
+    conf = io.load_conformal(paths)
+    io.write_json(paths.bundle_conformal_file,
+                  {"levels": list(conf.levels), "q": dict(conf.q)})
+
+    pred = Predictor(copy_root, mode="ensemble")
+    assert pred.sigma_scale == 1.0, "a legacy bundle must not acquire a scaling factor"
+
+    arr = io.shard_to_numpy(io.read_shard(sorted(paths.shards_dir.glob("*.parquet"))[0]))
+    X, fp, dt = arr["X"][:6], arr["u_chem_fp"][:6], arr["dose_time"][:6]
+    rows = pred.predict_encoded(X, fp, dt)
+
+    # independently: the raw spread across members, exactly as the old code produced it
+    Xz = torch.from_numpy(pred.scalers.transform_x(np.asarray(X, np.float32))).float()
+    dtz = torch.from_numpy(
+        pred.scalers.transform_dose_time(np.asarray(dt, np.float32))).float()
+    fpt = torch.from_numpy(np.asarray(fp, np.float32)).float()
+    with torch.no_grad():
+        ages = torch.stack([m(Xz, fpt, dtz)[1] for m in pred.members])
+    raw = ages.std(0, unbiased=False).numpy()
+
+    got = np.array([r["sigma_age"] for r in rows])
+    assert np.allclose(got, raw, rtol=0, atol=0), (
+        f"sigma_age changed on a legacy bundle: {got} vs {raw} -- the baseline comparison "
+        "would be measuring a library change, not the calibration change"
+    )
+
+
 def test_mc_dropout_is_single_batched_call(bundle):
     """T passes must be ONE tiled forward, never a per-sample loop."""
     pred = Predictor(bundle, mode="mc_dropout", T=40)

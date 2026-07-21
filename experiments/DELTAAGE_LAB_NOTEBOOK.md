@@ -1944,6 +1944,53 @@ Gill-donor residuals (5 donors × ~15 cells) instead of 33,613 HFF ones.
 > donor heterogeneity — not a further bug — and the response is a per-donor or conditional
 > interval, pre-registered separately.
 
+### That caveat is now QUANTIFIED, before run 2 — `experiments/q_power_analysis.py`
+
+The caveat above was a hunch. It has been simulated from the baseline's own per-fold MAEs, on
+the pool geometry run 2 will actually have (5 donors × ~14 cells ≈ 70 residuals). No GPU, no
+bundles, reproducible.
+
+**Result 1 — `q` is very noisy at this pool size.** Over 4,000 resamples: median **36.2 yr**,
+90% range **[23.7, 48.2]** — a **68% spread from sampling alone**, before any modelling error.
+
+**Result 2 — a single global `q` cannot serve these donors.** Coverage that the median `q`
+delivers to each held-out donor:
+
+| fold | MAE | coverage | |
+|---|---|---|---|
+| O1 | 5.39 | **1.000** | saturated |
+| Y1 | 7.28 | **1.000** | saturated |
+| O2 | 7.54 | **1.000** | saturated |
+| Y2 | 14.06 | **0.960** | saturated |
+| N2 | 21.79 | **0.808** | under-covers |
+| N3 | 29.69 | **0.666** | under-covers |
+
+**Aggregate mean 0.906 — inside the 0.85–0.95 window — while `0/6` individual folds are.**
+
+> **This is the single most important thing to know before reading run 2.** Donor error scales
+> differ **5.5×**, so one scalar `q` mathematically cannot hold every fold at 90%. The aggregate
+> can land in the window purely by averaging saturation against under-coverage — which is
+> **exactly what run 1 showed** (mean 0.873 from 0.381 / 0.857 / 1.000 / 1.000 / 1.000 / 1.000).
+>
+> The model is conservative: half-normal residuals give `P90/mean = 2.07`, while `MASTER_PLAN`
+> §5d puts our heavy-tailed mixture at **2.67**. The real `q` is therefore *larger*, and
+> saturation *more* likely, than simulated.
+
+**Consequence for the pre-registered bar.** A run-2 miss on `conformal_coverage` is now expected
+on structural grounds, and would be **a finding about donor heterogeneity, not evidence that the
+calibration code is wrong**. The two must not be confused. The legitimate responses are:
+
+1. accept the failure and report it — a single global interval is not appropriate for donors
+   whose errors differ 5.5×; or
+2. run a **new** test with a **new** pre-registered bar, for a per-donor or conditional interval.
+
+**Never** shrink `q` until coverage lands in the window. `STAGE_1` §1b.4 already forbids it, and
+the reason is now numerical rather than rhetorical: with a 68% sampling spread, *any* target
+coverage can be hit by choosing a `q` after seeing the result.
+
+**Also worth watching:** the aggregate `conformal_coverage` is a mean over folds, so it can read
+"in range" while nothing is. **Read the per-fold row, not the mean.**
+
 ### VERDICT — RUN 1: **INVALID, RE-RUN REQUIRED**
 
 Not a failure of the hypothesis. The hypothesis was never tested: the calibration set was 99.8%

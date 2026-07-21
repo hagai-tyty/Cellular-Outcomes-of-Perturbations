@@ -69,6 +69,41 @@ def backup_bundle(root: Path) -> str:
     return f"backed up -> {dst.name}"
 
 
+def _restore(donors: list[str]) -> None:
+    """Put each fold's pre-Stage-1 bundle back, so the baseline can be RE-MEASURED.
+
+    `scorecard/baseline.json` was produced by the pre-Stage-1 library. Comparing it against a
+    Stage 1 snapshot is only honest if the current code reproduces those same numbers on those
+    same bundles -- otherwise a library change is silently folded into the measurement. Costs no
+    GPU time (scorecard does not train):
+
+        python retrain_stage1.py --restore
+        python scorecard.py snapshot --tag baseline_recheck
+        python scorecard.py compare baseline baseline_recheck    # every diff must be 0.000
+    """
+    print("\nRESTORING pre-Stage-1 bundles (no training)")
+    for d in donors:
+        root = resolve_root(f"cellfate_loocv_{d}")
+        if root is None:
+            print(f"   {d}: fold directory not found")
+            continue
+        src, dst = root / BACKUP_DIRNAME, root / "bundle"
+        if not src.is_dir():
+            print(f"   {d}: no {BACKUP_DIRNAME}/ -- nothing to restore "
+                  "(this fold was never retrained)")
+            continue
+        if dst.exists():
+            shutil.rmtree(dst)
+        shutil.copytree(src, dst)          # COPY, not move: the backup stays available
+        print(f"   {d}: {BACKUP_DIRNAME}/ -> bundle/")
+    print("\n  NEXT — confirm the baseline still measures the same under current code:")
+    print("    python scorecard.py snapshot --tag baseline_recheck")
+    print("    python scorecard.py compare baseline baseline_recheck")
+    print("  EVERY metric must show a mean diff of exactly 0.000. Anything else means the")
+    print("  library changed how metrics are computed, and `compare baseline A_xdonor` would")
+    print("  be measuring that change on top of the calibration change.")
+
+
 def retrain(root: Path, xdonor: bool, device: str) -> dict:
     from cellfate.training.train_model import TrainConfig
     from cellfate.training.train_model import run as train_run
@@ -90,7 +125,14 @@ def main() -> None:
                     help="comma-separated subset, e.g. N2 for a smoke test")
     ap.add_argument("--no-xdonor", action="store_true",
                     help="disable cross-donor calibration (the Stage 1a-only rollback path)")
+    ap.add_argument("--restore", action="store_true",
+                    help="restore each fold's bundle_pre_stage1/ backup over bundle/ and exit; "
+                         "no training. Use to re-measure the baseline with current code, or to "
+                         "roll back")
     args = ap.parse_args()
+
+    if args.restore:
+        return _restore([d.strip() for d in args.donors.split(",") if d.strip()])
 
     import torch
 
