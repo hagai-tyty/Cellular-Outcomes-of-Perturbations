@@ -11,6 +11,44 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-07-21 — Stage 1 run 1 was INVALID; bulk-corpus guard added
+
+**Status:** ✅ **Fixes written, NOT yet run.** Run 1 executed fully (6 folds, 212 min) and is void.
+
+**What happened.** `cell_line` is not donor. The training split merges the **GSE242423 HFF corpus
+(33,613 cells)** with the **six Gill donors (~14 cells each)**, and both are labelled by
+`cell_line` — so the inner-LODO rotated over HFF as a seventh donor. Holding HFF out left a model
+trained on **75 cells** (val_loss 33.0 vs the deployed 5.3), and because that fold is also the
+largest it contributed **33,613 of 33,688 pooled residuals (99.8%)**. `q` and `sigma_scale` were
+therefore calibrated against data starvation, not donor shift.
+
+The tell: `sigma_scale` ranged **6.28 to 74.45** across folds for a quantity that should be
+similar. Y2's 74.45 implies a median ensemble spread of 0.50 yr against a P90 residual of 36.9.
+
+**My defect, not just the plan's.** `verify_1a.py` *detected this and printed the warning* — "MORE
+than the expected 5; saw 6. THIS IS THE DANGEROUS DIRECTION" — and then **graded the run `PASS`**,
+because the verdict logic only escalated to STOP on *too few* donors. The operator followed a PASS.
+Cost: 3.5 h of GPU time and a void experiment. A check that fires and is then overruled by its own
+scoring rule is worse than no check.
+
+| File | Fix |
+|---|---|
+| `src/cellfate/training/xdonor_calib.py` | `MIN_INNER_TRAIN_FRAC = 0.5` — skip any inner fold whose held-out donor leaves <50% of the training split; raise if <2 usable folds survive |
+| `verify_1a.py` | `STOP` when any donor holds >50% of a training split, **or** when the donor count differs from the expected 5. Both were previously PASS-with-warning |
+| `tests/test_training.py` | two regression tests: a 90%-dominant donor must be skipped and must not reach the residual pool; a 95/5 split must raise |
+
+**Bars unchanged** — this is ground rule §6 ("the default assumption is a bug in the test"), not a
+retroactive threshold move. Run 1 numbers, per-fold coverage, and run-2 predictions are recorded in
+the lab notebook.
+
+**What run 1 did establish:** the guards behaved exactly as predicted, including the sharper
+bit-identical prediction — `dage_mae_model` and `rank_model_dage` moved **+0.000 on every fold**.
+Stage 1 provably does not touch the model. `fate_prauc` moved 0.992→0.988, which is *correct*: `S`
+is `softmax(logits/T)[:,0]` and 3-class softmax is not rank-preserving in one class under a
+temperature change.
+
+---
+
 ## 2026-07-20 — Follow-up task: per-mode sigma_scale for mc_dropout
 
 **Status:** ⏳ **blocked on Stage 1 score** — the xfail marker is in place (`tests/test_inference.py`).

@@ -174,6 +174,9 @@ def main() -> None:
             "OK" if tr.get("n_donors", 0) >= 2 else "** INNER-LODO IMPOSSIBLE **",
         ])
 
+    def inv_code(code: int) -> str:
+        return {v: k for k, v in DONOR_VOCAB.items()}.get(code, str(code))
+
     # ---- SAVE the verdict as JSON BEFORE any console table ----
     # The box-drawing tables below can crash on a non-UTF-8 console; the JSON must
     # survive that, so it is written here while `results` is fully populated.
@@ -185,6 +188,18 @@ def main() -> None:
                 for s in results[d]["splits"].values() if "_error" not in s)
         for d in ok_folds
     )
+    # A donor holding most of the training split is a bulk corpus, not a donor: holding it out
+    # leaves a data-starved model, and its residuals then dominate the pooled calibration.
+    # xdonor_calib skips these, but they must be VISIBLE here -- the first Stage 1 run was
+    # invalidated by exactly this (HFF, 33,613 of 33,688 training cells).
+    dominant = {}
+    for d in ok_folds:
+        tr = results[d]["splits"].get("train", {})
+        counts, n_rows = tr.get("counts", {}), tr.get("n_rows", 0) or 1
+        big = {inv_code(c): n for c, n in counts.items() if n > 0.5 * n_rows}
+        if big:
+            dominant[d] = big
+
     if not ok_folds:
         status, reason = "CANNOT_VERIFY", "No fold loaded."
     elif not all_cols_ok:
@@ -192,10 +207,21 @@ def main() -> None:
     elif min(n_donors) < 2:
         bad = [d for d, n in zip(ok_folds, n_donors, strict=True) if n < 2]
         status, reason = "STOP", f"Folds {bad} have <2 training donors; inner-LODO cannot run."
+    elif dominant:
+        status = "STOP"
+        reason = (f"`cell_line` mixes donors with a BULK CORPUS {sorted({k for v in "
+                  f"dominant.values() for k in v})}: it holds >50% of the training split, so "
+                  "holding it out leaves a data-starved model whose residuals swamp the pool. "
+                  "Rotating over it is not cross-donor calibration.")
+    elif max(n_donors) != EXPECTED_TRAIN_DONORS:
+        status = "STOP"
+        reason = (f"expected exactly {EXPECTED_TRAIN_DONORS} training donors "
+                  f"(six minus the held-out one), saw {min(n_donors)}-{max(n_donors)}. "
+                  "`cell_line` does not correspond 1:1 to donor; inspect it before running 1b.")
     else:
         status = "PASS"
-        reason = (f"7 columns everywhere; {min(n_donors)}-{max(n_donors)} training "
-                  f"donors per fold. Inner-LODO is possible.")
+        reason = (f"7 columns everywhere; exactly {EXPECTED_TRAIN_DONORS} training donors per "
+                  "fold, none dominant. Inner-LODO is possible.")
 
     report = {
         "script": "verify_1a",
@@ -208,6 +234,7 @@ def main() -> None:
             "expected_train_donors": EXPECTED_TRAIN_DONORS,
             "all_splits_7_cols": all_cols_ok,
             "ok_folds": ok_folds,
+            "dominant_donors": dominant,
         },
         "raw_shard_peek": peek,
         "folds": results,

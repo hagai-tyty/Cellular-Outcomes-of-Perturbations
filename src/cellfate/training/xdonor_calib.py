@@ -37,6 +37,14 @@ log = get_logger("cellfate.training")
 
 MIN_DONORS = 2
 
+# An inner fold is only a proxy for the DEPLOYED model if it is trained on a comparable amount
+# of data. Holding out a donor that is most of the training set produces a data-starved model
+# whose residuals measure "what happens with almost no training data", not "what happens on an
+# unseen donor" -- and because those residuals are pooled, one such fold can swamp every honest
+# one. Measured on the Gill+HFF merge: holding out HFF left 75 of 33,688 cells (0.2%), and that
+# single fold supplied 33,613 of 33,688 pooled residuals (99.8%).
+MIN_INNER_TRAIN_FRAC = 0.5
+
 # The inference mode `sigma_scale` is valid for. NOT a configurable value: `sigma_pred` is
 # collected as the spread across ENSEMBLE MEMBERS, so an ensemble-derived factor is the only
 # thing this module can produce. It is a constant so the label written into the bundle always
@@ -96,12 +104,28 @@ def crossdonor_stats(train_ds: TensorDataset, val_ds: TensorDataset,
             "Check the donor column (Stage 1a) rather than bypassing this."
         )
 
+    n_total = len(train_ds)
     res, log_, tgt, fts, sig = [], [], [], [], []
-    used = 0
+    used, skipped = 0, []
     for d in uniq:
         hold = donors == d
         inner_tr, inner_te = _subset(train_ds, ~hold), _subset(train_ds, hold)
         if len(inner_te) == 0 or len(inner_tr) == 0:
+            continue
+
+        # A donor that IS the training set cannot be held out and still leave a model worth
+        # calibrating against. Skipping is the only honest option: including it pools residuals
+        # from a data-starved model with residuals from real ones, and since it is also the
+        # largest fold it dominates the pooled quantile.
+        if len(inner_tr) < MIN_INNER_TRAIN_FRAC * n_total:
+            skipped.append(int(d))
+            log.warning(
+                "inner-LODO: SKIPPING donor %d -- holding it out leaves %d of %d training "
+                "cells (%.1f%%, below the %.0f%% floor). It is a bulk corpus, not a donor; "
+                "calibrating against it would measure data starvation, not donor shift.",
+                int(d), len(inner_tr), n_total, 100.0 * len(inner_tr) / max(n_total, 1),
+                100.0 * MIN_INNER_TRAIN_FRAC,
+            )
             continue
 
         # Early stopping must NOT see the held-out donor, or the residuals we collect from it
@@ -128,6 +152,13 @@ def crossdonor_stats(train_ds: TensorDataset, val_ds: TensorDataset,
         log_event(log, "xdonor.fold", donor=int(d), n_train=len(inner_tr),
                   n_held=len(inner_te), n_age=int(am.sum()))
 
+    if used < MIN_DONORS:
+        raise ValueError(
+            f"inner-LODO ran only {used} usable fold(s) of {len(uniq)} donors "
+            f"(skipped as bulk corpora: {skipped}). Calibration from fewer than {MIN_DONORS} "
+            "held-out donors is not cross-donor. Check the donor column (Stage 1a)."
+        )
+
     stats = XDonorStats(
         abs_residuals=np.concatenate(res) if res else np.array([]),
         logits=np.vstack(log_) if log_ else np.zeros((0, 3)),
@@ -136,7 +167,7 @@ def crossdonor_stats(train_ds: TensorDataset, val_ds: TensorDataset,
         sigma_pred=np.concatenate(sig) if sig else np.array([]),
         n_donors=used,
     )
-    log_event(log, "xdonor.done", n_donors=used,
+    log_event(log, "xdonor.done", n_donors=used, n_skipped=len(skipped), skipped=skipped,
               n_residuals=int(stats.abs_residuals.size), n_logits=int(stats.logits.shape[0]))
     return stats
 

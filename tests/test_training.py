@@ -282,6 +282,57 @@ def test_crossdonor_stats_refuses_a_single_donor():
                          _tiny_cfg(), "cpu")
 
 
+def test_crossdonor_stats_skips_a_bulk_corpus_masquerading_as_a_donor():
+    """The defect that invalidated the first Stage 1 run.
+
+    The Gill+HFF merge carries HFF as a `cell_line` with 33,613 of 33,688 training cells.
+    Holding it out left a model trained on 75 cells (val_loss 33.0 vs 5.3), and because that
+    fold is also the largest, it supplied 99.8% of the pooled residuals -- so `q` and
+    `sigma_scale` were calibrated against data starvation, not donor shift.
+    """
+    from cellfate.training.xdonor_calib import MIN_INNER_TRAIN_FRAC, crossdonor_stats
+
+    # donor 0 holds 90% of the rows; donors 1 and 2 hold 5% each
+    n = 200
+    ds = _toy_dataset(n=n)
+    donor = torch.zeros(n, dtype=torch.long)
+    donor[180:190] = 1
+    donor[190:] = 2
+    ds = torch.utils.data.TensorDataset(*ds.tensors[:-1], donor)
+
+    def make():
+        return CellFateNet(g=8, d_cell=8, d_u=8, latent_dim=8, p_drop=0.1)
+
+    stats = crossdonor_stats(ds, ds, make, _tiny_cfg(), "cpu")
+
+    # donor 0 must be skipped: holding it out leaves 20/200 = 10%, below the floor
+    assert 0.10 < MIN_INNER_TRAIN_FRAC
+    assert stats.n_donors == 2, (
+        f"expected the bulk corpus to be skipped and 2 real donors used, got {stats.n_donors}"
+    )
+    # and its 180 rows must not appear in the pooled residuals
+    assert stats.abs_residuals.size <= 20, (
+        f"bulk corpus leaked into the residual pool ({stats.abs_residuals.size} residuals)"
+    )
+
+
+def test_crossdonor_stats_refuses_when_only_one_donor_survives_the_bulk_filter():
+    """Two donors where one is a bulk corpus leaves one usable fold -- not cross-donor."""
+    from cellfate.training.xdonor_calib import crossdonor_stats
+
+    n = 200
+    ds = _toy_dataset(n=n)
+    donor = torch.zeros(n, dtype=torch.long)
+    donor[190:] = 1                      # 95% / 5%
+    ds = torch.utils.data.TensorDataset(*ds.tensors[:-1], donor)
+
+    def make():
+        return CellFateNet(g=8, d_cell=8, d_u=8, latent_dim=8, p_drop=0.1)
+
+    with pytest.raises(ValueError, match="usable fold"):
+        crossdonor_stats(ds, ds, make, _tiny_cfg(), "cpu")
+
+
 def test_sigma_scale_mode_label_must_match_what_was_computed():
     """The bundle's mode label describes what was COMPUTED, not what the caller declared.
 

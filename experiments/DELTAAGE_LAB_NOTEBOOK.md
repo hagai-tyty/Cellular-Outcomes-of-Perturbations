@@ -1831,8 +1831,120 @@ python scorecard.py compare baseline A_xdonor   ->  [paste]
 | `rank_model_dage` | 0.948 | noise | | |
 | `fate_prauc` | 0.992 | noise | | |
 
-### VERDICT — PENDING
+### RESULT — RUN 1 (2026-07-21) — ⛔ **INVALID. The experiment did not test the hypothesis.**
 
-*Was the prediction right? If yes, the root cause is confirmed and Stage 2's go/no-go is next. If
-no, the surprise is the finding — and per §6 of the ground rules, the first assumption is a bug in
-the change, not a discovery.*
+Ran on D: (RTX 2050, CUDA), 6 folds, 212 min. **The run is void for a reason found in its own
+diagnostics: `cell_line` is not donor.**
+
+```
+DONOR VOCAB: {'HFF': 0, 'N3': 1, 'O1': 2, 'O2': 3, 'Y1': 4, 'Y2': 5, 'N2': 6}
+cells per donor (N2 fold train): HFF=33613, N3=14, O1=16, O2=18, Y1=13, Y2=14
+```
+
+The training split is the **GSE242423 HFF reprogramming corpus (33,613 cells) merged with the six
+Gill donors (~14 cells each)**. `cell_line` labels both, so the inner-LODO rotated over HFF as if
+it were a seventh donor:
+
+```
+- xdonor.fold  donor=0 (HFF)  n_train=75      n_held=33613
+- xdonor.fold  donor=1 (N3)   n_train=33674   n_held=14
+  ... (four more, ~14 cells each)
+- xdonor.done  n_donors=6  n_residuals=33688
+```
+
+**The HFF fold trained on 75 cells** — val_loss **33.0** against the deployed model's **5.3** — and
+because it is also the largest fold it contributed **33,613 of 33,688 pooled residuals (99.8%)**.
+
+> **So `q` and `sigma_scale` were calibrated against data starvation, not donor shift.** The
+> quantity Stage 1 set out to measure was never measured.
+
+**The smoking gun is `sigma_scale`, which should be similar across folds:**
+
+| fold | N2 | N3 | O1 | O2 | Y1 | **Y2** |
+|---|---|---|---|---|---|---|
+| `sigma_scale` | 6.28 | 22.56 | 11.40 | 16.40 | 11.79 | **74.45** |
+| `q` (yr) | 19.73 | 40.23 | 37.53 | 41.33 | 34.65 | 36.87 |
+
+A **12× spread**. Y2's 74.45 implies a median ensemble spread of **0.50 yr** against a P90 residual
+of 36.9 — five members trained on 75 cells agreeing closely with each other while collectively
+catastrophically wrong. That is the ensemble-under-shift failure in its purest form, but it is
+*our own construction*, not a property of the data.
+
+### Scorecard, run 1 — recorded for completeness, interprets nothing
+
+| Role | Metric | Baseline | Run 1 | Verdict vs bar |
+|---|---|---|---|---|
+| TARGET | `conformal_coverage` | 0.401 | **0.873** | ACCEPT, CI [+0.171,+0.774] — **but see below** |
+| TARGET | `fate_ece` | 0.281 | **0.227** | **FAIL** — `noise`, 19% drop vs the ≥40% bar |
+| GUARD | `dage_mae_model` | 14.291 | 14.291 | ✅ **bit-identical**, +0.000 every fold |
+| GUARD | `rank_model_dage` | 0.948 | 0.948 | ✅ **bit-identical** |
+| GUARD | `fate_prauc` | 0.992 | 0.988 | ✅ noise |
+| GUARD | `fate_roc` | 0.983 | 0.978 | ✅ noise |
+| watch | `conformal_width` | 17.72 | **70.12** | as predicted (70–86) |
+| watch | `ood_rate` | 0.273 | 0.273 | ✅ unchanged, as predicted |
+| watch | `res_approvals` | 3 | **0** | over-approval gap → 0, as predicted |
+
+**The coverage "ACCEPT" is an averaging artifact and must not be reported as a pass.** Per fold:
+
+```
+N2 0.381 | N3 0.857 | O1 1.000 | O2 1.000 | Y1 1.000 | Y2 1.000
+```
+
+Four folds cover **everything** (q far exceeds their error) and N2 covers **38%** (q=19.7 below its
+21.8 MAE). The 0.873 mean is two opposite failures cancelling. Under the pre-registered ruling
+(>0.95 → FAIL), **four of six folds fail**.
+
+### Two things the run DID establish
+
+1. **The guards behaved exactly as predicted**, including the sharper bit-identical prediction:
+   `dage_mae_model` and `rank_model_dage` moved by **+0.000 on every fold**. Stage 1 provably does
+   not touch the model — only the calibration layer.
+2. **`fate_prauc`/`fate_roc` moved slightly (0.992→0.988) and this is CORRECT, not a leak.** `S` is
+   `softmax(logits/T)[:,0]`, and for 3-class softmax the ordering of one class's probability across
+   cells is **not** temperature-invariant (the normaliser depends on all three logits). Temperature
+   legitimately changed, so a small rank change follows. Verified analytically with a counterexample.
+
+### Root cause of the invalidity — a defect in the verification, not just the calibration
+
+`verify_1a.py` **detected this and printed the warning verbatim** —
+
+> `!! MORE than the expected 5; saw 6. THIS IS THE DANGEROUS DIRECTION.`
+
+— and then **graded the run `PASS`**, because the verdict logic only escalated to `STOP` on
+*too few* donors. The operator followed a PASS. **This cost 3.5 hours of GPU time and a void
+experiment.** The check existed, fired, and was ignored by its own scoring rule.
+
+### Fixes applied (not yet run)
+
+| Where | Fix |
+|---|---|
+| `xdonor_calib.py` | `MIN_INNER_TRAIN_FRAC = 0.5` — skip any inner fold whose held-out donor leaves <50% of the training split. Such a fold measures data starvation, not donor shift. Raises if fewer than 2 usable folds survive |
+| `verify_1a.py` | `STOP` (not PASS-with-warning) when a donor holds >50% of a training split, **or** when the donor count is anything other than the expected 5 |
+| `tests/test_training.py` | two tests: a 90%-dominant donor must be skipped and must not reach the residual pool; a 95/5 split must raise rather than calibrate off one donor |
+
+**Bars are unchanged.** This is ground rule §6 — *"when a result surprises you, the default
+assumption is a bug in the test"* — not a retroactive threshold move. Run 2 will pool ~75 honest
+Gill-donor residuals (5 donors × ~15 cells) instead of 33,613 HFF ones.
+
+### Predictions for RUN 2, recorded before it runs
+
+| Metric | Run 1 | Run 2 predicted | Why |
+|---|---|---|---|
+| `xdonor_n_donors` | 6 | **5** | HFF skipped |
+| `xdonor_n_residuals` | 33,688 | **~75** | Gill donors only |
+| `sigma_scale` spread | 6.3–74.5 | **narrower, ~3–8** | no starved fold |
+| `conformal_coverage` | 0.873 (0.38–1.00) | **less saturated** | q from honest residuals |
+| guards | bit-identical | **bit-identical** | unchanged |
+
+> **Honest caveat, stated now.** With only ~15 training cells per Gill donor, the inner-LODO pool
+> is ~75 residuals from 5 donors. That is enough for a 90% split-conformal quantile
+> (`ceil(76×0.9)`=69th of 75), but the per-donor heterogeneity already measured (MAE 5.4 on O1 vs
+> 29.7 on N3) means **a single global `q` may be unable to hit 0.85–0.95 on every fold regardless
+> of how correctly it is fitted.** If run 2 still shows saturated folds, that is a finding about
+> donor heterogeneity — not a further bug — and the response is a per-donor or conditional
+> interval, pre-registered separately.
+
+### VERDICT — RUN 1: **INVALID, RE-RUN REQUIRED**
+
+Not a failure of the hypothesis. The hypothesis was never tested: the calibration set was 99.8%
+data-starvation residuals. Both targets are void; both guards passed and are informative.
