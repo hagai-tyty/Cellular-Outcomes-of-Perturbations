@@ -16,6 +16,7 @@ are ever corrupted.
 
 from __future__ import annotations
 
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -97,16 +98,27 @@ class Predictor:
 
         # Stage 1b: sigma_age is the ENSEMBLE SPREAD (~2.4 yr) while true out-of-donor error is
         # ~14 yr, and RES consumes sigma -- not q -- so it needs its own rescaling. The factor is
-        # calibrated against one specific spread, so applying it under the other mode would
-        # silently calibrate the wrong quantity. getattr keeps pre-Stage-1b bundles loading.
+        # calibrated against ONE specific spread, so it must not be applied to the other:
+        # mode="ensemble" spreads across members, mode="mc_dropout" across T dropout passes of
+        # member[0]. getattr keeps pre-Stage-1b bundles loading.
         self.sigma_scale = float(getattr(conf, "sigma_scale", 1.0))
-        scale_mode = str(getattr(conf, "sigma_scale_mode", "ensemble"))
-        if self.sigma_scale != 1.0 and scale_mode != self.mode:
-            raise ConfigError(
-                f"bundle's sigma_scale={self.sigma_scale:.3f} was calibrated for "
-                f"mode={scale_mode!r} but this Predictor runs mode={self.mode!r}. "
-                f"Re-run with mode={scale_mode!r}, or recompute the factor against "
-                f"{self.mode!r} samples -- it calibrates a different spread in each mode."
+        self.sigma_scale_mode = str(getattr(conf, "sigma_scale_mode", "ensemble"))
+        self.sigma_calibrated = True
+        if self.sigma_scale != 1.0 and self.sigma_scale_mode != self.mode:
+            # Drop the factor rather than refuse to load. Applying it would calibrate the wrong
+            # quantity; refusing would kill mc_dropout entirely on every Stage-1 bundle, which
+            # is a capability regression, not a safety gain. Serving the RAW spread is exactly
+            # what this mode did before Stage 1 -- no worse, and now it says so.
+            self.sigma_scale = 1.0
+            self.sigma_calibrated = False
+            warnings.warn(
+                f"sigma_scale was calibrated for mode={self.sigma_scale_mode!r}; running "
+                f"mode={self.mode!r}, so it is NOT applied and `sigma_age` is the raw "
+                f"{self.mode!r} spread -- UNCALIBRATED and known to be overconfident "
+                f"(~2.4 yr against ~14 yr true out-of-donor error). Do not feed it to RES or "
+                f"any safety threshold. Use mode={self.sigma_scale_mode!r} for calibrated "
+                f"uncertainty.",
+                stacklevel=2,
             )
 
     # -- core stochastic passes -------------------------------------------- #

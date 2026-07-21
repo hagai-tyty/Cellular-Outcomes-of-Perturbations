@@ -331,14 +331,30 @@ def test_determinism_ensemble_mode(bundle):
     assert a == b
 
 
-@pytest.mark.xfail(
-    reason="mc_dropout needs per-mode sigma_scale calibration (Stage 1b follow-up); "
-           "implement after Stage 1 is scored",
-    strict=True,
-)
+def test_mc_dropout_warns_and_drops_a_mismatched_sigma_scale(bundle):
+    """mc_dropout must stay USABLE on a Stage-1 bundle, with the factor dropped, not applied.
+
+    sigma_scale is calibrated from the ensemble spread. Applying it to the dropout spread would
+    calibrate the wrong quantity; refusing to load would kill the mode outright on every
+    Stage-1 bundle. So it is dropped, loudly -- serving the raw spread, which is what this mode
+    did before Stage 1.
+    """
+    ens = Predictor(bundle, mode="ensemble")
+    if ens.sigma_scale == 1.0:
+        pytest.skip("bundle carries no sigma_scale; nothing to mismatch")
+
+    with pytest.warns(UserWarning, match="UNCALIBRATED"):
+        mc = Predictor(bundle, mode="mc_dropout", T=8)
+    assert mc.sigma_scale == 1.0, "the ensemble factor must NOT be applied to dropout spread"
+    assert mc.sigma_calibrated is False, "the mode must report its uncertainty as uncalibrated"
+    assert ens.sigma_calibrated is True
+
+
 def test_mc_dropout_is_single_batched_call(bundle):
     """T passes must be ONE tiled forward, never a per-sample loop."""
-    pred = Predictor(bundle, mode="mc_dropout", T=40)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")          # the uncalibrated-sigma warning is expected
+        pred = Predictor(bundle, mode="mc_dropout", T=40)
     paths = ArtifactPaths.of(bundle)
     arr = io.shard_to_numpy(io.read_shard(sorted(paths.shards_dir.glob("*.parquet"))[0]))
     member = pred.members[0]

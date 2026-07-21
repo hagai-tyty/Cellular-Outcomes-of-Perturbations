@@ -49,6 +49,33 @@ temperature change.
 
 ---
 
+## 2026-07-21 — mc_dropout un-broken: drop the mismatched factor instead of refusing to load
+
+**Status:** ✅ Written, not run. Replaces the xfail with a real fix.
+
+**The regression I introduced.** `STAGE_1` §3 asks for a **bundle-write-time** assert. I added
+that *and* a load-time `raise` in `Predictor`, which went further than the plan and made
+`mode="mc_dropout"` **fail on every Stage-1 bundle** — `serve.py --mode mc_dropout` included. That
+is a capability regression, not a safety gain: the mode worked before Stage 1 and its uncertainty
+was uncalibrated then too.
+
+**Fix.** On a mode mismatch `Predictor` now **drops the factor** (`sigma_scale = 1.0`), sets
+`sigma_calibrated = False`, and emits a loud `UserWarning` naming the risk. The wrong number can
+still never be produced — the ensemble factor is never applied to dropout spread — but the mode
+stays usable and self-describing.
+
+The `xfail(strict=True)` marker is removed; `test_mc_dropout_is_single_batched_call` passes again,
+and a new test pins the drop-and-warn behaviour. The real follow-up (a *separate* mc_dropout
+`sigma_scale`, calibrated from dropout passes) is still open and still blocked until Stage 1 is
+scored — but it no longer blocks the mode.
+
+**Also:** `retrain_stage1.py` now sets `CUBLAS_WORKSPACE_CONFIG=:4096:8` before importing torch.
+Run 1 printed torch's warning that cuBLAS GEMMs are nondeterministic on CUDA ≥ 10.2 without it.
+The guards came back bit-identical anyway, but that was not guaranteed — and "bit-identical" is
+the sharpest test we have that Stage 1 does not touch the model.
+
+---
+
 ## 2026-07-20 — Follow-up task: per-mode sigma_scale for mc_dropout
 
 **Status:** ⏳ **blocked on Stage 1 score** — the xfail marker is in place (`tests/test_inference.py`).

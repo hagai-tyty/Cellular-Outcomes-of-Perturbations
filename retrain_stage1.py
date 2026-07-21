@@ -31,10 +31,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import sys
 import time
 from pathlib import Path
+
+# Must be set BEFORE torch initialises CUDA, hence before any torch import. `set_global_seed`
+# already requests deterministic algorithms, but on CUDA >= 10.2 cuBLAS GEMMs remain
+# nondeterministic without this workspace setting -- torch warns about exactly that, and run 1
+# printed the warning. Determinism is not cosmetic here: Stage 1's guards are supposed to come
+# back BIT-IDENTICAL, a far sharper test than "the CI includes zero", and that only holds if the
+# deployed ensemble is reproducible.
+os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
 
 DONORS = ["N2", "N3", "O1", "O2", "Y1", "Y2"]
 REGIME = "holdout"
