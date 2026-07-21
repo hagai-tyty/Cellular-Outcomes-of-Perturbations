@@ -140,7 +140,7 @@ def run(cfg: TrainConfig) -> dict:
         )
     else:
         xstats = crossdonor_stats(train_ds, val_ds, make_model, cfg, device,
-                                  mc_T=cfg.mc_dropout_T)
+                                  mc_T=cfg.mc_dropout_T, calib_ds=calib_ds)
 
     # -- temperature: cross-donor logits, falling back to val (then calib) ------------- #
     # cal_* stay defined regardless: the report contrasts in-distribution against

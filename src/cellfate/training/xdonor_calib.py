@@ -96,6 +96,41 @@ def _subset(ds: TensorDataset, mask: torch.Tensor) -> TensorDataset:
     return TensorDataset(*[t[mask] for t in ds.tensors])
 
 
+def _concat(datasets: list[TensorDataset]) -> TensorDataset | None:
+    live = [d for d in datasets if len(d)]
+    if not live:
+        return None
+    n_cols = len(live[0].tensors)
+    return TensorDataset(*[torch.cat([d.tensors[i] for d in live]) for i in range(n_cols)])
+
+
+def _held_out_cells(d: int, splits: list[TensorDataset]) -> TensorDataset | None:
+    """EVERY cell of donor ``d``, from every split -- because the inner model saw none of them.
+
+    The inner model trains on `train minus d` and early-stops on `val minus d`, so donor d's
+    cells in train, val AND calib are all equally unseen by it. Evaluating on only its train
+    cells discards clean held-out data for no reason: on the Gill folds that is ~14 cells per
+    donor used against ~21 available, so the pooled calibration set grows by ~40%.
+
+    That matters because `q` is a 90th percentile of that pool, and its sampling noise scales
+    as 1/sqrt(n) -- the pool is the binding constraint on how stable the interval is
+    (experiments/q_power_analysis.py: a 68% spread at ~70 residuals).
+
+    ⚠ THE SPLITS MUST BE DISJOINT. A cell appearing in two of them is counted twice, which
+    inflates the pool and silently distorts `q`. Passing the same object twice is deduplicated
+    below because it is the easy mistake; genuinely overlapping *different* objects cannot be
+    detected here (the tensors carry no cell ids) and are the caller's contract to uphold.
+    ``train_model.run`` reads three disjoint splits, so it satisfies this by construction.
+    """
+    seen: set[int] = set()
+    uniq_splits = []
+    for s in splits:
+        if len(s) and id(s) not in seen:
+            seen.add(id(s))
+            uniq_splits.append(s)
+    return _concat([_subset(s, s.tensors[DONOR_I] == d) for s in uniq_splits])
+
+
 MC_ROW_BUDGET = 8192          # tiled rows per forward; batch = budget // T
 
 
@@ -148,7 +183,8 @@ def n_train_donors(train_ds: TensorDataset) -> int:
 
 
 def crossdonor_stats(train_ds: TensorDataset, val_ds: TensorDataset,
-                     make_model, cfg, device: str, mc_T: int = 50) -> XDonorStats:
+                     make_model, cfg, device: str, mc_T: int = 50,
+                     calib_ds: TensorDataset | None = None) -> XDonorStats:
     """Inner leave-one-donor-out over the training donors; pool the out-of-donor statistics.
 
     For each donor d: train an ensemble on the other donors, predict on d, keep the ΔAge
@@ -157,6 +193,8 @@ def crossdonor_stats(train_ds: TensorDataset, val_ds: TensorDataset,
     The monitoring split passed to each inner ensemble is the outer val split with donor d
     REMOVED -- see the leakage note in the module tests and STAGE_1 deviation log.
     """
+    if calib_ds is None:
+        calib_ds = _subset(train_ds, torch.zeros(len(train_ds), dtype=torch.bool))
     donors = train_ds.tensors[DONOR_I]
     uniq = sorted(set(donors.tolist()))
     if len(uniq) < MIN_DONORS:
@@ -170,8 +208,10 @@ def crossdonor_stats(train_ds: TensorDataset, val_ds: TensorDataset,
     used, skipped, per_donor, donor_scales = 0, [], {}, {}
     for d in uniq:
         hold = donors == d
-        inner_tr, inner_te = _subset(train_ds, ~hold), _subset(train_ds, hold)
-        if len(inner_te) == 0 or len(inner_tr) == 0:
+        inner_tr = _subset(train_ds, ~hold)
+        # Evaluate on ALL of donor d's cells, not just its train ones -- see _held_out_cells.
+        inner_te = _held_out_cells(d, [train_ds, val_ds, calib_ds])
+        if inner_te is None or len(inner_te) == 0 or len(inner_tr) == 0:
             continue
 
         # A donor that IS the training set cannot be held out and still leave a model worth

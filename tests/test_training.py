@@ -275,6 +275,61 @@ def test_sigma_scale_is_identity_without_statistics():
     assert sigma_scale_factor(stats, z_conf=0.0) == 1.0
 
 
+def test_crossdonor_pool_uses_every_split_of_the_held_out_donor():
+    """The inner model sees donor d in NO split, so all of d's cells are valid held-out data.
+
+    It trains on `train minus d` and early-stops on `val minus d`, so d's train, val and calib
+    cells are equally unseen. Evaluating on only its train cells throws away clean data, and the
+    pool size is what limits `q`'s stability (a 68% sampling spread at ~70 residuals).
+    """
+    from cellfate.training import crossdonor_stats
+
+    def split(n, donors):
+        ds = _toy_dataset(n=n)
+        return torch.utils.data.TensorDataset(*ds.tensors[:-1], torch.tensor(donors))
+
+    # two donors; each contributes cells to train, val AND calib
+    train = split(40, [0] * 20 + [1] * 20)
+    val = split(16, [0] * 8 + [1] * 8)
+    calib = split(16, [0] * 8 + [1] * 8)
+
+    def make():
+        return CellFateNet(g=8, d_cell=8, d_u=8, latent_dim=8, p_drop=0.1)
+
+    with_calib = crossdonor_stats(train, val, make, _tiny_cfg(), "cpu",
+                                  mc_T=4, calib_ds=calib)
+    without_calib = crossdonor_stats(train, val, make, _tiny_cfg(), "cpu", mc_T=4)
+
+    # with calib: 20 train + 8 val + 8 calib = 36 per donor; without: 20 + 8 = 28
+    assert with_calib.residuals_per_donor == {0: 36, 1: 36}, with_calib.residuals_per_donor
+    assert without_calib.residuals_per_donor == {0: 28, 1: 28}
+    assert with_calib.abs_residuals.size > without_calib.abs_residuals.size, (
+        "calib cells of the held-out donor were discarded"
+    )
+
+
+def test_the_same_split_passed_twice_is_not_double_counted():
+    """Overlapping splits would inflate the pool and silently distort `q`.
+
+    Genuinely different-but-overlapping datasets cannot be detected (no cell ids in the
+    tensors) and are the caller's contract; passing the SAME object twice is the easy mistake
+    and is deduplicated.
+    """
+    from cellfate.training import crossdonor_stats
+
+    ds = _toy_dataset(n=40)
+    ds = torch.utils.data.TensorDataset(*ds.tensors[:-1],
+                                        torch.tensor([0] * 20 + [1] * 20))
+
+    def make():
+        return CellFateNet(g=8, d_cell=8, d_u=8, latent_dim=8, p_drop=0.1)
+
+    stats = crossdonor_stats(ds, ds, make, _tiny_cfg(), "cpu", mc_T=4, calib_ds=ds)
+    assert stats.residuals_per_donor == {0: 20, 1: 20}, (
+        f"the same split counted more than once: {stats.residuals_per_donor}"
+    )
+
+
 def test_crossdonor_stats_refuses_a_single_donor():
     """Inner-LODO with one donor would silently produce in-distribution calibration wearing
     a cross-donor label -- the exact defect Stage 1 exists to fix. It must raise instead."""
@@ -308,17 +363,18 @@ def test_crossdonor_stats_skips_a_bulk_corpus_masquerading_as_a_donor():
     def make():
         return CellFateNet(g=8, d_cell=8, d_u=8, latent_dim=8, p_drop=0.1)
 
-    stats = crossdonor_stats(ds, ds, make, _tiny_cfg(), "cpu")
+    stats = crossdonor_stats(ds, ds, make, _tiny_cfg(), "cpu", mc_T=4)
 
     # donor 0 must be skipped: holding it out leaves 20/200 = 10%, below the floor
     assert 0.10 < MIN_INNER_TRAIN_FRAC
     assert stats.n_donors == 2, (
         f"expected the bulk corpus to be skipped and 2 real donors used, got {stats.n_donors}"
     )
-    # and its 180 rows must not appear in the pooled residuals
-    assert stats.abs_residuals.size <= 20, (
-        f"bulk corpus leaked into the residual pool ({stats.abs_residuals.size} residuals)"
+    # and its 180 rows must not appear in the pooled residuals (donors 1 and 2 hold 10 each)
+    assert 0 not in stats.residuals_per_donor, (
+        f"bulk corpus leaked into the residual pool: {stats.residuals_per_donor}"
     )
+    assert stats.abs_residuals.size == 20, stats.residuals_per_donor
 
 
 def test_crossdonor_stats_refuses_when_only_one_donor_survives_the_bulk_filter():
