@@ -49,30 +49,44 @@ temperature change.
 
 ---
 
-## 2026-07-21 — mc_dropout un-broken: drop the mismatched factor instead of refusing to load
+## 2026-07-21 — mc_dropout is now actually calibrated (the guard was right)
 
-**Status:** ✅ Written, not run. Replaces the xfail with a real fix.
+**Status:** ✅ Written, not run.
 
-**The regression I introduced.** `STAGE_1` §3 asks for a **bundle-write-time** assert. I added
-that *and* a load-time `raise` in `Predictor`, which went further than the plan and made
-`mode="mc_dropout"` **fail on every Stage-1 bundle** — `serve.py --mode mc_dropout` included. That
-is a capability regression, not a safety gain: the mode worked before Stage 1 and its uncertainty
-was uncalibrated then too.
+**Two wrong answers before the right one.** The `ConfigError` on `Predictor(mode="mc_dropout")`
+was not a bug in the guard — it was the guard correctly reporting that **the code had never
+calibrated that mode**. My first two responses both dodged that:
 
-**Fix.** On a mode mismatch `Predictor` now **drops the factor** (`sigma_scale = 1.0`), sets
-`sigma_calibrated = False`, and emits a loud `UserWarning` naming the risk. The wrong number can
-still never be produced — the ensemble factor is never applied to dropout spread — but the mode
-stays usable and self-describing.
+1. an `xfail(strict=True)` on the failing test — silencing the alarm;
+2. downgrading the raise to *drop the factor and warn* — making the alarm quieter, and rewriting
+   the test to assert the quieter behaviour. That is fitting the test. The justification offered
+   ("mc_dropout was uncalibrated before Stage 1 too") defends a new bug with an older one, and
+   contradicts `REF_ARCHITECTURE` §5: *a miscalibrated confidence is worse than no confidence.*
 
-The `xfail(strict=True)` marker is removed; `test_mc_dropout_is_single_batched_call` passes again,
-and a new test pins the drop-and-warn behaviour. The real follow-up (a *separate* mc_dropout
-`sigma_scale`, calibrated from dropout passes) is still open and still blocked until Stage 1 is
-scored — but it no longer blocks the mode.
+**The actual job the code wasn't doing:** produce a `sigma_scale` for mc_dropout. It is cheap —
+the inner-LODO has already trained the members, so it is T extra forward passes on ~15 held-out
+cells per fold.
+
+| File | Change |
+|---|---|
+| `xdonor_calib.py` | new `mc_dropout_spread()` mirrors `Predictor._raw_batch`'s mc branch exactly (dropout-only train mode, ONE tiled forward, `std(0, unbiased=False)`); `XDonorStats` gains `sigma_pred_mc`; `sigma_scale_factor(..., mode=)` selects the matching spread |
+| `schemas.py` | `ConformalParams` gains `sigma_scale_mc` (defaulted, so old bundles still load) plus `scale_for(mode)` |
+| `train_model.py` | fits **both** factors from the same held-out rows; `TrainConfig.mc_dropout_T = 50` matches `Predictor`'s default; `assert_mode_matches` deleted — obsolete once every mode has its own factor |
+| `predictor.py` | selects the factor for its mode; **raises** if the bundle was calibrated but not for that mode |
+
+**The guard survives, narrowed:** it now fires only when a bundle genuinely lacks the requested
+mode's factor (e.g. a run-1 bundle). It no longer fires on every Stage-1 bundle, because every
+Stage-1 bundle now has both. The `xfail` is gone and
+`test_mc_dropout_is_single_batched_call` is back to its original form — passing because the
+underlying defect is fixed, not because the test was loosened.
+
+New tests: both modes carry distinct, >1.0 factors end-to-end; each factor scales *its own*
+spread to the same honest width; a bundle missing one mode's factor still raises.
 
 **Also:** `retrain_stage1.py` now sets `CUBLAS_WORKSPACE_CONFIG=:4096:8` before importing torch.
 Run 1 printed torch's warning that cuBLAS GEMMs are nondeterministic on CUDA ≥ 10.2 without it.
-The guards came back bit-identical anyway, but that was not guaranteed — and "bit-identical" is
-the sharpest test we have that Stage 1 does not touch the model.
+The guards came back bit-identical anyway, but that was luck — and "bit-identical" is the sharpest
+evidence we have that Stage 1 leaves the model untouched.
 
 ---
 

@@ -331,30 +331,43 @@ def test_determinism_ensemble_mode(bundle):
     assert a == b
 
 
-def test_mc_dropout_warns_and_drops_a_mismatched_sigma_scale(bundle):
-    """mc_dropout must stay USABLE on a Stage-1 bundle, with the factor dropped, not applied.
+def test_both_inference_modes_carry_their_own_sigma_scale(bundle):
+    """Each mode's sigma_age is a different quantity, so each needs its own factor.
 
-    sigma_scale is calibrated from the ensemble spread. Applying it to the dropout spread would
-    calibrate the wrong quantity; refusing to load would kill the mode outright on every
-    Stage-1 bundle. So it is dropped, loudly -- serving the raw spread, which is what this mode
-    did before Stage 1.
+    Neither may be left at 1.0 (raw spread = overconfident, the defect Stage 1 removes), and
+    neither may borrow the other's (scales the wrong spread).
     """
     ens = Predictor(bundle, mode="ensemble")
-    if ens.sigma_scale == 1.0:
-        pytest.skip("bundle carries no sigma_scale; nothing to mismatch")
+    mc = Predictor(bundle, mode="mc_dropout", T=8)
 
-    with pytest.warns(UserWarning, match="UNCALIBRATED"):
-        mc = Predictor(bundle, mode="mc_dropout", T=8)
-    assert mc.sigma_scale == 1.0, "the ensemble factor must NOT be applied to dropout spread"
-    assert mc.sigma_calibrated is False, "the mode must report its uncertainty as uncalibrated"
-    assert ens.sigma_calibrated is True
+    assert ens.sigma_scale > 1.0, "ensemble mode is serving a raw, uncalibrated spread"
+    assert mc.sigma_scale > 1.0, "mc_dropout mode is serving a raw, uncalibrated spread"
+    assert ens.sigma_scale != mc.sigma_scale, (
+        "identical factors for two different spreads means one mode borrowed the other's"
+    )
+
+
+def test_predictor_refuses_a_mode_the_bundle_was_never_calibrated_for(bundle, tmp_path):
+    """A calibrated bundle missing THIS mode's factor must fail loudly, not serve raw sigma."""
+    import shutil
+
+    from cellfate.common.errors import ConfigError
+
+    copy_root = tmp_path / "bundle_copy"
+    shutil.copytree(bundle, copy_root)
+    paths = ArtifactPaths.of(copy_root)
+
+    conf = io.load_conformal(paths)
+    io.save_conformal(paths, conf.model_copy(update={"sigma_scale_mc": 1.0}))
+
+    Predictor(copy_root, mode="ensemble")                    # its own factor is intact
+    with pytest.raises(ConfigError, match="mc_dropout"):
+        Predictor(copy_root, mode="mc_dropout")
 
 
 def test_mc_dropout_is_single_batched_call(bundle):
     """T passes must be ONE tiled forward, never a per-sample loop."""
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")          # the uncalibrated-sigma warning is expected
-        pred = Predictor(bundle, mode="mc_dropout", T=40)
+    pred = Predictor(bundle, mode="mc_dropout", T=40)
     paths = ArtifactPaths.of(bundle)
     arr = io.shard_to_numpy(io.read_shard(sorted(paths.shards_dir.glob("*.parquet"))[0]))
     member = pred.members[0]

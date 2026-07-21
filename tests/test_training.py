@@ -236,7 +236,8 @@ def test_sigma_scale_widens_an_overconfident_ensemble_spread():
 
     stats = XDonorStats(
         abs_residuals=np.full(200, 14.0), logits=np.zeros((0, 3)), targets=np.zeros((0, 3)),
-        sigma_pred=np.full(200, 2.4), n_donors=5, feats=np.zeros((0, 1)),
+        sigma_pred=np.full(200, 2.4), sigma_pred_mc=np.full(200, 2.4),
+        n_donors=5, feats=np.zeros((0, 1)),
     )
     s = sigma_scale_factor(stats, z_conf=1.0, level=0.90)
     assert s == pytest.approx(14.0 / 2.4, rel=1e-6)
@@ -249,7 +250,8 @@ def test_sigma_scale_never_shrinks_an_already_adequate_spread():
 
     stats = XDonorStats(
         abs_residuals=np.full(50, 1.0), logits=np.zeros((0, 3)), targets=np.zeros((0, 3)),
-        sigma_pred=np.full(50, 9.0), n_donors=5, feats=np.zeros((0, 1)),
+        sigma_pred=np.full(50, 9.0), sigma_pred_mc=np.full(50, 9.0),
+        n_donors=5, feats=np.zeros((0, 1)),
     )
     assert sigma_scale_factor(stats, z_conf=1.0) == 1.0
 
@@ -259,13 +261,16 @@ def test_sigma_scale_is_identity_without_statistics():
 
     empty = XDonorStats(
         abs_residuals=np.array([]), logits=np.zeros((0, 3)), targets=np.zeros((0, 3)),
-        sigma_pred=np.array([]), n_donors=0, feats=np.zeros((0, 1)),
+        sigma_pred=np.array([]), sigma_pred_mc=np.array([]),
+        n_donors=0, feats=np.zeros((0, 1)),
     )
     assert sigma_scale_factor(empty, z_conf=1.0) == 1.0
+    assert sigma_scale_factor(empty, z_conf=1.0, mode="mc_dropout") == 1.0
     # z_conf=0 would divide by zero; must not raise or return a non-finite factor
     stats = XDonorStats(
         abs_residuals=np.full(10, 5.0), logits=np.zeros((0, 3)), targets=np.zeros((0, 3)),
-        sigma_pred=np.full(10, 1.0), n_donors=3, feats=np.zeros((0, 1)),
+        sigma_pred=np.full(10, 1.0), sigma_pred_mc=np.full(10, 1.0),
+        n_donors=3, feats=np.zeros((0, 1)),
     )
     assert sigma_scale_factor(stats, z_conf=0.0) == 1.0
 
@@ -333,21 +338,29 @@ def test_crossdonor_stats_refuses_when_only_one_donor_survives_the_bulk_filter()
         crossdonor_stats(ds, ds, make, _tiny_cfg(), "cpu")
 
 
-def test_sigma_scale_mode_label_must_match_what_was_computed():
-    """The bundle's mode label describes what was COMPUTED, not what the caller declared.
+def test_sigma_scale_is_fitted_per_mode_from_the_matching_spread():
+    """Each inference mode gets its OWN factor, from its OWN spread.
 
-    Without this, setting inference_mode="mc_dropout" would write an ensemble-derived factor
-    under an mc_dropout label -- and Predictor's guard, seeing a matching label, would wave it
-    through. That is the exact silent failure the label exists to prevent.
+    `sigma_age` is the ensemble spread in one mode and the T-pass dropout spread in the other.
+    Borrowing one factor for the other scales the wrong quantity; leaving a mode at 1.0 serves
+    raw overconfident uncertainty. Both are wrong, so both modes are calibrated.
     """
-    from cellfate.common.errors import ConfigError
-    from cellfate.training.xdonor_calib import SIGMA_SCALE_MODE, assert_mode_matches
+    from cellfate.training import XDonorStats, sigma_scale_factor
 
-    assert SIGMA_SCALE_MODE == "ensemble"
-    assert_mode_matches(5.83, "ensemble")            # computed and declared agree
-    assert_mode_matches(1.0, "mc_dropout")           # unit factor is mode-agnostic
-    with pytest.raises(ConfigError, match="mc_dropout"):
-        assert_mode_matches(5.83, "mc_dropout")      # a real factor under the wrong label
+    # true error 14 yr; members agree to 2.0, dropout jitters by 7.0 -- different quantities
+    stats = XDonorStats(
+        abs_residuals=np.full(200, 14.0), logits=np.zeros((0, 3)), targets=np.zeros((0, 3)),
+        sigma_pred=np.full(200, 2.0), sigma_pred_mc=np.full(200, 7.0),
+        n_donors=5, feats=np.zeros((0, 1)),
+    )
+    ens = sigma_scale_factor(stats, z_conf=1.0, mode="ensemble")
+    mc = sigma_scale_factor(stats, z_conf=1.0, mode="mc_dropout")
+
+    assert ens == pytest.approx(14.0 / 2.0)
+    assert mc == pytest.approx(14.0 / 7.0)
+    # each factor must carry ITS OWN spread to the same honest width
+    assert 2.0 * ens == pytest.approx(14.0)
+    assert 7.0 * mc == pytest.approx(14.0)
 
 
 def test_conformal_schema_still_loads_pre_stage1b_bundles(tmp_path):
@@ -390,28 +403,21 @@ def test_e2e_sigma_scale_reaches_the_predictor(trained_bundle):
     assert pred.sigma_scale == pytest.approx(summary["sigma_scale"])
 
 
-def test_predictor_refuses_a_sigma_scale_calibrated_for_another_mode(trained_bundle, tmp_path):
-    """Applying an ensemble-calibrated factor to MC-dropout spread calibrates the wrong
-    quantity, and would do it silently. Fail loudly instead."""
-    import shutil
+def test_e2e_both_modes_are_calibrated_from_their_own_spread(trained_bundle):
+    """The bundle must carry a factor for BOTH inference modes, each from its own spread.
 
-    from cellfate.common.errors import ConfigError
+    A mode left at 1.0 serves the raw spread -- overconfident, and precisely the defect Stage 1
+    exists to remove. The two spreads (across members vs across T dropout passes) are different
+    quantities, so identical factors would mean one borrowed the other's.
+    """
     from cellfate.inference import Predictor
 
-    root, _, _ = trained_bundle
-    copy_root = tmp_path / "bundle_copy"
-    shutil.copytree(root, copy_root)
-    paths = ArtifactPaths.of(copy_root)
+    root, _, summary = trained_bundle
+    assert summary["sigma_scale"] > 1.0, "ensemble mode left uncalibrated"
+    assert summary["sigma_scale_mc"] > 1.0, "mc_dropout mode left uncalibrated"
 
-    conf = io.load_conformal(paths)
-    io.save_conformal(paths, conf.model_copy(
-        update={"sigma_scale": 5.0, "sigma_scale_mode": "ensemble"}))
-
-    Predictor(copy_root, mode="ensemble")                     # matching mode: fine
-    with pytest.raises(ConfigError, match="sigma_scale"):
-        Predictor(copy_root, mode="mc_dropout")
-
-    # a unit factor is mode-agnostic -- it must NOT trip the guard
-    io.save_conformal(paths, conf.model_copy(
-        update={"sigma_scale": 1.0, "sigma_scale_mode": "ensemble"}))
-    Predictor(copy_root, mode="mc_dropout")
+    ens = Predictor(root, mode="ensemble")
+    mc = Predictor(root, mode="mc_dropout", T=8)
+    assert ens.sigma_scale == pytest.approx(summary["sigma_scale"])
+    assert mc.sigma_scale == pytest.approx(summary["sigma_scale_mc"])
+    assert ens.sigma_scale != mc.sigma_scale

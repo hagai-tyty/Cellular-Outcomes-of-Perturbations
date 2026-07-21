@@ -49,6 +49,7 @@ from cellfate.training.dataset import (
     X_I,
     load_split_tensors,
 )
+from cellfate.training.xdonor_calib import MIN_INNER_TRAIN_FRAC
 
 DONORS = ["N2", "N3", "O1", "O2", "Y1", "Y2"]
 REGIME = "holdout"
@@ -155,73 +156,84 @@ def main() -> None:
         return
 
     # ---- S1a.5: the acceptance assertions, per fold ----
-    results, rows = {}, []
+    results = {}
     for d in DONORS:
-        r = check_fold(d)
-        results[d] = r
-        if "_error" in r:
-            rows.append([d, "ERROR", "", "", "", r["_error"][:40]])
-            continue
-        tr = r["splits"].get("train", {})
-        cols_ok = all(s.get("n_cols") == N_COLS
-                      for s in r["splits"].values() if "_error" not in s)
-        rows.append([
-            d,
-            str(tr.get("n_rows", "n/a")),
-            str(tr.get("n_donors", "n/a")),
-            "yes" if cols_ok and r.get("empty_n_cols") == N_COLS else "NO",
-            "yes" if tr.get("dtype_ok") and tr.get("len_ok") else "NO",
-            "OK" if tr.get("n_donors", 0) >= 2 else "** INNER-LODO IMPOSSIBLE **",
-        ])
+        results[d] = check_fold(d)
 
     def inv_code(code: int) -> str:
         return {v: k for k, v in DONOR_VOCAB.items()}.get(code, str(code))
 
-    # ---- SAVE the verdict as JSON BEFORE any console table ----
-    # The box-drawing tables below can crash on a non-UTF-8 console; the JSON must
-    # survive that, so it is written here while `results` is fully populated.
     ok_folds = [d for d in DONORS if "_error" not in results.get(d, {"_error": 1})]
-    n_donors = [results[d]["splits"].get("train", {}).get("n_donors", 0) for d in ok_folds]
     all_cols_ok = all(
         results[d].get("empty_n_cols") == N_COLS
         and all(s.get("n_cols") == N_COLS
                 for s in results[d]["splits"].values() if "_error" not in s)
         for d in ok_folds
     )
-    # A donor holding most of the training split is a bulk corpus, not a donor: holding it out
-    # leaves a data-starved model, and its residuals then dominate the pooled calibration.
-    # xdonor_calib skips these, but they must be VISIBLE here -- the first Stage 1 run was
-    # invalidated by exactly this (HFF, 33,613 of 33,688 training cells).
-    dominant = {}
+
+    # Report what `crossdonor_stats` will ACTUALLY DO, not what a bare donor count suggests.
+    # A donor holding most of a training split is a bulk corpus (here: HFF, 33,613 of 33,688
+    # cells), and xdonor_calib skips it -- holding it out would leave a data-starved model whose
+    # residuals then swamp the pool. That is what invalidated Stage 1 run 1. So the number that
+    # matters is the count of donors that SURVIVE the skip, and the threshold is imported rather
+    # than restated, so the two files cannot drift apart.
+    bulk, usable = {}, {}
     for d in ok_folds:
         tr = results[d]["splits"].get("train", {})
         counts, n_rows = tr.get("counts", {}), tr.get("n_rows", 0) or 1
-        big = {inv_code(c): n for c, n in counts.items() if n > 0.5 * n_rows}
-        if big:
-            dominant[d] = big
+        skipped = {inv_code(c): n for c, n in counts.items()
+                   if (n_rows - n) < MIN_INNER_TRAIN_FRAC * n_rows}
+        if skipped:
+            bulk[d] = skipped
+        usable[d] = len(counts) - len(skipped)
 
+    n_usable = list(usable.values())
+
+    # per-fold summary rows, judged on USABLE donors -- the same number the verdict uses
+    rows = []
+    for d in DONORS:
+        r = results[d]
+        if "_error" in r:
+            rows.append([d, "ERROR", "", "", "", r["_error"][:40]])
+            continue
+        tr = r["splits"].get("train", {})
+        cols_ok = all(s.get("n_cols") == N_COLS
+                      for s in r["splits"].values() if "_error" not in s)
+        n_use = usable.get(d, 0)
+        rows.append([
+            d,
+            str(tr.get("n_rows", "n/a")),
+            f"{tr.get('n_donors', 0)} -> {n_use}",
+            "yes" if cols_ok and r.get("empty_n_cols") == N_COLS else "NO",
+            "yes" if tr.get("dtype_ok") and tr.get("len_ok") else "NO",
+            "OK" if n_use == EXPECTED_TRAIN_DONORS
+            else f"** {n_use} usable, expected {EXPECTED_TRAIN_DONORS} **",
+        ])
+
+    # ---- SAVE the verdict as JSON BEFORE any console table ----
+    # The box-drawing tables below can crash on a non-UTF-8 console; the JSON must
+    # survive that, so it is written here while `results` is fully populated.
+    n_donors = [results[d]["splits"].get("train", {}).get("n_donors", 0) for d in ok_folds]
     if not ok_folds:
         status, reason = "CANNOT_VERIFY", "No fold loaded."
     elif not all_cols_ok:
         status, reason = "FAIL", "A split returns != 7 columns (check the empty-split branch)."
-    elif min(n_donors) < 2:
-        bad = [d for d, n in zip(ok_folds, n_donors, strict=True) if n < 2]
-        status, reason = "STOP", f"Folds {bad} have <2 training donors; inner-LODO cannot run."
-    elif dominant:
+    elif min(n_usable, default=0) < 2:
+        bad = [d for d, n in usable.items() if n < 2]
         status = "STOP"
-        reason = (f"`cell_line` mixes donors with a BULK CORPUS {sorted({k for v in "
-                  f"dominant.values() for k in v})}: it holds >50% of the training split, so "
-                  "holding it out leaves a data-starved model whose residuals swamp the pool. "
-                  "Rotating over it is not cross-donor calibration.")
-    elif max(n_donors) != EXPECTED_TRAIN_DONORS:
+        reason = (f"Folds {bad} have <2 donors left after bulk corpora are skipped; "
+                  "inner-LODO cannot run.")
+    elif min(n_usable) != EXPECTED_TRAIN_DONORS or max(n_usable) != EXPECTED_TRAIN_DONORS:
         status = "STOP"
-        reason = (f"expected exactly {EXPECTED_TRAIN_DONORS} training donors "
-                  f"(six minus the held-out one), saw {min(n_donors)}-{max(n_donors)}. "
-                  "`cell_line` does not correspond 1:1 to donor; inspect it before running 1b.")
+        reason = (f"expected exactly {EXPECTED_TRAIN_DONORS} usable donors per fold (six minus "
+                  f"the held-out one), saw {min(n_usable)}-{max(n_usable)} after skipping bulk "
+                  "corpora. `cell_line` does not correspond 1:1 to donor; inspect it.")
     else:
         status = "PASS"
-        reason = (f"7 columns everywhere; exactly {EXPECTED_TRAIN_DONORS} training donors per "
-                  "fold, none dominant. Inner-LODO is possible.")
+        skip_note = (f" ({sorted({k for v in bulk.values() for k in v})} skipped as bulk "
+                     f"corpora, as crossdonor_stats will)" if bulk else "")
+        reason = (f"7 columns everywhere; exactly {EXPECTED_TRAIN_DONORS} usable training "
+                  f"donors per fold{skip_note}. Inner-LODO is possible.")
 
     report = {
         "script": "verify_1a",
@@ -234,7 +246,8 @@ def main() -> None:
             "expected_train_donors": EXPECTED_TRAIN_DONORS,
             "all_splits_7_cols": all_cols_ok,
             "ok_folds": ok_folds,
-            "dominant_donors": dominant,
+            "bulk_corpora_skipped": bulk,
+            "usable_donors_per_fold": usable,
         },
         "raw_shard_peek": peek,
         "folds": results,
@@ -245,26 +258,33 @@ def main() -> None:
 
     print("\n  PER-FOLD CHECK  (train split unless noted)")
     print(render_table(
-        ["fold", "train rows", "donors", "7 cols", "dtype/len", "inner-LODO"],
+        ["fold", "train rows", "donors (labels -> usable)", "7 cols", "dtype/len", "inner-LODO"],
         rows, aligns=["l", "r", "r", "l", "l", "l"]))
 
     print(f"\n  DONOR VOCAB (cell_line -> code): {DONOR_VOCAB}")
 
-    print("\n  CELLS PER DONOR in each fold's TRAIN split — a donor with very few cells makes")
-    print("  its inner-LODO fold nearly useless, and the pooled calibration inherits that")
+    print("\n  CELLS PER DONOR in each fold's TRAIN split, and what crossdonor_stats will do")
+    print(f"  with each: a donor holding >{100 * (1 - MIN_INNER_TRAIN_FRAC):.0f}% of the split "
+          "is a BULK CORPUS and gets SKIPPED -- holding")
+    print("  it out would leave a data-starved model whose residuals swamp the pooled quantile")
     inv = {v: k for k, v in DONOR_VOCAB.items()}
     rows = []
     for d in DONORS:
         r = results.get(d, {})
         if "_error" in r:
             continue
-        counts = r["splits"].get("train", {}).get("counts", {})
-        named = ", ".join(f"{inv.get(c, c)}={n}" for c, n in sorted(counts.items()))
-        low = min(counts.values()) if counts else 0
-        rows.append([d, str(len(counts)), named or "n/a",
-                     "OK" if low >= 20 else f"** thin: {low} cells **"])
-    print(render_table(["fold", "donors", "cells per donor (train)", "smallest"],
-                       rows, aligns=["l", "r", "l", "l"]))
+        tr = r["splits"].get("train", {})
+        counts, n_rows = tr.get("counts", {}), tr.get("n_rows", 0) or 1
+        named = ", ".join(
+            f"{inv.get(c, c)}={n}" + ("(SKIP)" if (n_rows - n) < MIN_INNER_TRAIN_FRAC * n_rows
+                                      else "")
+            for c, n in sorted(counts.items()))
+        n_use = usable.get(d, 0)
+        rows.append([d, str(len(counts)), str(n_use), named or "n/a",
+                     "OK" if n_use == EXPECTED_TRAIN_DONORS
+                     else f"** expected {EXPECTED_TRAIN_DONORS} **"])
+    print(render_table(["fold", "labels", "usable", "cells per donor (train)", "inner-LODO"],
+                       rows, aligns=["l", "r", "r", "l", "l"]))
 
     print("\n  PER-SPLIT COLUMN COUNT — all four splits plus the empty branch must read 7")
     rows = []
@@ -281,43 +301,20 @@ def main() -> None:
                        rows, aligns=["l"] + ["r"] * (len(SPLITS) + 1)))
 
     # ---- verdict ----
-    ok_folds = [d for d in DONORS if "_error" not in results.get(d, {"_error": 1})]
-    n_donors = [results[d]["splits"].get("train", {}).get("n_donors", 0) for d in ok_folds]
-    cols_ok = all(
-        results[d].get("empty_n_cols") == N_COLS
-        and all(s.get("n_cols") == N_COLS
-                for s in results[d]["splits"].values() if "_error" not in s)
-        for d in ok_folds
-    )
-
-    print("\n   VERDICT:")
-    if not ok_folds:
-        print("     => CANNOT VERIFY. No fold loaded.")
-    elif not cols_ok:
-        print("     => FAIL. Some split still returns 6 columns. Check the empty-split branch.")
-    elif min(n_donors) < 2:
-        bad = [d for d, n in zip(ok_folds, n_donors, strict=True) if n < 2]
-        print(f"     => STOP. Folds {bad} have <2 training donors -- inner-LODO cannot run.")
-        print("        `cell_line` does not distinguish donors in this dataset. Do NOT substitute")
-        print("        a guessed grouping: a wrong one produces in-distribution calibration")
-        print("        wearing a cross-donor label, which is the defect Stage 1 exists to fix.")
-        print("        Report this and stop -- 1b is not implementable as designed.")
-    else:
-        print(f"     => PASS. 7 columns everywhere; {min(n_donors)}-{max(n_donors)} training")
-        print("        donors per fold. Inner-LODO is possible. Proceed to 1b.")
-        if min(n_donors) < EXPECTED_TRAIN_DONORS:
-            print(f"     !! FEWER than the expected {EXPECTED_TRAIN_DONORS} (6 donors minus the")
-            print(f"        held-out one); saw {min(n_donors)}. A smaller inner-LODO pool means a")
-            print("        noisier calibration fit -- STAGE_1 S1b.4 names this as the most likely")
-            print("        cause of 1b failing.")
-        if max(n_donors) > EXPECTED_TRAIN_DONORS:
-            print(f"     !! MORE than the expected {EXPECTED_TRAIN_DONORS}; saw {max(n_donors)}.")
-            print("        THIS IS THE DANGEROUS DIRECTION. It means `cell_line` is finer-grained")
-            print("        than donor -- e.g. donor x timepoint, or donor x passage. Holding out")
-            print("        one such group is NOT holding out a donor: cells from the same donor")
-            print("        stay in training, so the residuals understate true cross-donor error")
-            print("        and `q` comes out too small. That looks like success and is not.")
-            print("        Check the cell_line values printed above before proceeding to 1b.")
+    # ONE source of truth: `status`/`reason` were decided above and written to the JSON. This
+    # only restates them. Recomputing here is how a console verdict and a saved verdict drift
+    # apart and start disagreeing.
+    print(f"\n   VERDICT: {status}")
+    print(f"     => {reason}")
+    if bulk:
+        print(f"     - bulk corpora skipped by crossdonor_stats: "
+              f"{sorted({k for v in bulk.values() for k in v})}")
+        print("       (they are training signal, not donors -- rotating over them would")
+        print("        calibrate against data starvation, which voided Stage 1 run 1)")
+    if status == "STOP":
+        print("     - Do NOT substitute a guessed grouping. A wrong one produces")
+        print("       in-distribution calibration wearing a cross-donor label -- the exact")
+        print("       defect Stage 1 exists to fix, now invisible. Report it instead.")
 
     print("\n   NEXT: python scorecard.py snapshot --tag 1a_donorlabels")
     print("         python scorecard.py compare baseline 1a_donorlabels")

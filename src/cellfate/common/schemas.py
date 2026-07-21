@@ -225,8 +225,12 @@ class ConformalParams(BaseModel):
 
     levels: list[float]
     q: dict[str, float]      # keyed by str(level), e.g. {"0.9": 1.83}
-    sigma_scale: float = 1.0          # multiplier on sigma_age; 1.0 == uncalibrated
-    sigma_scale_mode: str = "ensemble"  # inference mode the factor was calibrated for
+    # One factor PER INFERENCE MODE. sigma_age is the ensemble spread in mode="ensemble" and
+    # the T-pass dropout spread in mode="mc_dropout" -- different quantities, different
+    # magnitudes, so each needs its own. 1.0 means "not calibrated for that mode".
+    sigma_scale: float = 1.0            # mode="ensemble"
+    sigma_scale_mc: float = 1.0         # mode="mc_dropout"
+    sigma_scale_mode: str = "ensemble"  # which mode `sigma_scale` refers to (provenance)
 
     @model_validator(mode="after")
     def _ok(self) -> ConformalParams:
@@ -235,14 +239,20 @@ class ConformalParams(BaseModel):
                 raise ValueError(f"conformal level {lvl} must be in (0, 1)")
             if str(lvl) not in self.q:
                 raise ValueError(f"missing quantile for level {lvl} (key {str(lvl)!r})")
-        if not (self.sigma_scale > 0 and math.isfinite(self.sigma_scale)):
-            raise ValueError(f"sigma_scale must be finite and > 0, got {self.sigma_scale}")
+        for name, val in (("sigma_scale", self.sigma_scale),
+                          ("sigma_scale_mc", self.sigma_scale_mc)):
+            if not (val > 0 and math.isfinite(val)):
+                raise ValueError(f"{name} must be finite and > 0, got {val}")
         if self.sigma_scale_mode not in ("ensemble", "mc_dropout"):
             raise ValueError(
                 "sigma_scale_mode must be 'ensemble' or 'mc_dropout', "
                 f"got {self.sigma_scale_mode!r}"
             )
         return self
+
+    def scale_for(self, mode: str) -> float:
+        """The factor calibrated for ``mode``; 1.0 if that mode was never calibrated."""
+        return self.sigma_scale if mode == "ensemble" else self.sigma_scale_mc
 
 
 class TemperatureParams(BaseModel):

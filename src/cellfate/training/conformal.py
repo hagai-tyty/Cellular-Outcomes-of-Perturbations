@@ -17,6 +17,7 @@ from cellfate.common.schemas import ConformalParams
 
 def fit_conformal(abs_residuals, levels, default_q: float = 1e3,
                   sigma_scale: float = 1.0,
+                  sigma_scale_mc: float = 1.0,
                   sigma_scale_mode: str = "ensemble") -> ConformalParams:
     """Build ConformalParams from absolute age residuals.
 
@@ -53,6 +54,7 @@ def fit_conformal(abs_residuals, levels, default_q: float = 1e3,
         k = min(max(rank, 1), n)
         q[str(lvl)] = float(rs[k - 1])
     return ConformalParams(levels=levels, q=q, sigma_scale=float(sigma_scale),
+                           sigma_scale_mc=float(sigma_scale_mc),
                            sigma_scale_mode=str(sigma_scale_mode))
 
 

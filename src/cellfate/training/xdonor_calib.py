@@ -27,7 +27,6 @@ import numpy as np
 import torch
 from torch.utils.data import TensorDataset
 
-from cellfate.common.errors import ConfigError
 from cellfate.common.logging import get_logger, log_event
 
 from .dataset import AM_I, DONOR_I, YA_I, YC_I
@@ -57,7 +56,8 @@ class XDonorStats:
     abs_residuals: np.ndarray   # (M,)  |ΔAge error| pooled over held-out donors -> fits q
     logits: np.ndarray          # (M,3) fate logits, out-of-donor -> fits temperature
     targets: np.ndarray         # (M,3) matching soft labels
-    sigma_pred: np.ndarray      # (M,)  ensemble spread on those rows -> fits sigma_scale
+    sigma_pred: np.ndarray      # (M,)  ENSEMBLE spread     -> fits sigma_scale
+    sigma_pred_mc: np.ndarray   # (M,)  MC-DROPOUT spread   -> fits sigma_scale_mc
     n_donors: int               # inner-LODO donors actually used
     # DIAGNOSTIC ONLY -- deliberately not used to fit the OOD reference. These come from
     # independently-seeded INNER models, whose latent bases differ by arbitrary rotation, while
@@ -79,6 +79,37 @@ def _subset(ds: TensorDataset, mask: torch.Tensor) -> TensorDataset:
     return TensorDataset(*[t[mask] for t in ds.tensors])
 
 
+@torch.no_grad()
+def mc_dropout_spread(model, ds: TensorDataset, device: str, T: int,
+                      batch_size: int = 256) -> np.ndarray:
+    """Std of ΔAge across T dropout passes -- what `sigma_age` IS in mode="mc_dropout".
+
+    Mirrors ``Predictor._raw_batch``'s mc_dropout branch exactly: only Dropout modules go to
+    train mode, the T passes are ONE tiled forward, and the spread is ``std(0, unbiased=False)``.
+    A mismatch here would calibrate a quantity inference never produces.
+
+    Batched modestly because the tiled input is T x batch rows.
+    """
+    from torch.utils.data import DataLoader
+
+    from .dataset import DT_I, FP_I, X_I
+
+    model.eval()
+    for m in model.modules():                      # dropout ON, everything else stays eval
+        if isinstance(m, torch.nn.Dropout):
+            m.train()
+    try:
+        out = []
+        for batch in DataLoader(ds, batch_size=batch_size):
+            x, fp, dt = (batch[i].to(device) for i in (X_I, FP_I, DT_I))
+            n = x.shape[0]
+            _, ag, _ = model(x.repeat(T, 1), fp.repeat(T, 1), dt.repeat(T, 1))
+            out.append(ag.view(T, n).std(0, unbiased=False).cpu())
+    finally:
+        model.eval()
+    return torch.cat(out).numpy() if out else np.array([])
+
+
 def n_train_donors(train_ds: TensorDataset) -> int:
     """How many distinct donors the training split carries (the inner-LODO precondition)."""
     if len(train_ds) == 0:
@@ -87,7 +118,7 @@ def n_train_donors(train_ds: TensorDataset) -> int:
 
 
 def crossdonor_stats(train_ds: TensorDataset, val_ds: TensorDataset,
-                     make_model, cfg, device: str) -> XDonorStats:
+                     make_model, cfg, device: str, mc_T: int = 50) -> XDonorStats:
     """Inner leave-one-donor-out over the training donors; pool the out-of-donor statistics.
 
     For each donor d: train an ensemble on the other donors, predict on d, keep the ΔAge
@@ -105,7 +136,7 @@ def crossdonor_stats(train_ds: TensorDataset, val_ds: TensorDataset,
         )
 
     n_total = len(train_ds)
-    res, log_, tgt, fts, sig = [], [], [], [], []
+    res, log_, tgt, fts, sig, sig_mc = [], [], [], [], [], []
     used, skipped = 0, []
     for d in uniq:
         hold = donors == d
@@ -144,6 +175,11 @@ def crossdonor_stats(train_ds: TensorDataset, val_ds: TensorDataset,
             per = np.stack([member_outputs(m, inner_te, device)[1].numpy() for m in members])
             # ddof=0, matching Predictor's age.std(0, unbiased=False)
             sig.append(per.std(axis=0)[am])
+            # ...and the SAME rows under mc_dropout, so that mode gets its own honest factor
+            # instead of borrowing one calibrated for a different spread. Dropout consumes RNG,
+            # but train_member re-seeds at the top of every member, so the next fold is
+            # unaffected and `run()` stays reproducible.
+            sig_mc.append(mc_dropout_spread(members[0], inner_te, device, mc_T)[am])
 
         log_.append(ensemble_logits(members, inner_te, device).numpy())
         tgt.append(inner_te.tensors[YC_I].numpy())
@@ -165,6 +201,7 @@ def crossdonor_stats(train_ds: TensorDataset, val_ds: TensorDataset,
         targets=np.vstack(tgt) if tgt else np.zeros((0, 3)),
         feats=np.vstack(fts) if fts else np.zeros((0, 1)),
         sigma_pred=np.concatenate(sig) if sig else np.array([]),
+        sigma_pred_mc=np.concatenate(sig_mc) if sig_mc else np.array([]),
         n_donors=used,
     )
     log_event(log, "xdonor.done", n_donors=used, n_skipped=len(skipped), skipped=skipped,
@@ -172,24 +209,8 @@ def crossdonor_stats(train_ds: TensorDataset, val_ds: TensorDataset,
     return stats
 
 
-def assert_mode_matches(sigma_scale: float, inference_mode: str) -> None:
-    """STAGE_1 §3's bundle-write-time check, as a real error.
-
-    A `sigma_scale` other than 1.0 can only ever be an ENSEMBLE-spread factor. A bundle that
-    declares a different inference mode must not carry one: `Predictor` would find a matching
-    label and apply an ensemble-calibrated factor to MC-dropout spread -- the exact silent
-    failure the label exists to prevent. A unit factor is mode-agnostic and always allowed.
-    """
-    if sigma_scale != 1.0 and inference_mode != SIGMA_SCALE_MODE:
-        raise ConfigError(
-            f"inference_mode={inference_mode!r} but sigma_scale={sigma_scale:.3f} is calibrated "
-            f"from the {SIGMA_SCALE_MODE!r} spread. Train with "
-            f"inference_mode={SIGMA_SCALE_MODE!r}, or set xdonor_calibration=False to ship "
-            "without a sigma rescaling."
-        )
-
-
-def sigma_scale_factor(stats: XDonorStats, z_conf: float, level: float = 0.90) -> float:
+def sigma_scale_factor(stats: XDonorStats, z_conf: float, level: float = 0.90,
+                       mode: str = "ensemble") -> float:
     """Multiplier s such that ``mu +- z_conf*(s*sigma_age)`` attains nominal coverage.
 
     WHY THIS EXISTS, and why refitting the conformal `q` alone does not replace it
@@ -202,18 +223,19 @@ def sigma_scale_factor(stats: XDonorStats, z_conf: float, level: float = 0.90) -
     MODE DEPENDENCY. ``Predictor._raw_batch`` produces sigma_age two different ways:
         mode="ensemble"   (DEFAULT) -> spread across ensemble members
         mode="mc_dropout"           -> spread across T dropout passes of member[0]
-    ``stats.sigma_pred`` is the ENSEMBLE spread, so this factor is only valid for
-    mode="ensemble". The mode is recorded alongside the factor in ConformalParams and
-    asserted at load, because applying it under mc_dropout calibrates the wrong quantity
-    and would do so silently.
+    These are different quantities of different magnitude, so EACH GETS ITS OWN FACTOR,
+    measured on the same held-out rows. Borrowing one for the other calibrates the wrong
+    spread; serving an uncalibrated one is the very defect Stage 1 exists to remove. Both are
+    written to the bundle and `Predictor` selects by mode.
 
     Clamped at 1.0: this may widen sigma, never shrink it. Over-wide makes RES conservative,
     which is the safe direction.
     """
-    if stats.abs_residuals.size == 0 or stats.sigma_pred.size == 0:
+    spread = stats.sigma_pred if mode == "ensemble" else stats.sigma_pred_mc
+    if stats.abs_residuals.size == 0 or spread.size == 0:
         return 1.0
     need = float(np.quantile(stats.abs_residuals, level))    # half-width for `level` coverage
-    have = float(np.median(stats.sigma_pred)) * float(z_conf)
+    have = float(np.median(spread)) * float(z_conf)
     if not np.isfinite(need) or not np.isfinite(have) or have <= 0:
         return 1.0
     return max(1.0, need / have)

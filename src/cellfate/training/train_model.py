@@ -33,7 +33,6 @@ from .ood import fit_ood
 from .train import ensemble_age, ensemble_logits, member_outputs, train_ensemble
 from .xdonor_calib import (
     SIGMA_SCALE_MODE,
-    assert_mode_matches,
     crossdonor_stats,
     n_train_donors,
     sigma_scale_factor,
@@ -77,6 +76,9 @@ class TrainConfig:
     xdonor_calibration: bool = True
     # sigma_scale calibrates the ENSEMBLE spread, so it is only valid for this mode.
     inference_mode: str = "ensemble"
+    # dropout passes used to calibrate the mc_dropout sigma_scale. Must match Predictor's
+    # default T, or that mode's factor is fitted to a spread inference never produces.
+    mc_dropout_T: int = 50
 
 
 def _resolve_device(requested: str) -> str:
@@ -137,7 +139,8 @@ def run(cfg: TrainConfig) -> dict:
             "trustworthy out-of-donor.", n_donors,
         )
     else:
-        xstats = crossdonor_stats(train_ds, val_ds, make_model, cfg, device)
+        xstats = crossdonor_stats(train_ds, val_ds, make_model, cfg, device,
+                                  mc_T=cfg.mc_dropout_T)
 
     # -- temperature: cross-donor logits, falling back to val (then calib) ------------- #
     # cal_* stay defined regardless: the report contrasts in-distribution against
@@ -159,11 +162,15 @@ def run(cfg: TrainConfig) -> dict:
         from cellfate.common.schemas import TemperatureParams
         temperature = TemperatureParams(temperature=1.0)
 
-    # -- conformal + sigma scale: cross-donor residuals ------------------------------- #
+    # -- conformal + per-mode sigma scales: cross-donor residuals ---------------------- #
+    # BOTH inference modes are calibrated, from the same held-out rows. `sigma_age` is the
+    # ensemble spread in one and the T-pass dropout spread in the other; a mode left at 1.0
+    # would serve raw, overconfident uncertainty -- the exact defect Stage 1 removes.
     if xstats is not None and xstats.has_residuals:
         abs_res = xstats.abs_residuals                                    # CROSS-DONOR
-        sigma_scale = sigma_scale_factor(xstats, res_params.z_conf,
-                                         level=float(cfg.conformal_levels[0]))
+        lvl = float(cfg.conformal_levels[0])
+        sigma_scale = sigma_scale_factor(xstats, res_params.z_conf, lvl, mode="ensemble")
+        sigma_scale_mc = sigma_scale_factor(xstats, res_params.z_conf, lvl, mode="mc_dropout")
     else:
         if xstats is not None:
             log.warning("xdonor residuals empty; falling back to calib residuals")
@@ -174,11 +181,10 @@ def run(cfg: TrainConfig) -> dict:
             abs_res = np.abs(age_pred[am] - ya[am])
         else:
             abs_res = np.array([])
-        sigma_scale = 1.0
+        sigma_scale = sigma_scale_mc = 1.0
 
-    # The label written must describe what was actually COMPUTED, never what the caller declared.
-    assert_mode_matches(sigma_scale, cfg.inference_mode)          # STAGE_1 §3
     conformal = fit_conformal(abs_res, cfg.conformal_levels, sigma_scale=sigma_scale,
+                              sigma_scale_mc=sigma_scale_mc,
                               sigma_scale_mode=SIGMA_SCALE_MODE)
 
     # -- OOD reference: DELIBERATELY still the deployed model's train features --------- #
@@ -229,7 +235,8 @@ def _report(members, val_losses, train_ds, val_ds, calib_ds,
         "val_loss_per_member": [float(v) for v in val_losses],
         "temperature": temperature.temperature,
         "conformal_q": dict(conformal.q),
-        "sigma_scale": float(conformal.sigma_scale),
+        "sigma_scale": float(conformal.sigma_scale),          # mode="ensemble"
+        "sigma_scale_mc": float(conformal.sigma_scale_mc),    # mode="mc_dropout"
         "sigma_scale_mode": conformal.sigma_scale_mode,
         # whether the calibrators actually saw cross-donor data. Recorded in the bundle so a
         # fallback is auditable after the fact rather than only visible in a log line.
