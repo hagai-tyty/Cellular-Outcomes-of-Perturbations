@@ -255,6 +255,9 @@ def _report(members, val_losses, train_ds, val_ds, calib_ds,
         # per-donor pool composition: `q` is a quantile of these, so a lopsided pool means the
         # quantile describes one donor rather than cross-donor error
         "xdonor_residuals_per_donor": {} if xstats is None else xstats.residuals_per_donor,
+        # per-donor error scale vs predicted spread -- decides whether an ADAPTIVE conformal
+        # interval can meet the coverage bar that a single global q provably cannot
+        "xdonor_donor_scales": {} if xstats is None else xstats.donor_scales,
     }
     # IN-DISTRIBUTION (calib/val). From Stage 1b the temperature is no longer FITTED here, so
     # `nll_after_temp <= nll_before_temp` is NO LONGER GUARANTEED on this split -- fit_temperature

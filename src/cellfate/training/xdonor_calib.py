@@ -74,6 +74,15 @@ class XDonorStats:
     # LAST, and defaulted: every field after a defaulted one must also have a default.
     residuals_per_donor: dict[int, int] = field(default_factory=dict)
 
+    # Per-donor {n, mae, sigma_mean, sigma_mc_mean}. THE decisive measurement for whether an
+    # ADAPTIVE conformal interval can meet the 0.85-0.95 bar. A single global `q` provably
+    # cannot -- donor error scales differ ~5.5x -- but `mu +- q_norm * s_i` can, IF `s_i` tracks
+    # donor difficulty. `sigma_age`'s MAGNITUDE is wrong by construction (that is what
+    # sigma_scale fixes); normalization needs only its RANKING across donors. Correlating `mae`
+    # against `sigma_mean` over these donors answers it directly.
+    # See experiments/q_power_analysis.py and experiments/q_adaptive_feasibility.py.
+    donor_scales: dict[int, dict[str, float]] = field(default_factory=dict)
+
     @property
     def has_residuals(self) -> bool:
         return self.abs_residuals.size > 0
@@ -158,7 +167,7 @@ def crossdonor_stats(train_ds: TensorDataset, val_ds: TensorDataset,
 
     n_total = len(train_ds)
     res, log_, tgt, fts, sig, sig_mc = [], [], [], [], [], []
-    used, skipped, per_donor = 0, [], {}
+    used, skipped, per_donor, donor_scales = 0, [], {}, {}
     for d in uniq:
         hold = donors == d
         inner_tr, inner_te = _subset(train_ds, ~hold), _subset(train_ds, hold)
@@ -194,14 +203,30 @@ def crossdonor_stats(train_ds: TensorDataset, val_ds: TensorDataset,
         if am.any():
             res.append(np.abs(age[am] - ya[am]))
             per_donor[int(d)] = int(am.sum())
+            # Per-donor error scale vs per-donor predicted spread. THE decisive measurement for
+            # whether an ADAPTIVE (normalized) conformal interval can meet the 0.85-0.95 bar: a
+            # single global q provably cannot, because donor error scales differ ~5.5x, but
+            # `mu +- q_norm * s_i` can IF `s_i` tracks donor difficulty. `sigma_age`'s magnitude
+            # is wrong by construction (that is what sigma_scale fixes); normalization needs
+            # only its RANKING. Correlating these two columns across donors answers it, and the
+            # simulation says the tracking has to be near-perfect to reach 6/6.
+            # (experiments/q_power_analysis.py, experiments/q_adaptive_feasibility.py)
             per = np.stack([member_outputs(m, inner_te, device)[1].numpy() for m in members])
             # ddof=0, matching Predictor's age.std(0, unbiased=False)
-            sig.append(per.std(axis=0)[am])
+            spread = per.std(axis=0)[am]
+            sig.append(spread)
             # ...and the SAME rows under mc_dropout, so that mode gets its own honest factor
             # instead of borrowing one calibrated for a different spread. Dropout consumes RNG,
             # but train_member re-seeds at the top of every member, so the next fold is
             # unaffected and `run()` stays reproducible.
-            sig_mc.append(mc_dropout_spread(members[0], inner_te, device, mc_T)[am])
+            spread_mc = mc_dropout_spread(members[0], inner_te, device, mc_T)[am]
+            sig_mc.append(spread_mc)
+            donor_scales[int(d)] = {
+                "n": int(am.sum()),
+                "mae": float(np.abs(age[am] - ya[am]).mean()),
+                "sigma_mean": float(spread.mean()),
+                "sigma_mc_mean": float(spread_mc.mean()),
+            }
 
         log_.append(ensemble_logits(members, inner_te, device).numpy())
         tgt.append(inner_te.tensors[YC_I].numpy())
@@ -226,6 +251,7 @@ def crossdonor_stats(train_ds: TensorDataset, val_ds: TensorDataset,
         sigma_pred_mc=np.concatenate(sig_mc) if sig_mc else np.array([]),
         n_donors=used,
         residuals_per_donor=per_donor,
+        donor_scales=donor_scales,
     )
 
     # A pooled quantile is only "cross-donor" if no single donor owns most of the pool.
