@@ -18,7 +18,8 @@ from cellfate.common.schemas import ConformalParams
 def fit_conformal(abs_residuals, levels, default_q: float = 1e3,
                   sigma_scale: float = 1.0,
                   sigma_scale_mc: float = 1.0,
-                  sigma_scale_mode: str = "ensemble") -> ConformalParams:
+                  sigma_scale_mode: str = "ensemble",
+                  calibrated_modes: list[str] | None = None) -> ConformalParams:
     """Build ConformalParams from absolute age residuals.
 
     From Stage 1b these residuals are CROSS-DONOR (inner leave-one-donor-out), not the
@@ -55,7 +56,8 @@ def fit_conformal(abs_residuals, levels, default_q: float = 1e3,
         q[str(lvl)] = float(rs[k - 1])
     return ConformalParams(levels=levels, q=q, sigma_scale=float(sigma_scale),
                            sigma_scale_mc=float(sigma_scale_mc),
-                           sigma_scale_mode=str(sigma_scale_mode))
+                           sigma_scale_mode=str(sigma_scale_mode),
+                           sigma_calibrated_modes=list(calibrated_modes or []))
 
 
 def coverage(abs_residuals, q: float) -> float:

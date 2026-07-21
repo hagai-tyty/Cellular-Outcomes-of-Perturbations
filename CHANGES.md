@@ -49,6 +49,43 @@ temperature change.
 
 ---
 
+## 2026-07-21 — End-to-end smoke test, and the bug writing it exposed
+
+**Status:** ✅ Written, not run. `smoke_stage1.py` at repo root, CPU, ~2 min.
+
+**Why the existing tests could never have caught run 1's failure.** Every test fixture uses
+**balanced** synthetic sources — two cell lines, equal cells each. The real dataset is one bulk
+corpus (HFF, 33,613 cells) plus six tiny donors (~14 each). The bug lived entirely in that
+*geometry*, so it was invisible to the suite by construction.
+
+`smoke_stage1.py` builds a dataset with the same shape — `BULK_L0` ~300 cells, `DONOR_L0..5` ~20
+each — and runs build → train → calibrate → bundle → predict, asserting every Stage 1 invariant.
+It would have caught the bulk-corpus rotation, a silent fallback to in-distribution calibration,
+an uncalibrated inference mode, and a lopsided residual pool. It also **measures** the claim that
+the mc_dropout passes don't disturb training reproducibility — previously argued, never tested.
+
+### The bug it exposed before it even ran — **a factor of 1.0 is ambiguous**
+
+Tracing the script by hand, `Predictor(mode="mc_dropout")` would have **raised on a correctly
+calibrated bundle**. My guard inferred calibration status from the factor's *value*:
+
+```python
+if self.sigma_scale == 1.0 and max(ens, mc) != 1.0:   # WRONG
+```
+
+But `sigma_scale_factor` is **clamped at 1.0**, so 1.0 means *either* "measured, and the spread
+was already adequate" *or* "never measured". Conflating them refuses to serve a bundle whose
+spread simply needed no widening — and on well-fit data that is the normal case, not an edge one.
+
+Fixed by recording status explicitly: `ConformalParams.sigma_calibrated_modes` (defaulted to
+`[]`, so legacy bundles keep their old behaviour) plus `is_calibrated_for(mode)`. The guard now
+reads the list instead of guessing from a number.
+
+This is the third bug in a row found by *constructing the adversarial case* rather than
+re-reading the code — worth weighting when judging how much confidence a review pass deserves.
+
+---
+
 ## 2026-07-21 — Code audit: three defects Stage 1b newly exposes
 
 **Status:** ✅ Written, not run. Code only — no test was altered to accommodate any of these.

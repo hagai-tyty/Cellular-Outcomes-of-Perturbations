@@ -171,6 +171,10 @@ def run(cfg: TrainConfig) -> dict:
         lvl = float(cfg.conformal_levels[0])
         sigma_scale = sigma_scale_factor(xstats, res_params.z_conf, lvl, mode="ensemble")
         sigma_scale_mc = sigma_scale_factor(xstats, res_params.z_conf, lvl, mode="mc_dropout")
+        # Record WHICH modes were measured. A factor of 1.0 means "already adequate" here, not
+        # "unknown", and only this list can tell those apart at load time.
+        calibrated_modes = [m for m, s in (("ensemble", xstats.sigma_pred),
+                                           ("mc_dropout", xstats.sigma_pred_mc)) if s.size]
     else:
         if xstats is not None:
             log.warning("xdonor residuals empty; falling back to calib residuals")
@@ -182,10 +186,12 @@ def run(cfg: TrainConfig) -> dict:
         else:
             abs_res = np.array([])
         sigma_scale = sigma_scale_mc = 1.0
+        calibrated_modes = []          # legacy behaviour: no per-mode calibration claimed
 
     conformal = fit_conformal(abs_res, cfg.conformal_levels, sigma_scale=sigma_scale,
                               sigma_scale_mc=sigma_scale_mc,
-                              sigma_scale_mode=SIGMA_SCALE_MODE)
+                              sigma_scale_mode=SIGMA_SCALE_MODE,
+                              calibrated_modes=calibrated_modes)
 
     # -- OOD reference: DELIBERATELY still the deployed model's train features --------- #
     # STAGE_1 S1b.2 Edit 4 says to fit this on `xstats.feats`. That is not implementable:

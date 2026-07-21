@@ -231,6 +231,12 @@ class ConformalParams(BaseModel):
     sigma_scale: float = 1.0            # mode="ensemble"
     sigma_scale_mc: float = 1.0         # mode="mc_dropout"
     sigma_scale_mode: str = "ensemble"  # which mode `sigma_scale` refers to (provenance)
+    # WHICH modes were actually calibrated -- not inferable from the factors themselves. A
+    # factor of 1.0 is ambiguous: it means EITHER "measured, and the spread was already
+    # adequate" (the clamp in sigma_scale_factor) OR "never measured". Treating the first as
+    # the second would refuse to serve a correctly-calibrated bundle. Empty list = legacy
+    # bundle, no per-mode calibration, behave as before.
+    sigma_calibrated_modes: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _ok(self) -> ConformalParams:
@@ -243,16 +249,27 @@ class ConformalParams(BaseModel):
                           ("sigma_scale_mc", self.sigma_scale_mc)):
             if not (val > 0 and math.isfinite(val)):
                 raise ValueError(f"{name} must be finite and > 0, got {val}")
-        if self.sigma_scale_mode not in ("ensemble", "mc_dropout"):
+        valid = ("ensemble", "mc_dropout")
+        if self.sigma_scale_mode not in valid:
             raise ValueError(
-                "sigma_scale_mode must be 'ensemble' or 'mc_dropout', "
-                f"got {self.sigma_scale_mode!r}"
+                f"sigma_scale_mode must be one of {valid}, got {self.sigma_scale_mode!r}"
             )
+        bad = [m for m in self.sigma_calibrated_modes if m not in valid]
+        if bad:
+            raise ValueError(f"unknown sigma_calibrated_modes {bad}; valid are {list(valid)}")
         return self
 
     def scale_for(self, mode: str) -> float:
-        """The factor calibrated for ``mode``; 1.0 if that mode was never calibrated."""
+        """The sigma_age multiplier for ``mode``."""
         return self.sigma_scale if mode == "ensemble" else self.sigma_scale_mc
+
+    def is_calibrated_for(self, mode: str) -> bool:
+        """Whether ``mode``'s spread was actually measured.
+
+        A legacy bundle (empty list) reports True: it predates per-mode calibration and its
+        behaviour must not change.
+        """
+        return not self.sigma_calibrated_modes or mode in self.sigma_calibrated_modes
 
 
 class TemperatureParams(BaseModel):

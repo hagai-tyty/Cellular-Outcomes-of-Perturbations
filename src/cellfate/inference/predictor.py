@@ -100,19 +100,26 @@ class Predictor:
         # is a DIFFERENT quantity in each mode (across members vs across T dropout passes), so
         # the bundle carries one factor per mode and we take the one for ours.
         # getattr keeps pre-Stage-1b bundles loading.
-        ens = float(getattr(conf, "sigma_scale", 1.0))
-        mc = float(getattr(conf, "sigma_scale_mc", 1.0))
-        self.sigma_scale = ens if self.mode == "ensemble" else mc
-        if self.sigma_scale == 1.0 and max(ens, mc) != 1.0:
+        # Calibration STATUS is read explicitly, never inferred from the factor's value: 1.0 is
+        # ambiguous -- it means either "measured, and the spread was already adequate" (the
+        # clamp in sigma_scale_factor) or "never measured". Inferring would refuse to serve a
+        # correctly-calibrated bundle whose spread simply needed no widening.
+        self.sigma_scale = float(
+            conf.scale_for(self.mode) if hasattr(conf, "scale_for")
+            else getattr(conf, "sigma_scale", 1.0)
+        )
+        calibrated = (conf.is_calibrated_for(self.mode)
+                      if hasattr(conf, "is_calibrated_for") else True)
+        if not calibrated:
             # The bundle WAS calibrated -- just not for the mode being requested. Serving the
             # raw spread here would be uncalibrated and overconfident, which is precisely the
             # defect Stage 1 exists to remove; borrowing the other mode's factor would scale
             # the wrong quantity. Neither is acceptable for a number that gates a safety score.
             raise ConfigError(
-                f"this bundle has no sigma_scale for mode={self.mode!r} (it carries "
-                f"ensemble={ens:.3f}, mc_dropout={mc:.3f}). Rebuild it with this version of "
-                f"cellfate so both modes are calibrated, or run the mode that was. Serving "
-                f"the raw {self.mode!r} spread would be uncalibrated and overconfident."
+                f"this bundle was not calibrated for mode={self.mode!r} (calibrated modes: "
+                f"{list(conf.sigma_calibrated_modes)}). Rebuild it with this version of "
+                f"cellfate so every mode is calibrated, or run one that was. Serving the raw "
+                f"{self.mode!r} spread would be uncalibrated and overconfident."
             )
 
     # -- core stochastic passes -------------------------------------------- #
