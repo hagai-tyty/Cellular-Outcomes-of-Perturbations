@@ -21,7 +21,7 @@ quantity for a different k. There is deliberately no knob to shrink them.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 import torch
@@ -59,6 +59,12 @@ class XDonorStats:
     sigma_pred: np.ndarray      # (M,)  ENSEMBLE spread     -> fits sigma_scale
     sigma_pred_mc: np.ndarray   # (M,)  MC-DROPOUT spread   -> fits sigma_scale_mc
     n_donors: int               # inner-LODO donors actually used
+    # How many residuals each donor contributed. `q` is a QUANTILE of the pooled residuals, so
+    # a donor holding most of the pool sets it almost alone -- the pooled statistic then
+    # describes that donor, not cross-donor error. That is exactly how run 1 failed (HFF: 99.8%
+    # of 33,688), and the >50% skip only catches the extreme case. Recorded so the milder
+    # version is visible in metrics.json instead of silently shaping `q`.
+    residuals_per_donor: dict[int, int] = field(default_factory=dict)
     # DIAGNOSTIC ONLY -- deliberately not used to fit the OOD reference. These come from
     # independently-seeded INNER models, whose latent bases differ by arbitrary rotation, while
     # OODDetector compares the DEPLOYED member[0]'s z against the stored Gaussian. Pooling them
@@ -111,7 +117,9 @@ def mc_dropout_spread(model, ds: TensorDataset, device: str, T: int,
             m.train()
     try:
         out = []
-        for batch in DataLoader(ds, batch_size=max(1, row_budget // max(T, 1))):
+        # shuffle=False is LOAD-BEARING, not a default: the caller indexes the result with the
+        # age mask, so any reordering here would misalign spreads with residuals silently.
+        for batch in DataLoader(ds, batch_size=max(1, row_budget // max(T, 1)), shuffle=False):
             x, fp, dt = (batch[i].to(device) for i in (X_I, FP_I, DT_I))
             n = x.shape[0]
             _, ag, _ = model(x.repeat(T, 1), fp.repeat(T, 1), dt.repeat(T, 1))
@@ -148,7 +156,7 @@ def crossdonor_stats(train_ds: TensorDataset, val_ds: TensorDataset,
 
     n_total = len(train_ds)
     res, log_, tgt, fts, sig, sig_mc = [], [], [], [], [], []
-    used, skipped = 0, []
+    used, skipped, per_donor = 0, [], {}
     for d in uniq:
         hold = donors == d
         inner_tr, inner_te = _subset(train_ds, ~hold), _subset(train_ds, hold)
@@ -183,6 +191,7 @@ def crossdonor_stats(train_ds: TensorDataset, val_ds: TensorDataset,
         am = inner_te.tensors[AM_I].numpy().astype(bool)
         if am.any():
             res.append(np.abs(age[am] - ya[am]))
+            per_donor[int(d)] = int(am.sum())
             per = np.stack([member_outputs(m, inner_te, device)[1].numpy() for m in members])
             # ddof=0, matching Predictor's age.std(0, unbiased=False)
             sig.append(per.std(axis=0)[am])
@@ -214,9 +223,24 @@ def crossdonor_stats(train_ds: TensorDataset, val_ds: TensorDataset,
         sigma_pred=np.concatenate(sig) if sig else np.array([]),
         sigma_pred_mc=np.concatenate(sig_mc) if sig_mc else np.array([]),
         n_donors=used,
+        residuals_per_donor=per_donor,
     )
+
+    # A pooled quantile is only "cross-donor" if no single donor owns most of the pool.
+    total = sum(per_donor.values())
+    if total:
+        top_donor, top_n = max(per_donor.items(), key=lambda kv: kv[1])
+        if top_n > 0.5 * total:
+            log.warning(
+                "donor %d contributes %d of %d pooled residuals (%.0f%%): `q` and the sigma "
+                "scales largely describe THAT donor, not cross-donor error. The pool is "
+                "imbalanced even though no donor tripped the bulk-corpus skip.",
+                top_donor, top_n, total, 100.0 * top_n / total,
+            )
+
     log_event(log, "xdonor.done", n_donors=used, n_skipped=len(skipped), skipped=skipped,
-              n_residuals=int(stats.abs_residuals.size), n_logits=int(stats.logits.shape[0]))
+              n_residuals=int(stats.abs_residuals.size), n_logits=int(stats.logits.shape[0]),
+              residuals_per_donor=per_donor)
     return stats
 
 

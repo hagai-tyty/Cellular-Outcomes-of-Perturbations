@@ -212,7 +212,7 @@ def run(cfg: TrainConfig) -> dict:
 
     metrics = _report(members, val_losses, train_ds, val_ds, calib_ds,
                       cal_logits, cal_target, temperature, conformal, abs_res, xstats,
-                      cfg.mc_dropout_T)
+                      cfg.mc_dropout_T, res_params.z_conf)
     io.write_json(paths.bundle_dir / C.BUNDLE_METRICS_FILENAME, metrics)
     log_event(log, "bundle.done", bundle=str(paths.bundle_dir),
               n_members=len(members), temperature=round(temperature.temperature, 4))
@@ -225,7 +225,7 @@ def _jsonable(d: dict) -> dict:
 
 def _report(members, val_losses, train_ds, val_ds, calib_ds,
             cal_logits, cal_target, temperature, conformal, abs_res, xstats=None,
-            mc_T: int = 50) -> dict:
+            mc_T: int = 50, res_z_conf: float = 1.0) -> dict:
     from scipy.special import softmax  # available via the data-stage deps
 
     out = {
@@ -246,6 +246,9 @@ def _report(members, val_losses, train_ds, val_ds, calib_ds,
         "xdonor_calibrated": xstats is not None and xstats.n_donors >= 2,
         "xdonor_n_donors": 0 if xstats is None else xstats.n_donors,
         "xdonor_n_residuals": 0 if xstats is None else int(xstats.abs_residuals.size),
+        # per-donor pool composition: `q` is a quantile of these, so a lopsided pool means the
+        # quantile describes one donor rather than cross-donor error
+        "xdonor_residuals_per_donor": {} if xstats is None else xstats.residuals_per_donor,
     }
     # IN-DISTRIBUTION (calib/val). From Stage 1b the temperature is no longer FITTED here, so
     # `nll_after_temp <= nll_before_temp` is NO LONGER GUARANTEED on this split -- fit_temperature
@@ -272,6 +275,25 @@ def _report(members, val_losses, train_ds, val_ds, calib_ds,
         out["xdonor_nll_after_temp"] = soft_nll(xp_after, xt)
         out["xdonor_ece_before_temp"] = ece(xp_before, xlabels)
         out["xdonor_ece_after_temp"] = ece(xp_after, xlabels)
+    # -- how much of the sigma fix actually reaches the cells that matter ---------------- #
+    # `sigma_scale` is MULTIPLICATIVE, so it fixes the spread's MAGNITUDE but preserves its
+    # SHAPE. A cell where the ensemble happens to agree keeps a near-zero sigma even after a
+    # 6x scaling -- and RES consumes sigma via R_eff = max(0, -(mu + z*sigma)), so such a cell
+    # is scored as if its ΔAge were near-certain and can be APPROVED on that basis, while its
+    # true out-of-donor error is ~q. That is the permissive direction, the dangerous one.
+    # MASTER_PLAN §5b-bis anticipated this and offered `R_eff = max(0, -(mu + q))` as the
+    # "cleaner" alternative; STAGE_1 specified the rescaling instead. These ratios measure how
+    # large the gap is, so the choice can be made on evidence in Stage 4 (Change C).
+    if xstats is not None and xstats.sigma_pred.size and abs_res.size:
+        lvl0 = conformal.levels[0]
+        q0 = conformal.q[str(lvl0)]
+        if q0 > 0:
+            ratio = (xstats.sigma_pred * conformal.sigma_scale * res_z_conf) / q0
+            p10, p50, p90 = (float(np.quantile(ratio, x)) for x in (0.10, 0.50, 0.90))
+            out["xdonor_sigma_over_q_p10"] = p10   # « 1 means many cells still claim near-
+            out["xdonor_sigma_over_q_p50"] = p50   #   certainty despite honest error ~q
+            out["xdonor_sigma_over_q_p90"] = p90
+            out["xdonor_sigma_under_half_q_frac"] = float((ratio < 0.5).mean())
     if abs_res.size:
         lvl = conformal.levels[0]
         # NOTE: with cross-donor residuals this is coverage ON THE FITTING SET, so it is a

@@ -49,6 +49,59 @@ temperature change.
 
 ---
 
+## 2026-07-21 — Code audit: three defects Stage 1b newly exposes
+
+**Status:** ✅ Written, not run. Code only — no test was altered to accommodate any of these.
+
+Stage 1b shrinks the calibration pool from ~4,400 in-distribution cells to **~75 cross-donor
+cells** (5 Gill donors × ~15) once HFF is skipped. Several things that were safe at the old scale
+are not at the new one.
+
+### 1. `fit_temperature` could ship a maximally overconfident T — **real bug, fixed**
+
+Temperature is **unidentifiable on single-class data**: NLL falls monotonically as T → 0, because
+"always this class, with certainty" is optimal. The optimiser runs to the lower bound (`1e-2`),
+and the existing *"never worse than T=1"* guard **passes** — the fit genuinely is better on that
+data — so `T = 0.01` ships and every fate probability saturates.
+
+Unreachable before: the old pool was ~4,400 HFF cells with ample class variation. Reachable now:
+~75 Gill cells whose unsafe fraction ranges 0/21 to 8/19 per donor, so a pool that is nearly all
+one class is a real possibility.
+
+Fixed in `calibrate.py` (the method's own property, so it protects every caller):
+`has_class_variation()` requires ≥2 classes carrying ≥1% of the mass, else return T=1.0 with a
+warning. Uncalibrated beats confidently wrong.
+
+### 2. A lopsided residual pool is invisible — **fixed (diagnostic)**
+
+`q` is a *quantile of the pooled residuals*, so a donor owning most of the pool sets it almost
+alone. That is exactly how run 1 failed (HFF: 99.8%), and the >50% bulk-corpus skip only catches
+the extreme. `XDonorStats.residuals_per_donor` now records the composition, it reaches
+`metrics.json`, and `crossdonor_stats` warns when any donor exceeds 50% of the pool.
+
+### 3. `sigma_scale` is multiplicative, so it fixes magnitude but not SHAPE — **measured, not
+silently fixed**
+
+A cell the ensemble happens to agree on keeps a near-zero sigma even after a 6× scaling. RES
+consumes sigma via `R_eff = max(0, −(mu + z·σ))`, so that cell is scored as if its ΔAge were
+near-certain and can be **APPROVED** on that basis — while its true out-of-donor error is ~`q`.
+**That is the permissive direction, the dangerous one.**
+
+`MASTER_PLAN` §5b-bis anticipated this and offered `R_eff = max(0, −(mu + q))` as the *"cleaner"*
+alternative; `STAGE_1` specified the rescaling instead. Changing RES is a scored behaviour with a
+deferred verdict (Change C, Stage 4), so this is **deliberately not fixed here**. Instead
+`metrics.json` now reports `xdonor_sigma_over_q_p10/p50/p90` and
+`xdonor_sigma_under_half_q_frac`, so the size of the gap is measured and the choice can be made
+on evidence rather than argument.
+
+### Also
+
+`mc_dropout_spread`'s `DataLoader` is now explicitly `shuffle=False` — the caller indexes the
+result with the age mask, so a future edit flipping that default would misalign spreads with
+residuals **silently**.
+
+---
+
 ## 2026-07-21 — mc_dropout is now actually calibrated (the guard was right)
 
 **Status:** ✅ Written, not run.
