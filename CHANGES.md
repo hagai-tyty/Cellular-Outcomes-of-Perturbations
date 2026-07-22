@@ -49,6 +49,59 @@ temperature change.
 
 ---
 
+## 2026-07-22 — The "flaky" test was real: batch-size float sensitivity, now pinned
+
+**Status:** ✅ Fixed and verified — **7 consecutive clean full-suite runs (220 tests)** against a
+check that failed 2-of-3 before the fix.
+
+The previous entry logged a transient two-test failure and attributed it to a Windows file lock.
+**That was wrong.** Chasing it properly found a real numerical property.
+
+### Finding it
+
+Rather than hope it recurred, I replaced the guess with a stronger check —
+`test_batch_size_does_not_change_any_row`, which sweeps several batch sizes instead of comparing
+only batch-of-5 against singletons. It failed **immediately and repeatedly**, converting a
+1-in-N flake into a deterministic signal.
+
+### The cause — upstream of this change, and not a defect
+
+Measured on a trained bundle:
+
+```
+RAW ensemble probability (no calibration)   max |batch24 - single| = 8.9e-08
+after Platt (slope a ~ 8)                                          = 5.0e-07   (5.5x)
+sigma_age (multiplied by sigma_scale ~12)                          = 1.2e-06
+```
+
+torch selects different CPU kernels for different batch sizes, so identical rows differ in the
+last float32 ulp **before any of this code runs**. Two shipped factors then amplify it: Platt
+works in logit space so it multiplies by roughly its slope, and `sigma_age` is scaled by
+`sigma_scale`. Both magnitudes are numerically irrelevant.
+
+**The defect was the assertion, not the arithmetic.** `test_batch_and_single_agree` asserted
+`model_dump() == model_dump()` — bit-exact float equality, a guarantee torch never made. It
+passed by luck; the amplification exhausted the luck.
+
+### The fix
+
+Agreement is now asserted to a **relative** tolerance (`rel_tol=1e-4`, `abs_tol=1e-7`), not an
+absolute one. Absolute was tried first at `1e-6` and **still failed** — on `sigma_age`, whose
+scale and amplification differ from a probability's. An absolute bound would need re-tuning
+whenever a fitted parameter moves, which is how tests rot. Relative does not: float32 carries
+~1.2e-07 relative precision, amplification is capped by the Platt slope bound (1e2) and
+`sigma_scale`, so ~1e-5 is the ceiling and 1e-4 leaves an order of magnitude.
+
+This keeps every defect the test exists for — misaligned rows, leaked state, bad indexing all
+move values by O(0.1–1) **relative**, four orders above the bound.
+
+Also added `test_platt_clip_bounds_the_logit_blowup`: `P(safe)` values that round to exactly 1.0
+in float32 would give an infinite logit and a NaN probability, and this model saturates there
+routinely. The `EPS` clamp is load-bearing, and now documented as such in
+`common/calibration.py` along with the amplification-scales-with-slope property.
+
+---
+
 ## 2026-07-22 — Stage 1 run 2 scored; Change A″ calibrates `P(safe)`
 
 **Status:** ✅ Run 2 **executed and scored**. Change A″ written and tested locally (218 tests,

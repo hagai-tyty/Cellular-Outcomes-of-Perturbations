@@ -10,11 +10,23 @@ from __future__ import annotations
 
 import numpy as np
 
-EPS = 1e-6          # keeps logit() finite at p in {0, 1}
+# Clamp for logit(). LOAD-BEARING, not cosmetic: this model's P(safe) saturates (fate PR-AUC
+# ~1.0), and float32 values that round to exactly 1.0 would give an infinite logit and a NaN
+# probability. The clamp also bounds the sensitivity below -- d(logit)/dp = 1/(p(1-p)) reaches
+# ~1e7 at p = 1 - 1e-7, where a single float32 ulp moves the logit by ~0.9.
+EPS = 1e-6
 
 
 def platt_safe(p_safe: np.ndarray, a: float, b: float) -> np.ndarray:
-    """``sigmoid(a*logit(P(safe)) + b)`` -- the calibrated safe probability."""
+    """``sigmoid(a*logit(P(safe)) + b)`` -- the calibrated safe probability.
+
+    ⚠ NOISE AMPLIFICATION. Working in logit space multiplies input perturbations by roughly the
+    slope ``a``. Measured on a trained bundle: torch's batch-size-dependent CPU kernels move the
+    raw ensemble probability by ~9e-08, and this map takes that to ~5e-07 at a ~ 8. Harmless at
+    these magnitudes, and the reason batch-agreement is asserted to a tolerance rather than
+    bit-exactly (tests/test_inference.py), but it scales with ``a`` -- worth remembering if the
+    slope bound in ``fit_platt_binary`` is ever raised.
+    """
     p = np.clip(np.asarray(p_safe, dtype=np.float64), EPS, 1.0 - EPS)
     z = np.log(p / (1.0 - p))
     return 1.0 / (1.0 + np.exp(-(a * z + b)))

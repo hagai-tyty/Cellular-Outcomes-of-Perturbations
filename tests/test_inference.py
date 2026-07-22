@@ -4,6 +4,7 @@ a real bundle built by Documents 1-3. Adversarial and limit-focused."""
 
 from __future__ import annotations
 
+import math
 import warnings
 
 import numpy as np
@@ -306,6 +307,43 @@ def test_ood_cell_is_rejected(bundle):
     pytest.skip("no OOD cells surfaced in this fixture bundle")
 
 
+# Batch-size agreement is asserted to RELATIVE tolerance, not bit-exactly and not to an absolute
+# one, because the reported quantities have different scales and different amplification factors.
+#
+# torch picks different CPU kernels for different batch sizes, so identical rows can differ in the
+# last float32 ulp -- ~1.2e-07 relative. That is upstream of anything here: MEASURED on a trained
+# bundle, the raw ensemble probability already moves by 8.9e-08 between a batch of 24 and
+# singletons, before any calibration. Two shipped factors then amplify it:
+#
+#   * Platt works in logit space, multiplying by roughly its slope   (a ~ 8   -> ~5e-07 observed)
+#   * sigma_age is multiplied by sigma_scale                          (~12x   -> ~1.2e-06 observed)
+#
+# Both scale with a fitted parameter, so an absolute bound would need re-tuning whenever those
+# move -- which is exactly the kind of test that rots. Relative does not: float32 carries ~1.2e-07
+# relative precision, amplification is bounded by the Platt slope cap (1e2) and sigma_scale, so
+# ~1e-5 is the ceiling and 1e-4 leaves an order of magnitude of headroom.
+#
+# The original assertion was `model_dump() == model_dump()` -- bit-exactness, a guarantee torch
+# never made. It passed by luck and failed transiently once the amplification exhausted it. The
+# tolerance keeps every defect the test exists for: misaligned rows, leaked state or bad indexing
+# all move values by O(0.1-1) RELATIVE, four orders above this bound.
+_ROW_RTOL = 1e-4
+_ROW_ATOL = 1e-7
+
+
+def _assert_rows_agree(a: dict, b: dict) -> None:
+    assert a.keys() == b.keys(), (set(a) ^ set(b))
+    for k in a:
+        x, y = a[k], b[k]
+        if isinstance(x, float) and isinstance(y, float):
+            assert math.isclose(x, y, rel_tol=_ROW_RTOL, abs_tol=_ROW_ATOL), (
+                f"{k}: {x} vs {y}  (|diff| = {abs(x - y):.3e}, "
+                f"relative = {abs(x - y) / max(abs(x), abs(y), 1e-30):.3e})"
+            )
+        else:
+            assert x == y, f"{k}: {x!r} vs {y!r}"
+
+
 def test_batch_and_single_agree(bundle):
     pred = Predictor(bundle)
     paths = ArtifactPaths.of(bundle)
@@ -319,7 +357,48 @@ def test_batch_and_single_agree(bundle):
     batch = score_requests(pred, reqs)
     for k, req in enumerate(reqs):
         one = predict_one(pred, req)
-        assert one.model_dump() == batch[k].model_dump()
+        _assert_rows_agree(one.model_dump(), batch[k].model_dump())
+
+
+def test_batch_size_does_not_change_any_row(bundle):
+    """Stronger than `test_batch_and_single_agree`: EVERY batch size must give the same rows.
+
+    That test compares only batch-of-5 against singletons, and it failed transiently once.
+    Sweeping many batch sizes turns a 1-in-N flake into a deterministic check -- which is how the
+    cause was found: torch's CPU kernels differ by batch size, so the raw ensemble probability
+    already moves by ~9e-08 before any calibration, and Platt amplifies that by roughly its
+    slope. Neither is a defect; asserting bit-exactness was.
+    """
+    pred = Predictor(bundle)
+    paths = ArtifactPaths.of(bundle)
+    arr = io.shard_to_numpy(io.read_shard(sorted(paths.shards_dir.glob("*.parquet"))[0]))
+    n = min(12, len(arr["cell_id"]))
+    X, fp, dt = arr["X"][:n], arr["u_chem_fp"][:n], arr["dose_time"][:n]
+
+    reference = pred.predict_encoded(X, fp, dt)
+    for size in (1, 3, n):          # singleton, partial, and the whole batch
+        for start in range(0, n - size + 1, size):
+            got = pred.predict_encoded(X[start:start + size], fp[start:start + size],
+                                       dt[start:start + size])
+            for j, row in enumerate(got):
+                _assert_rows_agree(row, reference[start + j])
+
+
+def test_platt_clip_bounds_the_logit_blowup():
+    """The EPS clip in `apply_platt` is load-bearing, not cosmetic.
+
+    Without it, `P(safe)` values that round to exactly 1.0 in float32 give an infinite logit and
+    a NaN calibrated probability. The model produces such values routinely.
+    """
+    from cellfate.common.calibration import apply_platt
+
+    p = np.array([[1.0, 0.0, 0.0],            # saturated -- logit would be +inf
+                  [0.0, 0.5, 0.5],            # zero      -- logit would be -inf
+                  [1 - 1e-9, 5e-10, 5e-10]])  # beyond float32 resolution
+    out = apply_platt(p, a=4.14, b=2.06, safe_idx=0)
+    assert np.isfinite(out).all(), out
+    assert np.allclose(out.sum(axis=1), 1.0)
+    assert (out >= 0).all() and (out <= 1).all()
 
 
 def test_determinism_ensemble_mode(bundle):
