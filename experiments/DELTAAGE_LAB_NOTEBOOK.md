@@ -1995,3 +1995,168 @@ coverage can be hit by choosing a `q` after seeing the result.
 
 Not a failure of the hypothesis. The hypothesis was never tested: the calibration set was 99.8%
 data-starvation residuals. Both targets are void; both guards passed and are informative.
+
+---
+
+### RESULT — RUN 2 (2026-07-22) — ✅ **VALID.** Scored: 1 target passed, 1 REGRESSED.
+
+Ran on D: (RTX 2050), 6 folds, 210 min. The run-1 defect is gone, and it is visible in the logs
+rather than asserted:
+
+```
+inner-LODO: SKIPPING donor 0 -- holding it out leaves 75 of 33688 cells (0.2%, below the 50% floor)
+xdonor.done  n_donors=5  n_skipped=1  n_residuals=103  residuals_per_donor={21,21,21,19,21}
+```
+
+| | run 1 | run 2 |
+|---|---|---|
+| HFF | rotated as a donor, supplied **99.8%** of residuals | **skipped** |
+| inner-model val_loss | HFF fold **33.0** vs deployed 5.2 | every fold **5.17–5.27**, matching deployed |
+| cells per donor | 13–18 (train only) | **21** (train+val+calib, all unseen by the inner model) |
+
+Every inner model is now a genuine proxy for the one that ships. That is what makes the run valid.
+
+#### Scored against the pre-registered bars (§3)
+
+| role | metric | bar | result | |
+|---|---|---|---|---|
+| GUARD | `dage_mae_model` | noise | 14.291 → 14.291 | ✅ |
+| GUARD | `rank_model_dage` | noise | 0.948 → 0.948 | ✅ |
+| GUARD | `fate_prauc` | noise | 0.992 → 0.992 | ✅ |
+| GUARD | `fate_roc` | noise | 0.983 → 0.983 | ✅ |
+| GUARD | `ood_rate` | unchanged (deviation A2) | 0.273 → 0.273 | ✅ |
+| GUARD | `level_shift_model` | noise | −5.713 → −5.713 | ✅ |
+| **TARGET** | `conformal_coverage` | 0.85–0.95 | 0.401 → **0.889**, ACCEPT | ✅ |
+| **TARGET** | `fate_ece` | ACCEPT + ≥40% drop | 0.281 → **0.364**, CI [+0.058,+0.109] | ❌ **REGRESSION** |
+
+**All six guards came back with `max |diff| = 0.00e+00` on every fold** — not merely "noise" but
+bit-identical, which was the sharper prediction recorded above. Stage 1 provably touches
+calibration and nothing else.
+
+#### Prediction scorecard (all recorded before the run)
+
+| predicted | actual | |
+|---|---|---|
+| guards bit-identical | 0.00e+00 on all six | ✅ |
+| coverage aggregate lands in range | 0.889 | ✅ |
+| coverage per-fold bimodal | 1.000 ×5, N3 0.333 | ✅ |
+| `fate_ece` misses the 40% bar | it **regressed** — worse than predicted | ⚠️ |
+| `sigma_scale` ≈ 5–6 | **9.9–18.6** | ❌ my arithmetic: I divided by MEAN error; the formula uses P90 |
+| temperature > 1 (softening) | **0.755–0.849** (sharpening) | ❌ predicted from the synthetic rehearsal, not from data |
+
+#### Finding 1 — ONE donor sets `q` for the entire study
+
+| fold | own MAE | q | q/MAE | coverage | N3 in pool? |
+|---|---|---|---|---|---|
+| N2 | 21.79 | 33.76 | 1.55 | 1.000 | yes |
+| **N3** | **29.69** | **24.39** | **0.82** | **0.333** | **no** |
+| O1 | 5.39 | 34.64 | 6.43 | 1.000 | yes |
+| O2 | 7.54 | 36.27 | 4.81 | 1.000 | yes |
+| Y1 | 7.28 | 34.41 | 4.73 | 1.000 | yes |
+| Y2 | 14.06 | 34.19 | 2.43 | 1.000 | yes |
+
+`q` is 33.8–36.3 on every fold where N3 is in the calibration pool and **24.4** on the one fold
+where it is not. The pooled P90 lands inside N3's residuals, so **N3's offset alone determines the
+interval everyone else receives** — and LOOCV then removes it from its own pool, dropping `q`
+below N3's own error. `q/MAE` spans **0.82 → 6.43**.
+
+#### Finding 2 — the residuals are SHIFTED, not scattered
+
+N2's MAE is 21.79, yet **all 21** of its cells fall inside q = 33.76. Under the half-normal my
+power analysis assumed, roughly a third should have exceeded it. So residuals cluster around a
+per-donor **offset** rather than spreading from zero — T7.4.3's level shift appearing directly in
+the coverage numbers, and making coverage nearly a **step function**: `q` either clears a donor's
+offset (→1.000) or it does not (→0.333).
+
+> **The "heavy-tailed mixture" framing in the power analysis above is RETRACTED.** The error shape
+> is offset-dominated, not heavy-tailed. That points at **Stage 2**, which compresses per-donor
+> MAE from [5.4 … 29.7] to [4.3 … 10.0] (T16) — a 5.5× spread down to 2.3×.
+
+#### On coverage passing
+
+0.889 against a nominal 0.90 is split conformal's **marginal** guarantee working. The per-fold
+spread is **conditional** coverage, provably unachievable distribution-free (Barber, Candès,
+Ramdas & Tibshirani 2021). The aggregate is a mean over folds and can read "in range" while no
+fold is — so **read the per-fold row**. Recorded as a property of the method, not a bug.
+
+#### Finding 3 — why `fate_ece` regressed: four quantities, no two the same
+
+| stage | quantity |
+|---|---|
+| `calibrate.py:_nll` optimised | **multi-class** NLL |
+| `metrics.py:ece` reported | **top-1** confidence ECE |
+| `scorecard.py:_ece` grades | **binary** ECE on `P(safe)` |
+| `res.py` + `STAGE_3` §0.1 consume | **`S` = `P(safe)`, `P_loss`** |
+
+Plus a fit/apply mismatch: temperature is fitted on `ensemble_logits` (mean of member logits) but
+applied per-member and then averaged — `softmax(mean(lg)/T) ≠ mean(softmax(lg/T))` by Jensen.
+
+Cross-donor multi-class NLL chose T ≈ 0.755–0.849 while the held-out folds want ≤0.54; every fold
+worsened by +0.053…+0.108. The cross-donor top-1 ECE *improved* at the same time (0.269→0.217) —
+not a contradiction, a different metric.
+
+### VERDICT — RUN 2: **PARTIAL PASS.** Stage 1 does not pass as a whole.
+
+§3: *"Accept only if the TARGET metric says ACCEPT and no GUARD says REGRESSION."* A target
+regressed. §3 also makes the refits independent, so:
+
+| refit | verdict |
+|---|---|
+| conformal `q` | **ADOPTED** — 0.401 → 0.889, with the per-fold caveat on record |
+| `sigma_scale` | **ADOPTED** — drove RES approvals 3 → 0 and the over-approval gap to zero, as predicted |
+| temperature | **REJECTED** — regression; the in-distribution fit was better on the graded metric |
+| OOD | not attempted (deviation A2 — not implementable as specified) |
+
+---
+
+## Change A″ — calibrate `P(safe)`, the quantity the product ships  ⏳ IMPLEMENTED, NOT YET RUN
+
+### Hypothesis
+
+The fate calibrator optimises a quantity nothing uses. `res.py` consumes `S` and `P_loss`,
+`STAGE_3` §0.1 needs a risk threshold on `P(unsafe)`, and the scorecard grades binary ECE on
+`P(safe)` — while `fit_temperature` minimises multi-class NLL. Calibrating what is actually
+shipped and graded should recover the bar.
+
+**This is what the plan's own bar already assumes.** T8.2's table is, cell for cell, the
+scorecard's `fate_ece` and `fate_ece_platt` columns — and its "ECE recal" is **Platt fitted on
+the calib split**. `MASTER_PLAN` §5a names the defective quantity as "`S`, `P_loss`" with
+"**YES — Platt halves it**". So `STAGE_1`'s ≲0.17 bar was derived from an in-distribution-fitted
+Platt; §1b.2's `fit_temperature(xstats…)` is the line that never matched §2's own expected effect.
+
+### Is this a departure from the cross-donor principle? **No.**
+
+The principle says *calibrate on data whose error regime matches deployment*. Measured:
+
+| quantity | in-distribution | out-of-donor | premise met? |
+|---|---|---|---|
+| ΔAge error | ~4 yr | ~14 yr | **yes** → `q`/`sigma_scale` use the pool alone |
+| fate discrimination | 0.929–0.940 | **0.96–1.00** (T8.1) | **no** — no degradation |
+| fate calibration | — | calib-fitted Platt halves out-of-donor ECE on 4/5 folds (T8.2) | **no** — it transfers |
+
+So the in-distribution split *qualifies* for fate, and there is 43× more of it. The calibrator is
+fitted on the **union** (~4,593 cells). Fitting on the 103-cell pool alone would discard 97.8% of
+the available data for a 2-parameter fit — and because cells within a donor share that donor's
+offset, the pool's **effective** n is nearer 5 than 103.
+
+**The principle is tested, not assumed:** the strict pool-only Platt is fitted on every run and
+reported (`xdonor_only_platt_a/b`, `xdonor_only_safe_ece_insample`, `shipped_safe_ece_on_pool`),
+never shipped.
+
+### Prediction for RUN 3, recorded before it runs
+
+| metric | run 2 | predicted | why |
+|---|---|---|---|
+| `fate_ece` | 0.364 | **≈0.15–0.17** | in-dist Platt measures 0.153 (T8.2); the union adds the pool |
+| `conformal_coverage` | 0.889 | **≈0.889, unchanged** | the calibrator does not enter `q` |
+| `fate_prauc` / `fate_roc` | 0.992 / 0.983 | **bit-identical** | Platt's slope is constrained positive ⇒ rank-preserving |
+| `dage_mae_model`, `rank_model_dage` | unchanged | **bit-identical** | same weights |
+
+**Bar unchanged: ACCEPT + ≥40% drop (≤0.169).** Not weakened because the specification was wrong.
+A corrected calibrator that still misses is a real result about calibrator capacity at n≈103.
+
+> **If `fate_ece` lands just above 0.169** — accept the failure, or pre-register a new bar for a
+> different calibrator. Do **not** re-read the number and rationalise. That rule is what made
+> run 2's regression informative instead of embarrassing.
+
+### RESULT — RUN 3: PENDING

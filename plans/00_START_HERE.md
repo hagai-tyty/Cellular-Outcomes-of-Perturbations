@@ -215,10 +215,16 @@ Before starting any stage:
 
 | Stage | Date | Verdict | Accepted? | Notes |
 |---|---|---|---|---|
-| 0 baseline | | — | — | |
-| 1 calibration | | | | |
-| 2 level correction | | | | |
-| 3 gate | | GO / WEAK / STOP | | |
-| 3 tool | | | | |
-| 4 validation | | | | |
-| 5 publication gates | | | | |
+| 0 baseline | 2026-07-19 | — | — | Frozen as `scorecard/baseline.json`. Every number the plans predicted was confirmed: MAE 14.291, rank 0.948/0.955/0.686, ECE 0.281, coverage 0.401 (0.000 on N2/N3), OOD 0.273 |
+| **3 gate (run early)** | 2026-07-20 | **STOP** | n/a | Part C tied — Δt cannot predict the unsafe fraction forward. Also **1.8 cells/timepoint**: per-tp SE 12.9–15.9 yr exceeds the 11.35 yr effect on every donor, which breaks the ±3.7–4.6 yr arithmetic in `MASTER_PLAN` §5b-ter. Part B is structurally void (identical swing on all six folds, guaranteed by a linear model in `[x, dt, dt²]`). Stage 3 closed as specified |
+| 1 calibration — run 1 | 2026-07-21 | **INVALID** | no | `cell_line` merges the HFF corpus (33,613 cells) with the six donors (~14 each); the inner-LODO rotated over HFF, whose fold trained on 75 cells and supplied **99.8%** of residuals. `verify_1a` printed the warning and graded it PASS — that scoring bug cost 3.5 h |
+| 1 calibration — run 2 | 2026-07-22 | **PARTIAL** | q ✅ σ ✅ T ❌ | Guards **bit-identical on all six** (0.00e+00). `conformal_coverage` 0.401→**0.889** ACCEPT ✅. `fate_ece` 0.281→**0.364** **REGRESSION** ❌. §3's independence clause: adopt `q` + `sigma_scale`, reject the temperature refit |
+| 1 calibration — run 3 (A″) | pending | | | Platt on `P(safe)` — the quantity `res.py` ships and the scorecard grades. Bar unchanged: ACCEPT + ≥40% drop |
+| 2 level correction | not started | | | **Blocked on a wet-lab decision**: k≈3 reference cells per donor with clock readings on control *and* perturbed samples (`STAGE_2` §0). Run 2 strengthened the case — residuals are offset-dominated, and the offset is what makes coverage bimodal |
+| 3 tool | **closed** | — | — | Gate returned STOP; `REF_ARCHITECTURE` §8 counts this as one of three honest exits |
+| 4 validation | n/a | — | — | V3 (beat a fixed protocol) is moot without a recommender. V1/V2 are Stage 1's bars measured on held-out donors |
+| 5 publication gates | not started | | | Second clock + Y1 probe. Both still required before drafting |
+
+> **Full detail lives in `experiments/DELTAAGE_LAB_NOTEBOOK.md`** (per-run results, predictions
+> made before each run, and what they cost). Code-level departures from the stage documents are in
+> `plans/STAGE_1_DEVIATIONS.md`; every change is in `CHANGES.md`.
