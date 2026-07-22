@@ -17,7 +17,7 @@ import torch
 
 from cellfate.common import constants as C
 from cellfate.common import io
-from cellfate.common.calibration import apply_platt
+from cellfate.common.calibration import apply_platt, platt_safe
 from cellfate.common.errors import ConfigError
 from cellfate.common.io import ArtifactPaths
 from cellfate.common.logging import get_logger, log_event
@@ -170,15 +170,24 @@ def run(cfg: TrainConfig) -> dict:
     # rather than stacking two interacting calibrators.
     #
     # HOW MUCH DATA: everything held out -- the calib/val split AND the cross-donor pool.
-    # Restricting to the cross-donor pool alone means fitting 2 parameters on ~103 cells while
-    # discarding ~4,490, and run 2 measured that cost directly: cross-donor temperature came out
-    # 30% WORSE than the in-distribution one on the graded metric, CI excluding zero.
     #
-    # This is a DEPARTURE from Stage 1's cross-donor principle, and a deliberate one. That
-    # principle is right for the conformal `q`, which needs the SHAPE of out-of-donor error and
-    # gets it from 103 honest residuals. It is wrong for a 2-parameter calibrator at this n,
-    # where sampling variance dominates the distribution mismatch. Same principle, opposite
-    # answer, because the two quantities need different things -- recorded in the lab notebook.
+    # This is NOT a departure from Stage 1's cross-donor principle. That principle says to
+    # calibrate on data whose ERROR REGIME matches deployment, and it is decisive for ΔAge:
+    # ~4 yr in-distribution against ~14 yr out-of-donor. The premise is NOT met for fate --
+    #   * discrimination 0.929-0.940 in-distribution vs 0.96-1.00 out-of-donor (T8.1): no
+    #     degradation, if anything the held-out donors are easier;
+    #   * a CALIB-FITTED Platt halves out-of-donor ECE on 4 of 5 folds (T8.2): it transfers.
+    # STAGE_1's <=0.17 bar is itself derived from that calib-fitted Platt -- T8.2's "ECE raw"
+    # and "ECE recal" columns are, cell for cell, scorecard's `fate_ece` and `fate_ece_platt`.
+    # Holding the calibrator to a bar measured with a method we refused to use would be
+    # incoherent; §1b.2's `fit_temperature(xstats...)` is the line that never matched §2's own
+    # expected effect.
+    #
+    # Restricting to the pool alone would fit 2 parameters on ~103 cells while discarding
+    # ~4,490 -- and because cells within a donor share that donor's offset, its EFFECTIVE n is
+    # nearer 5 (the donor count) than 103. Run 2 measured the cost: cross-donor temperature came
+    # out 30% WORSE than the in-distribution one, CI excluding zero. The pool-only variant is
+    # still fitted below and REPORTED, so this stays a measurement rather than an assertion.
     from cellfate.common.schemas import TemperatureParams
 
     cal_probs = ensemble_probs(members, cal_ds, device).numpy() if len(cal_ds) else None
@@ -201,6 +210,41 @@ def run(cfg: TrainConfig) -> dict:
         temperature = TemperatureParams(temperature=1.0)
         log.warning("no held-out cells for fate calibration; shipping uncalibrated")
         fate_calib_n = {"total": 0, "in_dist": 0, "xdonor": 0}
+
+    # -- the STRICT cross-donor variant, fitted and REPORTED but NOT shipped ------------ #
+    # Stage 1's principle is that calibration must be fitted on data whose error regime matches
+    # deployment. For ΔAge that is measured and decisive (4 yr in-distribution vs 14 yr
+    # out-of-donor), so `q` and `sigma_scale` use the cross-donor pool alone. For FATE the
+    # premise does not hold: discrimination is 0.929-0.940 in-distribution against 0.96-1.00
+    # out-of-donor (T8.1) -- no degradation -- and a calib-fitted Platt halves out-of-donor ECE
+    # on 4 of 5 folds (T8.2), i.e. it transfers. STAGE_1's <=0.17 bar was itself derived from
+    # that calib-fitted Platt.
+    #
+    # Rather than assert that, MEASURE it: fit the pool-only calibrator too and record both, so
+    # the principle is tested on every run instead of quietly dropped. The pool is ~103 cells
+    # from 5 donors, and cells within a donor share that donor's offset, so its EFFECTIVE n is
+    # nearer 5 than 103 -- which is what a 2-parameter fit has to work with.
+    fate_alt = {}
+    if xstats is not None and len(xstats.probs_mean):
+        p_xd = xstats.probs_mean[:, C.SAFE_IDX]
+        y_xd = xstats.targets[:, C.SAFE_IDX]
+        a_xd, b_xd = fit_platt_binary(p_xd, y_xd)
+        fate_alt = {
+            "xdonor_only_platt_a": a_xd,
+            "xdonor_only_platt_b": b_xd,
+            "xdonor_only_n": int(p_xd.size),
+            "xdonor_only_n_donors": int(xstats.n_donors),
+            # both calibrators scored on the SAME held-out pool. The pool-only fit is scored on
+            # the data it was fitted to, so its number is optimistic -- stated here so the
+            # comparison is not read as fairer than it is.
+            "xdonor_only_safe_ece_insample": _binary_ece(
+                platt_safe(p_xd, a_xd, b_xd), y_xd),
+            "shipped_safe_ece_on_pool": _binary_ece(
+                platt_safe(p_xd, temperature.platt_a, temperature.platt_b), y_xd
+            ) if temperature.has_platt else None,
+        }
+        log_event(log, "fate.xdonor_only_diagnostic", calibrator="platt_binary",
+                  platt_a=round(a_xd, 5), platt_b=round(b_xd, 5), n=int(p_xd.size))
 
     # -- conformal + per-mode sigma scales: cross-donor residuals ---------------------- #
     # BOTH inference modes are calibrated, from the same held-out rows. `sigma_age` is the
@@ -263,7 +307,7 @@ def run(cfg: TrainConfig) -> dict:
 
     metrics = _report(members, val_losses, train_ds, val_ds, calib_ds,
                       cal_logits, cal_target, temperature, conformal, abs_res, xstats,
-                      cfg.mc_dropout_T, res_params.z_conf, fate_calib_n)
+                      cfg.mc_dropout_T, res_params.z_conf, fate_calib_n, fate_alt)
     io.write_json(paths.bundle_dir / C.BUNDLE_METRICS_FILENAME, metrics)
     log_event(log, "bundle.done", bundle=str(paths.bundle_dir),
               n_members=len(members), temperature=round(temperature.temperature, 4))
@@ -296,7 +340,8 @@ def _binary_ece(p: np.ndarray, y: np.ndarray, bins: int = 10) -> float:
 def _report(members, val_losses, train_ds, val_ds, calib_ds,
             cal_logits, cal_target, temperature, conformal, abs_res, xstats=None,
             mc_T: int = 50, res_z_conf: float = 1.0,
-            fate_calib_n: dict | None = None) -> dict:
+            fate_calib_n: dict | None = None,
+            fate_alt: dict | None = None) -> dict:
     from scipy.special import softmax  # available via the data-stage deps
 
     out = {
@@ -309,6 +354,7 @@ def _report(members, val_losses, train_ds, val_ds, calib_ds,
         "temperature": temperature.temperature,
         "conformal_q": dict(conformal.q),
         "fate_calib_n": fate_calib_n or {},
+        **(fate_alt or {}),
         "platt_a": temperature.platt_a,
         "platt_b": temperature.platt_b,
         "sigma_scale": float(conformal.sigma_scale),          # mode="ensemble"

@@ -196,6 +196,22 @@ def main() -> int:
         if isinstance(pre, float) and isinstance(post, float):
             print(f"      binary P(safe) ECE on the cross-donor pool: {pre:.3f} -> {post:.3f}")
 
+        # the strict cross-donor variant: fitted and reported, never shipped, so Stage 1's
+        # principle is TESTED on every run rather than quietly dropped
+        n = m.get("fate_calib_n") or {}
+        check("fit uses all held-out cells, not just the pool",
+              n.get("total", 0) > n.get("xdonor", 0),
+              f"total={n.get('total')} (in_dist={n.get('in_dist')} + xdonor={n.get('xdonor')})")
+        check("strict cross-donor variant reported as a diagnostic",
+              isinstance(m.get("xdonor_only_platt_a"), float),
+              f"a={m.get('xdonor_only_platt_a')} on n={m.get('xdonor_only_n')} "
+              f"from {m.get('xdonor_only_n_donors')} donors")
+        shipped, pool_only = m.get("shipped_safe_ece_on_pool"), m.get(
+            "xdonor_only_safe_ece_insample")
+        if isinstance(shipped, float) and isinstance(pool_only, float):
+            print(f"      on the cross-donor pool: shipped(all data) {shipped:.3f} vs "
+                  f"pool-only {pool_only:.3f} -- the latter is IN-SAMPLE, so it flatters itself")
+
         xs_path = ArtifactPaths.of(tmp).bundle_dir / XSTATS_FILENAME
         check("cross-donor pool persisted", xs_path.exists(), str(xs_path.name))
         if xs_path.exists():

@@ -110,11 +110,35 @@ the data restriction that run 2 had already measured as harmful.
 So the calibrator is fitted on the **union** — calib/val split **∪** cross-donor pool (~4,593
 cells). Restricting to the pool means fitting 2 parameters on 103 cells while discarding 4,490.
 
-**This is a deliberate departure from Stage 1's cross-donor principle, and it is stated as one.**
-That principle is right for the conformal `q`, which needs the *shape* of out-of-donor error and
-gets it from 103 honest residuals. It is wrong for a 2-parameter calibrator at this n, where
-sampling variance dominates the distribution mismatch. Same principle, opposite answer, because
-the two quantities need different things — which is itself a result worth reporting.
+**RETRACTED: this is NOT a departure from the cross-donor principle.** An earlier version of this
+entry called it one. Checking `T8.2` in the lab notebook shows otherwise — its table is, cell for
+cell, the scorecard's own columns:
+
+| fold | T8.2 "ECE raw" | `fate_ece` | T8.2 "ECE recal" | `fate_ece_platt` |
+|---|---|---|---|---|
+| N3 | 0.275 | 0.275 | 0.145 | 0.145 |
+| O1 | 0.316 | 0.316 | 0.147 | 0.147 |
+| O2 | 0.271 | 0.271 | 0.099 | 0.099 |
+| Y1 | 0.271 | 0.271 | 0.243 | 0.243 |
+| Y2 | 0.270 | 0.270 | 0.132 | 0.132 |
+
+T8.2's "recal" is **Platt fitted on the calib split**. So `STAGE_1`'s ≲0.17 bar was itself derived
+from an in-distribution-fitted Platt. Holding the calibrator to a bar measured with a method we
+refused to use would be incoherent; §1b.2's `fit_temperature(xstats...)` is the line that never
+matched §2's own expected effect.
+
+The principle says *calibrate on data whose error regime matches deployment*. Its premise is
+measured and decisive for ΔAge (~4 yr in-distribution vs ~14 yr out-of-donor) and **not met for
+fate**: discrimination is 0.929–0.940 in-distribution against **0.96–1.00 out-of-donor** (T8.1,
+no degradation), and a calib-fitted Platt **halves out-of-donor ECE on 4 of 5 folds** (T8.2 — it
+transfers). So the in-distribution split *qualifies* for fate, and there is 43× more of it.
+
+**And the principle is now tested rather than assumed.** The strict pool-only Platt is fitted on
+every run and reported as a diagnostic — never shipped — via `xdonor_only_platt_a/b`,
+`xdonor_only_n`, `xdonor_only_safe_ece_insample` and `shipped_safe_ece_on_pool`. On the synthetic
+geometry the shipped (all-data) fit scores **0.103** on the cross-donor pool against the pool-only
+fit's **0.109 in-sample** — the union wins on the pool's own data even though the pool-only fit is
+being graded on exactly what it was fitted to.
 
 `fate_calib_n` in `metrics.json` records the split (`total` / `in_dist` / `xdonor`) so the
 composition of the fit is auditable rather than implied.
