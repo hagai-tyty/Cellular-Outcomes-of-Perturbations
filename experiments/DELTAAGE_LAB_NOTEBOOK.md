@@ -2149,7 +2149,7 @@ never shipped.
 |---|---|---|---|
 | `fate_ece` | 0.364 | **≈0.15–0.17** | in-dist Platt measures 0.153 (T8.2); the union adds the pool |
 | `conformal_coverage` | 0.889 | **≈0.889, unchanged** | the calibrator does not enter `q` |
-| `fate_prauc` / `fate_roc` | 0.992 / 0.983 | **bit-identical** | Platt's slope is constrained positive ⇒ rank-preserving |
+| `fate_prauc` / `fate_roc` | 0.992 / 0.983 | **unchanged** | positive slope ⇒ monotone, so no reordering. Audit found two ways it could still MERGE cells (EPS clamp, float32 output cast) and both are fixed |
 | `dage_mae_model`, `rank_model_dage` | unchanged | **bit-identical** | same weights |
 
 **Bar unchanged: ACCEPT + ≥40% drop (≤0.169).** Not weakened because the specification was wrong.

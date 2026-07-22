@@ -185,7 +185,7 @@ def main() -> int:
         a, b = m.get("platt_a"), m.get("platt_b")
         check("Platt fitted on P(safe), not a multi-class temperature",
               isinstance(a, float) and isinstance(b, float), f"a={a} b={b}")
-        check("Platt slope is positive (rank-preserving, so the fate guards cannot move)",
+        check("Platt slope is positive (monotone: cannot REORDER cells, so the rank guards hold)",
               isinstance(a, float) and a > 0, f"a={a}")
         check("temperature left at 1.0 (one calibrator, not two stacked)",
               m.get("temperature") == 1.0, str(m.get("temperature")))

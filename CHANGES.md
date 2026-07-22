@@ -11,6 +11,84 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-07-22 — Full audit of the session's code; one real guard bug found and fixed
+
+**Status:** ✅ 221 tests, smoke 34/34. Everything committed and pushed.
+
+A line-by-line audit of everything changed this session, run against live code rather than by
+re-reading it. Most of it confirmed what was claimed; one thing did not.
+
+### 🐛 The bug: calibration could move the rank GUARDS
+
+Platt is monotone, so it can never *reorder* cells — but it can **merge** them, and a merged pair
+changes a rank metric. Two mechanisms, both measured:
+
+| mechanism | effect |
+|---|---|
+| `EPS` clamp at `1e-6` | collapsed **4 of 8** float32-representable values near 1.0 onto one number (float32's ulp there is ~6e-08, so the clamp was coarser than the input's own resolution) |
+| casting calibrated probs back to **float32** in `_summaries` | merged values the map left distinct. At slope 20: **PR-AUC 1.000 → 0.941, ROC-AUC → 0.966** |
+
+`_PLATT_BOUNDS` permits a slope up to `1e2`, so a steep fit is reachable on real data. Had one
+occurred, `fate_prauc` would have shown a **REGRESSION** — a Stage 1 guard — and the correct
+response under §3 is to *revert*. We would have reverted a working change because of a rounding
+artefact.
+
+**Fixed:** `EPS` → `1e-9` (two orders below the float32 ulp, so every representable input except
+exact 0/1 survives distinct), a numerically stable sigmoid for the wider logit range this admits,
+and `_summaries` no longer downcasts — `_rows` converts to Python floats and `res.py` upcasts to
+float64 anyway, so nothing downstream wanted the narrower type. Guards now hold at slopes 2, 8,
+20 and 100; `test_calibration_does_not_move_the_rank_guards_even_at_a_steep_slope` pins it.
+
+**Claims corrected.** Four places said Platt makes the rank guards "mathematically invariant" or
+"bit-identical". That was too strong — monotone means *no reordering*, not *no merging*. All four
+now say what is true, in `CHANGES.md`, the lab notebook, `smoke_stage1.py` and
+`common/calibration.py`.
+
+### Verified, not assumed
+
+| check | method | result |
+|---|---|---|
+| biology untouched | `git diff 18d7e69..HEAD -- src/cellfate/data/ models/ evaluation/` | **empty** — clock, harmonization, fate labels, ΔAge targets, network all unchanged |
+| column binding | indices 0–5 vs pre-session | `X_I…AM_I` still 0–5, `DONOR_I` appended |
+| donor never a feature | `forward(x, u, dose_time)`; grep for `DONOR_I` | only in grouping logic |
+| **row alignment** | rebuilt a dataset, compared every donor code against the shard's `cell_line` | **144/144 rows match** |
+| Platt recovers miscalibration | 3× sharpen, +1.8 bias, and both | recovered `a`,`b` within 0.02 of the true inverse; mean\|p−p_true\| ≈ 0.002 |
+| simplex invariants | saturated / zero / uniform input | finite, rows sum to 1, in [0,1], loss:death ratio preserved |
+| schema guards | negative slope, half-specified pair | both rejected |
+| back-compat | legacy `TemperatureParams` / `ConformalParams` | load unchanged, `sigma_scale` 1.0, both modes allowed |
+| xstats round-trip | save → load | all seven arrays plus both dicts |
+
+### Scope check on real bundles
+
+Retrained the six rehearsal folds with the current code and compared against the same folds
+trained *before* Change A″:
+
+```
+conformal_q  (N2)  0.47744181752204895  ->  0.47744181752204895
+sigma_scale  (N2)  7.795770789209797    ->  7.795770789209797
+temperature        1.498                ->  1.0   (Platt replaces it)
+```
+
+**Bit-identical** — the calibrator change provably does not reach `q` or `sigma_scale`. This is
+the same check to run on the real data when run 3 lands.
+
+### Held-out comparison (synthetic, 3 folds × 10 cells — weak, directional only)
+
+| | mean ECE on a truly held-out donor |
+|---|---|
+| no calibration | 0.161 |
+| **cross-donor temperature** (what run 2 shipped) | **0.190 ← worst** |
+| in-distribution temperature | 0.160 |
+| pool-only Platt | 0.172 |
+| **union Platt (shipped)** | **0.153 ← best** |
+
+Cross-donor temperature being worst independently reproduces run 2's regression on data it was
+never fitted to. The synthetic setup does not reproduce the real miscalibration magnitude
+(baseline 0.281 there vs ~0.16 here), so this is **directional support, not a prediction** that
+run 3 clears the bar.
+
+---
+
 ## 2026-07-21 — Stage 1 run 1 was INVALID; bulk-corpus guard added
 
 **Status:** ✅ **Fixes written, NOT yet run.** Run 1 executed fully (6 folds, 212 min) and is void.
@@ -215,7 +293,9 @@ the held-out folds.
 
 `fate_ece` must still say ACCEPT with a **≥40% drop** (0.281 → ≤0.169). Not weakened because the
 specification was wrong. Guards must stay bit-identical; Platt's positive slope makes
-`fate_prauc`/`fate_roc` mathematically invariant, and a test asserts it.
+`fate_prauc`/`fate_roc` stable -- monotone, so it never REORDERS cells. It can still MERGE
+them, which a rank metric would feel; both merge paths (the EPS clamp and a float32 output cast)
+were found in audit and fixed, and a test now pins the guards at slopes up to the 1e2 bound.
 
 On synthetic data the graded metric moves the right way — binary `P(safe)` ECE **0.176 → 0.080**
 on the cross-donor pool — but that is indicative only, not evidence about the real folds.

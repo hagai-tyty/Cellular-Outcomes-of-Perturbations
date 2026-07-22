@@ -160,9 +160,16 @@ class Predictor:
         # calibrator was fitted on (xstats.probs_mean). Fitting on mean-logits and applying
         # per-member -- what temperature does -- calibrates a different thing by Jensen.
         if self.platt is not None:
+            # Kept in float64, NOT cast back to the members' float32. Platt with a large slope
+            # saturates confident predictions toward 1.0, and a float32 cast then merges values
+            # the map left distinct -- creating TIES. Measured at slope 20 on overlapping
+            # classes: PR-AUC 1.000 -> 0.941 and ROC-AUC -> 0.966 purely from that rounding,
+            # which would read as a Stage 1 GUARD REGRESSION and trigger a wrongful revert.
+            # `_rows` converts to Python floats anyway and `res.py` upcasts to float64, so
+            # nothing downstream wants the narrower type.
             pbar = torch.from_numpy(
                 apply_platt(pbar.cpu().numpy(), *self.platt, safe_idx=SAFE_IDX)
-            ).to(pbar.dtype)
+            )
         ent = -(pbar * (pbar + 1e-12).log()).sum(1)
         Z = z.detach().cpu().numpy()
         return {

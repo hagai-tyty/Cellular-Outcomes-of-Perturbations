@@ -384,6 +384,41 @@ def test_batch_size_does_not_change_any_row(bundle):
                 _assert_rows_agree(row, reference[start + j])
 
 
+def test_calibration_does_not_move_the_rank_guards_even_at_a_steep_slope():
+    """`fate_prauc`/`fate_roc` are Stage 1 GUARDS; a REGRESSION there triggers a revert.
+
+    Platt is monotone, so it cannot REORDER cells -- but it can MERGE them, and merged cells
+    change a rank metric. Two mechanisms were found and fixed:
+
+      * the EPS clamp, previously 1e-6, collapsed four of eight float32-representable values
+        near 1.0 onto one number;
+      * casting the calibrated probabilities back to float32 merged values the map had left
+        distinct. At slope 20 that alone moved PR-AUC 1.000 -> 0.941 and ROC-AUC -> 0.966.
+
+    `_PLATT_BOUNDS` permits a slope up to 1e2, so a steep fit is reachable on real data. This
+    pins both fixes at slopes well past anything observed (~1.4-8 in practice).
+    """
+    from sklearn.metrics import average_precision_score, roc_auc_score
+
+    from cellfate.common.calibration import apply_platt
+
+    rng = np.random.default_rng(0)
+    n = 400
+    y = rng.integers(0, 2, n)
+    # P(safe) saturating against 1.0 for the positives -- this model's actual regime
+    p_safe = np.where(y == 1, 1 - 10 ** rng.uniform(-8, -1, n), rng.uniform(0.0, 0.5, n))
+    p = np.column_stack([p_safe, (1 - p_safe) * 0.6, (1 - p_safe) * 0.4]).astype(np.float32)
+    before = (average_precision_score(y, p[:, 0]), roc_auc_score(y, p[:, 0]))
+
+    for a in (2.0, 8.0, 20.0, 100.0):          # 100.0 is the bound in _PLATT_BOUNDS
+        cal = apply_platt(p.astype(np.float64), a, 0.5, 0)   # float64, as Predictor keeps it
+        after = (average_precision_score(y, cal[:, 0]), roc_auc_score(y, cal[:, 0]))
+        assert after == before, (
+            f"slope {a}: rank guards moved, PR-AUC {before[0]:.9f} -> {after[0]:.9f}, "
+            f"ROC-AUC {before[1]:.9f} -> {after[1]:.9f}"
+        )
+
+
 def test_platt_clip_bounds_the_logit_blowup():
     """The EPS clip in `apply_platt` is load-bearing, not cosmetic.
 
