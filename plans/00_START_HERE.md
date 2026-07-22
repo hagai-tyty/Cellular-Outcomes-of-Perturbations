@@ -36,13 +36,22 @@ a pre-registered accept/reject rule, so the decision is already made before you 
 
 ## Where you are right now
 
+> **Status only — updated 2026-07-22.** Nothing below this heading changes the plan: no stage, no
+> command, no acceptance bar has been edited. Only the record of what has already been executed.
+> Full detail in `experiments/DELTAAGE_LAB_NOTEBOOK.md`, `CHANGES.md` and
+> `plans/STAGE_1_DEVIATIONS.md`.
+
 | | Status |
 |---|---|
 | Diagnostics | **Done** — ~25 tests, Tests 0 through 18 |
 | Root cause found | **Yes** — all calibration fitted in-distribution |
 | Main fix validated | **Yes** — T16: k=3 reference cells → MAE 14.3 → 7.1 |
-| Code changed so far | **None** — every finding is a measurement, not a modification |
-| Baseline snapshot | **Not yet taken** ← *this is your next action* |
+| Baseline snapshot | **Taken 2026-07-19** — `scorecard/baseline.json`, all 6 folds ok |
+| Test 18 gate | **Run — STOP.** Δt cannot predict the unsafe fraction forward. Also measured: **1.8 cells/timepoint**, so per-timepoint SE (12.9–15.9 yr) exceeds the ~11.35 yr effect on every donor |
+| Stage 1a | **Done and passing** — donor column from `cell_line`; `verify_1a.py` PASS, 7 tensors on all splits, exactly 5 usable donors per fold |
+| Stage 1b | **Run twice.** Run 1 (07-21) **invalid** — a bulk corpus (HFF) was rotated as a donor and supplied 99.8% of residuals. Run 2 (07-22) **valid** |
+| Stage 1 acceptance | **PARTIAL.** `conformal_coverage` 0.401 → **0.889 ACCEPT**; `fate_ece` 0.281 → **0.364 REGRESSION**; all six guards **bit-identical** (0.00e+00). Under §3's independence clause `q` and `sigma_scale` are **adopted**, the temperature refit **rejected** |
+| Open | **Change A″** — recalibrate `P(safe)` (the quantity `res.py` and the scorecard actually use) instead of multi-class NLL. Implemented and tested; awaiting a third LOOCV run. Bar unchanged |
 
 ---
 
