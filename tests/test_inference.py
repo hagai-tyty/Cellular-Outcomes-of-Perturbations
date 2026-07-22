@@ -318,17 +318,25 @@ def test_ood_cell_is_rejected(bundle):
 #   * Platt works in logit space, multiplying by roughly its slope   (a ~ 8   -> ~5e-07 observed)
 #   * sigma_age is multiplied by sigma_scale                          (~12x   -> ~1.2e-06 observed)
 #
-# Both scale with a fitted parameter, so an absolute bound would need re-tuning whenever those
-# move -- which is exactly the kind of test that rots. Relative does not: float32 carries ~1.2e-07
-# relative precision, amplification is bounded by the Platt slope cap (1e2) and sigma_scale, so
-# ~1e-5 is the ceiling and 1e-4 leaves an order of magnitude of headroom.
+# Both scale with a fitted parameter, so a purely absolute bound would need re-tuning whenever
+# those move. But a purely RELATIVE bound fails too, and for the opposite reason: `mu_age` is a
+# ΔAge that can land near zero (measured: -0.00136), where a 1.7e-07 absolute wobble is 1.2e-04
+# relative. Neither alone works, so both are used -- |a-b| <= atol + rtol*|b|.
+#
+# ATOL IS DERIVED, not picked. The absolute noise floor is set by the LARGEST intermediate
+# magnitude in the computation, not by how close the final value happens to sit to zero:
+#   float32 relative precision 1.19e-07  x  year-scale intermediates ~30 yr  ~=  3.6e-06
+# so 1e-5 clears it. On a [0,1] probability that is still four orders below any real defect.
+#
+# RTOL covers the amplified paths: amplification is bounded by the Platt slope cap (1e2) and by
+# sigma_scale, putting the ceiling near 1e-5, so 1e-4 leaves an order of magnitude.
 #
 # The original assertion was `model_dump() == model_dump()` -- bit-exactness, a guarantee torch
 # never made. It passed by luck and failed transiently once the amplification exhausted it. The
 # tolerance keeps every defect the test exists for: misaligned rows, leaked state or bad indexing
-# all move values by O(0.1-1) RELATIVE, four orders above this bound.
+# all move values by O(0.1-1), four orders above this bound.
 _ROW_RTOL = 1e-4
-_ROW_ATOL = 1e-7
+_ROW_ATOL = 1e-5
 
 
 def _assert_rows_agree(a: dict, b: dict) -> None:
@@ -417,6 +425,36 @@ def test_calibration_does_not_move_the_rank_guards_even_at_a_steep_slope():
             f"slope {a}: rank guards moved, PR-AUC {before[0]:.9f} -> {after[0]:.9f}, "
             f"ROC-AUC {before[1]:.9f} -> {after[1]:.9f}"
         )
+
+
+def test_platt_does_not_move_the_rank_guards_at_any_slope():
+    """`fate_prauc`/`fate_roc` are Stage 1 GUARDS -- a move there triggers a revert.
+
+    Platt is strictly increasing in P(safe), so it never REORDERS cells. But it can MERGE them:
+    a large slope saturates confident predictions toward 1.0, and rounding then ties values the
+    map left distinct. Measured before the fix, at slope 20 with a float32 output cast:
+    PR-AUC 1.000 -> 0.941, ROC-AUC -> 0.966 -- purely from rounding, which would have read as a
+    guard regression and caused a wrongful revert.
+
+    `_PLATT_BOUNDS` permits slopes up to 1e2, so this sweeps well past the ~2-8 seen in practice.
+    """
+    from sklearn.metrics import average_precision_score, roc_auc_score
+
+    from cellfate.common.calibration import apply_platt
+
+    rng = np.random.default_rng(0)
+    n = 400
+    y = rng.integers(0, 2, n)
+    # P(safe) crowded against 1.0 for safe cells -- the regime this model produces
+    p_safe = np.where(y == 1, 1 - 10 ** rng.uniform(-8, -1, n), rng.uniform(0.0, 0.4, n))
+    p = np.column_stack([p_safe, (1 - p_safe) * 0.6, (1 - p_safe) * 0.4]).astype(np.float32)
+
+    base_pr = average_precision_score(y, p[:, 0])
+    base_roc = roc_auc_score(y, p[:, 0])
+    for a in (0.5, 2.0, 8.0, 20.0, 100.0):
+        cal = apply_platt(p.astype(np.float64), a, 0.5, 0)     # float64, as Predictor keeps it
+        assert average_precision_score(y, cal[:, 0]) == base_pr, f"PR-AUC moved at slope {a}"
+        assert roc_auc_score(y, cal[:, 0]) == base_roc, f"ROC-AUC moved at slope {a}"
 
 
 def test_platt_clip_bounds_the_logit_blowup():
