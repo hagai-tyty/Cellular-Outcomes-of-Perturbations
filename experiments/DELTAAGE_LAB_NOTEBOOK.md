@@ -1712,7 +1712,7 @@ adding a tensor consumes no RNG, so shuffle order and weights are identical.
 | Outcome | Conclusion | Next |
 |---|---|---|
 | Coverage 0.85–0.95 **and** ECE drops ≥40%, guards all `noise` | **Hypothesis CONFIRMED.** In-distribution calibration was the root cause. The generalizable methodological finding stands | Stage 2 decision (reference cells?) |
-| Coverage overshoots >0.95 | `q` inflated by the N2/N3 outliers — **expected, record it.** Do NOT tune `q` down; that is fitting the test | accept, note in limitations |
+| Coverage overshoots >0.95 | `q` inflated by the N2/N3 outliers — **expected, record it.** Do NOT tune `q` down; that is fitting the test | **FAIL** — a failed target, not a qualified success; then a new pre-registered bar correcting the CV bias (see ruling §1 below) |
 | Coverage still ≈0.40 | cross-donor residuals are not representative — most likely too few inner donors | check `xdonor_n_donors == 5` before anything else |
 | ECE unchanged | logits pooled from too few donors, or the defect is not calibration | diagnose separately; the three refits are independent |
 | **Any of `fate_prauc`, `fate_roc`, `rank_model_dage`, `dage_mae_model` REGRESSES** | the change reached something it must not | **REVERT.** A bug, not a trade-off |
