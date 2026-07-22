@@ -60,6 +60,20 @@ def ensemble_logits(members, ds, device) -> torch.Tensor:
     return acc / len(members)
 
 
+def ensemble_probs(members, ds, device) -> torch.Tensor:
+    """Mean over members of ``softmax(member_logits)`` -- exactly ``Predictor``'s ``pbar`` at T=1.
+
+    NOT ``softmax(ensemble_logits(...))``: averaging logits then softmaxing is a different
+    quantity by Jensen, and calibrating one while inference produces the other is the fit/apply
+    mismatch that Stage 1 run 2 shipped. Every calibrator fitted on P(safe) must use this.
+    """
+    acc = None
+    for m in members:
+        p = torch.softmax(member_outputs(m, ds, device)[0], dim=-1)
+        acc = p if acc is None else acc + p
+    return acc / len(members)
+
+
 def ensemble_age(members, ds, device) -> torch.Tensor:
     acc = None
     for m in members:

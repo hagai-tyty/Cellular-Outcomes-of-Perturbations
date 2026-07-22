@@ -31,7 +31,13 @@ from .conformal import coverage, fit_conformal
 from .dataset import AM_I, FP_I, YA_I, YC_I, load_split_tensors
 from .metrics import ece, soft_nll
 from .ood import fit_ood
-from .train import ensemble_age, ensemble_logits, member_outputs, train_ensemble
+from .train import (
+    ensemble_age,
+    ensemble_logits,
+    ensemble_probs,
+    member_outputs,
+    train_ensemble,
+)
 from .xdonor_calib import (
     SIGMA_SCALE_MODE,
     crossdonor_stats,
@@ -154,29 +160,47 @@ def run(cfg: TrainConfig) -> dict:
     else:
         cal_logits = cal_target = None
 
-    # Calibrate P(safe) -- the quantity the product ships and the scorecard grades. res.py
-    # consumes S and P_loss, STAGE_3 §0.1 needs a risk threshold on P(unsafe), and MASTER_PLAN
-    # §5a names "S, P_loss" as the defective quantity with "YES -- Platt halves it" (T8.2).
-    # STAGE_1's ≲0.17 bar is derived from that same Platt measurement. Run 2 fitted a scalar on
-    # multi-class NLL instead and REGRESSED the graded metric on every fold (0.281 -> 0.364),
-    # because the two objectives disagree about how much to sharpen.
-    # Platt subsumes the scalar (its slope IS a temperature on the binary logit) and adds the
-    # intercept a scalar cannot express, so `temperature` is left at 1.0 rather than stacking
-    # two interacting calibrators.
+    # -- fate calibration: Platt on P(safe), fitted on ALL available held-out cells ------ #
+    # WHAT: `res.py` consumes S and P_loss, STAGE_3 §0.1 needs a risk threshold on P(unsafe),
+    # and scorecard grades binary ECE on P(safe). MASTER_PLAN §5a names the defective quantity
+    # as "S, P_loss" and records "YES -- Platt halves it" (T8.2); STAGE_1's ≲0.17 bar comes from
+    # that measurement. Run 2 optimised multi-class NLL instead and regressed the graded metric
+    # on every fold (0.281 -> 0.364). Platt subsumes a temperature (its slope IS one on the
+    # binary logit) and adds the intercept a scalar cannot express, so `temperature` stays 1.0
+    # rather than stacking two interacting calibrators.
+    #
+    # HOW MUCH DATA: everything held out -- the calib/val split AND the cross-donor pool.
+    # Restricting to the cross-donor pool alone means fitting 2 parameters on ~103 cells while
+    # discarding ~4,490, and run 2 measured that cost directly: cross-donor temperature came out
+    # 30% WORSE than the in-distribution one on the graded metric, CI excluding zero.
+    #
+    # This is a DEPARTURE from Stage 1's cross-donor principle, and a deliberate one. That
+    # principle is right for the conformal `q`, which needs the SHAPE of out-of-donor error and
+    # gets it from 103 honest residuals. It is wrong for a 2-parameter calibrator at this n,
+    # where sampling variance dominates the distribution mismatch. Same principle, opposite
+    # answer, because the two quantities need different things -- recorded in the lab notebook.
     from cellfate.common.schemas import TemperatureParams
 
-    if xstats is not None and len(xstats.probs_mean):
-        a, b = fit_platt_binary(xstats.probs_mean[:, C.SAFE_IDX],
-                                xstats.targets[:, C.SAFE_IDX])
+    cal_probs = ensemble_probs(members, cal_ds, device).numpy() if len(cal_ds) else None
+    fate_parts = [(p[:, C.SAFE_IDX], t[:, C.SAFE_IDX]) for p, t in (
+        (cal_probs, cal_target),
+        (None if xstats is None else xstats.probs_mean, None if xstats is None else xstats.targets),
+    ) if p is not None and len(p)]
+
+    if fate_parts:
+        p_all = np.concatenate([p for p, _ in fate_parts])
+        y_all = np.concatenate([y for _, y in fate_parts])
+        a, b = fit_platt_binary(p_all, y_all)
         temperature = TemperatureParams(temperature=1.0, platt_a=a, platt_b=b)
+        n_xd = 0 if xstats is None else int(len(xstats.probs_mean))
+        fate_calib_n = {"total": int(p_all.size), "in_dist": int(p_all.size) - n_xd,
+                        "xdonor": n_xd}
         log_event(log, "fate.calibrated", calibrator="platt_binary",
-                  platt_a=round(a, 5), platt_b=round(b, 5), n=int(len(xstats.probs_mean)))
-    elif cal_logits is not None:
-        temperature = fit_temperature(cal_logits, cal_target)
-        if xstats is not None:
-            log.warning("xdonor probabilities empty; fell back to in-distribution temperature")
+                  platt_a=round(a, 5), platt_b=round(b, 5), **fate_calib_n)
     else:
         temperature = TemperatureParams(temperature=1.0)
+        log.warning("no held-out cells for fate calibration; shipping uncalibrated")
+        fate_calib_n = {"total": 0, "in_dist": 0, "xdonor": 0}
 
     # -- conformal + per-mode sigma scales: cross-donor residuals ---------------------- #
     # BOTH inference modes are calibrated, from the same held-out rows. `sigma_age` is the
@@ -239,7 +263,7 @@ def run(cfg: TrainConfig) -> dict:
 
     metrics = _report(members, val_losses, train_ds, val_ds, calib_ds,
                       cal_logits, cal_target, temperature, conformal, abs_res, xstats,
-                      cfg.mc_dropout_T, res_params.z_conf)
+                      cfg.mc_dropout_T, res_params.z_conf, fate_calib_n)
     io.write_json(paths.bundle_dir / C.BUNDLE_METRICS_FILENAME, metrics)
     log_event(log, "bundle.done", bundle=str(paths.bundle_dir),
               n_members=len(members), temperature=round(temperature.temperature, 4))
@@ -271,7 +295,8 @@ def _binary_ece(p: np.ndarray, y: np.ndarray, bins: int = 10) -> float:
 
 def _report(members, val_losses, train_ds, val_ds, calib_ds,
             cal_logits, cal_target, temperature, conformal, abs_res, xstats=None,
-            mc_T: int = 50, res_z_conf: float = 1.0) -> dict:
+            mc_T: int = 50, res_z_conf: float = 1.0,
+            fate_calib_n: dict | None = None) -> dict:
     from scipy.special import softmax  # available via the data-stage deps
 
     out = {
@@ -283,6 +308,7 @@ def _report(members, val_losses, train_ds, val_ds, calib_ds,
         "val_loss_per_member": [float(v) for v in val_losses],
         "temperature": temperature.temperature,
         "conformal_q": dict(conformal.q),
+        "fate_calib_n": fate_calib_n or {},
         "platt_a": temperature.platt_a,
         "platt_b": temperature.platt_b,
         "sigma_scale": float(conformal.sigma_scale),          # mode="ensemble"

@@ -93,9 +93,36 @@ plan's own evidence.
 
 ### The change
 
+**Fitted on ALL held-out cells, not just the cross-donor pool.** My first cut fitted Platt on the
+cross-donor pool alone (~103 cells) and would have missed the bar:
+
+| | mean `fate_ece` | drop | |
+|---|---|---|---|
+| in-dist temperature (baseline) | 0.281 | — | |
+| cross-donor temperature (run 2) | 0.364 | −30% | REGRESSION |
+| **cross-donor Platt** (first cut) | **≈0.199** | ~29% | **misses** the 0.169 bar |
+| in-dist Platt (`fate_ece_platt`) | 0.153 | +45.3% | ACCEPT |
+
+Decomposed: the **family** change (temperature → Platt) is worth **−45%**; the **fitting-data**
+change (in-distribution → cross-donor) costs **+30%**. The first cut fixed the family and kept
+the data restriction that run 2 had already measured as harmful.
+
+So the calibrator is fitted on the **union** — calib/val split **∪** cross-donor pool (~4,593
+cells). Restricting to the pool means fitting 2 parameters on 103 cells while discarding 4,490.
+
+**This is a deliberate departure from Stage 1's cross-donor principle, and it is stated as one.**
+That principle is right for the conformal `q`, which needs the *shape* of out-of-donor error and
+gets it from 103 honest residuals. It is wrong for a 2-parameter calibrator at this n, where
+sampling variance dominates the distribution mismatch. Same principle, opposite answer, because
+the two quantities need different things — which is itself a result worth reporting.
+
+`fate_calib_n` in `metrics.json` records the split (`total` / `in_dist` / `xdonor`) so the
+composition of the fit is auditable rather than implied.
+
 | file | change |
 |---|---|
 | `src/cellfate/common/calibration.py` **(new)** | `platt_safe` / `apply_platt`. In `common` because both layers need it and **`inference` must not import `training`** — an invariant my first draft broke |
+| `training/train.py` | `ensemble_probs` — the shared helper, so the calib split and the cross-donor pool cannot be computed two different ways |
 | `training/calibrate.py` | `fit_platt_binary(p_safe, y_safe)` — 2-param Platt on safe-vs-rest log-loss, slope constrained **positive** so the map is rank-preserving. Same guards as `fit_temperature` (identity fallback, never-worse-than-identity). `fit_temperature` kept as fallback |
 | `training/xdonor_calib.py` | `probs_mean` — the ensemble-averaged probability, byte-for-byte `Predictor`'s `pbar`, so fit and application see the same quantity. `save_xstats`/`load_xstats` persist the pool |
 | `common/schemas.py` | `TemperatureParams` gains `platt_a`/`platt_b` (defaulted `None`), validated as a pair with a positive slope. **`SCHEMA_VERSION` again not bumped** |

@@ -31,7 +31,13 @@ from torch.utils.data import TensorDataset
 from cellfate.common.logging import get_logger, log_event
 
 from .dataset import AM_I, DONOR_I, YA_I, YC_I
-from .train import ensemble_age, ensemble_logits, member_outputs, train_ensemble
+from .train import (
+    ensemble_age,
+    ensemble_logits,
+    ensemble_probs,
+    member_outputs,
+    train_ensemble,
+)
 
 log = get_logger("cellfate.training")
 
@@ -320,12 +326,9 @@ def crossdonor_stats(train_ds: TensorDataset, val_ds: TensorDataset,
         log_.append(ensemble_logits(members, inner_te, device).numpy())
         tgt.append(inner_te.tensors[YC_I].numpy())
         fts.append(member_outputs(members[0], inner_te, device)[2].numpy())
-        # mean over members of softmax(member logits) -- exactly Predictor's `pbar` at T=1, so
-        # the Platt fit and its application see the identical quantity
-        pm.append(np.stack([
-            torch.softmax(member_outputs(m, inner_te, device)[0], dim=-1).numpy()
-            for m in members
-        ]).mean(axis=0))
+        # exactly Predictor's `pbar` at T=1, via the shared helper so the calib split and the
+        # cross-donor pool can never be computed two different ways
+        pm.append(ensemble_probs(members, inner_te, device).numpy())
 
         log_event(log, "xdonor.fold", donor=int(d), n_train=len(inner_tr),
                   n_held=len(inner_te), n_age=int(am.sum()))
