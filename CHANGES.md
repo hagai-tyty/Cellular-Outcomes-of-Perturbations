@@ -49,6 +49,83 @@ temperature change.
 
 ---
 
+## 2026-07-22 — Stage 1 run 2 scored; Change A″ calibrates `P(safe)`
+
+**Status:** ✅ Run 2 **executed and scored**. Change A″ written and tested locally (218 tests,
+smoke 32/32); the real-data run is pending.
+
+### Run 2 result
+
+| role | metric | bar | result |
+|---|---|---|---|
+| GUARD ×6 | `dage_mae_model`, `rank_model_dage`, `fate_prauc`, `fate_roc`, `ood_rate`, `level_shift_model` | noise | **max abs diff 0.00e+00 on every fold** ✅ |
+| TARGET | `conformal_coverage` | 0.85–0.95 | 0.401 → **0.889**, ACCEPT ✅ |
+| TARGET | `fate_ece` | ACCEPT + ≥40% drop | 0.281 → **0.364** ❌ **REGRESSION** |
+
+Per §3's independence clause `q` and `sigma_scale` are adopted; only the fate calibrator changes.
+
+**What run 2 established about coverage** (recorded, not "fixed" — it is a property, not a bug):
+`q` = 33.8/34.6/36.3/34.4/34.2 on every fold where N3 sits in the pool, and **24.4** on the one
+fold where it does not. **N3's error offset alone sets the interval for the whole study**, and
+LOOCV removes it from its own pool — hence 0.333 there. `q/MAE` spans 0.82 → 6.43. N2's MAE is
+21.79 yet all 21 of its cells fall inside q=33.76, so residuals cluster around a per-donor
+**offset** rather than scattering — T7.4.3's level shift, which is Stage 2's target. The 0.889
+aggregate is split conformal's **marginal** guarantee; per-fold is **conditional** coverage,
+provably unachievable distribution-free (Barber, Candès, Ramdas & Tibshirani 2021).
+
+### Why `fate_ece` regressed — four quantities, no two the same
+
+| stage | quantity |
+|---|---|
+| `calibrate.py:_nll` optimised | multi-class NLL |
+| `metrics.py:ece` reported | top-1 confidence ECE |
+| `scorecard.py:_ece` grades | **binary ECE on `P(safe)`** |
+| `res.py` + `STAGE_3` §0.1 consume | **`S` = `P(safe)`, `P_loss`** |
+
+Plus a fit/apply mismatch: temperature is fitted on `ensemble_logits` (mean of member logits) but
+applied per-member then averaged — `softmax(mean(lg)/T)` ≠ `mean(softmax(lg/T))` by Jensen.
+
+**The plan already pointed here.** `MASTER_PLAN` §5a names the defective quantity as
+"`S`, `P_loss`" and records "**YES — Platt halves it**" (T8.2); `REF_ARCHITECTURE`:23 reads
+"ECE 0.28 → ~0.13 **with Platt**". `STAGE_1`'s ≲0.17 bar is derived from that Platt measurement —
+while §1b.2 specified `fit_temperature`. Change A″ resolves that inconsistency in favour of the
+plan's own evidence.
+
+### The change
+
+| file | change |
+|---|---|
+| `src/cellfate/common/calibration.py` **(new)** | `platt_safe` / `apply_platt`. In `common` because both layers need it and **`inference` must not import `training`** — an invariant my first draft broke |
+| `training/calibrate.py` | `fit_platt_binary(p_safe, y_safe)` — 2-param Platt on safe-vs-rest log-loss, slope constrained **positive** so the map is rank-preserving. Same guards as `fit_temperature` (identity fallback, never-worse-than-identity). `fit_temperature` kept as fallback |
+| `training/xdonor_calib.py` | `probs_mean` — the ensemble-averaged probability, byte-for-byte `Predictor`'s `pbar`, so fit and application see the same quantity. `save_xstats`/`load_xstats` persist the pool |
+| `common/schemas.py` | `TemperatureParams` gains `platt_a`/`platt_b` (defaulted `None`), validated as a pair with a positive slope. **`SCHEMA_VERSION` again not bumped** |
+| `training/train_model.py` | fits Platt, leaves `temperature = 1.0` (one calibrator, not two stacked), persists xstats, reports `xdonor_safe_ece_before/after` — the metric the scorecard grades |
+| `inference/predictor.py` | applies Platt to `pbar`; loss/death ratio preserved so `P_loss` stays meaningful to RES |
+
+**Persisting the pool is the enabler:** `crossdonor_stats` costs ~35 min/fold and its output was
+discarded, so every calibration experiment cost another 3.5 h. Future calibrators are now a
+seconds-long offline refit — with the standing rule that selection uses **that pool only**, never
+the held-out folds.
+
+### Bar unchanged
+
+`fate_ece` must still say ACCEPT with a **≥40% drop** (0.281 → ≤0.169). Not weakened because the
+specification was wrong. Guards must stay bit-identical; Platt's positive slope makes
+`fate_prauc`/`fate_roc` mathematically invariant, and a test asserts it.
+
+On synthetic data the graded metric moves the right way — binary `P(safe)` ECE **0.176 → 0.080**
+on the cross-donor pool — but that is indicative only, not evidence about the real folds.
+
+### One test I had to fix
+
+`test_platt_recovers_a_miscaled_and_a_BIASED_p_safe` initially "sharpened" a score that was never
+calibrated, so there was no correct slope to recover and it failed for the wrong reason. Rebuilt
+from `y ~ Bernoulli(sigmoid(z))`, so the true inverse is known: it now asserts a ≈ 1/3 for a 3×
+over-sharpening and b ≈ −1.8 for a +1.8 bias, **and** that no pure slope can fix the biased case —
+which is precisely the failure a temperature cannot address.
+
+---
+
 ## 2026-07-21 — Dress rehearsal on the real layout; two more defects found
 
 **Status:** ✅ **RUN.** 211 tests pass. The three Stage 1 scripts were executed end-to-end

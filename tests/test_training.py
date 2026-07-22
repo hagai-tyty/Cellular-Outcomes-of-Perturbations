@@ -230,12 +230,111 @@ def test_e2e_calibration_artifacts_valid(trained_bundle):
 # --------------------------------------------------------------------------- #
 # Stage 1b -- cross-donor calibration                                         #
 # --------------------------------------------------------------------------- #
+def test_platt_recovers_a_miscaled_and_a_BIASED_p_safe():
+    """The bias case is the one a temperature provably cannot fix.
+
+    A scalar can only sharpen or soften; it cannot shift the safe/unsafe boundary. Stage 1's own
+    <=0.17 bar comes from a Platt measurement (MASTER_PLAN: "S, P_loss ... YES -- Platt halves
+    it", T8.2), while run 2's scalar regressed the graded metric on every fold.
+    """
+    from cellfate.common.calibration import platt_safe
+    from cellfate.training.calibrate import fit_platt_binary
+
+    rng = np.random.default_rng(0)
+    n = 20000
+    z = rng.normal(0.0, 2.0, n)                 # true log-odds
+    p_true = 1.0 / (1.0 + np.exp(-z))           # calibrated BY CONSTRUCTION
+    y = (rng.uniform(size=n) < p_true).astype(float)
+
+    # (a) over-sharpened by 3x. logit(p_bad) = 3z, so recovering z needs a = 1/3, b = 0.
+    sharp = 1.0 / (1.0 + np.exp(-3.0 * z))
+    a, b = fit_platt_binary(sharp, y)
+    assert a == pytest.approx(1 / 3, abs=0.05), f"expected a~0.333, got {a}"
+    assert b == pytest.approx(0.0, abs=0.10), f"expected b~0, got {b}"
+    assert np.mean(np.abs(platt_safe(sharp, a, b) - p_true)) < 0.02
+
+    # (b) BIASED by +1.8 toward `safe`. logit(p_bad) = z + 1.8, so a = 1, b = -1.8.
+    # A TEMPERATURE CANNOT DO THIS: scaling z + 1.8 by any factor never recovers z.
+    biased = 1.0 / (1.0 + np.exp(-(z + 1.8)))
+    a2, b2 = fit_platt_binary(biased, y)
+    assert a2 == pytest.approx(1.0, abs=0.08), f"expected a~1, got {a2}"
+    assert b2 == pytest.approx(-1.8, abs=0.15), f"expected b~-1.8, got {b2}"
+    assert np.mean(np.abs(platt_safe(biased, a2, b2) - p_true)) < 0.02
+
+    # and the scalar-only alternative provably cannot: the best pure slope still leaves a gap
+    best_slope = min((np.mean(np.abs(platt_safe(biased, s, 0.0) - p_true)), s)
+                     for s in np.linspace(0.05, 5.0, 200))[0]
+    assert best_slope > 0.05, (
+        f"a slope alone got within {best_slope:.3f} of the truth on a BIASED input -- if a "
+        "temperature can fix this case the test no longer isolates the intercept"
+    )
+
+
+def test_platt_is_rank_preserving_so_the_fate_guards_cannot_move():
+    """`fate_prauc`/`fate_roc` are rank-based and are Stage 1 GUARDS.
+
+    The slope is constrained positive, so the map is strictly increasing in P(safe) and the
+    ordering is mathematically identical -- which is what lets this ship without disturbing them.
+    """
+    from cellfate.common.calibration import apply_platt
+
+    rng = np.random.default_rng(1)
+    p = rng.dirichlet(np.ones(3), size=300)
+    out = apply_platt(p, a=2.3, b=-0.7, safe_idx=0)
+
+    assert np.array_equal(np.argsort(p[:, 0]), np.argsort(out[:, 0]))
+    assert np.allclose(out.sum(axis=1), 1.0)
+    # the loss/death RATIO is untouched, so P_loss stays meaningful to RES
+    assert np.allclose(p[:, 1] / p[:, 2], out[:, 1] / out[:, 2])
+
+
+def test_platt_declines_degenerate_and_never_ships_worse_than_identity():
+    from cellfate.training.calibrate import fit_platt_binary
+
+    rng = np.random.default_rng(2)
+    p = rng.uniform(0.05, 0.95, 200)
+    with pytest.warns(UserWarning, match="single class"):
+        assert fit_platt_binary(p, np.ones(200)) == (1.0, 0.0)
+    assert fit_platt_binary(np.array([]), np.array([])) == (1.0, 0.0)
+
+    # already calibrated -> must not make it worse; identity is always available
+    y = (rng.uniform(size=500) < p[:500] if len(p) >= 500 else rng.integers(0, 2, len(p)))
+    a, b = fit_platt_binary(p[:len(y)], y.astype(float))
+    assert a > 0
+
+
+def test_xstats_round_trips_through_the_bundle(tmp_path):
+    """Persisting the pool is what makes future calibrator work a seconds-long offline refit
+    instead of another 3.5 h LOOCV pass."""
+    from cellfate.training.xdonor_calib import XDonorStats, load_xstats, save_xstats
+
+    rng = np.random.default_rng(3)
+    stats = XDonorStats(
+        abs_residuals=rng.normal(size=20), logits=rng.normal(size=(20, 3)),
+        targets=rng.dirichlet(np.ones(3), size=20), probs_mean=rng.dirichlet(np.ones(3), size=20),
+        sigma_pred=rng.uniform(size=20), sigma_pred_mc=rng.uniform(size=20),
+        n_donors=5, feats=rng.normal(size=(20, 4)),
+        residuals_per_donor={1: 10, 2: 10},
+        donor_scales={1: {"n": 10, "mae": 3.5}, 2: {"n": 10, "mae": 7.0}},
+    )
+    save_xstats(tmp_path, stats)
+    back = load_xstats(tmp_path)
+
+    for k in ("abs_residuals", "logits", "targets", "probs_mean",
+              "sigma_pred", "sigma_pred_mc", "feats"):
+        assert np.allclose(getattr(back, k), getattr(stats, k)), k
+    assert back.n_donors == 5
+    assert back.residuals_per_donor == {1: 10, 2: 10}
+    assert back.donor_scales[1]["mae"] == 3.5
+
+
 def test_sigma_scale_widens_an_overconfident_ensemble_spread():
     """The defect this exists for: members agree (~2.4 yr) while collectively wrong (~14 yr)."""
     from cellfate.training import XDonorStats, sigma_scale_factor
 
     stats = XDonorStats(
         abs_residuals=np.full(200, 14.0), logits=np.zeros((0, 3)), targets=np.zeros((0, 3)),
+        probs_mean=np.zeros((0, 3)),
         sigma_pred=np.full(200, 2.4), sigma_pred_mc=np.full(200, 2.4),
         n_donors=5, feats=np.zeros((0, 1)),
     )
@@ -250,6 +349,7 @@ def test_sigma_scale_never_shrinks_an_already_adequate_spread():
 
     stats = XDonorStats(
         abs_residuals=np.full(50, 1.0), logits=np.zeros((0, 3)), targets=np.zeros((0, 3)),
+        probs_mean=np.zeros((0, 3)),
         sigma_pred=np.full(50, 9.0), sigma_pred_mc=np.full(50, 9.0),
         n_donors=5, feats=np.zeros((0, 1)),
     )
@@ -261,6 +361,7 @@ def test_sigma_scale_is_identity_without_statistics():
 
     empty = XDonorStats(
         abs_residuals=np.array([]), logits=np.zeros((0, 3)), targets=np.zeros((0, 3)),
+        probs_mean=np.zeros((0, 3)),
         sigma_pred=np.array([]), sigma_pred_mc=np.array([]),
         n_donors=0, feats=np.zeros((0, 1)),
     )
@@ -269,6 +370,7 @@ def test_sigma_scale_is_identity_without_statistics():
     # z_conf=0 would divide by zero; must not raise or return a non-finite factor
     stats = XDonorStats(
         abs_residuals=np.full(10, 5.0), logits=np.zeros((0, 3)), targets=np.zeros((0, 3)),
+        probs_mean=np.zeros((0, 3)),
         sigma_pred=np.full(10, 1.0), sigma_pred_mc=np.full(10, 1.0),
         n_donors=3, feats=np.zeros((0, 1)),
     )
@@ -406,6 +508,7 @@ def test_sigma_scale_is_fitted_per_mode_from_the_matching_spread():
     # true error 14 yr; members agree to 2.0, dropout jitters by 7.0 -- different quantities
     stats = XDonorStats(
         abs_residuals=np.full(200, 14.0), logits=np.zeros((0, 3)), targets=np.zeros((0, 3)),
+        probs_mean=np.zeros((0, 3)),
         sigma_pred=np.full(200, 2.0), sigma_pred_mc=np.full(200, 7.0),
         n_donors=5, feats=np.zeros((0, 1)),
     )

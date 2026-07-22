@@ -1,10 +1,21 @@
 """Post-hoc confidence calibration (Document 3, S5).
 
-Temperature scaling fits a single scalar T on the ensemble-averaged held-out
-logits by minimising NLL with a bounded L-BFGS-B optimiser (L-BFGS with box
-constraints on T). Because T=1 is feasible and we keep an explicit guard, the
-calibrated NLL can never be worse than the uncalibrated one. T is shipped in the
-bundle and divides the logits before softmax at inference.
+Two calibrators live here.
+
+``fit_temperature`` -- a single scalar T fitted on the ensemble-averaged held-out logits by
+minimising MULTI-CLASS NLL with a bounded L-BFGS-B optimiser. T=1 is feasible and guarded, so
+the calibrated NLL can never be worse than the uncalibrated one.
+
+``fit_platt_binary`` -- a 2-parameter Platt fit on the SAFE-vs-rest boundary, which is the
+quantity the product actually ships: ``res.py`` consumes ``S = P(safe)`` and ``P_loss``,
+``STAGE_3`` S0.1 requires a risk threshold on ``P(unsafe)``, and ``scorecard.py`` grades binary
+ECE on ``P(safe)``. Stage 1 run 2 calibrated multi-class NLL instead and REGRESSED that metric
+(0.281 -> 0.364 on every fold), because the two objectives disagree about how much to sharpen.
+
+Platt's slope IS a temperature on the binary logit, so it subsumes the scalar and adds the
+intercept a scalar cannot express -- the reason in-distribution Platt reaches 0.153 where
+temperature reaches 0.281 on this data. It is monotone in ``P(safe)``, so ranking metrics
+(fate PR-AUC / ROC-AUC) are preserved exactly.
 """
 
 from __future__ import annotations
@@ -15,9 +26,14 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.special import log_softmax
 
+from cellfate.common.calibration import EPS as _EPS
+from cellfate.common.calibration import apply_platt, platt_safe
 from cellfate.common.schemas import TemperatureParams
 
+__all__ = ["fit_temperature", "fit_platt_binary", "has_class_variation", "apply_platt"]
+
 _BOUNDS = (1e-2, 1e2)
+_PLATT_BOUNDS = ((1e-2, 1e2), (-1e2, 1e2))   # slope must stay positive: rank preservation
 
 
 def _nll(logits: np.ndarray, target: np.ndarray, t: float) -> float:
@@ -38,6 +54,54 @@ def has_class_variation(target, min_mass_frac: float = 0.01) -> bool:
     if not np.isfinite(total) or total <= 0:
         return False
     return int((mass / total >= min_mass_frac).sum()) >= 2
+
+
+def _binary_logloss(p_safe: np.ndarray, y_safe: np.ndarray, a: float, b: float) -> float:
+    p = np.clip(platt_safe(p_safe, a, b), _EPS, 1.0 - _EPS)
+    return float(-(y_safe * np.log(p) + (1.0 - y_safe) * np.log(1.0 - p)).mean())
+
+
+def fit_platt_binary(p_safe, y_safe) -> tuple[float, float]:
+    """Fit ``P(safe) -> sigmoid(a*logit(P(safe)) + b)`` on cross-donor probabilities.
+
+    WHY THIS AND NOT A TEMPERATURE. ``P(safe)`` is what the product ships and what the bar
+    grades: ``res.py`` consumes ``S`` and ``P_loss``, ``STAGE_3`` S0.1 needs a risk threshold on
+    ``P(unsafe)``, and ``scorecard.py`` scores binary ECE on ``P(safe)``. MASTER_PLAN S5a names
+    the defective quantity as "``S``, ``P_loss``" and records "YES -- Platt halves it" (T8.2);
+    the ~0.13 that STAGE_1's <=0.17 bar is derived from was MEASURED with Platt. Stage 1 run 2
+    fitted a scalar on multi-class NLL instead and regressed the metric on every fold
+    (0.281 -> 0.364), because those two objectives disagree about how much to sharpen.
+
+    RANK PRESERVATION. The slope is constrained positive, so the map is strictly increasing in
+    ``P(safe)``. Every ranking metric (fate PR-AUC, ROC-AUC) is therefore mathematically
+    unchanged -- which is what lets this ship without disturbing Stage 1's guards.
+
+    Returns the identity ``(1.0, 0.0)`` when the data cannot identify a fit (empty, or a single
+    class present), and never returns a fit worse than the identity on its own objective.
+    """
+    p = np.asarray(p_safe, dtype=np.float64).ravel()
+    y = np.asarray(y_safe, dtype=np.float64).ravel()
+    if p.size == 0 or p.size != y.size:
+        return 1.0, 0.0
+    # a single class carries no information about where the boundary should sit
+    pos = float(y.sum())
+    if not (0.0 < pos < float(y.size)):
+        warnings.warn(
+            "Platt calibration skipped: the safe/unsafe target carries a single class, so the "
+            "boundary is unidentifiable. Shipping the identity (1.0, 0.0) uncalibrated.",
+            stacklevel=2,
+        )
+        return 1.0, 0.0
+
+    res = minimize(lambda w: _binary_logloss(p, y, float(w[0]), float(w[1])),
+                   x0=np.array([1.0, 0.0]), method="L-BFGS-B", bounds=_PLATT_BOUNDS)
+    a, b = (float(res.x[0]), float(res.x[1])) if res.success else (1.0, 0.0)
+    if not (np.isfinite(a) and np.isfinite(b)):
+        return 1.0, 0.0
+    # never ship a calibration worse than none, mirroring fit_temperature's guard
+    if _binary_logloss(p, y, a, b) > _binary_logloss(p, y, 1.0, 0.0) + 1e-12:
+        return 1.0, 0.0
+    return a, b
 
 
 def fit_temperature(logits, target, bounds: tuple[float, float] = _BOUNDS) -> TemperatureParams:

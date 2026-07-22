@@ -273,9 +273,26 @@ class ConformalParams(BaseModel):
 
 
 class TemperatureParams(BaseModel):
+    """Fate-probability calibration.
+
+    ``temperature`` divides the logits before softmax (multi-class, legacy).
+
+    ``platt_a``/``platt_b`` calibrate the SAFE-vs-rest boundary on the ensemble-averaged
+    probability: ``P(safe) -> sigmoid(a*logit(P(safe)) + b)``. That is the quantity the product
+    ships (``res.py`` consumes ``S`` and ``P_loss``) and the one the scorecard grades, whereas
+    temperature optimises multi-class NLL -- a different objective, which regressed the graded
+    metric in Stage 1 run 2.
+
+    Both are DEFAULTED (``None`` = absent), so every bundle written before this change loads and
+    behaves identically, and ``SCHEMA_VERSION`` is deliberately not bumped -- ``Predictor``
+    raises on a version mismatch, which would reject every existing bundle.
+    """
+
     model_config = ConfigDict(extra="forbid")
 
     temperature: float = 1.0
+    platt_a: float | None = None      # slope; > 0 keeps the map rank-preserving
+    platt_b: float | None = None      # intercept -- the term a temperature cannot express
 
     @field_validator("temperature")
     @classmethod
@@ -283,6 +300,25 @@ class TemperatureParams(BaseModel):
         if v <= 0:
             raise ValueError("temperature must be > 0")
         return v
+
+    @model_validator(mode="after")
+    def _platt_ok(self) -> TemperatureParams:
+        if (self.platt_a is None) != (self.platt_b is None):
+            raise ValueError("platt_a and platt_b must be set together, or both left unset")
+        if self.platt_a is not None:
+            if not (math.isfinite(self.platt_a) and math.isfinite(self.platt_b)):
+                raise ValueError("platt_a and platt_b must be finite")
+            if self.platt_a <= 0:
+                raise ValueError(
+                    f"platt_a must be > 0 so the calibration is rank-preserving on P(safe); "
+                    f"got {self.platt_a}. A non-positive slope would reorder cells and silently "
+                    "move fate PR-AUC / ROC-AUC."
+                )
+        return self
+
+    @property
+    def has_platt(self) -> bool:
+        return self.platt_a is not None and self.platt_b is not None
 
 
 # --------------------------------------------------------------------------- #

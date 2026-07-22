@@ -21,6 +21,7 @@ quantity for a different k. There is deliberately no knob to shrink them.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -54,8 +55,14 @@ SIGMA_SCALE_MODE = "ensemble"
 @dataclass
 class XDonorStats:
     abs_residuals: np.ndarray   # (M,)  |ΔAge error| pooled over held-out donors -> fits q
-    logits: np.ndarray          # (M,3) fate logits, out-of-donor -> fits temperature
+    logits: np.ndarray          # (M,3) MEAN member logits, out-of-donor -> fits temperature
     targets: np.ndarray         # (M,3) matching soft labels
+    # (M,3) ensemble-averaged PROBABILITY: mean over members of softmax(member_logits), which is
+    # byte-for-byte what Predictor._summaries produces as `pbar` at T=1. The Platt calibrator is
+    # fitted on this and applied to this, so fitting and application agree exactly. Temperature
+    # does not have that property -- it is fitted on MEAN LOGITS but applied per-member and then
+    # averaged, and softmax(mean(lg)/T) != mean(softmax(lg/T)) by Jensen.
+    probs_mean: np.ndarray
     sigma_pred: np.ndarray      # (M,)  ENSEMBLE spread     -> fits sigma_scale
     sigma_pred_mc: np.ndarray   # (M,)  MC-DROPOUT spread   -> fits sigma_scale_mc
     n_donors: int               # inner-LODO donors actually used
@@ -90,6 +97,48 @@ class XDonorStats:
     @property
     def has_logits(self) -> bool:
         return self.logits.shape[0] > 0
+
+
+XSTATS_FILENAME = "xdonor_stats.npz"
+_ARRAY_FIELDS = ("abs_residuals", "logits", "targets", "probs_mean",
+                 "sigma_pred", "sigma_pred_mc", "feats")
+
+
+def save_xstats(bundle_dir, stats: XDonorStats) -> None:
+    """Persist the cross-donor pool so calibrators can be refitted WITHOUT retraining.
+
+    `crossdonor_stats` costs ~35 min per fold and its output was discarded once the calibrators
+    were fitted, so every calibration experiment cost another full LOOCV pass (~3.5 h). The pool
+    is ~103 rows; storing it turns those experiments into a seconds-long offline refit.
+
+    ⚠ Anything selected on this pool must be selected on THIS POOL ONLY. The held-out folds stay
+    untouched until a scorecard snapshot, or a calibrator is being chosen on the test set.
+    """
+    from pathlib import Path
+
+    path = Path(bundle_dir) / XSTATS_FILENAME
+    path.parent.mkdir(parents=True, exist_ok=True)
+    np.savez_compressed(
+        path,
+        n_donors=np.array(stats.n_donors),
+        residuals_per_donor=np.array(json.dumps(stats.residuals_per_donor)),
+        donor_scales=np.array(json.dumps(stats.donor_scales)),
+        **{k: np.asarray(getattr(stats, k)) for k in _ARRAY_FIELDS},
+    )
+
+
+def load_xstats(bundle_dir) -> XDonorStats:
+    """Read back a pool written by :func:`save_xstats`."""
+    from pathlib import Path
+
+    d = np.load(Path(bundle_dir) / XSTATS_FILENAME, allow_pickle=False)
+    return XDonorStats(
+        n_donors=int(d["n_donors"]),
+        residuals_per_donor={int(k): int(v)
+                             for k, v in json.loads(str(d["residuals_per_donor"])).items()},
+        donor_scales={int(k): v for k, v in json.loads(str(d["donor_scales"])).items()},
+        **{k: d[k] for k in _ARRAY_FIELDS},
+    )
 
 
 def _subset(ds: TensorDataset, mask: torch.Tensor) -> TensorDataset:
@@ -204,7 +253,7 @@ def crossdonor_stats(train_ds: TensorDataset, val_ds: TensorDataset,
         )
 
     n_total = len(train_ds)
-    res, log_, tgt, fts, sig, sig_mc = [], [], [], [], [], []
+    res, log_, tgt, fts, sig, sig_mc, pm = [], [], [], [], [], [], []
     used, skipped, per_donor, donor_scales = 0, [], {}, {}
     for d in uniq:
         hold = donors == d
@@ -271,6 +320,12 @@ def crossdonor_stats(train_ds: TensorDataset, val_ds: TensorDataset,
         log_.append(ensemble_logits(members, inner_te, device).numpy())
         tgt.append(inner_te.tensors[YC_I].numpy())
         fts.append(member_outputs(members[0], inner_te, device)[2].numpy())
+        # mean over members of softmax(member logits) -- exactly Predictor's `pbar` at T=1, so
+        # the Platt fit and its application see the identical quantity
+        pm.append(np.stack([
+            torch.softmax(member_outputs(m, inner_te, device)[0], dim=-1).numpy()
+            for m in members
+        ]).mean(axis=0))
 
         log_event(log, "xdonor.fold", donor=int(d), n_train=len(inner_tr),
                   n_held=len(inner_te), n_age=int(am.sum()))
@@ -286,6 +341,7 @@ def crossdonor_stats(train_ds: TensorDataset, val_ds: TensorDataset,
         abs_residuals=np.concatenate(res) if res else np.array([]),
         logits=np.vstack(log_) if log_ else np.zeros((0, 3)),
         targets=np.vstack(tgt) if tgt else np.zeros((0, 3)),
+        probs_mean=np.vstack(pm) if pm else np.zeros((0, 3)),
         feats=np.vstack(fts) if fts else np.zeros((0, 1)),
         sigma_pred=np.concatenate(sig) if sig else np.array([]),
         sigma_pred_mc=np.concatenate(sig_mc) if sig_mc else np.array([]),

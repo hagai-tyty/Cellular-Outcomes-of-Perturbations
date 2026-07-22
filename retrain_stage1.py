@@ -48,6 +48,7 @@ os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
 DONORS = ["N2", "N3", "O1", "O2", "Y1", "Y2"]
 REGIME = "holdout"
 BACKUP_DIRNAME = "bundle_pre_stage1"
+STAGE1_DIRNAME = "bundle_stage1_parked"
 
 
 def resolve_root(name: str) -> Path | None:
@@ -90,18 +91,48 @@ def _restore(donors: list[str]) -> None:
         src, dst = root / BACKUP_DIRNAME, root / "bundle"
         if not src.is_dir():
             print(f"   {d}: no {BACKUP_DIRNAME}/ -- nothing to restore "
-                  "(this fold was never retrained)")
+                  "(this fold is already at its pre-Stage-1 bundle)")
             continue
+        # NEVER destroy a Stage 1 bundle to get at the baseline. It costs ~27 min per fold to
+        # rebuild, and its metrics.json carries xdonor_donor_scales -- the measurement that
+        # decides whether an adaptive conformal interval is viable. Park it first.
+        keep = root / STAGE1_DIRNAME
         if dst.exists():
-            shutil.rmtree(dst)
+            if keep.exists():
+                shutil.rmtree(keep)
+            shutil.move(str(dst), str(keep))
+            print(f"   {d}: bundle/ -> {STAGE1_DIRNAME}/ (parked), "
+                  f"{BACKUP_DIRNAME}/ -> bundle/")
+        else:
+            print(f"   {d}: {BACKUP_DIRNAME}/ -> bundle/")
         shutil.copytree(src, dst)          # COPY, not move: the backup stays available
-        print(f"   {d}: {BACKUP_DIRNAME}/ -> bundle/")
     print("\n  NEXT — confirm the baseline still measures the same under current code:")
     print("    python scorecard.py snapshot --tag baseline_recheck")
     print("    python scorecard.py compare baseline baseline_recheck")
     print("  EVERY metric must show a mean diff of exactly 0.000. Anything else means the")
     print("  library changed how metrics are computed, and `compare baseline A_xdonor` would")
     print("  be measuring that change on top of the calibration change.")
+    print(f"\n  Any Stage 1 bundle was PARKED in {STAGE1_DIRNAME}/, not deleted.")
+    print("  Put it back with:   python retrain_stage1.py --use-stage1")
+
+
+def _use_stage1(donors: list[str]) -> None:
+    """Swap a parked Stage 1 bundle back into place (the inverse of --restore)."""
+    print("\nRESTORING Stage 1 bundles (no training)")
+    for d in donors:
+        root = resolve_root(f"cellfate_loocv_{d}")
+        if root is None:
+            print(f"   {d}: fold directory not found")
+            continue
+        src, dst = root / STAGE1_DIRNAME, root / "bundle"
+        if not src.is_dir():
+            print(f"   {d}: no {STAGE1_DIRNAME}/ -- nothing parked for this fold")
+            continue
+        if dst.exists():
+            shutil.rmtree(dst)
+        shutil.move(str(src), str(dst))
+        print(f"   {d}: {STAGE1_DIRNAME}/ -> bundle/")
+    print("\n  NEXT: python scorecard.py snapshot --tag A_xdonor")
 
 
 def retrain(root: Path, xdonor: bool, device: str) -> dict:
@@ -126,13 +157,18 @@ def main() -> None:
     ap.add_argument("--no-xdonor", action="store_true",
                     help="disable cross-donor calibration (the Stage 1a-only rollback path)")
     ap.add_argument("--restore", action="store_true",
-                    help="restore each fold's bundle_pre_stage1/ backup over bundle/ and exit; "
-                         "no training. Use to re-measure the baseline with current code, or to "
-                         "roll back")
+                    help="swap the pre-Stage-1 backup into bundle/ and exit; no training. Any "
+                         "Stage 1 bundle is PARKED, not deleted. Use to re-measure the baseline "
+                         "with current code, or to roll back")
+    ap.add_argument("--use-stage1", action="store_true",
+                    help="the inverse of --restore: swap the parked Stage 1 bundle back in")
     args = ap.parse_args()
 
+    donor_list = [d.strip() for d in args.donors.split(",") if d.strip()]
     if args.restore:
-        return _restore([d.strip() for d in args.donors.split(",") if d.strip()])
+        return _restore(donor_list)
+    if args.use_stage1:
+        return _use_stage1(donor_list)
 
     import torch
 

@@ -21,7 +21,8 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from cellfate.common.constants import SCHEMA_VERSION
+from cellfate.common.calibration import apply_platt
+from cellfate.common.constants import SAFE_IDX, SCHEMA_VERSION
 from cellfate.common.errors import ConfigError, GenePanelMismatch, SchemaError
 from cellfate.common.io import (
     ArtifactPaths,
@@ -83,7 +84,12 @@ class Predictor:
         if not self.members:
             raise ConfigError("bundle contains no ensemble members")
 
-        self.temperature = load_temperature(self.paths).temperature
+        temp = load_temperature(self.paths)
+        self.temperature = temp.temperature
+        # Platt on the SAFE-vs-rest boundary -- the quantity RES and the risk threshold consume.
+        # Absent on every pre-existing bundle, in which case only `temperature` applies and
+        # behaviour is unchanged.
+        self.platt = (float(temp.platt_a), float(temp.platt_b)) if temp.has_platt else None
         self.ood = OODDetector(self.paths)
         self.res_params = load_res_params(self.paths)
 
@@ -150,6 +156,13 @@ class Predictor:
 
     def _summaries(self, probs, age, z):
         pbar = probs.mean(0)                                    # (N, 3)
+        # Applied to the ENSEMBLE-AVERAGED probability, which is exactly the quantity the
+        # calibrator was fitted on (xstats.probs_mean). Fitting on mean-logits and applying
+        # per-member -- what temperature does -- calibrates a different thing by Jensen.
+        if self.platt is not None:
+            pbar = torch.from_numpy(
+                apply_platt(pbar.cpu().numpy(), *self.platt, safe_idx=SAFE_IDX)
+            ).to(pbar.dtype)
         ent = -(pbar * (pbar + 1e-12).log()).sum(1)
         Z = z.detach().cpu().numpy()
         return {

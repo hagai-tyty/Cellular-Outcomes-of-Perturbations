@@ -178,6 +178,33 @@ def main() -> int:
             print(f"      note: a factor clamped to 1.0 (ensemble={s_ens:.3f}, mc={s_mc:.3f}) "
                   "-- spread already adequate on this synthetic fit, not a failure")
 
+        # ---- 6b. THE FATE CALIBRATOR + THE PERSISTED POOL ---------------------------- #
+        print("\n  [5b/8] fate calibration and the persisted cross-donor pool ...")
+        from cellfate.training.xdonor_calib import XSTATS_FILENAME, load_xstats
+
+        a, b = m.get("platt_a"), m.get("platt_b")
+        check("Platt fitted on P(safe), not a multi-class temperature",
+              isinstance(a, float) and isinstance(b, float), f"a={a} b={b}")
+        check("Platt slope is positive (rank-preserving, so the fate guards cannot move)",
+              isinstance(a, float) and a > 0, f"a={a}")
+        check("temperature left at 1.0 (one calibrator, not two stacked)",
+              m.get("temperature") == 1.0, str(m.get("temperature")))
+        # the graded quantity is reported alongside the top-1 figure
+        pre, post = m.get("xdonor_safe_ece_before"), m.get("xdonor_safe_ece_after")
+        check("binary P(safe) ECE is reported (the metric scorecard grades)",
+              isinstance(pre, float) and isinstance(post, float), f"{pre} -> {post}")
+        if isinstance(pre, float) and isinstance(post, float):
+            print(f"      binary P(safe) ECE on the cross-donor pool: {pre:.3f} -> {post:.3f}")
+
+        xs_path = ArtifactPaths.of(tmp).bundle_dir / XSTATS_FILENAME
+        check("cross-donor pool persisted", xs_path.exists(), str(xs_path.name))
+        if xs_path.exists():
+            back = load_xstats(ArtifactPaths.of(tmp).bundle_dir)
+            check("persisted pool round-trips with the right row count",
+                  back.abs_residuals.size == m.get("xdonor_n_residuals")
+                  and back.probs_mean.shape[0] == m.get("xdonor_n_residuals"),
+                  f"{back.abs_residuals.size} rows vs {m.get('xdonor_n_residuals')}")
+
         # ---- 7. PREDICTOR ROUND-TRIP ------------------------------------------------ #
         print("\n  [6/8] Predictor round-trip ...")
         from cellfate.common.errors import ConfigError

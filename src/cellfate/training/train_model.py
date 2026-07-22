@@ -17,6 +17,7 @@ import torch
 
 from cellfate.common import constants as C
 from cellfate.common import io
+from cellfate.common.calibration import apply_platt
 from cellfate.common.errors import ConfigError
 from cellfate.common.io import ArtifactPaths
 from cellfate.common.logging import get_logger, log_event
@@ -25,7 +26,7 @@ from cellfate.common.schemas import ResParams
 from cellfate.models import CellFateNet
 
 from .bundle import assemble_bundle
-from .calibrate import fit_temperature
+from .calibrate import fit_platt_binary, fit_temperature
 from .conformal import coverage, fit_conformal
 from .dataset import AM_I, FP_I, YA_I, YC_I, load_split_tensors
 from .metrics import ece, soft_nll
@@ -35,6 +36,7 @@ from .xdonor_calib import (
     SIGMA_SCALE_MODE,
     crossdonor_stats,
     n_train_donors,
+    save_xstats,
     sigma_scale_factor,
 )
 
@@ -152,14 +154,28 @@ def run(cfg: TrainConfig) -> dict:
     else:
         cal_logits = cal_target = None
 
-    if xstats is not None and xstats.has_logits:
-        temperature = fit_temperature(xstats.logits, xstats.targets)      # CROSS-DONOR
+    # Calibrate P(safe) -- the quantity the product ships and the scorecard grades. res.py
+    # consumes S and P_loss, STAGE_3 §0.1 needs a risk threshold on P(unsafe), and MASTER_PLAN
+    # §5a names "S, P_loss" as the defective quantity with "YES -- Platt halves it" (T8.2).
+    # STAGE_1's ≲0.17 bar is derived from that same Platt measurement. Run 2 fitted a scalar on
+    # multi-class NLL instead and REGRESSED the graded metric on every fold (0.281 -> 0.364),
+    # because the two objectives disagree about how much to sharpen.
+    # Platt subsumes the scalar (its slope IS a temperature on the binary logit) and adds the
+    # intercept a scalar cannot express, so `temperature` is left at 1.0 rather than stacking
+    # two interacting calibrators.
+    from cellfate.common.schemas import TemperatureParams
+
+    if xstats is not None and len(xstats.probs_mean):
+        a, b = fit_platt_binary(xstats.probs_mean[:, C.SAFE_IDX],
+                                xstats.targets[:, C.SAFE_IDX])
+        temperature = TemperatureParams(temperature=1.0, platt_a=a, platt_b=b)
+        log_event(log, "fate.calibrated", calibrator="platt_binary",
+                  platt_a=round(a, 5), platt_b=round(b, 5), n=int(len(xstats.probs_mean)))
     elif cal_logits is not None:
         temperature = fit_temperature(cal_logits, cal_target)
         if xstats is not None:
-            log.warning("xdonor logits empty; fell back to in-distribution temperature")
+            log.warning("xdonor probabilities empty; fell back to in-distribution temperature")
     else:
-        from cellfate.common.schemas import TemperatureParams
         temperature = TemperatureParams(temperature=1.0)
 
     # -- conformal + per-mode sigma scales: cross-donor residuals ---------------------- #
@@ -216,6 +232,11 @@ def run(cfg: TrainConfig) -> dict:
         deps_hash=io.deps_hash(), config_hash=config_hash,
     )
 
+    # Persist the cross-donor pool: it costs ~35 min/fold to produce and was discarded once the
+    # calibrators were fitted, so every calibration experiment cost another full LOOCV pass.
+    if xstats is not None:
+        save_xstats(paths.bundle_dir, xstats)
+
     metrics = _report(members, val_losses, train_ds, val_ds, calib_ds,
                       cal_logits, cal_target, temperature, conformal, abs_res, xstats,
                       cfg.mc_dropout_T, res_params.z_conf)
@@ -227,6 +248,25 @@ def run(cfg: TrainConfig) -> dict:
 
 def _jsonable(d: dict) -> dict:
     return {k: (list(v) if isinstance(v, tuple) else v) for k, v in d.items()}
+
+
+def _binary_ece(p: np.ndarray, y: np.ndarray, bins: int = 10) -> float:
+    """Binary ECE on P(safe) -- the SAME definition scorecard.py grades as ``fate_ece``.
+
+    Deliberately duplicated from `scorecard.py:_ece` rather than imported: the scorecard is a
+    repo-root script, not part of the package, and the whole point of this metric is that the
+    bundle's diagnostic and the graded number agree.
+    """
+    p = np.asarray(p, dtype=np.float64)
+    y = np.asarray(y, dtype=np.float64)
+    edges = np.linspace(0.0, 1.0, bins + 1)
+    err = 0.0
+    for i in range(bins):
+        hi = edges[i + 1] if i < bins - 1 else 1.0 + 1e-9
+        m = (p >= edges[i]) & (p < hi)
+        if m.sum():
+            err += (m.sum() / len(p)) * abs(p[m].mean() - y[m].mean())
+    return float(err)
 
 
 def _report(members, val_losses, train_ds, val_ds, calib_ds,
@@ -243,6 +283,8 @@ def _report(members, val_losses, train_ds, val_ds, calib_ds,
         "val_loss_per_member": [float(v) for v in val_losses],
         "temperature": temperature.temperature,
         "conformal_q": dict(conformal.q),
+        "platt_a": temperature.platt_a,
+        "platt_b": temperature.platt_b,
         "sigma_scale": float(conformal.sigma_scale),          # mode="ensemble"
         "sigma_scale_mc": float(conformal.sigma_scale_mc),    # mode="mc_dropout"
         "sigma_scale_mc_T": int(mc_T),   # the T it was fitted at; see mc_dropout_spread
@@ -284,6 +326,18 @@ def _report(members, val_losses, train_ds, val_ds, calib_ds,
         out["xdonor_nll_after_temp"] = soft_nll(xp_after, xt)
         out["xdonor_ece_before_temp"] = ece(xp_before, xlabels)
         out["xdonor_ece_after_temp"] = ece(xp_after, xlabels)
+    # ...and the BINARY P(safe) ECE, which is what scorecard.py actually grades as `fate_ece`.
+    # Reported alongside the top-1 multi-class figure above so the bundle's own diagnostic and
+    # the scorecard metric can never silently disagree again -- run 2's top-1 ECE improved
+    # (0.269 -> 0.217) while the graded binary ECE regressed (0.281 -> 0.364).
+    if xstats is not None and len(xstats.probs_mean):
+        p_safe = xstats.probs_mean[:, C.SAFE_IDX]
+        y_safe = xstats.targets[:, C.SAFE_IDX]
+        out["xdonor_safe_ece_before"] = _binary_ece(p_safe, y_safe)
+        if temperature.has_platt:
+            cal = apply_platt(xstats.probs_mean, temperature.platt_a,
+                              temperature.platt_b, C.SAFE_IDX)
+            out["xdonor_safe_ece_after"] = _binary_ece(cal[:, C.SAFE_IDX], y_safe)
     # -- how much of the sigma fix actually reaches the cells that matter ---------------- #
     # `sigma_scale` is MULTIPLICATIVE, so it fixes the spread's MAGNITUDE but preserves its
     # SHAPE. A cell where the ensemble happens to agree keeps a near-zero sigma even after a
