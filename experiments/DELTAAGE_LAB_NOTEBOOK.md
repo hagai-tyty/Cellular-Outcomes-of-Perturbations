@@ -2159,4 +2159,96 @@ A corrected calibrator that still misses is a real result about calibrator capac
 > different calibrator. Do **not** re-read the number and rationalise. That rule is what made
 > run 2's regression informative instead of embarrassing.
 
-### RESULT — RUN 3: PENDING
+### RESULT — RUN 3 (2026-07-23): **PARTIAL** — coverage passes, `fate_ece` accepts but misses the drop
+
+Executed on the data machine. 222 tests pass; 6/6 folds retrained in **229.0 min**; snapshot
+`B_fatecal`; compared against both `baseline` and `A_xdonor`.
+
+**Scored against the bars in `STAGE_1_CALIBRATION.md` §3 (lines 402–407):**
+
+| Role | Metric | Bar | baseline → B_fatecal | Verdict |
+|---|---|---|---|---|
+| TARGET | `conformal_coverage` | reach 0.85–0.95 | 0.401 → **0.889** ACCEPT | ✅ **PASS** |
+| TARGET | `fate_ece` | ACCEPT + ≥40% drop (≤0.169) | 0.281 → **0.249** ACCEPT, **−11.0%** | ❌ **MISS** |
+| GUARD | `fate_prauc` | noise | 0.992 → 0.992 (+0.000) | ✅ |
+| GUARD | `fate_roc` | noise | 0.983 → 0.983 (+0.000) | ✅ |
+| GUARD | `rank_model_dage` | noise | 0.948 → 0.948 (+0.000) | ✅ |
+| GUARD | `dage_mae_model` | noise | 14.291 → 14.291 (+0.000) | ✅ |
+
+**All four guards bit-identical (+0.000, CI [+0.000,+0.000]) for the third consecutive run.**
+Stage 1 provably does not touch the model. `interval_width` 17.717 → 65.888 reads REGRESSION but
+is **not a guard** and widening was the pre-registered consequence of an honest `q`.
+
+`A_xdonor → B_fatecal`: `fate_ece` 0.364 → 0.249 ACCEPT, `fate_ece_platt` 0.161 → 0.140 ACCEPT,
+coverage unchanged at 0.889. The union fit **did** repair run 2's regression — it just did not
+repair enough.
+
+#### The prediction was falsified, and the reason is precise
+
+Predicted `fate_ece` **≈0.15–0.17**; measured **0.249**. The stated reasoning was *"in-dist Platt
+measures 0.153 (T8.2)"*. **That equated two different quantities.**
+
+`scorecard.py:189` computes `fate_ece_platt = _ece(_platt(S_cal, …, S), st)`, and `S` at
+`scorecard.py:157` comes from `est.rows(...)` → `predictor._raw_batch`, which has **already
+applied the bundle's calibration** (`predictor.py:170`). So `fate_ece_platt` is not a standalone
+in-distribution Platt — it is a **SECOND calibration layer stacked on top of whatever the bundle
+ships**, fitted on the calib split.
+
+That single fact explains the whole table:
+
+| snapshot | bundle ships | `fate_ece` (bundle alone) | `fate_ece_platt` (+ stacked layer) |
+|---|---|---|---|
+| `baseline` | temperature | 0.281 | 0.153 |
+| `A_xdonor` | cross-donor temperature | 0.364 | 0.161 |
+| `B_fatecal` | union Platt | **0.249** | **0.140** |
+
+**The stacked layer lands at 0.140–0.161 regardless of what the bundle does.** It, not the
+bundle's calibrator, was doing the work in every T8.2 number. The 0.153 was never available to a
+single-layer bundle calibrator, so a bar derived from it was never within reach of the thing being
+built. This is the same class of error as the earlier T8.2 retraction, one level deeper.
+
+#### The bar itself is fair — checked before blaming it
+
+`fate_ece` is measured on 19–21 held-out cells with 10 bins (~2 cells/bin), so the estimator is
+biased upward and the bar could have been below its resolution. Simulated a **perfectly
+calibrated** model (`y ~ Bernoulli(p)`, so any ECE is pure estimator bias) at run-3's geometry:
+
+| regime | n | median ECE | P(≥0.17) |
+|---|---|---|---|
+| confident (matches PR-AUC 0.992) | 21 | 0.075 | 1.7% |
+| confident, **mean of 5 folds as scored** | 5×21 | **0.078**, 90% range [0.057, 0.105] | **0.0%** |
+
+The floor is **0.078**; the bar 0.169 sits at ~2× it. **The bar is attainable and stands.**
+0.249 is a real miss, not a measurement artefact.
+
+#### Why the union fit under-delivered
+
+`fate.calibrated` reports `total=4509 in_dist=4406 xdonor=103` — the cross-donor pool is
+**2.28%** of the fitting data. The fitted slopes show it was drowned:
+
+| | slope `a` across the 6 folds | mean |
+|---|---|---|
+| shipped (union) | 2.574, 2.599, 2.584, 2.621, 2.595, 2.622 | **2.599** |
+| pool-only (diagnostic, never shipped) | 1.533, 1.238, 1.404, 1.417, 1.542, 1.144 | **1.380** |
+
+The union slope is ~1.9× the pool-only slope and is **tight to ±0.024 across folds** — the
+signature of a fit determined by the 4406 shared in-distribution rows, not by the 103 rows that
+differ per fold. The union is, to three digits, the in-distribution fit. This is the deviation
+from *"calibrate on data whose error regime matches deployment"* that was flagged when it was
+made, and it cost the target.
+
+#### Recorded, not yet explained
+
+A synthetic probe of the two calibrator families (`sigmoid(a·logit p + b)` as shipped, vs
+`LogisticRegression` on raw `p` as `scorecard._platt` uses) **failed to reproduce** the observed
+gap — it made logistic-on-`p` *worse*, not better. The leading hypothesis is that logistic-on-`p`
+is **bounded** (it cannot exceed `sigmoid(w+c)`, the calib empirical rate at high `p`) whereas
+logit-Platt with `a>1` drives saturated inputs to exactly 1.0, so only the former can pull the top
+ECE bin down. **The mechanism is not confirmed** and is not relied on below.
+
+#### Next step is a measurement, not a change
+
+`train_model.py:240-243` already computed `xdonor_only_safe_ece_insample` and
+`shipped_safe_ece_on_pool` per fold and wrote them to `bundle/metrics.json`; the console printed
+only the slopes. Those numbers score the pool-only calibrator against the shipped one **on the
+same pool, at zero compute cost**, and no further change is pre-registered until they are read.

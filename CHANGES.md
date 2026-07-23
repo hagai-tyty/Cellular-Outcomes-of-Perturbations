@@ -11,6 +11,70 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-07-23 — RUN 3 executed and scored: PARTIAL. `fate_ece` misses; the bar it was set from was measuring a stacked calibrator
+
+**Status:** ✅ Run on the data machine (229.0 min, 6/6 folds, 222 tests pass). Scored, logged in
+`experiments/DELTAAGE_LAB_NOTEBOOK.md` under *RESULT — RUN 3*. **No code changed by this entry.**
+
+**Verdict against `STAGE_1_CALIBRATION.md` §3:** 5 of 6 criteria met.
+
+| Role | Metric | Bar | Result | |
+|---|---|---|---|---|
+| TARGET | `conformal_coverage` | 0.85–0.95 | 0.401 → **0.889** | ✅ |
+| TARGET | `fate_ece` | ACCEPT + ≥40% drop (≤0.169) | 0.281 → **0.249** (−11.0%) | ❌ |
+| GUARD ×4 | `fate_prauc`, `fate_roc`, `rank_model_dage`, `dage_mae_model` | noise | all **+0.000** | ✅ |
+
+Guards bit-identical for the third consecutive run — Stage 1 provably does not touch the model.
+`interval_width` 17.7 → 65.9 reads REGRESSION but is not a guard; widening is the pre-registered
+consequence of an honest `q`.
+
+### The finding: `fate_ece_platt` is a stacked layer, not an alternative calibrator
+
+`scorecard.py:189` fits its Platt on `S_cal` and applies it to `S` — and `S`
+(`scorecard.py:157`) is the **predictor's output**, which already has the bundle's calibration
+applied (`predictor.py:170`). So `fate_ece_platt` measures **bundle calibration + a second
+calib-fitted layer**, not a standalone in-distribution Platt.
+
+It lands at 0.140–0.161 in all three snapshots regardless of what the bundle ships (baseline
+0.153, A_xdonor 0.161, B_fatecal 0.140). **The second layer was doing the work in every T8.2
+number.** The run-3 prediction of ≈0.15–0.17 was derived from 0.153 as though a single-layer
+bundle calibrator could reach it. It could not. Prediction falsified; the reason is a
+specification error on my side, recorded rather than re-rationalised.
+
+### The bar was checked before being blamed, and it holds
+
+`fate_ece` is estimated on 19–21 cells over 10 bins, so estimator bias could in principle have put
+0.169 below its resolution. Simulating a perfectly calibrated model (`y ~ Bernoulli(p)`) at run-3's
+geometry gives a floor of **0.078** (90% range [0.057, 0.105] for the 5-fold mean, `P(≥0.17)=0.0%`).
+The bar sits at ~2× the floor. **It is attainable; 0.249 is a real miss.** The bar is not moved.
+
+### Why the union fit under-delivered
+
+`total=4509 in_dist=4406 xdonor=103` → the cross-donor pool is **2.28%** of the fit. Shipped slope
+`a` = 2.599 ± 0.024 across folds; the pool-only diagnostic slope = 1.380, ranging 1.144–1.542. The
+shipped slope being ~1.9× larger *and* far tighter across folds is the signature of a fit
+determined by the 4406 rows the folds share, not the 103 that differ. The union is the
+in-distribution fit to three digits — the deviation from *"calibrate on the deployment regime"*
+that was flagged when it was made, and it cost the target.
+
+### Not explained
+
+A synthetic probe of the two calibrator families failed to reproduce the observed gap (it made
+`LogisticRegression`-on-raw-`p` *worse*). The boundedness hypothesis — logistic-on-`p` cannot
+exceed `sigmoid(w+c)` while logit-Platt drives saturated inputs to exactly 1.0 — is unconfirmed
+and nothing below depends on it.
+
+### Reporting gap found (cosmetic, not fixed yet)
+
+`retrain_stage1.py:249` prints `ECE pre`/`ECE post` from `xdonor_ece_before_temp`/`_after_temp`,
+which apply `softmax(logits / temperature)`. Stage 1 sets `temperature = 1.0` whenever Platt is
+fitted, so those two columns are now **identical by construction** — which is exactly what run 3
+printed (0.269/0.269, 0.294/0.294, …). Not a calibration bug; the summary table is showing a
+guaranteed no-op and hiding `xdonor_safe_ece_before`/`_after`, the binary figure that matches what
+`scorecard.py` grades. Fix belongs with the next change, not on its own.
+
+---
+
 ## 2026-07-22 — Full audit of the session's code; one real guard bug found and fixed
 
 **Status:** ✅ 221 tests, smoke 34/34. Everything committed and pushed.
