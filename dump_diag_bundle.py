@@ -8,8 +8,11 @@ this reason, and the calib/test probabilities are one inference pass away.
 This writes `diag_dump/<DONOR>.npz` + `diag_dump/manifest.json` (~2 MB total, zip and send).
 It is READ-ONLY with respect to the run: no training, no bundle is modified, nothing is refitted.
 
-    python dump_diag_bundle.py            # pool + calib + test  (a few minutes, needs torch)
-    python dump_diag_bundle.py --pool-only  # pool only          (seconds, no torch, no splits)
+    python dump_diag_bundle.py              # pool + calib + test  (a few minutes)
+    python dump_diag_bundle.py --pool-only  # pool only (seconds: no inference pass, no splits)
+
+Both modes import the package, so both need the venv -- `--pool-only` skips the inference pass and
+the split loading, not the dependencies (`xdonor_calib` imports torch to read the pool).
 
 WHAT IT ENABLES, and the discipline that goes with it
 -----------------------------------------------------
