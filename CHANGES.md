@@ -13,10 +13,12 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ## 2026-07-23 (latest) — Repaired the calibration target and re-scored Stage 1 against it
 
-**Status:** ✅ Code written and tested locally (273 tests). ⏳ **Not yet re-run on the data
-machine** — re-scoring needs `scorecard.py snapshot` re-run there (inference only, minutes, no
-retrain). The re-scored numbers below are computed offline from `diag_dump/` and verified to
-reproduce the graded metric to **0.00e+00**.
+**Status:** ✅ **Re-run on the data machine** (`rescore_results.zip`, commit `0003ff8`). 273
+tests pass there. The live `scorecard.py snapshot --tag B_fatecal_pooled` printed the pooled
+block **ECE 0.211 / floor 0.091 / excess +0.121 / 100th pctile** — identical to the offline
+prediction from `diag_dump/` to **0.00e+00**. Guards vs the pre-repair `B_fatecal` snapshot:
+`max|Δ| = 0.00e+00` on all four, so the additive scorecard change did not perturb any measured
+value. `baseline` (pre-repair snapshot) correctly reports pooled ECE `n/a`.
 
 ### Why
 

@@ -2445,3 +2445,23 @@ so `fate_ece` becomes a Stage 2 acceptance metric rather than an unresolved Stag
 heterogeneous across donors. A guard's paired CI detects a mean effect only above ≈1.05 × the
 effect's own fold-to-fold SD, so a change that helps some donors and hurts others can be large
 and still read "noise". **Guard verdicts must be read with the per-fold column from here on.**
+
+### RE-SCORE EXECUTED ON THE DATA MACHINE (2026-07-23) — `rescore_results.zip`
+
+The repaired `scorecard.py` was run on the data machine, not just offline. Results confirm every
+offline prediction at full precision.
+
+- **Pooled fate ECE, live:** `ECE 0.211  floor 0.091  EXCESS +0.121  (pctile 100.0%)` — identical
+  to the `diag_dump/` computation to **0.00e+00**. The offline analysis is validated as a faithful
+  stand-in for the graded pipeline.
+- **Guards vs the pre-repair `B_fatecal` snapshot:** `max|Δ| = 0.00e+00` on `dage_mae_model`,
+  `rank_model_dage`, `fate_prauc`, `fate_roc`. The scorecard change is provably additive — it
+  reads new numbers, it does not move old ones. This is now the **fourth** consecutive run at
+  +0.000; the model is untouched.
+- **`conformal coverage` baseline→B_fatecal_pooled:** +0.488, CI [+0.139, +0.837], **ACCEPT**.
+- **`baseline` pooled ECE:** `n/a` — the pre-repair snapshot has no `_fate_S`, and the reader
+  degrades to `n/a` exactly as designed rather than erroring.
+- **273 tests pass** on the data machine's environment (D:\cellfate-rx).
+
+The re-score therefore stands as an executed, reproduced result — not a local prediction awaiting
+confirmation. **Stage 1's verdict is final: PARTIAL**, on the resolvable form of the metric.
