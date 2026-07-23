@@ -2343,3 +2343,55 @@ donor heterogeneity that leaves N3's conformal coverage at 0.333.
 **That is Stage 2's subject, not Stage 1's.** No further calibrator change is pre-registered:
 the family is right, the fitting set is right, and the remaining error is not a calibration
 problem.
+
+### INSTRUMENT AUDIT (2026-07-23) — "probably can't resolve it" was checked, not assumed
+
+Challenged on asserting the bar was unresolvable rather than demonstrating it. Measured
+(`audit_metrics.py`): simulate a system that satisfies the intent EXACTLY and ask how often the
+criterion reports it as passing.
+
+| criterion | null median | **pass rate for a system that IS correct** |
+|---|---|---|
+| `fate_ece ≤ 0.169`, **as graded** (mean of per-fold, n≈21 × 5) | 0.183 | **26.9%** |
+| `fate_ece ≤ 0.169`, **pooled** (n = 103) | 0.090 | **99.6%** |
+| `conformal_coverage ∈ [0.85, 0.95]`, pooled marginal (n = 124) | 0.903 | **93.0%** |
+
+**Confirmed: as graded, a perfectly calibrated model fails the bar 73% of the time.** The bar
+would have to be ≥ **0.225** for a perfect model to pass 95% of the time. The criterion is
+measuring the sample size, not the model.
+
+**And the fix works.** Pooling held-out cells across folds instead of averaging per-fold ECEs
+takes the pass rate for a correct system from 26.9% to **99.6%**. Pooling is the more correct
+LOOCV estimate — every cell is still predicted by a model that never saw it. Under it,
+run 3 scores **0.211 against the 0.169 bar: still a MISS**, now at the 100th percentile of the
+null, i.e. unambiguously real. Repairing the instrument does not hand Stage 1 a pass; it converts
+"cannot tell" into "genuinely short, by a measurable amount".
+
+**`conformal_coverage` is sound as written** — 93.0% pass rate for a correctly-90% system, and
+the pooled marginal rate is exactly what a conformal guarantee promises. Stage 1's coverage PASS
+survives audit.
+
+#### Correction made during the audit
+
+The first version of the guard analysis reported a minimum detectable effect from each metric's
+**own fold-to-fold SD** — e.g. `dage_mae_model` SD 9.67, "MDE 10.15 years", which would have
+meant the guard was nearly blind. **That was wrong.** The paired test is built on the
+DIFFERENCES, where the metric's own spread cancels. The sensitivity is
+
+> minimum detectable **mean** effect = k × SD(**effect** across folds),  k = 1.05 (6 folds), 1.24 (5)
+
+so a **uniform** change is caught at **any** magnitude — which is precisely why Stage 1's guards
+reading +0.000 with CI [+0.000, +0.000] is strong evidence rather than luck. Calibrated against
+the one real non-zero change measured so far (A_xdonor → B_fatecal on `fate_ece`: mean 0.115,
+CI half-width 0.0275 ⇒ SD(effect) 0.0221), that change sat at **4.2×** the detection threshold.
+
+**The real blind spot** is a change that helps some folds and hurts others: it can be large in
+the mean and still read as noise. Stage 1 could not hit it — the model was untouched — but every
+change from Stage 2 on will be heterogeneous across donors by construction. Guard verdicts must
+be read with the per-fold column, not the aggregate alone.
+
+#### Not reachable from this dump
+
+`dage_mae_ridge`, `level_shift_ridge`, `rank_ridge_dage`, `rank_res`, `res_*` need ridge
+predictions and RES recomputed. **None is a TARGET or a GUARD**, so no acceptance criterion
+depends on them; auditing them needs a dump extension, not a rerun.
