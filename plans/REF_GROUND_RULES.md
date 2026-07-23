@@ -69,6 +69,34 @@ threshold after seeing results is how every change comes to look like an improve
 If a result lands just outside its bar, the honest options are: **accept the failure**, or **run a
 new test with a new pre-registered bar** — never retroactively widen the old one.
 
+## 5b. A pre-set bar must also be RESOLVABLE — check before running, not after
+
+Setting the threshold before the run (§5) is necessary but **not sufficient**. A bar can be
+honestly pre-registered and still be untestable: if the estimator is noisy at the geometry it is
+graded on, a system that *fully meets the intent* fails the bar anyway, and both passing and
+failing it are uninformative. This is not hypothetical — it happened twice in Stage 1, and both
+times we found it **after** the run, not before:
+
+- **`fate_ece ≤ 0.169`, graded as the mean of per-fold ECEs (n≈21, 10 bins).** A *perfectly
+  calibrated* model scores 0.183 and clears the bar only **26.9%** of the time. The bar was
+  measuring the sample size. (Fix: pool across folds → floor 0.091, a correct system passes 99.6%.)
+- **`conformal_coverage ∈ [0.85, 0.95]`.** This one *survived* the check — a correctly-90% system
+  lands in-band **93%** of the time — but that was confirmed, not assumed.
+
+> **Before a bar is pre-registered, simulate a system that meets its intent EXACTLY at the geometry
+> the bar will be graded on, and confirm that system passes at least 95% of the time. If it does
+> not, the bar is unresolvable: move the threshold to `usable_bar`, or change the geometry (pool,
+> add cells), or drop the criterion — but do it now, not after a run wears the failure.**
+
+The check is one call: `audit_metrics.bar_verdict(null, bar, lower_is_better)` returns
+**RESOLVABLE / UNRESOLVABLE** against `MIN_PASS_RATE = 0.95`, where `null` is the metric simulated
+under its own intent (`y ~ Bernoulli(p)` for calibration; `hits ~ Bernoulli(level)` for coverage).
+Every registered TARGET bar has an entry in `tests/test_bars_resolvable.py`, so adding a bar means
+adding its resolvability test — a bar with no such test is not considered pre-registered.
+
+This is the forward form of the audit that caught both Stage 1 problems. The habit is: **audit the
+bar before the run, not the run after the bar.**
+
 ## 6. When a result surprises you
 
 The default assumption is a **bug in the test**, not a discovery. Precedents from this project:

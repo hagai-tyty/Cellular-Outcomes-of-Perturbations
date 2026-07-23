@@ -10,6 +10,16 @@ This measures that directly instead of asserting it, for every criterion the dum
 
     python audit_metrics.py diag_dump/
 
+USE IT FORWARD, NOT ONLY AFTER
+------------------------------
+Coverage and `fate_ece` were both audited only AFTER they misfired. The transferable win is the
+opposite order: every NEW acceptance bar goes through the same "would a correct system pass this?"
+check BEFORE it is pre-registered, not after it embarrasses a run. `resolvability()` is the
+reusable core -- hand it a null simulated at the geometry the bar will be graded on and it returns
+the pass-rate for a system that meets the intent exactly. `bar_verdict()` turns that into a
+RESOLVABLE / UNRESOLVABLE call against `MIN_PASS_RATE`. `REF_GROUND_RULES.md` sec 5b makes this a
+rule; `tests/test_bars_resolvable.py` guards it (one entry per registered bar).
+
 TWO KINDS OF CRITERION, TWO KINDS OF QUESTION
 ---------------------------------------------
 ABSOLUTE (the TARGETs -- `fate_ece`, `conformal_coverage`): compared against a fixed threshold.
@@ -44,6 +54,11 @@ FATE_BAR = 0.169          # STAGE_1_CALIBRATION.md section 3
 COV_LO, COV_HI = 0.85, 0.95
 COV_LEVEL = 0.90
 
+# A bar is RESOLVABLE only if a system that meets the intent exactly clears it at least this
+# often. 0.95 is the mirror of a 5% false-negative rate: a correct system should be wrongly
+# failed no more than 1 run in 20. Below this the bar is measuring the sample size, not the model.
+MIN_PASS_RATE = 0.95
+
 
 def ece(p, y, bins: int = 10) -> float:
     """Verbatim scorecard.py:112."""
@@ -72,6 +87,21 @@ def resolvability(sim_null: np.ndarray, bar: float, lower_is_better: bool = True
         "pass_rate": float(ok.mean()),
         "usable_bar": float(np.percentile(sim_null, 95 if lower_is_better else 5)),
     }
+
+
+def bar_verdict(sim_null: np.ndarray, bar: float, lower_is_better: bool = True,
+                min_pass: float = MIN_PASS_RATE) -> dict:
+    """The forward check, as one call: RESOLVABLE only if a correct system passes >= `min_pass`.
+
+    Point this at a null simulated at the geometry a PROPOSED bar will be graded on, BEFORE the bar
+    is pre-registered. `verdict` is "RESOLVABLE" or "UNRESOLVABLE"; on UNRESOLVABLE, `usable_bar`
+    is where the threshold would have to move (or the geometry change, e.g. pooling) for a correct
+    system to pass 95% of the time. `REF_GROUND_RULES.md` sec 5b.
+    """
+    r = resolvability(sim_null, bar, lower_is_better)
+    r["min_pass"] = float(min_pass)
+    r["verdict"] = "RESOLVABLE" if r["pass_rate"] >= min_pass else "UNRESOLVABLE"
+    return r
 
 
 def sensitivity_multiplier(n_folds: int) -> float:

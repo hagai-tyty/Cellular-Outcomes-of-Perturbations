@@ -11,6 +11,26 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-07-23 (latest) — Made "audit the bar before the run" a ground rule, not a lesson learned twice
+
+**Status:** ✅ Written and tested (282 tests). The transferable win from the Stage 1 scoring saga:
+coverage and `fate_ece` were both audited *after* they misfired. This turns that into a forward
+habit — every new acceptance bar is checked for **resolvability before it is pre-registered**.
+
+| File | Change |
+|---|---|
+| `plans/REF_GROUND_RULES.md` | new **§5b** — a pre-set bar (§5) must also be RESOLVABLE: simulate a system that meets the intent EXACTLY at the grading geometry and confirm it passes ≥ 95% *before* registering the bar. Cites both Stage 1 cases (fate_ece 26.9% → pool → 99.6%; coverage 93% confirmed). No existing rule renumbered. |
+| `audit_metrics.py` | new `bar_verdict(null, bar, …)` → **RESOLVABLE / UNRESOLVABLE** against `MIN_PASS_RATE = 0.95`; docstring section on forward use. `resolvability()` was already the reusable core. |
+| `tests/test_bars_resolvable.py` (new, +10) | one entry per registered TARGET bar, asserting a correct system's pass rate matches its required verdict. Includes the **retired** per-fold `fate_ece` bar asserting it stays UNRESOLVABLE — the lesson made executable — and one assertion that pooling flips the same bar's verdict. Adding a bar means adding an entry here; a bar with no entry is, by rule, not pre-registered. |
+
+Bug caught while writing the tests: my first `higher_is_better` case expected RESOLVABLE at a
+90% pass rate — but 90% < `MIN_PASS_RATE`, so UNRESOLVABLE was correct. The code was right; the
+test expectation was wrong. Fixed the test.
+
+**This does not touch any run, bundle, or scorecard column** — it is process + one helper + tests.
+
+---
+
 ## 2026-07-23 (latest) — Wrote the Stage 1.5 plan doc (harmonization & ΔAge zero-point audit)
 
 **Status:** ✅ Plan document committed. ⏳ The stage itself is **not run** — this is its
