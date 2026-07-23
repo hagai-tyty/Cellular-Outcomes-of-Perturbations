@@ -2252,3 +2252,94 @@ ECE bin down. **The mechanism is not confirmed** and is not relied on below.
 `shipped_safe_ece_on_pool` per fold and wrote them to `bundle/metrics.json`; the console printed
 only the slopes. Those numbers score the pool-only calibrator against the shipped one **on the
 same pool, at zero compute cost**, and no further change is pre-registered until they are read.
+
+---
+
+## RUN 3 POST-MORTEM (2026-07-23) — the diagnostics came back. Three of my claims are wrong.
+
+Offline analysis of `diag_dump/` (6 folds; pool, calib and test arrays, raw and calibrated).
+The pipeline reproduces the graded `fate_ece` from raw probabilities to **0.00e+00**, so every
+number below is the same quantity `scorecard.py` grades.
+
+### RETRACTION 1 — "the bar is fair and attainable". It is not: it sits BELOW the estimator floor.
+
+I computed the floor from `beta(12,1)` (most p > 0.9), inferring saturation from fate PR-AUC
+0.992, and reported a floor of 0.078 with the bar at ~2× it. **The dump shows no saturation
+whatever**: on test, P(safe) spans 0.09–0.88 with **0.0% above 0.99**; on the pool, max is 0.65.
+Near-perfect *ranking* does not imply saturated *probabilities* — that inference was simply wrong.
+
+Recomputing the floor from the **actual** test P(safe) vectors (`y ~ Bernoulli(p)`, so any ECE is
+pure estimator bias):
+
+| | floor median | floor p90 | observed | percentile |
+|---|---|---|---|---|
+| mean over the 5 scored folds | **0.183** | 0.225 | 0.249 | 99.5% |
+
+**A perfectly calibrated model clears the 0.169 bar only 26.9% of the time at this geometry.**
+The bar is below what n≈21 with 10 bins can resolve. The miss stands as a pre-registered fact,
+but it carries almost no information about calibration quality.
+
+The observed 0.249 still sits at the **99.5th percentile** of the perfect-calibration
+distribution, so there *is* real miscalibration — just not 0.249 worth of it.
+
+### RETRACTION 2 — "the union fit cost the target". It did not: it is the best candidate tried.
+
+Scoring all three pre-registered candidates on the graded folds, each against the floor **of its
+own output** (raw ECE is not comparable across candidates — see Retraction 3):
+
+| candidate | ECE | own floor | **excess** | vs bar |
+|---|---|---|---|---|
+| identity (no calibration) | 0.364 | 0.172 | **+0.192** | miss |
+| **union Platt [SHIPPED]** | 0.249 | 0.178 | **+0.071** | miss |
+| pool-only Platt [the PRINCIPLE] | 0.308 | 0.164 | **+0.144** | miss |
+
+**Reverting to the cross-donor principle would have been twice as bad.** The 2.28%-drowning
+argument correctly described the *fit*, but the conclusion drawn from it — that the deviation
+cost the target — is refuted. Recorded rather than deleted.
+
+On excess, the shipped calibrator removes **63%** of the miscalibration present with no
+calibration at all (+0.192 → +0.071). The effect Stage 1 was built to produce is there; the
+metric it was graded on cannot show it.
+
+### RETRACTION 3 — raw ECE rewards SHARPENING, so it cannot rank calibrators
+
+Refitting Platt on four donors' held-out cells and applying to the fifth appeared to take ECE
+0.249 → 0.103, apparently *beating* the 0.179 floor — impossible for an honest estimate. The
+refit sharpens (a = 3.4–5.7), and sharper probabilities occupy more extreme bins where Bernoulli
+variance is smaller, which **lowers the floor**. Against its own floor the refit scores +0.035,
+not −0.076.
+
+**Sharpening alone accounts for 0.110 of the 0.146 apparent gain — 75%.** A calibrator can move
+`fate_ece` toward the bar by sharpening while getting no better calibrated. This is a defect in
+the target metric, not a strategy: it is the one way this bar could be "landed" dishonestly, and
+it is recorded here so that route is closed.
+
+### What the pool said, and why it was misleading
+
+| family (LODO **within** the pool) | ECE |
+|---|---|
+| identity — no calibration at all | **0.130 — already "passes" 0.169** |
+| logit-Platt [shipped] | 0.067 |
+| logistic-on-p [T8.2 family] | 0.101 |
+| isotonic | 0.059 |
+
+On the pool everything passes, including doing nothing. **The pool is not a proxy for the graded
+donor.** Base rates: calib **0.514**, pool **0.64**, test **0.754** (N2 1.000, Y1 0.579). The
+deployed calibrator is fitted for a 0.51-safe world and graded on a 0.75-safe one — the residual
+is *label shift*, which no calibrator fitted on source data can correct.
+
+Answers to the four questions: **Q1** family is fine, logit-Platt beats logistic-on-p 0.067 vs
+0.101; **Q2** union beats pool-only, +0.071 vs +0.144; **Q3** capacity is ample on the pool
+(isotonic 0.059) but no pre-registered candidate clears the bar on test; **Q4** ICC **0.342**,
+n_eff **13.7 of 103** — donor offsets dominate, so the pool is ~14 independent points.
+
+### Where the residual actually lives
+
+Per-fold excess for the other-donor refit: N3 +0.044, O1 −0.023, O2 −0.014, Y2 0.000, and
+**Y1 +0.165**. Y1's base rate is 0.579 against 0.76–0.86 for the rest. Donor calibration
+transfers between donors that resemble each other and fails on the one that does not — the same
+donor heterogeneity that leaves N3's conformal coverage at 0.333.
+
+**That is Stage 2's subject, not Stage 1's.** No further calibrator change is pre-registered:
+the family is right, the fitting set is right, and the remaining error is not a calibration
+problem.

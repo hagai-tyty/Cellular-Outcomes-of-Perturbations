@@ -11,6 +11,38 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-07-23 (later) — Diagnostics read. Three of yesterday's claims retracted; the bar is below the estimator floor
+
+**Status:** ✅ Analysed `diag_dump/` from the data machine. Pipeline reproduces the graded
+`fate_ece` from raw probabilities to **0.00e+00**. Full detail in the lab notebook under
+*RUN 3 POST-MORTEM*. **No source changed.**
+
+| Retracted | Replaced by |
+|---|---|
+| "the bar is fair and attainable, ~2× the 0.078 floor" | Floor recomputed on the **actual** P(safe) vectors is **0.183**. A perfectly calibrated model clears 0.169 only **26.9%** of the time. The bar is below what n≈21 × 10 bins can resolve. |
+| "the union fit cost the target; revert to the pool-only principle" | Union **excess +0.071** vs pool-only **+0.144** vs identity **+0.192**. The principle would have been twice as bad. The shipped calibrator is the best candidate tried. |
+| "P(safe) saturates, so the top ECE bin cannot move" | **0.0%** of test rows exceed 0.99; P(safe) spans 0.09–0.88. Near-perfect *ranking* (PR-AUC 0.992) does not imply saturated *probabilities* — that inference was wrong, and the family hypothesis built on it is dead. |
+
+**The metric rewards sharpening.** An other-donor refit appeared to take ECE 0.249 → 0.103,
+seemingly beating its own 0.179 floor — impossible. Sharpening (a = 3.4–5.7) moves probabilities
+into extreme bins where Bernoulli variance is smaller, **lowering the floor**; 0.110 of the 0.146
+apparent gain (75%) is that artefact. Recorded so the one dishonest route to "landing" the bar is
+closed explicitly.
+
+**Excess over own floor is the comparable quantity.** By it, Stage 1 removes **63%** of the
+miscalibration present with no calibration at all (+0.192 → +0.071) — the effect the stage was
+built to produce, on a metric that can show it.
+
+**Where the residual lives:** base rates are calib 0.514, pool 0.64, test 0.754. The calibrator is
+fitted for a 0.51-safe world and graded on a 0.75-safe one; that is *label shift*, uncorrectable
+from source data. Per-fold, the failure concentrates on **Y1** (base rate 0.579 vs 0.76–0.86
+elsewhere) — the same donor heterogeneity behind N3's 0.333 coverage. **Stage 2's subject.**
+
+**No further calibrator change is pre-registered.** Family right, fitting set right, residual not
+a calibration problem.
+
+---
+
 ## 2026-07-23 — RUN 3 executed and scored: PARTIAL. `fate_ece` misses; the bar it was set from was measuring a stacked calibrator
 
 **Status:** ✅ Run on the data machine (229.0 min, 6/6 folds, 222 tests pass). Scored, logged in
