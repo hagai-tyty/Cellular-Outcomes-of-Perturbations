@@ -2395,3 +2395,53 @@ be read with the per-fold column, not the aggregate alone.
 `dage_mae_ridge`, `level_shift_ridge`, `rank_ridge_dage`, `rank_res`, `res_*` need ridge
 predictions and RES recomputed. **None is a TARGET or a GUARD**, so no acceptance criterion
 depends on them; auditing them needs a dump extension, not a rerun.
+
+### STAGE 1 RE-SCORED (2026-07-23) — repaired estimator, unchanged verdict
+
+`scorecard.py` now reports the calibration target in its resolvable form: pooled over all
+held-out cells, with the estimator floor and the excess above it. Verified against `diag_dump/`
+to reproduce the graded metric to **0.00e+00** before being trusted.
+
+| | per-fold **[as graded]** | pooled **[repaired]** |
+|---|---|---|
+| `fate_ece` | 0.249 | **0.211** |
+| floor (perfect model) | 0.179 | **0.091** |
+| excess | +0.071 | **+0.121** |
+| a *correct* system passes 0.169 | **26.9%** | **99.6%** |
+| verdict | MISS — uninterpretable | **MISS — real, 100th pctile of the null** |
+
+**The verdict is unchanged, and that is what makes the repair legitimate.** Had it converted a
+miss into a pass it would have been goalpost-moving; instead it converts "cannot tell" into
+"genuinely short, by a measurable amount".
+
+Note the direction: pooled ECE is *lower* (0.211 vs 0.249) but pooled **excess is higher**
+(+0.121 vs +0.071). Per-fold averaging lets each donor's offset be absorbed into its own fold's
+bins; pooling forces donors with different base rates into shared bins, where the label shift
+shows up as what it is. The pooled number is the harsher and more honest one.
+
+### FINAL VERDICT — STAGE 1: **PARTIAL**
+
+| Role | Metric | Bar | Result | |
+|---|---|---|---|---|
+| TARGET | `conformal_coverage` | 0.85–0.95 | 0.401 → **0.889** pooled marginal | ✅ **PASS**, audited (93.0% pass rate for a correctly-90% system) |
+| TARGET | `fate_ece` | ≤ 0.169 | **0.211** pooled | ❌ **MISS**, real and measurable |
+| GUARD ×4 | PR-AUC, ROC, rank, MAE | noise | **+0.000** bit-identical ×3 runs | ✅ |
+
+**What Stage 1 delivered:** conformal coverage went from 0.401 to 0.889 — the headline defect
+the stage existed to fix, and it is solved. `q` and both `sigma_scale` factors are calibrated on
+cross-donor statistics. The model is provably untouched.
+
+**What it did not:** `fate_ece` does not reach its bar, and the diagnostics say why — the
+residual is **donor-level label shift** (base rates: calib 0.514, pool 0.64, test 0.754),
+concentrated in **Y1** (0.579 against 0.76–0.86 elsewhere). No calibrator fitted on source data
+can correct an unknown target prior. Of the pre-registered candidates the shipped union Platt is
+the best (excess +0.071 per-fold vs +0.144 pool-only vs +0.192 uncalibrated).
+
+**Carried into Stage 2, not papered over:** more donors is the only thing that addresses a prior
+that varies donor to donor. Stage 2's k≈3 reference cells per donor is exactly that intervention,
+so `fate_ece` becomes a Stage 2 acceptance metric rather than an unresolved Stage 1 failure.
+
+**Carried as a measurement warning:** every Stage 2 change touches the model and will be
+heterogeneous across donors. A guard's paired CI detects a mean effect only above ≈1.05 × the
+effect's own fold-to-fold SD, so a change that helps some donors and hurts others can be large
+and still read "noise". **Guard verdicts must be read with the per-fold column from here on.**

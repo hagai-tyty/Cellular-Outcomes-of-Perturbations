@@ -11,6 +11,71 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-07-23 (latest) — Repaired the calibration target and re-scored Stage 1 against it
+
+**Status:** ✅ Code written and tested locally (273 tests). ⏳ **Not yet re-run on the data
+machine** — re-scoring needs `scorecard.py snapshot` re-run there (inference only, minutes, no
+retrain). The re-scored numbers below are computed offline from `diag_dump/` and verified to
+reproduce the graded metric to **0.00e+00**.
+
+### Why
+
+`fate_ece` is graded as the mean of per-fold ECEs over ~21 held-out cells in 10 bins. Measured
+(`audit_metrics.py`): a **perfectly calibrated** model scores 0.183 and clears the 0.169 bar only
+**26.9%** of the time. The criterion was measuring the sample size, not the model. Pooling the
+held-out cells across folds — the more correct LOOCV estimate, since every cell is still
+predicted by a model that never saw it — raises that to **99.6%**.
+
+### `scorecard.py` (the user's file; additive only, no existing metric changed)
+
+| Change | Detail |
+|---|---|
+| `measure_fold` stores `_fate_S` / `_fate_y` | raw per-fold safe probabilities and labels. Underscored, so `METRICS`-driven tables ignore them |
+| new `pooled_fate_ece(folds)` | pooled ECE + **floor** + **excess** + null percentile. Returns `None` for snapshots predating it, so `baseline.json` still loads |
+| `_print_snapshot` / `cmd_compare` | print the pooled block; compare shows both snapshots' raw ECE **and** excess |
+| `cmd_compare` header | states that the paired CI's sensitivity comes from the **consistency** of a change across folds, not the metric's own spread, and that a heterogeneous change can be large in the mean and still read as noise |
+
+**`floor`** is the median ECE a perfectly calibrated model with that exact probability vector
+would score (`y ~ Bernoulli(p)`, so all of it is estimator bias). **`excess = ece − floor`** is
+the only quantity comparable across calibrators: raw ECE also moves when a calibrator merely
+*sharpens*, because sharper probabilities sit in extreme bins where the floor is lower. On run 3,
+**75%** of one apparent improvement was exactly that.
+
+### Stage 1 re-scored
+
+| | per-fold **[as graded]** | pooled **[repaired]** |
+|---|---|---|
+| `fate_ece` | 0.249 | **0.211** |
+| floor | 0.179 | **0.091** |
+| excess | +0.071 | **+0.121** |
+| pass rate for a *correct* system | **26.9%** | **99.6%** |
+| vs bar 0.169 | MISS (uninterpretable) | **MISS (real, 100th pctile of null)** |
+
+**The verdict does not change, which is the point** — repairing the instrument could not have
+been goalpost-moving, because Stage 1 fails either way. What changes is that the failure is now
+*interpretable*: at 100% of the null it is unambiguously real, not an artefact of n≈21.
+
+**Stage 1 final: PARTIAL.** `conformal_coverage` PASS (0.889 pooled marginal; audited at 93.0%
+pass rate for a correctly-90% system). `fate_ece` MISS. Four guards +0.000, bit-identical, three
+runs running.
+
+### Tooling added this session (all read-only w.r.t. runs; logged here late — the changelog rule was missed on the first three)
+
+| File | Purpose |
+|---|---|
+| `dump_pool_diag.py` (+9 tests) | reads back `xdonor_only_safe_ece_insample` / `shipped_safe_ece_on_pool`, computed by run 3 and printed nowhere |
+| `dump_diag_bundle.py` (+8 tests) | packages pool + calib + test arrays, raw **and** calibrated, into a ~2 MB sendable dump so calibrators can be refitted offline instead of by retraining |
+| `diag_calibrators.py` (+11 tests) | compares calibrator families by leave-one-donor-out **within** the pool; reports ICC / effective n |
+| `audit_metrics.py` (+12 tests) | asks of every criterion: how often does a system that satisfies the intent EXACTLY get reported as passing |
+| `tests/test_scorecard_pooled.py` (+9) | pins the repair, above all that `excess` calls a purely sharpened model **worse** |
+
+Two defects found by writing those tests: `donor_ids_from_counts` must refuse to reconstruct pool
+donor labels when residual and fate row counts disagree (it returns `None` rather than guessing);
+and a boundary bug where `0.250 - 0.230 = 0.019999999999999990` reported a gain of exactly the
+threshold as below it.
+
+---
+
 ## 2026-07-23 (later) — Diagnostics read. Three of yesterday's claims retracted; the bar is below the estimator floor
 
 **Status:** ✅ Analysed `diag_dump/` from the data machine. Pipeline reproduces the graded

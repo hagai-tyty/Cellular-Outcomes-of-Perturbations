@@ -187,6 +187,15 @@ def measure_fold(donor: str):
         out["fate_roc"] = float(roc_auc_score(st, S))
         out["fate_ece"] = _ece(S, st)
         out["fate_ece_platt"] = _ece(_platt(S_cal, cls_cal == SAFE_IDX, S), st)
+        # RAW rows, kept so ECE can also be POOLED across folds at aggregation time.
+        # `fate_ece` above is a per-fold ECE over ~21 cells in 10 bins, which is biased upward
+        # hard enough that a PERFECTLY calibrated model scores 0.183 and clears the 0.169 bar
+        # only 26.9% of the time -- it measures the sample size, not the model
+        # (audit_metrics.py). Pooling is the more correct LOOCV estimate: every cell is still
+        # predicted by a model that never saw it, and the pass rate for a correct system rises
+        # to 99.6%. Underscored: raw data, not a metric, so METRICS-driven tables ignore it.
+        out["_fate_S"] = [float(v) for v in S]
+        out["_fate_y"] = [int(v) for v in st]
     else:
         for k in ("fate_prauc", "fate_roc", "fate_ece", "fate_ece_platt"):
             out[k] = None
@@ -236,6 +245,47 @@ def _agg(folds, key):
     return float(np.mean(vals)) if vals else None
 
 
+def pooled_fate_ece(folds, trials: int = 4000, seed: int = 0):
+    """ECE over ALL held-out cells at once, with the floor a perfect model would score.
+
+    Returns None when the snapshot predates this (no `_fate_S`), so old snapshots still load.
+
+    `floor` is the median ECE for a PERFECTLY calibrated model with this exact probability
+    vector (`y ~ Bernoulli(p)`, so every bit of it is estimator bias). `excess = ece - floor` is
+    the only quantity comparable ACROSS calibrators: raw ECE moves when a calibrator merely
+    sharpens, because sharper probabilities sit in extreme bins where Bernoulli variance -- and
+    so the floor -- is smaller. Measured on run 3: 75% of one apparent improvement was that.
+    """
+    S, Y = [], []
+    for d in DONORS:
+        f = folds.get(d)
+        if not isinstance(f, dict) or "_error" in f:
+            continue
+        s, y = f.get("_fate_S"), f.get("_fate_y")
+        if s and y:
+            S.extend(s); Y.extend(y)
+    if len(S) < 10:
+        return None
+    S, Y = np.asarray(S, float), np.asarray(Y, float)
+    obs = _ece(S, Y)
+    rng = np.random.default_rng(seed)
+    sims = np.array([_ece(S, (rng.random(len(S)) < S).astype(float)) for _ in range(trials)])
+    return {"n": int(len(S)), "ece": float(obs), "floor": float(np.median(sims)),
+            "excess": float(obs - np.median(sims)),
+            "pctile": float((sims < obs).mean())}
+
+
+def _print_pooled(snap, label="POOLED"):
+    p = pooled_fate_ece(snap["folds"])
+    if p is None:
+        print(f"\n  {label} fate ECE: n/a (snapshot predates pooled scoring)")
+        return None
+    print(f"\n  {label} fate ECE over all {p['n']} held-out cells:"
+          f"  ECE {p['ece']:.3f}   floor {p['floor']:.3f}   EXCESS {p['excess']:+.3f}"
+          f"   (pctile of null {p['pctile']:.1%})")
+    return p
+
+
 def _print_snapshot(snap):
     from cellfate.common.console import install_pretty_console, render_table
     install_pretty_console()
@@ -252,6 +302,7 @@ def _print_snapshot(snap):
         rows.append([label] + cells + ["n/a" if a is None else f"{a:.3f}"])
     print(render_table(["metric"] + ok + ["mean"], rows,
                        aligns=["l"] + ["r"] * (len(ok) + 1)))
+    _print_pooled(snap)
 
 
 def _paired(A_folds, B_folds, key):
@@ -306,6 +357,11 @@ def cmd_compare(tag_a: str, tag_b: str):
     print(f"\nSCORECARD compare:  {tag_a}  ->  {tag_b}")
     print("  DECISION RULE: a change is REAL only if the paired 95% CI across folds excludes 0.")
     print("  'noise (CI incl. 0)' means the change is not distinguishable from fold variation.")
+    print("  NOTE: the paired CI is built on DIFFERENCES, so its sensitivity is set by how")
+    print("  CONSISTENT a change is across folds (min detectable mean ~ 1.05 x SD of the effect,")
+    print("  6 folds). A uniform change is caught at any size; one that helps some folds and")
+    print("  hurts others can be large in the mean and still read as noise -- check the")
+    print("  per-fold column before trusting an aggregate verdict.")
 
     rows = []
     for key, (direction, label) in METRICS.items():
@@ -346,6 +402,20 @@ def cmd_compare(tag_a: str, tag_b: str):
               f"{tag_b}: {rb - rob:+.2f}   (closer to 0 is better)")
     print("\n  NOTE: 'RES approvals' alone is NOT a quality metric — Test 7.4.3 showed the model")
     print("  approves MORE than the oracle. Judge it by the over-approval gap above.")
+    # POOLED fate ECE, with the floor. The per-fold `fate_ece` row above is measured on ~21
+    # cells in 10 bins, where a PERFECTLY calibrated model scores 0.183 and clears the 0.169 bar
+    # only 26.9% of the time; pooled, the same model clears it 99.6% of the time
+    # (audit_metrics.py). Judge the calibration target here, not on the per-fold row.
+    print("\n  POOLED fate ECE (the resolvable form of the calibration target):")
+    pa_, pb_ = _print_pooled(A, f"  {tag_a}"), _print_pooled(B, f"  {tag_b}")
+    if pa_ and pb_:
+        print(f"\n    raw ECE   {pa_['ece']:.3f} -> {pb_['ece']:.3f}   "
+              f"({pb_['ece'] - pa_['ece']:+.3f})")
+        print(f"    EXCESS    {pa_['excess']:+.3f} -> {pb_['excess']:+.3f}   "
+              f"({pb_['excess'] - pa_['excess']:+.3f})   <- compare calibrators on THIS")
+        print("    (raw ECE also moves when a calibrator merely sharpens, because sharper")
+        print("     probabilities lower the floor; excess subtracts that off.)")
+
     print("\n  ACCEPT the change only if the TARGET metric says ACCEPT and no guard metric says")
     print("  REGRESSION. See MASTER_PLAN.md §7b for the pre-registered criteria per change.")
 
