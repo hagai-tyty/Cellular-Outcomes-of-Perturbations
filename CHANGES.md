@@ -11,6 +11,33 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-07-23 (latest) — Wrote the Stage 1.5 plan doc (harmonization & ΔAge zero-point audit)
+
+**Status:** ✅ Plan document committed. ⏳ The stage itself is **not run** — this is its
+pre-registration, nothing under `src/` or `tests/` is touched yet.
+
+Stage 1.5 existed only as an out-of-repo plan file; now `plans/STAGE_1_5_HARMONIZATION_AUDIT.md`
+records it in the repo. It is a **measurement-only** stage (0 lines change in `src/`) that sits
+between Stage 1 (closed) and Stage 2. It exists because four plan docs assert harmonization is
+"unit-tested" / "intercept cancellation proven" (`MASTER_PLAN:48`, `REF_ARCHITECTURE:20`,
+`STAGE_5:127`, `STAGE_6:143`) while **no test exercises `harmonize.py`** — the Stage 6 gate names
+a test that does not exist. Reading the module surfaced two concrete facts the audit pins:
+
+1. ΔAge cancels additive batch effects (`mu_d`, `mu_ref`, clock intercept) but carries a
+   per-dataset **scale gain** `sigma_ref/(sigma_d+EPS)` — so "batch-immune by construction" is an
+   overstatement, and Group B asserts the exact invariant instead.
+2. `_control_baseline` has a **silent fallback** ([aging.py:88](src/cellfate/data/aging.py)): a
+   donor in a chunk with no vehicle controls is self-centred, forcing its mean ΔAge toward 0.
+   Whether this fired on the real build is what distinguishes the ±12.7 yr per-donor offset being
+   real biology (Stage 2's premise) from an artefact — Group E checks it directly.
+
+The doc specifies the test groups (A: the promised intercept proof; B: the true scale invariant;
+C: fit/leak-safety; D: the ΔAge zero-point incl. the fallback; E: real-data replay of `plan_all`)
+and a `verify_stage1_5.py` gate mirroring `verify_1a.py`. No existing plan doc was modified —
+additive, in the style of `STAGE_1_DEVIATIONS.md`.
+
+---
+
 ## 2026-07-23 (latest) — Repaired the calibration target and re-scored Stage 1 against it
 
 **Status:** ✅ **Re-run on the data machine** (`rescore_results.zip`, commit `0003ff8`). 273
