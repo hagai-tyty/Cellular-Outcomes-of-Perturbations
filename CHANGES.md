@@ -84,6 +84,29 @@ is also structured (O1/O2 both 53 agree to 0.4 yr; only the age-0 neonates N2/N3
 clock's ~1–94 yr fitted range), so it may localise to 2 of 6 folds. This is a self-correction of my
 own framing, not of the M1 result — same shape as the D1 downgrade. Handoff: Stage 4 validation.
 
+### E1 EXECUTED — NO_TREND. Prediction falsified; escalation now supported on both axes
+
+`experiments/diag_e1_trajectory.py` (+13 branch tests, pre-registered and committed BEFORE the run
+in `3a81cb6`). Predicted PASS (moderate); result **`NO_TREND`**.
+
+- Primary (iPSC excluded): mean per-donor Spearman(age, day) **−0.064**, 95% CI **[−0.232, +0.104]**,
+  4/6 negative, every |rho| ≤ 0.28. Adults-only also NO_TREND (−0.055).
+- With-iPSC PASS (−0.179) **does not count** — carried by pluripotent endpoints (cell-type change,
+  not aging), which E1 excluded on purpose.
+
+M1 (absolute age) and E1 (within-donor change) now **agree**: on this data the frozen clock does not
+demonstrably read the aging axis, absolute or relative. The §8.4 NO_TREND branch fires — **the deep
+escalation stands**: ΔAge's target is unvalidated (Stage 4 / Stage 5); Stage 2's premise remains
+void as stated.
+
+Two caveats, so the null is neither over-read nor explained away: (1) null at n=6, but the per-donor
+rhos are weak and sign-inconsistent, so low power is not the story; (2) the monotonic metric may be
+mis-specified for Gill's **transient** (MPTR) protocol (OSKM withdrawn ~day 13 → non-monotonic
+trajectory) — a limitation of my pre-registration, not grounds to dismiss the result. Next step, to
+pre-register before running: **E1b** over the reprogramming phase only (days 0→~15). Stated guard:
+not a retry until something passes — a null E1b plus E1 is strong evidence against ΔAge validity.
+Until then ΔAge's rejuvenation signal is **NOT validated**. `src/` untouched.
+
 Also fixed while here: a pre-existing `N802` in `tests/test_diag_zero_point.py` that would have
 failed CI's `ruff check src/ tests/ scripts/`, and two dead imports in the diagnostic. **CI lint is
 still red from 11 other pre-existing errors elsewhere in `tests/` (e.g. `test_verify_1a.py:108`) —

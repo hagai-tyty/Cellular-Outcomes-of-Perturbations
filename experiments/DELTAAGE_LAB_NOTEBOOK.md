@@ -2808,3 +2808,57 @@ like M2.
   clock, rather than condemning the whole target.
 
 **Nothing in E1 changes `src/`.** `git diff --stat src/` must be empty when it finishes.
+
+## RESULT — E1 (EXECUTED 2026-07-25, data machine) — **NO_TREND. Prediction FALSIFIED.**
+
+`python experiments/diag_e1_trajectory.py "D:\Gill"` → `diag_e1_trajectory_results.json`.
+I predicted PASS (moderate). It did not.
+
+| donor | chrono | n pts | rho(age, day) | direction |
+|---|---|---|---|---|
+| N2 | 0 | 20 | **−0.231** | falls |
+| N3 | 0 | 20 | +0.065 | rises |
+| Y1 | 29 | 18 | **−0.276** | falls |
+| Y2 | 35 | 20 | −0.029 | ~flat |
+| O1 | 53 | 20 | −0.043 | ~flat |
+| O2 | 53 | 20 | +0.129 | rises |
+
+- **Primary (iPSC excluded): `NO_TREND`** — mean rho **−0.064**, 95% CI **[−0.232, +0.104]**, 4/6
+  negative. Every per-donor rho is **weak** (|rho| ≤ 0.28) and the signs are **inconsistent**.
+- **Adults-only:** `NO_TREND` (mean −0.055) — removing the neonates did not sharpen it.
+- **With-iPSC:** `PASS` (mean −0.179) — **but this does not rescue the result.** The only trend
+  appears when the pluripotent iPSC endpoints are included, and those are a **cell-type change, not
+  aging** — exactly the confound E1 excluded on purpose. It measures fibroblast→iPSC identity, not
+  the rejuvenation axis.
+
+### What this means — the escalation is now supported on BOTH axes
+
+M1 showed the clock fails on **absolute** age. E1 now shows it also does **not** show a clear
+**within-donor rejuvenation trajectory** — the quantity ΔAge is built from. So the two independent
+tests agree: **on this data the frozen clock does not demonstrably read the aging axis, absolute or
+relative.** The §8.4 branch for `NO_TREND` fires: **the deep escalation STANDS** — ΔAge's target is
+not validated on this data, which reaches into **Stage 4 (validation)** and **Stage 5 (what can be
+claimed)**. Stage 2's premise remains void as stated.
+
+### Two honest caveats, so the null is not over-read (and not explained away)
+
+1. **This is a null at n=6, not proof of absence.** The CI [−0.232, +0.104] fails to *establish* a
+   trend; it does not *rule out* a weak one. But the per-donor rhos are themselves weak and
+   sign-inconsistent, so "underpowered to see a strong trend" is not the explanation — there is no
+   strong within-donor trend to see.
+2. **The metric may be mis-specified for Gill's protocol — a limitation of my pre-registration, not
+   a reason to dismiss the result.** Gill 2022 is **maturation-phase *transient* reprogramming
+   (MPTR)**: OSKM is expressed ~13 days then **withdrawn**, after which cells re-differentiate. The
+   age trajectory is therefore **not monotonic** (down during reprogramming, back up during
+   maturation), and a monotonic Spearman over days 0→54 conflates the two phases and can wash a real
+   dip to zero. I should have accounted for this before pre-registering a monotonic test; I did not.
+
+### The disciplined next step — NOT license to fish
+
+Because of caveat 2, the question is not fully closed. **E1b** — Spearman over the *reprogramming
+phase only* (days 0→~15, before OSKM withdrawal), where the rejuvenation dip should live — is the
+right follow-up. **It must be pre-registered with its own bar before running.** Stating the guard
+explicitly: refining the test after a null is precisely the fishing pattern this project guards
+against, so **a null E1b would, together with E1, be strong evidence against ΔAge validity**, and
+E1b is not a retry until something passes. As of now, **the ΔAge rejuvenation signal is NOT
+validated**, and the burden is on a pre-registered E1b to change that.

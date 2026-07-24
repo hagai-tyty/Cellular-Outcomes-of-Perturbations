@@ -1,0 +1,74 @@
+{
+  "script": "diag_e1_trajectory",
+  "utc": "2026-07-24T22:59:12+00:00",
+  "bars": [
+    {
+      "id": "E1",
+      "bar": "paired 95% CI on the mean per-donor Spearman(age, day) excludes 0 and is negative",
+      "null": "a clock that reads nothing about the reprogramming axis (per-donor rho ~ 0)",
+      "pass_rate_if_intent_holds": 0.9995297989861898,
+      "resolvability": "CONDITIONAL on trend consistency across 6 donors (T4-style): a moderate, consistent trend passes ~99%; a heterogeneous one can read NO_TREND"
+    }
+  ],
+  "trajectory_meta": {
+    "n_samples": 124,
+    "n_ipsc": 6,
+    "excluded_ipsc": true,
+    "n_donors": 6
+  },
+  "verdict_primary_ipsc_excluded": {
+    "status": "NO_TREND",
+    "n_donors": 6,
+    "mean_rho": -0.06409121232624164,
+    "ci95": [
+      -0.23203064079533442,
+      0.10384821614285113
+    ],
+    "n_donors_negative": 4,
+    "per_donor": {
+      "N2": -0.2307152682957427,
+      "N3": 0.06505414122437335,
+      "O1": -0.04311727964871258,
+      "O2": 0.12859539544352874,
+      "Y1": -0.2756194095817549,
+      "Y2": -0.028744853099141716
+    },
+    "reason": "the age-vs-day trend is not distinguishable from a clock that reads nothing (mean rho -0.064, 95% CI [-0.232, +0.104], 4/6 negative)"
+  },
+  "verdict_adults_only": {
+    "status": "NO_TREND",
+    "n_donors": 4,
+    "mean_rho": -0.05472153672152011,
+    "ci95": [
+      -0.31969256771679433,
+      0.21024949427375408
+    ],
+    "n_donors_negative": 3,
+    "per_donor": {
+      "O1": -0.04311727964871258,
+      "O2": 0.12859539544352874,
+      "Y1": -0.2756194095817549,
+      "Y2": -0.028744853099141716
+    },
+    "reason": "the age-vs-day trend is not distinguishable from a clock that reads nothing (mean rho -0.055, 95% CI [-0.320, +0.210], 3/4 negative)"
+  },
+  "verdict_with_ipsc": {
+    "status": "PASS",
+    "n_donors": 6,
+    "mean_rho": -0.17924251518714981,
+    "ci95": [
+      -0.33381173725938723,
+      -0.024673293114912398
+    ],
+    "n_donors_negative": 6,
+    "per_donor": {
+      "N2": -0.33486096248860264,
+      "N3": -0.033290271124597925,
+      "O1": -0.14882709443937894,
+      "O2": -0.026110016568312095,
+      "Y1": -0.374401146263719,
+      "Y2": -0.1579656002382882
+    },
+    "reason": "predicted age falls with reprogramming day; the clock tracks the rejuvenation axis (mean rho -0.179, 95% CI [-0.334, -0.025], 6/6 negative)"
+  }
+}

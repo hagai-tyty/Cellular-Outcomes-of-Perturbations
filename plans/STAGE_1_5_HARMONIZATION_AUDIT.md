@@ -34,6 +34,8 @@ report. The pre-registration text in §0–§4 is left **exactly as written**; o
 | §5.4 **Phase 1** — M1/M2/M3 measurements | ✅ **EXECUTED — M1 FAILED. ACTION: ESCALATE** (§7). M2's verdict was a stub and is being fixed; M3 indeterminate as predicted |
 | §5.4 Phases 2–4 | ⛔ **BLOCKED by the M1 failure** — do not proceed until the clock's validity is settled |
 | Does the clock read chronological age on this data? | ❌ **NO at the extremes** — 11.8 yr contrast vs a 53 yr true gap; two age-0 donors read 62 yr apart (§7) |
+| §8.3 **E1** — does the clock track within-donor age *change* (bears on ΔAge)? | ❌ **NO_TREND** (§8.5) — mean rho −0.064, CI [−0.232, +0.104]. Escalation now supported on both absolute (M1) and relative (E1) axes. Caveat: monotonic metric vs Gill's transient protocol → **E1b** to pre-register |
+| Is ΔAge's target validated on this data? | ❌ **not as of E1** — burden on a pre-registered E1b (reprogramming-phase-only) |
 
 ---
 
@@ -589,3 +591,29 @@ materially different, and much smaller, problem than "the clock is broken." If t
 
 **Handoff:** this belongs to Stage 4's validation work; recorded here because Stage 1.5 is where the
 failure surfaced. Nothing in §8 touches `src/`.
+
+## 8.5 E1 EXECUTED (2026-07-25) — **NO_TREND. Escalation stands, now on both axes.**
+
+Full record + per-donor table in `experiments/DELTAAGE_LAB_NOTEBOOK.md` under *RESULT — E1*.
+Prediction was PASS (moderate); **falsified.**
+
+- **Primary (iPSC excluded): `NO_TREND`** — mean per-donor Spearman(age, day) **−0.064**, 95% CI
+  **[−0.232, +0.104]**, 4/6 negative, every |rho| ≤ 0.28. Adults-only also `NO_TREND` (−0.055).
+- **With-iPSC `PASS` (−0.179) does not count** — the trend is carried by pluripotent endpoints, a
+  cell-type change, not aging. E1 excluded them for exactly this reason.
+
+**M1 (absolute) and E1 (within-donor change) now agree:** on this data the frozen clock does not
+demonstrably read the aging axis, absolute *or* relative. The §8.4 `NO_TREND` branch fires — the
+**deep escalation stands**: ΔAge's target is unvalidated, reaching into Stage 4 / Stage 5; Stage 2's
+premise remains void as stated.
+
+**Two caveats, recorded so the null is neither over-read nor explained away:** (1) it is a null at
+n=6, but the per-donor rhos are weak and sign-inconsistent, so low power is not the story; (2) the
+monotonic metric may be mis-specified for Gill's **transient** (MPTR) protocol — OSKM withdrawn ~day
+13, so the age trajectory is non-monotonic and a 0→54 Spearman conflates the reprogramming dip with
+maturation recovery. That is a limitation of my pre-registration, not grounds to dismiss the result.
+
+**Next (pre-register before running): E1b** — Spearman over the reprogramming phase only (days
+0→~15), where the dip should live. Guard stated in the notebook: this is not a retry until something
+passes; a null E1b plus E1 is strong evidence against ΔAge validity. Until then, **ΔAge's
+rejuvenation signal is NOT validated.**
