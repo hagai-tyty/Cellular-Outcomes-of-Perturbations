@@ -21,7 +21,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from audit_metrics import MIN_PASS_RATE, bar_verdict, ece, resolvability  # noqa: E402
+from audit_metrics import MIN_PASS_RATE, bar_verdict, ece  # noqa: E402
 
 TRIALS = 3000
 SEED = 0

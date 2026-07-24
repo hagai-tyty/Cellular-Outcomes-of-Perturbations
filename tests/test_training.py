@@ -230,7 +230,7 @@ def test_e2e_calibration_artifacts_valid(trained_bundle):
 # --------------------------------------------------------------------------- #
 # Stage 1b -- cross-donor calibration                                         #
 # --------------------------------------------------------------------------- #
-def test_platt_recovers_a_miscaled_and_a_BIASED_p_safe():
+def test_platt_recovers_a_miscaled_and_a_biased_p_safe():
     """The bias case is the one a temperature provably cannot fix.
 
     A scalar can only sharpen or soften; it cannot shift the safe/unsafe boundary. Stage 1's own

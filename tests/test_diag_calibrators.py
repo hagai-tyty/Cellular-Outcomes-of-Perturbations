@@ -17,8 +17,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from diag_calibrators import (  # noqa: E402
-    FAMILIES, _fit_identity, _fit_isotonic, _fit_logistic_on_p, _fit_logit_platt,
-    ece, effective_n, lodo_scores,
+    FAMILIES,
+    _fit_identity,
+    _fit_isotonic,
+    _fit_logit_platt,
+    ece,
+    effective_n,
+    lodo_scores,
 )
 
 

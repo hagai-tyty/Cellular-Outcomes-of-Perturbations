@@ -13,7 +13,6 @@ import sys
 from pathlib import Path
 
 import numpy as np
-import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -58,9 +57,9 @@ def test_a_single_donor_pool_still_reconstructs():
 # ------------------------------------------------------------------ round trip ---- #
 def test_pool_reader_round_trips_a_real_xstats(tmp_path):
     """Write a pool with the real save_xstats, read it back through _pool."""
-    from cellfate.training.xdonor_calib import XDonorStats, save_xstats
-
     import dump_diag_bundle
+
+    from cellfate.training.xdonor_calib import XDonorStats, save_xstats
 
     rng = np.random.default_rng(0)
     n = 12
@@ -88,9 +87,9 @@ def test_pool_reader_round_trips_a_real_xstats(tmp_path):
 
 def test_pool_reader_flags_unreconstructible_labels_instead_of_crashing(tmp_path):
     """Counts describing fewer rows than the fate arrays: labels must be withheld, not invented."""
-    from cellfate.training.xdonor_calib import XDonorStats, save_xstats
-
     import dump_diag_bundle
+
+    from cellfate.training.xdonor_calib import XDonorStats, save_xstats
 
     n = 10
     xs = XDonorStats(

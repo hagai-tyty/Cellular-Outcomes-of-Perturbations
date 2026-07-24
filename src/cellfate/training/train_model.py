@@ -26,7 +26,7 @@ from cellfate.common.schemas import ResParams
 from cellfate.models import CellFateNet
 
 from .bundle import assemble_bundle
-from .calibrate import fit_platt_binary, fit_temperature
+from .calibrate import fit_platt_binary
 from .conformal import coverage, fit_conformal
 from .dataset import AM_I, FP_I, YA_I, YC_I, load_split_tensors
 from .metrics import ece, soft_nll

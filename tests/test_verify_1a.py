@@ -105,7 +105,7 @@ def test_corpus_is_skipped_across_the_dominant_range(corpus_frac):
     assert "D0" in bulk["N2"]
 
 
-def test_a_donor_just_under_the_floor_is_NOT_skipped():
+def test_a_donor_just_under_the_floor_is_not_skipped():
     """The documented gap, pinned so a change to the threshold is a deliberate act.
 
     A donor at 49% of the split is KEPT -- holding it out still leaves 51%, above the floor --

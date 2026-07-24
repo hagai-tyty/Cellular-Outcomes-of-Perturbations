@@ -11,11 +11,9 @@ import json
 import sys
 from pathlib import Path
 
-import pytest
-
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from dump_pool_diag import read_fold, verdict  # noqa: E402
+from dump_pool_diag import verdict  # noqa: E402
 
 
 # ------------------------------------------------------------------ verdict ---- #

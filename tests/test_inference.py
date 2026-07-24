@@ -535,7 +535,7 @@ def test_predictor_refuses_a_mode_the_bundle_was_never_calibrated_for(bundle, tm
     Predictor(copy_root, mode="mc_dropout", T=4)
 
 
-def test_pre_stage1_bundles_measure_IDENTICALLY_under_the_new_code(bundle, tmp_path):
+def test_pre_stage1_bundles_measure_identically_under_the_new_code(bundle, tmp_path):
     """`scorecard/baseline.json` was measured with the pre-Stage-1 library. Comparing it to a
     Stage 1 snapshot is only honest if the new code reproduces the OLD numbers on an OLD bundle
     -- otherwise the comparison silently mixes a library change into the measurement.
