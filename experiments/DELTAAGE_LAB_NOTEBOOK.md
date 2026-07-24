@@ -2579,137 +2579,14 @@ zero** — the premise Stage 2 spends wet-lab money on is weaker than "establish
 (`git diff --stat src/` empty). Whether a single-sample baseline is adequate is a Stage 2 design
 question — and it is precisely what Stage 2's k≈3 reference cells per donor would fix.
 
-## FIX PLAN — written AFTER the Group A–D and Group E results (2026-07-24)
+## FIX PLAN — recorded in the Stage 1.5 plan document
 
-**This is not a pre-registration.** It is the plan formed *in response to* the results recorded
-above, after following the Group E census into the Gill metadata. It is recorded here as part of
-Stage 1.5 rather than as a new document; `plans/STAGE_1_5_HARMONIZATION_AUDIT.md` is left untouched
-so the original pre-registration stays auditable beside what actually happened.
-**Status: PLAN ONLY — nothing below has been executed.**
+Following the Group E census into the Gill metadata produced three findings (a cross-batch
+zero-point, invisible baseline replication, and unused `donor age` ground truth) and a fix plan.
 
-### The number that makes this urgent
+**The plan lives at the end of `plans/STAGE_1_5_HARMONIZATION_AUDIT.md`, section 5** — appended
+after the original pre-registration, never substituted for it, so the plan as written and what
+actually happened stay auditable side by side. It is kept in one place only, so the two copies
+cannot drift.
 
-The clock ships its own cross-validated error in its metadata
-(`configs/clocks/fleischer_clock.json`, Fleischer 2018 / GSE113957, 133 samples, 33,155 weights):
-
-```
-cv_mae_years = 12.27
-```
-
-The per-donor offset Stage 2 exists to correct is **±12.7 yr (ridge) / 13.12 yr (model mean |shift|)**.
-
-> **The offset attributed to donor biology is the same magnitude as ONE clock measurement's error —
-> and every donor's zero-point IS exactly one clock measurement.**
-
-That does not prove the offset is noise. It proves the two are **currently indistinguishable**, and
-that committing Stage 2's wet-lab budget on the assumption that it is biology is unjustified until
-measured.
-
-### Three findings, and why each has to be fixed
-
-**D1 — the zero-point is CROSS-BATCH (a real defect).** All six baselines are `*_Fib_Sendai_`**`Exp2`**,
-but treatment samples span both experiments — per donor 10 × Exp1 vs 8–10 × Exp2:
-
-| donor | treatment n | Exp1 | Exp2 | share measured against a cross-batch baseline |
-|---|---|---|---|---|
-| N2 / N3 / O1 / O2 / Y2 | 20 | 10 | 10 | **50%** |
-| Y1 | 18 | 10 | 8 | **56%** |
-
-So for ~half of every donor's samples, `ΔAge = age(Exp1) − age(Exp2 baseline)`. Any Exp1↔Exp2
-difference is injected **into the definition of `y_age` itself**, not into a downstream metric —
-every number since inherits it, and nothing records which batch a baseline came from.
-
-**D2 — baseline replication is INVISIBLE (instrumentation gap).** `_control_baseline`
-(`aging.py:81-90`) averages whatever controls exist and records nothing — not the count, not the
-composition. Stage 1.5 made `n=0` visible; **`n=1` is still silent.** Same class of defect as the
-two that already cost real time: the silent fallback, and `verify_1a` grading PASS on a warning it
-had itself printed.
-
-**D3 — `donor age` ground truth is UNUSED.** GEO declares it and nothing parses it
-(`grep -rn "donor age" src/ local_runners/ scripts/` → zero hits); `_parse_series` reads only
-`days of reprogramming` and `cell type`.
-
-| donor | N2 | N3 | Y1 | Y2 | O1 | O2 |
-|---|---|---|---|---|---|---|
-| chronological age | 0 | 0 | 29 | 35 | 53 | 53 |
-
-It is the only external ground truth available, and it can test what the whole ΔAge target rests
-on: **does this clock read age on this data at all?** At `cv_mae ≈ 12.3 yr` the test is well powered
-at the extremes (0 vs 53 ≈ 4× the error) and deliberately underpowered in the middle (29 vs 35 is
-half the error) — so only the extreme contrast may be claimed.
-
-### Deliberately LEFT ALONE, and why
-
-1. **The ΔAge definition (control-relative).** The design is right; the data feeding it is the
-   problem. Redefining the target would invalidate every prior result and all four guards.
-2. **The clock — validate, never refit.** A frozen external artefact with published provenance.
-   Reweighting it to improve our numbers is fitting the test. Measure it, report it, including if
-   it fails.
-3. **`models/`, `training/`, `evaluation/`, and all Stage 1 calibration.** Stage 1 is closed at
-   PARTIAL; re-opening it mixes changes and destroys the four-run `+0.000` guard record.
-4. **Do NOT drop the Exp1 samples to "solve" D1** — that discards ~50% of the data by a silent
-   selection rule, which is worse than the confound. Model or match the batch; never delete.
-5. **Do NOT recruit `Failing to reprogram fibroblast` (47 samples) as extra baseline.** They have
-   been through reprogramming. Tempting for replication, wrong biologically.
-6. **Every prior record.** Annotate, never rewrite.
-
-### Plan — sequenced so the cheap measurements decide whether the expensive change is needed
-
-It is entirely possible the answer is *"the clock and the baseline are the only real problems"* and
-Phase 3 shrinks to uncertainty-propagation plus documentation. The plan is built to permit that
-answer rather than assume the large fix.
-
-**Phase 1 — measurements only; nothing rebuilt. The decisive phase.**
-New read-only `experiments/diag_zero_point.py` (same shape as `dump_pool_diag.py` /
-`diag_calibrators.py`: pure functions, printed table, JSON dump). Predictions pre-registered here
-*before* it runs.
-- **M1** — does the clock track chronological age? `LinearClock.predict_age` on the six day-0
-  baselines vs `[0, 0, 29, 35, 53, 53]`, against the clock's own 12.27 yr CV MAE.
-- **M2** — is there an Exp1/Exp2 batch effect? Matched `(donor, day, marker)` comparison. This
-  measures the offset D1 injects.
-- **M3** — bound the share of the ±12.7 yr explainable by the single unreplicated Exp2 baseline.
-
-| M1 | M2 | Action |
-|---|---|---|
-| separates 0 from 53 | no batch effect | baselines informative and unconfounded → **Phase 2 only**; Stage 2 proceeds |
-| separates 0 from 53 | **batch effect present** | D1 real and quantified → **Phase 2 + Phase 3** |
-| **does NOT separate 0 from 53** | either | **escalate** — the clock does not read age on this data; ΔAge's target is unvalidated. Reaches past Stage 1.5 into Stage 4, and Stage 2's premise is void as stated |
-
-**Phase 2 — instrumentation. Value-neutral, worth doing regardless.**
-
-| File | Change |
-|---|---|
-| `data/sources.py` (`_parse_series`) | also parse `donor age`, stamp into `obs` |
-| `data/aging.py` (`_control_baseline` / `delta_age`) | record per-line baseline **count + composition** (n, batch, marker). Recording only — arithmetic untouched |
-| `data/build_dataset.py` | persist that composition into chunk metrics |
-| `verify_stage1_5.py` | flag `n_baseline < k` **and cross-batch baselines** — turn D1/D2 into a gate that can fail |
-
-**Hard guard:** ΔAge must be **bit-identical** before/after (`max|Δ| == 0.00e+00`). It records, it
-does not compute. If any ΔAge moves, the change is wrong — revert, do not rationalise. This is why
-Phase 2 needs no re-score and is safe even if Phase 3 never happens.
-
-**Phase 3 — the zero-point fix. Only the option Phase 1 licenses.**
-A batch-matched baseline is **impossible** (no Exp1 day-0 exists). Realistic candidates:
-- **(a)** estimate the Exp1↔Exp2 offset from matched samples and remove it before ΔAge — targets D1;
-- **(b)** shrinkage baseline `λ·(donor day-0) + (1−λ)·(age-anchored grand mean)` using the newly
-  parsed `donor age` — targets the `n=1` variance;
-- **(c)** propagate baseline uncertainty into `sigma_age`, which today covers prediction spread but
-  **not** the error of the zero-point it is measured against — so intervals are overconfident by
-  construction. Cheapest honest option; possibly sufficient alone.
-
-Exactly **one** ships, as its own pre-registered Change with its own bar and tag. It changes
-`y_age`, so it needs a **rebuild + full re-score**, and the four guards will legitimately move —
-the `+0.000` record restarts, stated in advance.
-
-**Phase 4 — re-score, then rule on Stage 2's framing**, which this work has already shifted: from
-*"correct a known biological offset"* to *"replicate the baseline so we can determine whether the
-offset exists."* Stage 2's k≈3 reference cells are the right intervention either way; the
-justification changes, not the action.
-
-### Verification
-
-| Phase | Verified by |
-|---|---|
-| 1 | read-only script + JSON; pure functions unit-tested (`tests/test_diag_zero_point.py`) over **every** branch — a branch that never executes is not a check |
-| 2 | full `pytest -q` green; **`y_age` bit-identical** on a rebuilt fold; `verify_stage1_5.py` shows the new columns; `ruff check src/ tests/ scripts/` clean |
-| 3 | rebuild + `scorecard.py snapshot` + `compare baseline <tag>`; the new bar passes `audit_metrics.bar_verdict` **before** the run (ground rule §5b) and gets an entry in `tests/test_bars_resolvable.py` |
+**Status: PLAN ONLY — nothing in it has been executed** (`git diff --stat src/` empty).
