@@ -11,6 +11,50 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-07-24 (review) — Independently reviewed the Stage 1.5 work; verified it, then tightened its plan
+
+**Status:** ✅ Review complete, 303 tests pass, `src/` untouched. Recorded as
+`STAGE_1_5_HARMONIZATION_AUDIT.md` **§6**. No code changed by this entry.
+
+The Stage 1.5 tests, verifier, Group E run and fix plan (5 commits) were re-checked **against the
+tree rather than taken on trust**.
+
+**Every checkable claim held:** clock `cv_mae_years` = **12.2688** (claimed 12.27); `donor age`
+genuinely unused (0 grep hits; `_parse_series` reads only `days of reprogramming` + `cell type`);
+Exp1/Exp2 identity genuinely discarded (docstring only); `git diff --stat src/` **empty** across all
+5 commits; **21/21** new tests and **303** total pass; Group E **51/51** chunks with the fallback
+never fired, **covering all six LOOCV donors** so the PASS is not vacuous; every Gill donor carries
+**exactly 1 control**.
+
+**The tests are not decorative — they were mutation-tested.** Four defects were injected into `src/`
+(variance floor removed; control branch killed; `sigma_ref` dropped from the Gill Projection;
+`_align` made positional) and each was caught by the right test. `src/` restored after each.
+
+**§5 corrected the Stage 1.5 doc, and was right to.** §2 Group A had specified intercept
+cancellation as *bit-identical*; it is not — `(age+b) − mean(age_ctrl+b)` re-rounds, so the
+cancellation is numerical (~1e-14), not symbolic. Reproduced independently.
+
+**One concern raised, then dismissed by checking:** the verifier counts controls per *chunk* while
+production groups per *cell_line within* a chunk. Every source emits one chunk per cell line by
+construction (`sources.py:364/459/507`), so the check is exactly equivalent — not a defect, though
+the invariant is unasserted (tightening T5).
+
+**Five gaps closed in the fix plan (§6.2):**
+
+| | Gap | Tightening |
+|---|---|---|
+| T1 | Phase 1's measurements had implicit bars and skipped `bar_verdict` — violating the §5b ground rule adopted the day before | each of M1–M3 gets a pre-registered bar, a resolvability check and an entry in `tests/test_bars_resolvable.py` **before** running. M1's power stated: SE(diff) 12.27 yr vs a 53 yr contrast ≈ 4.3σ |
+| T2 | M3 was measured but appeared in no decision | given its own decision table; it is the quantity that should *size* Phase 3 |
+| T3 | option (c) is largely **redundant** — `sigma_scale_factor` already fits `sigma_age` to residuals that contain the baseline error | keep only if made **per-donor**; as written it should be struck |
+| T4 | option (a) needs matched Exp1/Exp2 pairs that may not exist; and Phase 3 changes `y_age`, so it reopens **both Stage 1 targets**, not just the guards | M2 must report pair counts first, "(a) impossible" is a permitted outcome, and Stage 1's PARTIAL verdict must be declared re-openable **before** Phase 3 |
+| T5 | the gate's chunk↔line assumption is unasserted | group by `raw.obs["cell_line"]` (one line, with Phase 2) |
+
+**Verdict:** the work is sound and the plan is now concrete. **Phase 1 is the correct next action** —
+read-only, cheap, and able to escalate past this whole stage if M1 shows the clock does not read age
+on this data.
+
+---
+
 ## 2026-07-24 — Stage 1.5: the harmonization claim made true, and the ΔAge zero-point gate built
 
 **Status:** ✅ **FULLY EXECUTED on the data machine.** Groups A–D: 21 new tests pass, full suite

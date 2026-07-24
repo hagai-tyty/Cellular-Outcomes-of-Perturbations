@@ -323,3 +323,99 @@ right intervention either way; the justification changes, not the action.
 | 1 | read-only script + JSON; pure functions unit-tested (`tests/test_diag_zero_point.py`) over **every** branch — a branch that never executes is not a check |
 | 2 | full `pytest -q` green; **`y_age` bit-identical** on a rebuilt fold; `verify_stage1_5.py` shows the new baseline-composition columns; `ruff check src/ tests/ scripts/` clean |
 | 3 | rebuild + `scorecard.py snapshot --tag <new>` + `compare baseline <new>`; the new bar passes `audit_metrics.bar_verdict` **before** the run (ground rule §5b) and is registered in `tests/test_bars_resolvable.py` |
+
+---
+
+# 6. INDEPENDENT REVIEW OF §5 (2026-07-24) — verified, then tightened
+
+> §5 was produced on the data machine. Everything in it was **re-checked against the tree rather
+> than taken on trust**, including by breaking the code to confirm the new tests can fail. §5 is
+> left exactly as written; this section records what verification found and the gaps it closed.
+
+## 6.1 Verification — every checkable claim held
+
+| Claim in §5 | How checked | Result |
+|---|---|---|
+| clock `cv_mae_years = 12.27` | read `configs/clocks/fleischer_clock.json` | ✅ **12.2688**, 133 samples, GSE113957 |
+| `donor age` unused, 0 hits | `grep -rn` over `src/ local_runners/ scripts/` | ✅ exact; `_parse_series` reads only `days of reprogramming` + `cell type` |
+| Exp1/Exp2 identity discarded | grep `sources.py` | ✅ appears only in a docstring example, never parsed into `obs` |
+| `git diff --stat src/` empty | diff over the 5 commits | ✅ **`src/` untouched**; only docs, tests, verifier |
+| Groups A–D 21/21, suite 303 | ran both | ✅ **21/21**, ✅ **303 passed** |
+| Group E 51/51, fallback never fired | read `verify_stage1_5_results.json` | ✅ and **all six LOOCV donors present** — the PASS is not vacuous |
+| every Gill donor has exactly 1 control | per-chunk census in the JSON | ✅ N2/N3/O1/O2/Y2 = 1 of 21, Y1 = 1 of 19 |
+
+**The tests were mutation-tested — they are not decorative.** Four deliberate defects were injected
+and `src/` restored after each; each was caught by the right test:
+
+| Injected defect | Caught by |
+|---|---|
+| variance floor removed | `test_variance_floor_lifts_every_sigma_to_at_least_the_median` |
+| control branch killed (always self-centre) | `test_control_baseline_matches_the_raw_control_mean_when_controls_exist` |
+| `sigma_ref` dropped from the Gill Projection | `test_the_gain_actually_differs_between_datasets_so_it_is_not_immune` |
+| `_align` made positional (ignores gene names) | `test_align_places_permuted_and_missing_genes_in_the_right_columns` |
+
+**§5 corrected this document, and the correction is right.** §2 Group A specified intercept
+cancellation as **bit-identical**; it is not. `(age+b) − mean(age_ctrl+b)` re-rounds, so the
+cancellation is numerical (~1e-14), not symbolic. Independently reproduced. **§2 was wrong; the
+implementation is right.**
+
+**One concern raised and dismissed by checking.** The verifier counts controls **per chunk**, while
+production `_control_baseline` groups per `cell_line` *within* a chunk — so a mixed-line chunk could
+mask a fallback. Checked: every source emits one chunk per cell line by construction
+(`sources.py:364`, `:459`, `:507`), so chunk↔line is 1:1 and the check is exactly equivalent. **Not
+a defect** — but the invariant is nowhere asserted (see T4).
+
+## 6.2 Gaps found in the §5.4 plan, and the tightenings that close them
+
+**T1 — Phase 1 does not comply with the ground rule this project just adopted.** §5.5 routes only
+*Phase 3* through `audit_metrics.bar_verdict`. But M1/M2/M3 each carry an implicit bar ("separates
+0 from 53"), and `REF_GROUND_RULES.md §5b` requires **every** bar to be shown resolvable *before*
+the run. M1 is the one that matters: with 2 samples at age 0 and 2 at 53, `SE(diff) = 12.27·√(1/2+1/2)
+= 12.27 yr` against a 53 yr contrast — ~4.3σ, comfortably powered. **That is the calculation §5.4
+asserts qualitatively and must instead register:** each of M1–M3 gets a pre-registered bar, a
+`bar_verdict` check, and an entry in `tests/test_bars_resolvable.py` **before** `diag_zero_point.py`
+runs. If a measurement has no resolvable bar, it is a description, not a test.
+
+**T2 — M3 is measured but decides nothing.** The §5.4 decision table is M1 × M2 only; M3 ("bound
+the share of the ±12.7 yr explained by the single unreplicated baseline") has no row. M3 is the
+quantity that should *size* Phase 3, so it needs a decision role:
+
+| M3 result | Consequence |
+|---|---|
+| baseline noise explains **most** of the offset | Stage 2's premise is reframed, not merely re-justified: there may be no donor-biology offset to correct. Phase 3 becomes **required**, and option (b) leads |
+| explains **little** | the offset survives as biology-or-batch; Phase 3 is driven by M2/D1 instead, option (a) leads |
+| **indeterminate** at n=6 | say so and stop — an underpowered bound is not a finding. Record it and let Stage 2's extra donors settle it |
+
+**T3 — option (c) is partly redundant with work Stage 1 already did.** §5.4 offers "propagate
+baseline uncertainty into `sigma_age`" as the cheapest option. But `sigma_scale_factor`
+(`xdonor_calib.py:374`) already fits `sigma_age` to the **true out-of-donor residuals**, and those
+residuals are `|pred − y_age|` where `y_age` *already contains* the baseline error. So the baseline
+error is **already absorbed in magnitude**, on average, by `sigma_scale`. Option (c) therefore adds
+nothing as stated. It adds value **only if made per-donor** — scaling each donor's interval by the
+quality of *its own* baseline (n, batch match), which is exactly what a single global multiplier
+cannot express. **Restated that way it stays on the menu; as written it should be struck.**
+
+**T4 — two unstated preconditions.**
+- **Option (a) may not be estimable.** It needs matched `(donor, day, marker)` samples spanning
+  Exp1/Exp2. If no such pairs exist, the Exp1↔Exp2 offset is unidentifiable and (a) is off the
+  menu regardless of M2. **M2 must report pair counts first**, and the plan must permit "(a) is
+  impossible" as an outcome.
+- **Phase 3 reopens Stage 1's closed verdict.** §5.4 states the four guards will move. It does not
+  state that changing `y_age` also moves **both Stage 1 targets** — `conformal_coverage` (PASS) and
+  `fate_ece` (MISS) are computed against `y_age`. Stage 1's PARTIAL verdict would need re-stating,
+  not just its guards. That is acceptable but must be declared **before** Phase 3, not discovered
+  after.
+
+**T5 — cheap hardening for the gate (do with Phase 2).** `verify_stage1_5.py` should assert the
+chunk↔line invariant it silently relies on (group by `raw.obs["cell_line"]` rather than the chunk's
+metadata label), so the gate cannot weaken silently if a future source emits mixed-line chunks. One
+line; no behaviour change today.
+
+## 6.3 Standing verdict
+
+§5 is **accepted as sound work**: the tests are real, the Group E result is meaningful and
+non-vacuous, the discipline held (`src/` untouched), and the reasoning corrected this document
+where it was wrong. The §5.4 plan is **directionally right and now concrete** with T1–T5 folded in.
+
+**Phase 1 remains the correct next action** — it is read-only, cheap, and genuinely decisive: M1
+can escalate past this entire stage if the clock does not read age on this data.
