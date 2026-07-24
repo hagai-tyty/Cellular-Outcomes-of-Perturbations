@@ -1,0 +1,475 @@
+{
+  "script": "verify_stage1_5",
+  "utc": "2026-07-24T11:54:09+00:00",
+  "gse_dir": "D:\\GSE242423",
+  "gill_dir": "D:\\Gill",
+  "verdict": {
+    "status": "PASS",
+    "reason": "every one of 51 scanned chunks with perturbed cells also carries >=1 control; the zero-point is control-relative throughout.",
+    "n_chunks": 51,
+    "n_scanned": 51,
+    "n_errored": 0,
+    "fallback_chunks": []
+  },
+  "chunks": [
+    {
+      "chunk_id": "reprogramming:HFF:b0",
+      "cell_line": "HFF",
+      "n_cells": 981,
+      "n_control": 112,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b1",
+      "cell_line": "HFF",
+      "n_cells": 981,
+      "n_control": 112,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b2",
+      "cell_line": "HFF",
+      "n_cells": 981,
+      "n_control": 112,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b3",
+      "cell_line": "HFF",
+      "n_cells": 981,
+      "n_control": 112,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b4",
+      "cell_line": "HFF",
+      "n_cells": 981,
+      "n_control": 112,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b5",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b6",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b7",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b8",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b9",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b10",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b11",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b12",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b13",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b14",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b15",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b16",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b17",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b18",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b19",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b20",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b21",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b22",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b23",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b24",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b25",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b26",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b27",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b28",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b29",
+      "cell_line": "HFF",
+      "n_cells": 980,
+      "n_control": 111,
+      "n_perturbed": 869,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b30",
+      "cell_line": "HFF",
+      "n_cells": 979,
+      "n_control": 111,
+      "n_perturbed": 868,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b31",
+      "cell_line": "HFF",
+      "n_cells": 979,
+      "n_control": 111,
+      "n_perturbed": 868,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b32",
+      "cell_line": "HFF",
+      "n_cells": 979,
+      "n_control": 111,
+      "n_perturbed": 868,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b33",
+      "cell_line": "HFF",
+      "n_cells": 979,
+      "n_control": 111,
+      "n_perturbed": 868,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b34",
+      "cell_line": "HFF",
+      "n_cells": 979,
+      "n_control": 111,
+      "n_perturbed": 868,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b35",
+      "cell_line": "HFF",
+      "n_cells": 979,
+      "n_control": 111,
+      "n_perturbed": 868,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b36",
+      "cell_line": "HFF",
+      "n_cells": 979,
+      "n_control": 111,
+      "n_perturbed": 868,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b37",
+      "cell_line": "HFF",
+      "n_cells": 979,
+      "n_control": 111,
+      "n_perturbed": 868,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b38",
+      "cell_line": "HFF",
+      "n_cells": 979,
+      "n_control": 111,
+      "n_perturbed": 868,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b39",
+      "cell_line": "HFF",
+      "n_cells": 979,
+      "n_control": 111,
+      "n_perturbed": 868,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b40",
+      "cell_line": "HFF",
+      "n_cells": 979,
+      "n_control": 111,
+      "n_perturbed": 868,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b41",
+      "cell_line": "HFF",
+      "n_cells": 979,
+      "n_control": 111,
+      "n_perturbed": 868,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b42",
+      "cell_line": "HFF",
+      "n_cells": 979,
+      "n_control": 111,
+      "n_perturbed": 868,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b43",
+      "cell_line": "HFF",
+      "n_cells": 979,
+      "n_control": 111,
+      "n_perturbed": 868,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:HFF:b44",
+      "cell_line": "HFF",
+      "n_cells": 979,
+      "n_control": 111,
+      "n_perturbed": 868,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:N2",
+      "cell_line": "N2",
+      "n_cells": 21,
+      "n_control": 1,
+      "n_perturbed": 20,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:N3",
+      "cell_line": "N3",
+      "n_cells": 21,
+      "n_control": 1,
+      "n_perturbed": 20,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:O1",
+      "cell_line": "O1",
+      "n_cells": 21,
+      "n_control": 1,
+      "n_perturbed": 20,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:O2",
+      "cell_line": "O2",
+      "n_cells": 21,
+      "n_control": 1,
+      "n_perturbed": 20,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:Y1",
+      "cell_line": "Y1",
+      "n_cells": 19,
+      "n_control": 1,
+      "n_perturbed": 18,
+      "fallback_fired": false,
+      "error": null
+    },
+    {
+      "chunk_id": "reprogramming:Y2",
+      "cell_line": "Y2",
+      "n_cells": 21,
+      "n_control": 1,
+      "n_perturbed": 20,
+      "fallback_fired": false,
+      "error": null
+    }
+  ]
+}

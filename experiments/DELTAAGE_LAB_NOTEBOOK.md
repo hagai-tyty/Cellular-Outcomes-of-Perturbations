@@ -2465,3 +2465,116 @@ offline prediction at full precision.
 
 The re-score therefore stands as an executed, reproduced result — not a local prediction awaiting
 confirmation. **Stage 1's verdict is final: PARTIAL**, on the resolvable form of the metric.
+
+---
+
+# STAGE 1.5 — Harmonization & ΔAge zero-point audit (2026-07-24)
+
+**Plan:** `plans/STAGE_1_5_HARMONIZATION_AUDIT.md`. **Measurement only — `src/` untouched.**
+Purpose: make true a claim four plan docs already assert ("unit-tested; intercept cancellation
+proven"), and settle whether the ±12.7 yr per-donor offset Stage 2 is built on is real biology or
+an artefact of the silent no-control fallback at `aging.py:88`.
+
+## What was built
+
+| File | Contents |
+|---|---|
+| `tests/test_harmonize.py` (new, 21 tests) | Groups A–D synthetic proofs + every branch of the Group E decision function |
+| `verify_stage1_5.py` (new) | the runnable gate: a **pure** `decide_verdict()` + a read-only real-data replay that censuses controls per chunk |
+
+## RESULT — Groups A–D (synthetic, EXECUTED 2026-07-24)
+
+**21/21 pass; full suite 303 pass; ruff clean.** Before this, **zero** test files imported
+`harmonize.py`, so `STAGE_6:143`'s acceptance gate named a test that could never fail and
+`STAGE_5:127` promised a reviewer a proof that did not exist.
+
+| Group | Established |
+|---|---|
+| **A** | the clock intercept, `mu_d` and `mu_ref` all cancel in the control-relative ΔAge; an additive per-gene batch offset applied to a whole dataset (and refit) leaves ΔAge unchanged |
+| **B** | the **exact** invariant: `ΔAge = Σ_g δ_g · sigma_ref,g / (sigma_d,g + EPS) · w_g`. `sigma_d` does **not** cancel — it is a per-dataset multiplicative gain, and the same raw δ yields a *different* ΔAge in a dataset with different spread. **"Batch-immune by construction" is false as written**; immune to *additive* effects, carries a *scale* factor |
+| **C** | `fit` uses only the controls handed to it (the held-out-donor guarantee), the variance floor lifts every sigma to ≥ median, the gene space is the sorted intersection of admissible sets, and `MIN_REPLICATES` / unknown-dataset / missing-reference all raise rather than silently degrade |
+| **D** | the per-line control-relative zero-point, **and the fallback pinned**: a line with no controls is self-centred, forcing its mean ΔAge to exactly 0. The behaviour is now visible in a test, so changing it is a deliberate act |
+
+### A second overstatement found, smaller than the first
+
+The plan (Group A) asks for intercept cancellation to be **"bit-identical."** It is not. The
+cancellation is *numerical*, not symbolic: `age + b` followed by subtracting a control mean
+re-rounds, so a large intercept moves the low bits. Measured: immune to ~1e-12, **not** bit-exact —
+`np.array_equal` fails. The test asserts `allclose(atol=1e-9)` and says why. Same species of
+overclaim as "batch-immune by construction", found by writing the test the plan asked for.
+
+## Group E — PREDICTION, recorded BEFORE the run
+
+The gate replays `plan_all(sources)`, fetches every chunk, and counts vehicle controls. A chunk
+with perturbed cells and **zero** controls fired the fallback.
+
+**Prediction: PASS — no chunk fires the fallback.** Confidence high, and it is a code-reading
+prediction, not a hope:
+
+- **Gill (6 chunks, one per donor).** `plan()` emits one chunk per donor; `fetch()` marks
+  `day == 0.0 or ctype == "Dermal fibroblast"` as control. Each donor's time course *includes* its
+  own day-0 baseline, so every Gill chunk carries ≥1 control.
+- **GSE242423 (HFF, ~43–51 stratified sub-batches).** `_batch_indices()` shuffles controls and
+  treated cells *separately* and `np.array_split`s **each** across `n_batches`, so every batch
+  receives ≈ `n_ctrl / n_batches` controls. `plan()` states the intent outright: *"Each batch still
+  carries D0 controls."* The chunking was designed against exactly this failure.
+
+**The only route to FAIL** is `n_controls < n_batches`, which would leave some `cg[k]` empty. With
+`max_cells_per_sample = 5000` D0 cells against ~43–51 batches, that is ~100× off.
+
+### What each outcome licenses
+
+| Outcome | Conclusion | Next |
+|---|---|---|
+| **PASS** | the per-donor offset is **not** an artefact of the zero-point fallback. Note the limit of the claim: this rules out *this specific* artefact, it does **not** prove the offset is biology | Stage 2's premise survives; wet-lab spend is justified on this axis |
+| **FAIL** | some donor's ΔAge zero-point is self-centred, so part of the ±12.7 yr is artefact | a **FINDING**, not a bug to patch here (§1/§3): record in `STAGE_1_DEVIATIONS.md`, fix under its own pre-registered Change, defer Stage 2 spend |
+
+### Known limitation of the gate, recorded now rather than after
+
+`verify_stage1_5.py` counts controls on the **raw fetched chunk (pre-QC)**. ΔAge is computed in
+`process_chunk` *after* QC, so a batch that lost **all** of its controls to the `min_genes` /
+`max_mito_frac` filters would fire the fallback and this gate would still report PASS. With
+stratification giving ~100 controls per batch, every one of them failing QC is negligible — but
+the check is pre-QC and that gap is real. Stated before the result, so it cannot be produced
+afterwards to explain one away.
+
+## RESULT — Group E (EXECUTED 2026-07-24, data machine) — **PASS**, prediction confirmed
+
+`python verify_stage1_5.py "D:\GSE242423" "D:\Gill"` → `verify_stage1_5_results.json`.
+**51 of 51 chunks carry ≥1 vehicle control. The `aging.py:88` fallback never fired.**
+
+| Source | Chunks | Composition | Zero-point |
+|---|---|---|---|
+| GSE242423 HFF | 45 stratified batches (`b0…b44`) | ~980 cells each, **111–112 controls / ~869 perturbed** | control-relative |
+| Gill | 6 donor chunks (N2, N3, O1, O2, Y1, Y2) | 19–21 cells each, **1 control / 18–20 perturbed** | control-relative |
+
+The prediction and its reasoning both held: `_batch_indices()`'s stratification delivers a near-
+identical control share to every HFF batch, and each Gill donor chunk carries its own day-0
+baseline. **The self-centring fallback is ruled out as a source of the per-donor offset.**
+
+**The pre-registered pre-QC caveat did not bite.** Gill donors show 19–21 cells pre-QC here and
+19–21 in the built dataset, so no donor lost its control to QC.
+
+### What the census found that the gate was not asking about
+
+**Every Gill donor's zero-point rests on exactly ONE control sample.** That is a PASS by the
+pre-registered rule — a control exists, so the zero-point is control-relative, not self-centred —
+but `n = 1` means the baseline has **no replication and zero degrees of freedom**. Any measurement
+error in that single day-0 sample propagates **1:1 into every ΔAge for that donor**, i.e. it lands
+as a per-donor *additive offset* — structurally the same shape as the ±12.7 yr the Stage 2 premise
+is built on, and indistinguishable from it by any measurement taken so far.
+
+So the honest scope of this PASS:
+
+- **Ruled out:** the offset is an artefact of the *no-control self-centring fallback*.
+- **NOT ruled out:** the offset is noise in a single unreplicated baseline sample per donor.
+- **Not addressed here at all:** whether the offset is biology. This gate cannot answer that.
+
+Read alongside `STAGE_1_DEVIATIONS.md` **C1** — the ±12.7 yr figure is the **ridge** baseline's
+shift, and the *model's* mean per-donor shift is −5.71 with 95% CI **[−22.9, +11.5], which includes
+zero** — the premise Stage 2 spends wet-lab money on is weaker than "established biology". Stage
+1.5 has removed one candidate artefact and, in doing so, surfaced a second one that is still open.
+
+**This is a finding, not a defect to patch here.** Per §1/§3 nothing in `src/` was touched
+(`git diff --stat src/` empty). Whether a single-sample baseline is adequate is a Stage 2 design
+question — and it is precisely what Stage 2's k≈3 reference cells per donor would fix.

@@ -11,7 +11,63 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
-## 2026-07-23 (latest) — Made "audit the bar before the run" a ground rule, not a lesson learned twice
+## 2026-07-24 — Stage 1.5: the harmonization claim made true, and the ΔAge zero-point gate built
+
+**Status:** ✅ **FULLY EXECUTED on the data machine.** Groups A–D: 21 new tests pass, full suite
+**303**, ruff clean. Group E: **PASS — 51/51 chunks carry ≥1 control; the `aging.py:88` fallback
+never fired.** `src/` **untouched** (`git diff --stat src/` empty), so no guard can have moved.
+Predictions were pre-registered in the lab notebook *before* the run and were confirmed.
+
+### Group E result, and the finding it surfaced
+
+| Source | Chunks | Controls per chunk |
+|---|---|---|
+| GSE242423 HFF | 45 stratified batches | **111–112** of ~980 cells |
+| Gill | 6 donor chunks | **exactly 1** of 19–21 cells |
+
+**Ruled out:** the ±12.7 yr per-donor offset is not an artefact of the self-centring fallback.
+**Surfaced, and still open:** every Gill donor's zero-point rests on **one unreplicated control
+sample**, so any error in that single day-0 measurement propagates 1:1 as a per-donor additive
+offset — the same shape as the effect Stage 2 is premised on, and not distinguishable from it by
+anything measured so far. Read with deviation **C1** (the ±12.7 is the *ridge* shift; the model's
+mean shift is −5.71, 95% CI [−22.9, +11.5], including zero), the Stage 2 premise is weaker than
+"established biology". A finding, not a defect to patch here — and exactly what Stage 2's k≈3
+reference cells per donor would address.
+
+**Why.** Four plan documents assert cross-modality harmonization is "unit-tested" with "intercept
+cancellation **proven**" (`MASTER_PLAN.md:48`, `STAGE_5_PUBLICATION.md:127`,
+`STAGE_6_NEW_DATA.md:143`) — and **no test imported `harmonize.py`**. `STAGE_6`'s acceptance gate
+therefore named a test that could never fail, and `STAGE_5` promised a reviewer a proof that was
+never written. This stage makes the existing claim *true*, not weaker.
+
+| File | Change |
+|---|---|
+| `tests/test_harmonize.py` (new, +21) | **A** intercept / `mu_d` / `mu_ref` cancel; additive batch offset immune. **B** the exact closed form. **C** fit leak-safety, variance floor, sorted-intersection gene space, `MIN_REPLICATES` / unknown-dataset / missing-reference raise, `_align`, JSON round-trip. **D** per-line zero-point **and the silent fallback pinned**. **E** every branch of `decide_verdict` |
+| `verify_stage1_5.py` (new) | the runnable gate. A **pure** `decide_verdict()` separated from all I/O (the `verify_1a` lesson — a decision function whose only exercised path says PASS is not a gate), plus a read-only replay that censuses vehicle controls per chunk and writes `verify_stage1_5_results.json` |
+
+### Two overstatements the tests corrected
+
+1. **"batch-immune by construction"** (`harmonize.py:9`) is false as written. ΔAge is immune to
+   *additive* batch effects but carries a per-dataset multiplicative **gain**:
+   `ΔAge = Σ_g δ_g · sigma_ref,g / (sigma_d,g + EPS) · w_g`, now pinned as a closed form. The same
+   raw δ gives a *different* ΔAge in a dataset with different spread — measured, not argued.
+2. **"intercept cancellation is bit-identical"** (plan, Group A) is not exact. The cancellation is
+   *numerical*, not symbolic — `age + b` then subtracting a control mean re-rounds. Immune to
+   ~1e-12; `np.array_equal` fails. Found by writing the test the plan asked for.
+
+### Defects found in my own draft before commit, not after
+
+`sys.modules` dataclass-load crash under `importlib` (collection error); an inverted
+gene-intersection fixture that asserted the wrong answer; the over-strict `array_equal` above; one
+`UP017`. Recorded because "the tests passed" is only meaningful if the first draft did not.
+
+**Deliberately NOT done:** the wording fixes to `harmonize.py`'s docstring and the two
+reviewer-facing rows (`STAGE_5:127`, `STAGE_6:143`) are **proposed, not applied** — plan §4 makes
+that the user's call, not this stage's.
+
+---
+
+## 2026-07-23 — Made "audit the bar before the run" a ground rule, not a lesson learned twice
 
 **Status:** ✅ Written and tested (282 tests). The transferable win from the Stage 1 scoring saga:
 coverage and `fate_ece` were both audited *after* they misfired. This turns that into a forward
