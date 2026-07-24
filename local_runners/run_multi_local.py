@@ -50,7 +50,10 @@ BATCH = 256
 ROOT = "cellfate_multi"
 
 HERE = Path(__file__).resolve().parent
-CLOCK = str(HERE / "configs" / "clocks" / "fleischer_clock.json")
+# The clock lives in the REPO ROOT `configs/`, not under `local_runners/`. This previously pointed
+# at HERE/"configs"/... -- a path that does not exist -- so any rebuild aborted in `build_clock`
+# with ConfigError (it fails loud by design, no silent fallback). Found in Stage 1.5 Phase 1.
+CLOCK = str(HERE.parent / "configs" / "clocks" / "fleischer_clock.json")
 
 
 def discover_gse(data_dir: str):

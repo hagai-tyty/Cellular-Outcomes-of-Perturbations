@@ -1,6 +1,6 @@
 {
   "script": "diag_zero_point",
-  "utc": "2026-07-24T16:41:43+00:00",
+  "utc": "2026-07-24T17:19:39+00:00",
   "gill_dir": "D:\\Gill",
   "bars": [
     {
@@ -72,9 +72,81 @@
     "reason": "extreme contrast 11.8 yr vs bar 20.2 yr (true gap 53 yr, clock cv_mae 12.27)"
   },
   "M2": {
-    "status": "NOT_ESTIMABLE",
-    "n_pairs": 0,
-    "reason": "no matched (donor, day, marker) pairs span Exp1 and Exp2; the batch offset is unidentifiable and fix option (a) is impossible"
+    "status": "NO_BATCH_EFFECT",
+    "n_pairs": 12,
+    "mean_offset_years": -2.988325951572456,
+    "ci95": [
+      -13.118934023449302,
+      7.14228212030439
+    ],
+    "reason": "paired Exp1-Exp2 offset -2.99 yr, 95% CI [-13.12, +7.14] over 12 pairs",
+    "evidence": {
+      "n_titles": 124,
+      "n_parsed": 118,
+      "n_pairs": 12,
+      "pairs": [
+        {
+          "exp1": "N2_d11_CD13_Sendai_Exp1",
+          "exp2": "N2_d11_CD13_Sendai_Exp2",
+          "diff_years": -28.76249993098142
+        },
+        {
+          "exp1": "N2_d11_SSEA4_Sendai_Exp1",
+          "exp2": "N2_d11_SSEA4_Sendai_Exp2",
+          "diff_years": -5.603861818654934
+        },
+        {
+          "exp1": "N3_d11_CD13_Sendai_Exp1",
+          "exp2": "N3_d11_CD13_Sendai_Exp2",
+          "diff_years": -20.227573303802664
+        },
+        {
+          "exp1": "N3_d11_SSEA4_Sendai_Exp1",
+          "exp2": "N3_d11_SSEA4_Sendai_Exp2",
+          "diff_years": -40.24964466341726
+        },
+        {
+          "exp1": "O1_d11_CD13_Sendai_Exp1",
+          "exp2": "O1_d11_CD13_Sendai_Exp2",
+          "diff_years": 16.771423999692544
+        },
+        {
+          "exp1": "O1_d11_SSEA4_Sendai_Exp1",
+          "exp2": "O1_d11_SSEA4_Sendai_Exp2",
+          "diff_years": 13.590289352229249
+        },
+        {
+          "exp1": "O2_d11_CD13_Sendai_Exp1",
+          "exp2": "O2_d11_CD13_Sendai_Exp2",
+          "diff_years": -0.0035030398174882293
+        },
+        {
+          "exp1": "O2_d11_SSEA4_Sendai_Exp1",
+          "exp2": "O2_d11_SSEA4_Sendai_Exp2",
+          "diff_years": 12.075932221529456
+        },
+        {
+          "exp1": "Y1_d11_CD13_Sendai_Exp1",
+          "exp2": "Y1_d11_CD13_Sendai_Exp2",
+          "diff_years": 4.621825546967756
+        },
+        {
+          "exp1": "Y1_d11_SSEA4_Sendai_Exp1",
+          "exp2": "Y1_d11_SSEA4_Sendai_Exp2",
+          "diff_years": 8.577600501221113
+        },
+        {
+          "exp1": "Y2_d11_CD13_Sendai_Exp1",
+          "exp2": "Y2_d11_CD13_Sendai_Exp2",
+          "diff_years": -2.4081504212984726
+        },
+        {
+          "exp1": "Y2_d11_SSEA4_Sendai_Exp1",
+          "exp2": "Y2_d11_SSEA4_Sendai_Exp2",
+          "diff_years": 5.758250137462653
+        }
+      ]
+    }
   },
   "M3": {
     "status": "INDETERMINATE",

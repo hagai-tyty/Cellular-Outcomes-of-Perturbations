@@ -34,7 +34,6 @@ from __future__ import annotations
 
 import json
 import sys
-from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -115,6 +114,47 @@ def m1_verdict(pred: dict[str, float], chrono: dict[str, float] | None = None,
         "reason": (f"extreme contrast {contrast:.1f} yr vs bar {thr:.1f} yr "
                    f"(true gap {true_gap:.0f} yr, clock cv_mae {cv_mae:.2f})"),
     }
+
+
+def parse_title(title: str) -> dict | None:
+    """Split a Gill sample title into `(donor, day, marker, exp)`. Pure.
+
+    Titles look like `N2_d11_CD13_Sendai_Exp1` (treatment) and `N2_Fib_Sendai_Exp2` (the day-0
+    baseline). The pipeline's `obs` discards batch and marker identity (finding D1), so the
+    series-matrix titles are the ONLY place they survive — which is why M2 reads them here rather
+    than from `obs`.
+
+    Returns `None` for anything not fully specified — notably the `_Fib_` baselines, which carry no
+    day or marker and so cannot form a matched pair.
+    """
+    p = title.split("_")
+    if len(p) < 4:
+        return None
+    exp = p[-1]
+    if not exp.upper().startswith("EXP"):
+        return None
+    donor, day_tok, marker = p[0], p[1], p[2]
+    if not (day_tok.startswith("d") and day_tok[1:].isdigit()):
+        return None                      # excludes the '_Fib_' day-0 baselines by construction
+    return {"donor": donor, "day": float(day_tok[1:]), "marker": marker, "exp": exp}
+
+
+def group_matched_pairs(parsed: dict[str, dict]) -> list[tuple[str, str]]:
+    """`(donor, day, marker)` groups holding BOTH an Exp1 and an Exp2 sample. Pure.
+
+    Returns `(exp1_title, exp2_title)` so the caller can difference them in that order. Groups with
+    only one batch, or with duplicates within a batch, are skipped — a pair must be unambiguous.
+    """
+    buckets: dict[tuple[str, float, str], dict[str, list[str]]] = {}
+    for title, v in parsed.items():
+        key = (v["donor"], v["day"], v["marker"])
+        buckets.setdefault(key, {}).setdefault(v["exp"], []).append(title)
+    pairs: list[tuple[str, str]] = []
+    for _key, by_exp in sorted(buckets.items()):
+        e1, e2 = by_exp.get("Exp1", []), by_exp.get("Exp2", [])
+        if len(e1) == 1 and len(e2) == 1:
+            pairs.append((e1[0], e2[0]))
+    return pairs
 
 
 def m2_verdict(diffs: list[float], min_pairs: int = MIN_PAIRS_FOR_M2) -> dict:
@@ -291,6 +331,45 @@ def baseline_ages(gill_dir: str) -> tuple[dict[str, float], dict]:
     return ages, meta
 
 
+def matched_exp_offsets(gill_dir: str) -> tuple[list[float], dict]:
+    """Exp1 − Exp2 predicted-age difference for every matched `(donor, day, marker)` pair.
+
+    Batch identity is parsed from the SERIES-MATRIX TITLES, because the pipeline's `obs` discards it
+    (finding D1). Same normalisation (`normalize_counts` → log1p-CP10k) and same frozen clock as
+    `baseline_ages`, so the differences are in the clock's own units.
+    """
+    root = Path(__file__).resolve().parents[1]
+    for p in (root, root / "local_runners", root / "src"):
+        if str(p) not in sys.path:
+            sys.path.insert(0, str(p))
+    from run_multi_local import discover_gill  # type: ignore
+
+    from cellfate.data.aging import LinearClock
+    from cellfate.data.normalize import normalize_counts
+    from cellfate.data.sources import GillReprogrammingSource
+
+    expr, series = discover_gill(gill_dir)
+    src = GillReprogrammingSource(expr_tsv=expr, series_matrix=series)
+    src._load()
+    clock = LinearClock.from_json(root / "configs" / "clocks" / "fleischer_clock.json")
+
+    parsed = {t: v for t, v in ((t, parse_title(t)) for t in src._rpm.columns) if v}
+    pairs = group_matched_pairs(parsed)
+    meta: dict = {"n_titles": int(len(src._rpm.columns)), "n_parsed": len(parsed),
+                  "n_pairs": len(pairs)}
+    if not pairs:
+        return [], meta
+
+    needed = sorted({t for pr in pairs for t in pr})
+    mat = src._rpm[needed].to_numpy(dtype=np.float64).T          # samples x genes (linear RPM)
+    ages = dict(zip(needed, clock.predict_age(normalize_counts(mat), list(src._genes)),
+                    strict=True))
+    diffs = [float(ages[a] - ages[b]) for a, b in pairs]
+    meta["pairs"] = [{"exp1": a, "exp2": b, "diff_years": float(ages[a] - ages[b])}
+                     for a, b in pairs]
+    return diffs, meta
+
+
 def main() -> int:
     gill_dir = sys.argv[1] if len(sys.argv) > 1 else r"D:\Gill"
     print("STAGE 1.5 PHASE 1 — zero-point diagnostics (read-only)\n")
@@ -321,9 +400,16 @@ def main() -> int:
         print(f"  [!] {d}: {e}")
 
     m1 = m1_verdict(ages)
-    # M2 needs matched Exp1/Exp2 pairs. The pipeline discards batch identity (finding D1), so
-    # until Phase 2 parses it there are no pairs to hand in -- reported honestly, not faked.
-    m2 = m2_verdict([])
+    # M2: batch identity is absent from `obs` (finding D1) but present in the series-matrix titles,
+    # so it is parsed from there and MEASURED. An earlier revision handed in an empty list, which
+    # made M2 report "no matched pairs ... option (a) is impossible" -- a false claim, since
+    # N2_d11_CD13_Sendai_Exp1 and _Exp2 both exist.
+    try:
+        diffs, m2_meta = matched_exp_offsets(gill_dir)
+    except Exception as exc:  # noqa: BLE001 — a failed M2 must not hide the M1 verdict
+        diffs, m2_meta = [], {"error": repr(exc)[:200]}
+    m2 = m2_verdict(diffs)
+    m2["evidence"] = m2_meta
     # M3 uses the per-donor level shifts already measured by the scorecard.
     shifts = load_level_shifts()
     m3 = m3_verdict(list(shifts.values())) if shifts else {"status": "CANNOT_VERIFY",

@@ -45,7 +45,7 @@ def test_m1_bar_is_resolvable_at_the_real_geometry():
     assert dzp.m1_power(6.0) < 0.5               # 29 vs 35 — correctly NOT gated
 
 
-def test_bars_are_recorded_before_the_run_and_M1_reads_resolvable():
+def test_bars_are_recorded_before_the_run_and_m1_reads_resolvable():
     ids = {b["id"]: b for b in dzp.bars()}
     assert set(ids) == {"M1", "M2", "M3"}
     assert ids["M1"]["verdict"] == "RESOLVABLE"
@@ -208,3 +208,67 @@ def test_the_expected_real_path_is_phase_2_and_3_with_no_lead():
 def test_load_level_shifts_returns_empty_when_no_snapshot(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     assert dzp.load_level_shifts("scorecard/nope.json") == {}
+
+
+# ===================================================================== #
+# Title parsing + matched-pair grouping (the M2 fix).                    #
+# The pipeline's `obs` discards batch/marker identity (finding D1), so   #
+# these read it from the series-matrix titles instead. An earlier        #
+# revision handed m2_verdict an empty list and thereby emitted the FALSE #
+# claim that no matched pairs exist; these pin that they do.             #
+# ===================================================================== #
+def test_parse_title_reads_donor_day_marker_and_batch():
+    v = dzp.parse_title("N2_d11_CD13_Sendai_Exp1")
+    assert v == {"donor": "N2", "day": 11.0, "marker": "CD13", "exp": "Exp1"}
+
+
+def test_parse_title_rejects_the_day0_baselines_which_have_no_day_or_marker():
+    """`N2_Fib_Sendai_Exp2` carries no day and no marker, so it cannot form a pair."""
+    assert dzp.parse_title("N2_Fib_Sendai_Exp2") is None
+
+
+def test_parse_title_rejects_titles_without_a_batch_suffix_or_too_few_fields():
+    assert dzp.parse_title("N2_d11_CD13_Sendai") is None      # no Exp suffix
+    assert dzp.parse_title("N2_d11_CD13") is None             # too few fields
+
+
+def test_group_matched_pairs_finds_a_real_exp1_exp2_pair():
+    """The exact pair that disproves 'no matched pairs span Exp1 and Exp2'."""
+    titles = ["N2_d11_CD13_Sendai_Exp1", "N2_d11_CD13_Sendai_Exp2"]
+    parsed = {t: dzp.parse_title(t) for t in titles}
+    assert dzp.group_matched_pairs(parsed) == [
+        ("N2_d11_CD13_Sendai_Exp1", "N2_d11_CD13_Sendai_Exp2")]
+
+
+def test_group_matched_pairs_returns_exp1_first_so_the_difference_is_signed():
+    titles = ["N2_d11_CD13_Sendai_Exp2", "N2_d11_CD13_Sendai_Exp1"]   # reversed input order
+    parsed = {t: dzp.parse_title(t) for t in titles}
+    e1, e2 = dzp.group_matched_pairs(parsed)[0]
+    assert e1.endswith("Exp1") and e2.endswith("Exp2")
+
+
+def test_group_matched_pairs_skips_groups_present_in_only_one_batch():
+    titles = ["N2_d13_CD13_Sendai_Exp1", "N2_d15_SSEA4_Sendai_Exp1"]
+    parsed = {t: dzp.parse_title(t) for t in titles}
+    assert dzp.group_matched_pairs(parsed) == []
+
+
+def test_group_matched_pairs_skips_ambiguous_duplicates_within_a_batch():
+    """Two Exp1 rows for the same (donor, day, marker) make the pair ambiguous -> skip."""
+    parsed = {
+        "N2_d11_CD13_a_Exp1": {"donor": "N2", "day": 11.0, "marker": "CD13", "exp": "Exp1"},
+        "N2_d11_CD13_b_Exp1": {"donor": "N2", "day": 11.0, "marker": "CD13", "exp": "Exp1"},
+        "N2_d11_CD13_c_Exp2": {"donor": "N2", "day": 11.0, "marker": "CD13", "exp": "Exp2"},
+    }
+    assert dzp.group_matched_pairs(parsed) == []
+
+
+def test_group_matched_pairs_separates_markers_and_days_and_donors():
+    titles = [
+        "N2_d11_CD13_Sendai_Exp1", "N2_d11_CD13_Sendai_Exp2",     # pair
+        "N2_d11_SSEA4_Sendai_Exp1", "N2_d11_SSEA4_Sendai_Exp2",   # different marker -> own pair
+        "N3_d11_CD13_Sendai_Exp1", "N3_d11_CD13_Sendai_Exp2",     # different donor -> own pair
+        "N2_d13_CD13_Sendai_Exp1",                                # unmatched
+    ]
+    parsed = {t: dzp.parse_title(t) for t in titles}
+    assert len(dzp.group_matched_pairs(parsed)) == 3

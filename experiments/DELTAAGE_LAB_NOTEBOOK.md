@@ -2708,3 +2708,40 @@ change the ACTION (M1 short-circuits `decide()`), but it must not stand in the r
 (`ConfigError`, no silent fallback — correct design), so **re-running the build today would abort at
 the clock step.** The only tracked clock is `configs/clocks/fleischer_clock.json`. This matters
 because "we can always harmonize again" was being relied on as the fallback.
+
+## RE-RUN after fixing M2 and the clock path (2026-07-24) — M1 unchanged; **D1 downgraded**
+
+The two defects above were fixed and Phase 1 re-run. **Everything above is left as recorded**; this
+section only adds what changed.
+
+- `experiments/diag_zero_point.py` — M2 now parses `(donor, day, marker, Exp)` from the
+  series-matrix titles (the only place batch identity survives) and **measures** the offset. New
+  pure `parse_title()` / `group_matched_pairs()`, 8 new branch tests.
+- `local_runners/run_multi_local.py:53` — `CLOCK` now resolves to the tracked
+  `configs/clocks/fleischer_clock.json`. **A rebuild is possible again.**
+
+### M2 — now MEASURED: **NO_BATCH_EFFECT**
+
+```
+paired Exp1-Exp2 offset  -2.99 yr,  95% CI [-13.12, +7.14],  n = 12 matched pairs
+```
+
+**12 matched pairs exist**, so the stubbed verdict's claim ("no matched pairs … option (a) is
+impossible") is now definitively disproven by measurement, not just by reading titles.
+
+**This corrects my own D1 finding, and the correction cuts against me.** I recorded the cross-batch
+zero-point as "a real defect" driving the per-donor offset. Measured, the Exp1↔Exp2 term is
+**−2.99 yr** and **not distinguishable from zero**. D1 remains structurally true — the baselines
+*are* all Exp2 while ~50% of samples are Exp1 — but it is **not demonstrated to be a driver** of the
+±12.7 yr offset, and Phase 3 option (a) would have little to remove.
+
+**The honest limit, stated so the null is not over-read:** the CI half-width is ~**10 yr**, the same
+order as the ±12.7 yr offset in question. So this **excludes a large batch effect, not a meaningful
+one**. "No batch effect" here means *not detectable at n=12 with this noise* — not *absent*.
+
+### Net effect on the verdict: none
+
+**M1 still FAILS** (11.8 yr vs 20.2 bar) and `decide()` short-circuits on it, so the action remains
+**ESCALATE** and Phases 2–4 stay blocked. What changed is the *ranking of the candidate causes*: the
+batch term is measured small, which leaves the **clock's validity** and the **`n=1` baseline** as the
+two live explanations — and M1 says the first of those is already failing.

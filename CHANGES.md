@@ -52,6 +52,30 @@ neonates — which would leave two of six LOOCV folds with an unvalidated target
 
 Both are being fixed next, then Phase 1 is re-run and re-recorded.
 
+### Both fixed, Phase 1 re-run — M1 unchanged, **D1 downgraded**
+
+- **M2 now measures.** `parse_title()` / `group_matched_pairs()` read `(donor, day, marker, Exp)`
+  from the series-matrix titles — the only place batch identity survives — plus 8 branch tests.
+  Result: **12 matched pairs**, offset **−2.99 yr, 95% CI [−13.12, +7.14] → `NO_BATCH_EFFECT`.**
+  The stub's claim is disproven by measurement.
+- **`run_multi_local.py:53`** `CLOCK` now resolves to the tracked
+  `configs/clocks/fleischer_clock.json`; **a rebuild is possible again.**
+
+**This corrects finding D1, against the earlier claim.** The cross-batch zero-point was recorded as
+"a real defect"; measured, the Exp1↔Exp2 term is **not distinguishable from zero**. D1 stays
+structurally true (all baselines Exp2, ~50% of samples Exp1) but is **not demonstrated to drive** the
+±12.7 yr offset — Phase 3 option (a) would have little to remove. **Not over-read:** the CI
+half-width (~10 yr) is the same order as the offset, so this excludes a *large* batch effect, not a
+meaningful one.
+
+**Verdict unchanged: M1 still FAILS, ACTION remains ESCALATE**, Phases 2–4 blocked. The live
+explanations are now the clock's validity and the `n=1` baseline.
+
+Also fixed while here: a pre-existing `N802` in `tests/test_diag_zero_point.py` that would have
+failed CI's `ruff check src/ tests/ scripts/`, and two dead imports in the diagnostic. **CI lint is
+still red from 11 other pre-existing errors elsewhere in `tests/` (e.g. `test_verify_1a.py:108`) —
+not touched here.**
+
 ---
 
 ## 2026-07-24 (Phase 1) — Stage 1.5 Phase 1 written: zero-point diagnostics, bars pre-registered

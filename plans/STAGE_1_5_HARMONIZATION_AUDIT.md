@@ -489,3 +489,26 @@ currently broken. The only tracked clock is `configs/clocks/fleischer_clock.json
 
 Both are corrections to *diagnostics and wiring*, not to `src/` model or data code — `git diff
 --stat src/` stays empty for this stage.
+
+## 7.2 Both fixed, Phase 1 re-run (2026-07-24) — **M1 unchanged; D1 downgraded**
+
+| Fix | Result |
+|---|---|
+| M2 now parses `(donor, day, marker, Exp)` from the series-matrix titles and **measures** the offset (+ `parse_title` / `group_matched_pairs`, 8 branch tests) | ✅ **12 matched pairs found** — the stub's "no matched pairs … option (a) is impossible" is disproven by measurement |
+| `run_multi_local.py:53` `CLOCK` → tracked `configs/clocks/fleischer_clock.json` | ✅ resolves; **a rebuild is possible again** |
+
+**M2 measured: `NO_BATCH_EFFECT`** — paired Exp1−Exp2 offset **−2.99 yr, 95% CI [−13.12, +7.14]**,
+n = 12.
+
+**This corrects finding D1, against my own earlier claim.** §5.3 recorded the cross-batch zero-point
+as "a real defect". Measured, the batch term is **−2.99 yr and not distinguishable from zero**. D1
+stays *structurally* true (all baselines Exp2; ~50% of samples Exp1) but is **not demonstrated to
+drive** the ±12.7 yr offset, and Phase 3 option (a) would have little to remove.
+
+**Do not over-read the null:** the CI half-width is ~10 yr, the same order as the offset in
+question, so this excludes a *large* batch effect, not a meaningful one.
+
+**Verdict unchanged — `M1` still FAILS and short-circuits `decide()`: ACTION remains ESCALATE**,
+Phases 2–4 stay blocked. What moved is the ranking of candidate causes: with the batch term measured
+small, the two live explanations are the **clock's validity** (already failing M1) and the **`n=1`
+baseline**.
