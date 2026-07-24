@@ -2762,3 +2762,49 @@ made, but its truth for ΔAge is now explicitly an open measurement, not a settl
 is also structured — O1/O2 (both 53) agree to 0.4 yr, adults separate ~18 vs 21 true, only the
 neonatal N2/N3 blow up — so it may localise to 2 of 6 folds (clock applied below its ~1–94 yr
 fitted range) rather than being a whole-clock failure.
+
+## E1 PRE-REGISTRATION (2026-07-25, written BEFORE the run)
+
+`experiments/diag_e1_trajectory.py` (+13 branch tests). **The decisive test of §8:** does the frozen
+clock track age *change* within a donor's reprogramming trajectory — the quantity ΔAge = `w·(x_pert
+− x_base)` is built from — as opposed to the absolute reading M1 rejected?
+
+**Statistic.** Per donor, Spearman(predicted_age, reprogramming day) over that donor's fibroblast
+samples. Rejuvenation predicts predicted age **falls** as reprogramming proceeds → **negative** rho.
+Aggregate = mean of the six per-donor rho, paired 95% CI (t, n=6).
+
+**Bar (resolvability-checked, §5b).** PASS iff the CI **excludes 0 and is negative**. Null: a clock
+that reads nothing about the reprogramming axis (per-donor rho ~ 0). A moderate, consistent trend
+(rho ≈ −0.6, donor SD 0.25) passes ~99%; a heterogeneous trend can read NO_TREND at n=6 — CONDITIONAL,
+like M2.
+
+**Confounds, fixed in advance:**
+- iPSC endpoints are a **cell-type change**, not aging; a fibroblast clock is out of domain there.
+  **Excluded from the primary**, reported as a with-iPSC sensitivity.
+- Neonatal N2/N3 failed M1; the aggregate is also reported **adults-only** as a sensitivity.
+- Direction assumes reprogramming rejuvenates (the project premise): a positive or null trend is
+  evidence the clock does not read the relevant axis on this data.
+
+### Predictions, recorded now
+
+- **Primary (iPSC-excluded): PASS — negative mean rho, CI excludes 0. Confidence MODERATE (~60%).**
+  Reasoning: M1 showed the clock *does* separate the adults in-domain (≈18 vs a 21 yr gap), so it
+  reads a real aging axis there; ΔAge cancels exactly the parts M1 failed on (intercept, missing
+  genes, per-donor bias). So the adult trajectories should fall. The uncertainty is real: the
+  Fleischer clock may transfer poorly to the reprogramming context, and "failing to reprogram"
+  samples may not rejuvenate — either could pull the aggregate to NO_TREND at n=6.
+- **Adults-only: more likely PASS than the primary** — the neonates are the donors M1 broke, so
+  removing them should sharpen the trend if the clock is domain-limited rather than broken.
+- **With-iPSC: strongly negative** — young iPSC endpoints reinforce the fall, but that partly
+  measures identity change, which is why it is a sensitivity, not the test.
+
+### What each outcome licenses (from §8.4)
+
+- **PASS** → the escalation **downgrades**: ΔAge tracks rejuvenation despite the absolute-age
+  failure; Stage 2's premise survives; the fix is to correct docs that imply absolute-age validity.
+- **NO_TREND / WRONG_DIRECTION** → the deep escalation **stands**: the ΔAge target itself is not
+  validated on this data, reaching into Stage 4 (validation) and Stage 5 (what can be claimed).
+- **Adults PASS but neonates do not** → localises to N2/N3; hold them out or source an age-0-valid
+  clock, rather than condemning the whole target.
+
+**Nothing in E1 changes `src/`.** `git diff --stat src/` must be empty when it finishes.
