@@ -71,6 +71,19 @@ meaningful one.
 **Verdict unchanged: M1 still FAILS, ACTION remains ESCALATE**, Phases 2–4 blocked. The live
 explanations are now the clock's validity and the `n=1` baseline.
 
+### Escalation scoped (plan doc §8) — the severity is provisional, not settled
+
+**M1 tested ABSOLUTE age; the model trains on ΔAge, which is control-relative.** For `age = w·x+b`,
+ΔAge = `w·(x_pert − x_base)`, so the intercept, any additive per-donor baseline offset, and **every
+gene Gill is missing cancel**. Measured this session: Gill covers 57% of the clock's genes / **89% of
+its weight mass**, so **10.8% reads as zero** — an absolute-age error that vanishes in ΔAge. So M1's
+failure proves the clock's *absolute* readings invalid on this data; it does **not** prove ΔAge's
+target invalid — a separate, unmeasured question. §8.3 pre-registers the tests that settle it, first
+of which (E1) is a within-donor age-*trajectory* check, the only one that bears on ΔAge. The failure
+is also structured (O1/O2 both 53 agree to 0.4 yr; only the age-0 neonates N2/N3 blow up, below the
+clock's ~1–94 yr fitted range), so it may localise to 2 of 6 folds. This is a self-correction of my
+own framing, not of the M1 result — same shape as the D1 downgrade. Handoff: Stage 4 validation.
+
 Also fixed while here: a pre-existing `N802` in `tests/test_diag_zero_point.py` that would have
 failed CI's `ruff check src/ tests/ scripts/`, and two dead imports in the diagnostic. **CI lint is
 still red from 11 other pre-existing errors elsewhere in `tests/` (e.g. `test_verify_1a.py:108`) —

@@ -2745,3 +2745,20 @@ one**. "No batch effect" here means *not detectable at n=12 with this noise* —
 **ESCALATE** and Phases 2–4 stay blocked. What changed is the *ranking of the candidate causes*: the
 batch term is measured small, which leaves the **clock's validity** and the **`n=1` baseline** as the
 two live explanations — and M1 says the first of those is already failing.
+
+## ESCALATION SCOPING — recorded in the plan doc §8
+
+Scoped in `plans/STAGE_1_5_HARMONIZATION_AUDIT.md` §8 (kept there so it does not drift). The
+load-bearing point, worth stating here because it reframes the severity:
+
+**M1 tested ABSOLUTE age; the model's target is ΔAge, which is control-relative.** For `age = w·x+b`,
+ΔAge = `w·(x_pert − x_base)` — so the intercept, any additive per-donor baseline offset, and **every
+gene Gill is missing** (measured: **10.8% of the clock's weight mass reads as zero**, 57% of genes /
+89% of mass covered) all **cancel**. Three of the likeliest causes of M1's failure therefore do not
+touch ΔAge. **M1 proves the clock's absolute readings are invalid here; it does NOT prove ΔAge's
+target is invalid** — that needs a within-donor age-*trajectory* test (E1), which §8.3 pre-registers
+first. The §7 "Stage 2's premise is void" is the pre-registered branch and stands as the decision
+made, but its truth for ΔAge is now explicitly an open measurement, not a settled fact. The failure
+is also structured — O1/O2 (both 53) agree to 0.4 yr, adults separate ~18 vs 21 true, only the
+neonatal N2/N3 blow up — so it may localise to 2 of 6 folds (clock applied below its ~1–94 yr
+fitted range) rather than being a whole-clock failure.

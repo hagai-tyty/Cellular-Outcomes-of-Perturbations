@@ -512,3 +512,80 @@ question, so this excludes a *large* batch effect, not a meaningful one.
 Phases 2–4 stay blocked. What moved is the ranking of candidate causes: with the batch term measured
 small, the two live explanations are the **clock's validity** (already failing M1) and the **`n=1`
 baseline**.
+
+---
+
+# 8. ESCALATION SCOPING — what M1's failure does and does not establish
+
+**This is a scoping pass, not results.** It defines what to measure next and pre-commits nothing;
+the measurements below get their own pre-registration before they run (§8.3). The M1 result in §7
+stands unedited.
+
+## 8.1 The pivotal distinction M1 does not resolve
+
+**M1 tested ABSOLUTE age.** The pipeline's actual target is **ΔAge — control-relative, within
+donor.** For a linear clock `age = w·x + b`:
+
+```
+M1   : age(baseline)         = w·x_baseline + b                 ← what failed
+ΔAge : age(pert) − age(base) = w·(x_pert − x_base)              ← what the model trains on
+```
+
+**The intercept `b` cancels in ΔAge** (proven in §2 Group A). So does **any additive per-donor
+baseline offset**, and so does **every gene the Gill data is missing** — a missing gene reads 0 for
+*both* pert and baseline, so its contribution to ΔAge is exactly zero. Three of the most likely
+causes of M1's absolute-age failure therefore **do not touch ΔAge at all.**
+
+Grounding for that, measured this session (read-only):
+
+| Fact | Bears on absolute age (M1) | Bears on ΔAge |
+|---|---|---|
+| clock intercept `b = 72.4` | yes | **cancels** |
+| **10.8% of the clock's |weight| mass is on genes Gill lacks** (57% of genes / 89% of mass covered) | yes — silently zeroed | **cancels** (0 for pert and base alike) |
+| every donor over-predicted by **+22.7 … +98.7** (a positive additive bias) | yes | **cancels if the bias is per-donor-constant** |
+| N2/N3 at age 0 vs Fleischer cohort's ~1–94 yr fitted range | yes — extrapolation | **only if `w` itself misbehaves out of domain** |
+
+**Consequence:** M1's failure proves the clock's *absolute* readings are invalid on this data. It
+does **not** prove ΔAge's target is invalid — that is a separate, unmeasured question. So the §7
+escalation is **real but its severity is provisional**: "Stage 2's premise is void" was the
+pre-registered branch and was correctly followed as a decision rule, but whether it holds for ΔAge
+specifically is exactly what §8.3 must measure before the claim is asserted as fact.
+
+*(This is a self-correction of my own framing, not of the result — the same shape as the D1
+downgrade in §7.2. M1 should arguably have been paired with a within-donor test in the original
+pre-registration; it was not, so it is added now.)*
+
+## 8.2 The failure is structured, which narrows it
+
+- **O1/O2 (both 53) agree to 0.4 yr** → the clock is *reproducible*, not random.
+- Across the four **adult** donors, old-vs-young separates by ≈18 yr against a true 21 yr gap →
+  respectable *in-domain* behaviour.
+- The catastrophe is confined to the **neonatal** donors (N2/N3), which sit outside the clock's
+  fitted age range.
+
+Read together: **the clock may be usable on the adult donors and invalid on the neonates** — a
+materially different, and much smaller, problem than "the clock is broken." If true, it localises to
+**2 of the 6 LOOCV folds**.
+
+## 8.3 What to measure next — read-only, pre-register before running
+
+| ID | Measurement | Why it is the RIGHT next test |
+|---|---|---|
+| **E1** | Does the clock track age *change* WITHIN a donor's reprogramming trajectory? (predicted age across day 0 → 54; does it fall, and monotonically, the way rejuvenation predicts?) | **This is the one that actually bears on ΔAge**, because it uses `w·(x_change)` — the quantity the model trains on — not the absolute reading M1 rejected |
+| **E2** | Confirm the domain gap: Fleischer's actual age distribution (is age 0 truly outside it?) and whether the 11% missing-weight-mass concentrates in aging-informative genes | turns "neonates are extrapolation" from a plausible read into a checked fact |
+| **E3** | Restrict M1 to the four adults (29/35 vs 53) | if adults separate and only neonates break, the escalation shrinks to "N2/N3 have an out-of-domain baseline" rather than "the clock is invalid" |
+
+## 8.4 Where each outcome leads
+
+- **E1 shows ΔAge tracks within-donor change** → the escalation *downgrades*: absolute-age claims
+  are unsupported (a real but narrow limitation), ΔAge and Stage 2 survive. Correct the docs that
+  imply absolute-age validity; proceed.
+- **Only the neonates fail (E3), ΔAge otherwise fine** → flag or hold out N2/N3, or source a clock
+  valid at age 0. Two folds, not the whole target.
+- **E1 shows ΔAge does NOT track within-donor change** → the deep escalation stands: the ΔAge target
+  itself is unvalidated on this data, which reaches into **Stage 4 (validation)** and **Stage 5
+  (what can honestly be claimed)**. This is the outcome that would genuinely block the project's
+  headline, and it is why E1 is the first thing to run.
+
+**Handoff:** this belongs to Stage 4's validation work; recorded here because Stage 1.5 is where the
+failure surfaced. Nothing in §8 touches `src/`.
