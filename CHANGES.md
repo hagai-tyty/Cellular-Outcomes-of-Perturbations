@@ -68,9 +68,10 @@ that the user's call, not this stage's.
 ### Fix plan recorded (PLAN ONLY — nothing executed)
 
 Following the Group E census into the Gill metadata produced three findings, and a fix plan is
-recorded at the end of the Stage 1.5 section of the lab notebook — **not** as a new document, and
-`plans/STAGE_1_5_HARMONIZATION_AUDIT.md` is left untouched so the original pre-registration stays
-auditable beside what happened.
+recorded in **`plans/STAGE_1_5_HARMONIZATION_AUDIT.md` §5** — appended after the original
+pre-registration (§0–§4 left exactly as written, never substituted), so the plan as written and
+what actually happened stay auditable side by side in one file. **Not** a new document. The lab
+notebook carries only a pointer to it, so the two cannot drift.
 
 - **D1 — the zero-point is cross-batch.** All six baselines are `*_Fib_Sendai_`**`Exp2`**, while
   ~**50%** of every donor's treatment samples are **Exp1** (10 per donor). Half of `y_age` is
