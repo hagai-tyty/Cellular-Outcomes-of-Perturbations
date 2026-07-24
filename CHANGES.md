@@ -65,6 +65,33 @@ gene-intersection fixture that asserted the wrong answer; the over-strict `array
 reviewer-facing rows (`STAGE_5:127`, `STAGE_6:143`) are **proposed, not applied** — plan §4 makes
 that the user's call, not this stage's.
 
+### Fix plan recorded (PLAN ONLY — nothing executed)
+
+Following the Group E census into the Gill metadata produced three findings, and a fix plan is
+recorded at the end of the Stage 1.5 section of the lab notebook — **not** as a new document, and
+`plans/STAGE_1_5_HARMONIZATION_AUDIT.md` is left untouched so the original pre-registration stays
+auditable beside what happened.
+
+- **D1 — the zero-point is cross-batch.** All six baselines are `*_Fib_Sendai_`**`Exp2`**, while
+  ~**50%** of every donor's treatment samples are **Exp1** (10 per donor). Half of `y_age` is
+  therefore `age(Exp1) − age(Exp2 baseline)` — a batch term inside the target's *definition*.
+- **D2 — baseline replication is invisible.** `_control_baseline` records neither count nor
+  composition; Stage 1.5 made `n=0` visible, `n=1` is still silent.
+- **D3 — `donor age` is parsed nowhere** (grep: zero hits) though GEO declares it
+  (N2/N3=0, Y1=29, Y2=35, O1/O2=53) — the only ground truth able to test whether the clock reads
+  age on this data.
+
+**The number that makes it urgent:** the clock's own metadata carries `cv_mae_years = 12.27`, and
+the per-donor offset Stage 2 exists to correct is ±12.7 (ridge) / 13.12 (model). The offset is the
+size of **one** clock measurement's error — and each donor's zero-point **is** one clock
+measurement. Not proof it is noise; proof the two are currently indistinguishable.
+
+Plan is sequenced measurement-first (M1 clock-vs-chronological-age, M2 Exp1/Exp2 batch effect, M3
+bound the noise share) with pre-registered branches, so the cheap measurements decide whether the
+rebuild-and-re-score change is needed at all. Explicitly left alone: the ΔAge definition, the
+clock's weights, Stage 1's calibration and its four-run `+0.000` guard record, the Exp1 samples,
+and every prior record.
+
 ---
 
 ## 2026-07-23 — Made "audit the bar before the run" a ground rule, not a lesson learned twice
