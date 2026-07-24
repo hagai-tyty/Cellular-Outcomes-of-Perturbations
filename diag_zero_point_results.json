@@ -1,0 +1,96 @@
+{
+  "script": "diag_zero_point",
+  "utc": "2026-07-24T16:41:43+00:00",
+  "gill_dir": "D:\\Gill",
+  "bars": [
+    {
+      "id": "M1",
+      "bar": "extreme age contrast >= 20.2 yr",
+      "null": "a clock that reads nothing (contrast ~ N(0, 12.27))",
+      "pass_rate_if_intent_holds": 0.9962640898186957,
+      "verdict": "RESOLVABLE"
+    },
+    {
+      "id": "M2",
+      "bar": "paired 95% CI on the Exp1-Exp2 offset excludes 0",
+      "null": "no batch effect",
+      "pass_rate_if_intent_holds": null,
+      "verdict": "CONDITIONAL \u2014 depends on the matched-pair count, reported at runtime (T4)"
+    },
+    {
+      "id": "M3",
+      "bar": "share of offset variance >= 50% or < 25%",
+      "null": "n/a \u2014 an estimate with a chi-square CI, not a test",
+      "pass_rate_if_intent_holds": null,
+      "verdict": "EXPECTED UNRESOLVABLE at n=6 \u2014 the variance is known only to ~a factor of six, so INDETERMINATE is the pre-registered likely outcome (T2)"
+    }
+  ],
+  "baselines": {
+    "donors": {
+      "N2": {
+        "n_baseline": 1,
+        "predicted_age": 98.65122290529983,
+        "chronological_age": 0.0
+      },
+      "N3": {
+        "n_baseline": 1,
+        "predicted_age": 36.44481964830975,
+        "chronological_age": 0.0
+      },
+      "O1": {
+        "n_baseline": 1,
+        "predicted_age": 79.12114400790244,
+        "chronological_age": 53.0
+      },
+      "O2": {
+        "n_baseline": 1,
+        "predicted_age": 79.49712734543391,
+        "chronological_age": 53.0
+      },
+      "Y1": {
+        "n_baseline": 1,
+        "predicted_age": 64.92371024396492,
+        "chronological_age": 29.0
+      },
+      "Y2": {
+        "n_baseline": 1,
+        "predicted_age": 57.6578006556975,
+        "chronological_age": 35.0
+      }
+    },
+    "errors": {}
+  },
+  "M1": {
+    "status": "FAIL",
+    "contrast_years": 11.761114399863388,
+    "threshold_years": 20.180369428571225,
+    "true_age_gap": 53.0,
+    "n_young": 2,
+    "n_old": 2,
+    "power_if_clock_correct": 0.9962640898186957,
+    "spearman_all_donors_REPORTED_NOT_GATED": 0.028571428571428574,
+    "reason": "extreme contrast 11.8 yr vs bar 20.2 yr (true gap 53 yr, clock cv_mae 12.27)"
+  },
+  "M2": {
+    "status": "NOT_ESTIMABLE",
+    "n_pairs": 0,
+    "reason": "no matched (donor, day, marker) pairs span Exp1 and Exp2; the batch offset is unidentifiable and fix option (a) is impossible"
+  },
+  "M3": {
+    "status": "INDETERMINATE",
+    "n_donors": 6,
+    "observed_sd_years": 16.393125751453223,
+    "baseline_sd_years": 12.26879346460328,
+    "share_of_variance": 0.5601188265849427,
+    "share_ci": [
+      0.09309174897841747,
+      1.0
+    ],
+    "residual_sd_years": 10.872501038209496,
+    "reason": "observed offset SD 16.4 yr vs 12.3 yr from a single baseline -> share 56% (95% CI 9%-100%); 10.9 yr SD remains for biology+batch+model"
+  },
+  "decision": {
+    "action": "ESCALATE",
+    "reason": "the clock does not separate the age extremes on this data, so \u0394Age's target is unvalidated. This reaches past Stage 1.5 into Stage 4 and Stage 2's premise is void as stated. Do not proceed to Phase 2/3."
+  }
+}

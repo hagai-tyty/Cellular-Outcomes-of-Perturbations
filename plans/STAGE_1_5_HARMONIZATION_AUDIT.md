@@ -31,8 +31,9 @@ report. The pre-registration text in §0–§4 is left **exactly as written**; o
 | §0.1 "batch-immune by construction" is an overstatement | ✅ **confirmed false as written**; exact invariant now pinned |
 | §0.3 is the ±12.7 yr offset the *fallback* artefact? | ✅ **answered: no** |
 | Is the offset *biology*? | ⏳ **still open** — §5.2 found a second candidate artefact (`n=1` baseline) |
-| §5.4 **Phase 1** — M1/M2/M3 measurements | ⏳ **next action** (read-only, decisive) |
-| §5.4 Phases 2–4 | ⏳ not started; gated on Phase 1 |
+| §5.4 **Phase 1** — M1/M2/M3 measurements | ✅ **EXECUTED — M1 FAILED. ACTION: ESCALATE** (§7). M2's verdict was a stub and is being fixed; M3 indeterminate as predicted |
+| §5.4 Phases 2–4 | ⛔ **BLOCKED by the M1 failure** — do not proceed until the clock's validity is settled |
+| Does the clock read chronological age on this data? | ❌ **NO at the extremes** — 11.8 yr contrast vs a 53 yr true gap; two age-0 donors read 62 yr apart (§7) |
 
 ---
 
@@ -445,3 +446,46 @@ where it was wrong. The §5.4 plan is **directionally right and now concrete** w
 
 **Phase 1 remains the correct next action** — it is read-only, cheap, and genuinely decisive: M1
 can escalate past this entire stage if the clock does not read age on this data.
+
+---
+
+# 7. PHASE 1 EXECUTED (2026-07-24) — **M1 FAILED. ESCALATE.**
+
+Numbers, per-donor table and full reasoning are in `experiments/DELTAAGE_LAB_NOTEBOOK.md` under
+*RESULT — PHASE 1*; kept in one place so the two cannot drift. Summary:
+
+| Measurement | Verdict |
+|---|---|
+| **M1** — does the clock read chronological age? | ❌ **FAIL** — extreme contrast **11.8 yr** vs bar **20.2** (true gap 53 yr). N2 (age 0) predicts **98.7**, older than both 53-year-olds; the two age-0 donors read **62 yr apart** |
+| **M2** — Exp1/Exp2 batch offset | ⚠️ reported `NOT_ESTIMABLE`, but that was a **stub** (`m2_verdict([])`) and its claim "option (a) is impossible" is **false** — matched pairs exist in the series matrix. Being fixed |
+| **M3** — share of offset variance from one baseline | ⏳ **INDETERMINATE** as pre-registered — 56%, 95% CI [9%, 100%] |
+
+**The Phase 1 prediction was FALSIFIED.** It predicted `PHASE_2_AND_3` with M1 clearing.
+
+**Consequence, per the §5.4 pre-registered branch table:** the clock does not separate the age
+extremes on this data, so **ΔAge's target is unvalidated**. This reaches past Stage 1.5 into
+**Stage 4 validation**, and **Stage 2's premise is void as stated**. Phases 2–4 are blocked.
+
+**The failure is structured, not random** — and that is the lead for the escalation. O1/O2 (both 53)
+agree to **0.4 yr**; across the four *adult* donors the old-vs-young separation is ≈18 yr against a
+true 21 yr gap. The catastrophe is confined to the **neonatal** donors, and
+`fleischer_clock.json` was fit on **adult** dermal fibroblasts (GSE113957) — so age 0 is
+extrapolation outside its fitted domain. Every donor is also over-predicted (+22.7 to +98.7),
+so a positive bias sits on top. **Hypothesis for the escalation to settle:** the clock may be
+usable on the adults and invalid on the neonates — materially different from "the clock is broken",
+and it would mean two of six LOOCV folds carry an unvalidated target.
+
+**Also found, unrelated to the measurement:** `run_multi_local.py:53` points `CLOCK` at
+`local_runners/configs/clocks/fleischer_clock.json`, **which does not exist**. `build_clock` fails
+loud, so a rebuild would abort at the clock step — the "we can always harmonize again" fallback is
+currently broken. The only tracked clock is `configs/clocks/fleischer_clock.json`.
+
+## 7.1 Immediate follow-ups (before the escalation is scoped)
+
+1. **Fix M2** to parse `(donor, day, marker, Exp)` from the series-matrix titles and actually measure
+   the Exp1−Exp2 offset, then re-run and re-record. Its current verdict text must not stand.
+2. **Fix the runner's clock path** to the tracked `configs/clocks/fleischer_clock.json` so a rebuild
+   is possible at all.
+
+Both are corrections to *diagnostics and wiring*, not to `src/` model or data code — `git diff
+--stat src/` stays empty for this stage.

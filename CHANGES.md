@@ -11,6 +11,49 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-07-24 (Phase 1 EXECUTED) — **M1 FAILED. The clock does not read age on this data. ESCALATE.**
+
+**Status:** ✅ **RUN on the data machine.** `python experiments/diag_zero_point.py "D:\Gill"` →
+`diag_zero_point_results.json`. **The pre-registered prediction was FALSIFIED** — it predicted
+`PHASE_2_AND_3` with M1 clearing. `git diff --stat src/` empty. Full record in the lab notebook
+under *RESULT — PHASE 1*; summary in `plans/STAGE_1_5_HARMONIZATION_AUDIT.md` §7.
+
+| Measurement | Verdict |
+|---|---|
+| **M1** clock vs chronological age | ❌ **FAIL** — extreme contrast **11.8 yr** vs bar **20.2** (true gap 53 yr) |
+| **M2** Exp1/Exp2 batch offset | ⚠️ `NOT_ESTIMABLE` — but that verdict is a **stub**, see below |
+| **M3** share of offset variance from one baseline | ⏳ **INDETERMINATE** as predicted — 56%, CI [9%, 100%] |
+
+Per-donor: N2 (age **0**) → predicted **98.7**, i.e. older than both 53-year-olds; N3 (age 0) →
+36.4. **Two donors of identical age read 62 yr apart.**
+
+**Consequence (pre-registered branch):** ΔAge's target is **unvalidated**. This reaches past Stage
+1.5 into **Stage 4**, and **Stage 2's premise is void as stated**. Phases 2–4 blocked.
+
+**The failure is structured, which is the lead.** O1/O2 (both 53) agree to **0.4 yr**, and across the
+four *adult* donors the old-vs-young separation is ≈18 yr against a true 21 yr gap. The catastrophe
+is confined to the **neonatal** donors — and `fleischer_clock.json` was fit on **adult** dermal
+fibroblasts (GSE113957), so age 0 is extrapolation outside its fitted domain. All six donors are
+also over-predicted (+22.7 to +98.7). Hypothesis for the escalation: usable on adults, invalid on
+neonates — which would leave two of six LOOCV folds with an unvalidated target.
+
+### Two defects found while reviewing the run
+
+1. **M2's verdict is a stub, and its claim is false.** `diag_zero_point.py:326` calls
+   `m2_verdict([])`, so it always emits *"no matched (donor, day, marker) pairs … fix option (a) is
+   impossible."* **Matched pairs demonstrably exist** — `N2_d11_CD13_Sendai_Exp1` and `…_Exp2` are
+   both in the series matrix. The true statement is narrower: the *pipeline's `obs`* discards batch
+   identity (D1), but the diagnostic can parse the titles and does not. This is the pre-registered
+   *"M2 estimable after all"* branch. It does not change the ACTION (M1 short-circuits `decide()`).
+2. **The rebuild is currently broken.** `run_multi_local.py:53` points `CLOCK` at
+   `local_runners/configs/clocks/fleischer_clock.json`, **which does not exist**. `build_clock` fails
+   loud (correct design), so a rebuild aborts at the clock step — the "we can always harmonize
+   again" fallback does not currently work. Only `configs/clocks/fleischer_clock.json` is tracked.
+
+Both are being fixed next, then Phase 1 is re-run and re-recorded.
+
+---
+
 ## 2026-07-24 (Phase 1) — Stage 1.5 Phase 1 written: zero-point diagnostics, bars pre-registered
 
 **Status:** ✅ Written and tested (**332 tests**, 28 new + 1 new registry bar). ⏳ **Not yet run on
