@@ -6,7 +6,33 @@
 tests. Not blocking for the tool.
 **Scope:** 1 new test file, 1 new verifier script, **0 lines changed in `src/`**.
 
-**Status:** PLANNED — not yet run. This document is the pre-registration.
+**Status:** ✅ **EXECUTED and INDEPENDENTLY VERIFIED** (2026-07-24). The audit passed on its own
+terms; it surfaced a second, still-open artefact (§5.2) and a fix plan (§5.4, tightened in §6.2).
+
+### Status ledger — what is done, what is open
+
+*Every ✅ below was re-checked against the tree by an independent review (§6.1), not accepted on
+report. The pre-registration text in §0–§4 is left **exactly as written**; only this ledger and
+§5–§6 record what happened.*
+
+| Item | Status |
+|---|---|
+| §2 **Group A** — intercept cancellation, additive-batch immunity, `mu_ref` drops out | ✅ pass (with one correction: cancellation is numerical ~1e-14, **not** bit-identical as §2 specified) |
+| §2 **Group B** — the true scale-gain invariant, closed form | ✅ pass |
+| §2 **Group C** — fit / leak-safety, variance floor, gene space, raises, `_align`, round-trip | ✅ pass |
+| §2 **Group D** — ΔAge zero-point incl. the silent fallback pinned | ✅ pass |
+| §2 **Group E** — real-build replay | ✅ **PASS — 51/51 chunks carry ≥1 control; the fallback never fired.** All six LOOCV donors covered, so the PASS is not vacuous |
+| §2 `verify_stage1_5.py` with pure `decide_verdict()` | ✅ built, every branch unit-tested |
+| §3 Groups A–D pass with no repo data | ✅ 21/21 |
+| §3 full suite green | ✅ **303 passed** |
+| §3 `git diff --stat src/` empty | ✅ empty across all 5 commits |
+| §3 Group E reports whether the fallback fired | ✅ reported: it did not |
+| **Tests have real detection power** | ✅ mutation-tested — 4 injected defects, 4 caught (§6.1) |
+| §0.1 "batch-immune by construction" is an overstatement | ✅ **confirmed false as written**; exact invariant now pinned |
+| §0.3 is the ±12.7 yr offset the *fallback* artefact? | ✅ **answered: no** |
+| Is the offset *biology*? | ⏳ **still open** — §5.2 found a second candidate artefact (`n=1` baseline) |
+| §5.4 **Phase 1** — M1/M2/M3 measurements | ⏳ **next action** (read-only, decisive) |
+| §5.4 Phases 2–4 | ⏳ not started; gated on Phase 1 |
 
 ---
 

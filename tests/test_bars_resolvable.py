@@ -53,6 +53,18 @@ def null_ece_mean_of_folds(n_per_fold, k_folds, gen=_perfectly_calibrated_p):
     return np.array(out)
 
 
+def null_m1_contrast_correct_clock(true_gap=53.0, cv_mae=12.26879346460328, n_each=2):
+    """Stage 1.5 Phase 1 / M1: the extreme age contrast a CORRECT clock would produce.
+
+    Intent: the clock reads chronological age with its own published CV error. The bar is tested
+    against the opposite null (a clock reading nothing), so resolvability asks how often a clock
+    that DOES work clears a threshold set to exclude one that does not.
+    """
+    rng = np.random.default_rng(SEED)
+    se = cv_mae * np.sqrt(1.0 / n_each + 1.0 / n_each)
+    return rng.normal(true_gap, se, 20000)
+
+
 def null_coverage_marginal(n_total, level):
     """Marginal coverage of a correctly-`level` conformal interval over `n_total` cells."""
     rng = np.random.default_rng(SEED)
@@ -96,6 +108,18 @@ REGISTERED_BARS = [
                 "so the bar tested the sample size. If this ever reads RESOLVABLE the geometry "
                 "assumptions changed and sec 5b must be revisited.",
     },
+    {
+        "name": "M1 extreme age contrast >= 20.2 yr (Stage 1.5 Phase 1)",
+        "kind": "higher",
+        "null": null_m1_contrast_correct_clock,
+        "bar": 1.6448536269514722 * 12.26879346460328,     # z_0.95 * SE under a null clock
+        "expect": "RESOLVABLE",
+        "where": "STAGE_1_5_HARMONIZATION_AUDIT.md §5.4 M1, registered per §6.2 T1",
+        "note": "a clock that reads NOTHING clears 'contrast > 0' half the time, so the bar is "
+                "set at z_0.95 of the null SE instead. A correct clock (true gap 53 yr, cv_mae "
+                "12.27) clears that ~99.6% of the time. The 29-vs-35 middle contrast is "
+                "deliberately NOT gated -- it is half the clock's error and unresolvable.",
+    },
 ]
 
 
@@ -107,7 +131,7 @@ def test_registered_bar_has_expected_resolvability(spec):
         # coverage's band sits at ~0.93; the 0.05 slack is the known binomial width at n=124,
         # documented in the audit. A band criterion is judged in-band-rate, not a one-sided tail.
     else:
-        r = bar_verdict(spec["null"](), spec["bar"], lower_is_better=True)
+        r = bar_verdict(spec["null"](), spec["bar"], lower_is_better=(spec["kind"] == "lower"))
         verdict, rate = r["verdict"], r["pass_rate"]
     assert verdict == spec["expect"], (
         f"{spec['name']}: expected {spec['expect']} but a correct system passes "
@@ -119,7 +143,7 @@ def test_every_registered_bar_is_documented():
     for s in REGISTERED_BARS:
         assert s["name"] and s["expect"] in ("RESOLVABLE", "UNRESOLVABLE")
         assert s["where"] and s["note"]
-        assert s["kind"] in ("band", "lower")
+        assert s["kind"] in ("band", "lower", "higher")
 
 
 def test_the_retired_and_repaired_bars_differ_only_in_geometry():

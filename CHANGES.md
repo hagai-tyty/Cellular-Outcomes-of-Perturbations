@@ -11,6 +11,56 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-07-24 (Phase 1) — Stage 1.5 Phase 1 written: zero-point diagnostics, bars pre-registered
+
+**Status:** ✅ Written and tested (**332 tests**, 28 new + 1 new registry bar). ⏳ **Not yet run on
+the data machine** — it needs `D:\Gill`. `src/` untouched. Status ledger with ✅ markers added to
+the head of `STAGE_1_5_HARMONIZATION_AUDIT.md`.
+
+### `experiments/diag_zero_point.py` (new) — read-only, decides whether Phase 3 is needed at all
+
+| Measurement | Question |
+|---|---|
+| **M1** | does the frozen clock read chronological age on *this* data? (GEO donor ages 0,0,29,35,53,53) |
+| **M2** | is there an Exp1/Exp2 batch effect? (all six baselines are Exp2 — finding D1) |
+| **M3** | how much of the ±12.7 yr offset *variance* could one unreplicated baseline explain? |
+
+All repo-data imports are confined to `baseline_ages()`, so the decision logic is data-free and
+unit-tested. Uses the production normalisation (`normalize_counts` → log1p-CP10k), the space the
+frozen clock was fitted in, so predicted ages are comparable to its own CV MAE.
+
+### Bars pre-registered and resolvability-checked BEFORE running (§5b, tightening T1)
+
+| | Bar | Null | Correct system passes | |
+|---|---|---|---|---|
+| M1 | contrast ≥ **20.2 yr** | a clock reading **nothing** | **99.6%** | ✅ RESOLVABLE |
+| M2 | paired 95% CI excludes 0 | no batch effect | depends on pair count | ⚠ CONDITIONAL |
+| M3 | share ≥ 50% or < 25% | — | — | ❌ **expected UNRESOLVABLE at n=6** |
+
+**M1's bar is deliberately not "contrast > 0"** — a clock reading pure noise clears that half the
+time. It is set at `z₀.₉₅ × SE` under the null (20.2 yr), which a correct clock still clears 99.6%
+of the time. The 29-vs-35 middle contrast is **not gated**: at 6 yr it is half the clock's error.
+M1 is now an entry in `tests/test_bars_resolvable.py` (registry extended with a `higher` kind).
+
+**M3 is pre-registered as expected-unresolvable**, which is the point of checking bars forward: the
+point estimate is **56%** (observed offset SD 16.4 yr vs 12.27 yr from a single baseline, residual
+10.9 yr), but the χ² CI at 6 donors spans ~**[9%, 100%]**. Saying so *now* stops a 56% point
+estimate being mistaken for a finding later.
+
+### Tests — `tests/test_diag_zero_point.py` (new, 28)
+
+Every branch every function can emit, including the ones we hope not to see (**M1 FAIL → ESCALATE**,
+which reaches past Stage 1.5 into Stage 4) and the one we expect (**M3 INDETERMINATE at n=6**,
+asserted on the real level-shift values). Also pins that M1 does **not** gate on the underpowered
+middle contrast, and that a Phase 3 decision states it reopens **both** Stage 1 targets (T4).
+
+**Predicted outcome, recorded in the lab notebook:** `PHASE_2_AND_3` with **no** Phase 3 lead —
+M1 clears, M2 is NOT_ESTIMABLE (D1 discards batch identity, so option (a) is unavailable until
+Phase 2), M3 indeterminate. Useful precisely because it says *instrument first*: the data needed to
+choose a Phase 3 option does not exist yet.
+
+---
+
 ## 2026-07-24 (review) — Independently reviewed the Stage 1.5 work; verified it, then tightened its plan
 
 **Status:** ✅ Review complete, 303 tests pass, `src/` untouched. Recorded as

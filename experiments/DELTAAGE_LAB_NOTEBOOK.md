@@ -2590,3 +2590,57 @@ actually happened stay auditable side by side. It is kept in one place only, so 
 cannot drift.
 
 **Status: PLAN ONLY — nothing in it has been executed** (`git diff --stat src/` empty).
+
+---
+
+## STAGE 1.5 PHASE 1 — PRE-REGISTRATION (2026-07-24, written BEFORE the run)
+
+`experiments/diag_zero_point.py`. Read-only. Decides whether the expensive Phase 3 is needed at
+all. Bars registered here and in `tests/test_bars_resolvable.py` **before** any number is produced,
+per `REF_GROUND_RULES.md §5b` and tightening §6.2 T1.
+
+### The bars, and what a correct system would score
+
+| | Bar | Null it is tested against | A system meeting the intent passes | Verdict |
+|---|---|---|---|---|
+| **M1** | extreme age contrast ≥ **20.2 yr** | a clock that reads **nothing** (contrast ~ N(0, 12.27)) | **99.6%** (true gap 53 yr) | ✅ RESOLVABLE |
+| **M2** | paired 95% CI on the Exp1−Exp2 offset excludes 0 | no batch effect | depends on pair count | ⚠ CONDITIONAL |
+| **M3** | variance share ≥ 50% or < 25% | — (an estimate, not a test) | — | ❌ **EXPECTED UNRESOLVABLE at n=6** |
+
+**Why M1's bar is not "contrast > 0".** A clock reading pure noise clears that half the time. The
+bar is set at `z₀.₉₅ × SE` under the null instead — 20.2 yr — which a *correct* clock still clears
+99.6% of the time. **The 29-vs-35 middle contrast is deliberately NOT gated**: at 6 yr it is half
+the clock's own error, so it is reported and never claimed.
+
+### Predictions, recorded now
+
+1. **M1 PASSES.** The clock is a published age predictor with `cv_pearson = 0.837` over ages 1–96;
+   a 53-year contrast should clear 20.2 yr comfortably. **If it does not, that escalates past
+   Stage 1.5 entirely** — ΔAge's target would be unvalidated, which is a Stage 4 matter, and
+   Stage 2's premise is void as stated. Moderate-high confidence.
+2. **M2 returns NOT_ESTIMABLE.** Finding D1 is that batch identity is *discarded* at parse time
+   (`_parse_series` never reads it), so there are no matched pairs to hand in until Phase 2 parses
+   `Exp1`/`Exp2`. This is a permitted outcome (T4) and it means **fix option (a) is unavailable
+   until Phase 2 lands**, regardless of whether a batch effect exists. High confidence.
+3. **M3 returns INDETERMINATE**, with a point estimate near **56%**. Pre-computed from the six
+   `level_shift_model` values already in the snapshot: observed offset SD **16.4 yr** against
+   **12.27 yr** contributed by a single unreplicated baseline → share ≈ 56%, residual ≈ **10.9 yr**
+   for biology + batch + model. But with 6 donors the χ² CI on that share spans roughly
+   **[9%, 100%]**, so it cannot decide anything. **Stated in advance so a 56% point estimate is
+   not later mistaken for a finding.** High confidence.
+
+**Therefore the predicted ACTION is `PHASE_2_AND_3` with no Phase 3 lead** — M1 clears, but neither
+M2 nor M3 can yet say *which* defect dominates. That is a genuinely useful answer: it says
+instrument first (Phase 2 is value-neutral and safe), because **the data needed to choose a Phase 3
+option does not exist yet**.
+
+### What would make this wrong, and what each miss would mean
+
+- **M1 FAILS** → escalate; do not proceed to Phase 2/3. The strongest possible outcome and the
+  reason Phase 1 runs first.
+- **M2 estimable after all** (matched pairs exist despite D1) → option (a) comes back on the menu
+  earlier than expected.
+- **M3 determinate** → the χ² CI is narrower than predicted; M3 then *sizes* Phase 3 and picks its
+  lead (T2).
+
+**Nothing in Phase 1 changes `src/`.** `git diff --stat src/` must be empty when it finishes.
