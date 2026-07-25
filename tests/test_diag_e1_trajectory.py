@@ -78,8 +78,24 @@ def test_e1_verdict_drops_donors_with_an_undefined_trend():
     assert v["n_donors"] == 3 and "N2" not in v["per_donor"]
 
 
+# ----------------------------- restrict_to_phase --------------------------- #
+def test_restrict_to_phase_keeps_only_days_at_or_below_the_cutoff():
+    days, ages = e1.restrict_to_phase([0, 7, 15, 21, 54], [50, 40, 35, 30, 10], 15.0)
+    assert days == [0.0, 7.0, 15.0] and ages == [50.0, 40.0, 35.0]      # 21 and 54 dropped
+
+
+def test_restrict_to_phase_can_empty_out_a_donor_with_no_early_points():
+    days, ages = e1.restrict_to_phase([21, 34, 54], [30, 20, 10], 15.0)
+    assert days == [] and ages == []
+
+
+def test_e1b_cutoff_is_the_pre_registered_day_15():
+    assert e1.REPROG_PHASE_DAY_MAX == 15.0
+
+
 # ---------------------------------- bars ----------------------------------- #
-def test_bars_registers_e1_and_reports_it_resolvable_for_a_moderate_trend():
+def test_bars_registers_e1_and_e1b_both_resolvable_for_a_moderate_trend():
     b = {x["id"]: x for x in e1.bars()}
-    assert set(b) == {"E1"}
+    assert set(b) == {"E1", "E1b"}
     assert b["E1"]["pass_rate_if_intent_holds"] > 0.95
+    assert b["E1b"]["pass_rate_if_intent_holds"] > 0.95

@@ -2862,3 +2862,37 @@ explicitly: refining the test after a null is precisely the fishing pattern this
 against, so **a null E1b would, together with E1, be strong evidence against ΔAge validity**, and
 E1b is not a retry until something passes. As of now, **the ΔAge rejuvenation signal is NOT
 validated**, and the burden is on a pre-registered E1b to change that.
+
+## E1b PRE-REGISTRATION (2026-07-25, written BEFORE the run)
+
+Same statistic and bar as E1 (per-donor Spearman(age, day), paired 95% CI over 6 donors, PASS iff CI
+excludes 0 and is negative), restricted to the **reprogramming phase: day ≤ 15**.
+
+**The cutoff, and the anti-fishing guard.** Gill 2022 is maturation-phase *transient* reprogramming;
+OSKM is withdrawn ~day 13, so the age dip (if real) lives in the early window and is followed by
+re-differentiation. **Day 15 is chosen from the protocol** (covers the ~day-13 withdrawal) **and the
+sampling design** (dense early days 0,7,9,11,13,15 then a break to 21,29,…) — **not from the
+phase-restricted ages, which I have not looked at.** One pre-committed cutoff, one verdict; I am
+deliberately **not** scanning alternative cutoffs, because scanning until one passes is the exact
+fishing this guards against. Committed in git as code (`REPROG_PHASE_DAY_MAX = 15.0`) before the run.
+
+**Prediction, recorded now: genuinely uncertain — ~45% PASS.**
+- *For PASS:* E1's near-zero full-trajectory rho is **consistent with** a real early dip cancelled by
+  the later maturation rise; isolating days 0–15 could expose it. That is the whole reason E1b exists.
+- *For NO_TREND:* E1's per-donor rhos were weak *individually*, not just in aggregate — a strong
+  early dip would likely have left a stronger negative footprint even across 0–54. And the phase cut
+  leaves **fewer points per donor**, widening the CI, so a real-but-modest dip may not clear n=6.
+
+So I lean **slightly toward NO_TREND**, but PASS is entirely plausible and would be the more
+interesting result. Either way it is informative and the verdict is pre-committed.
+
+**Outcome meaning:**
+- **E1b PASS** → the rejuvenation signal *is* present once the transient protocol is respected; E1's
+  null was a metric mis-specification, not absence of signal. ΔAge is partially rescued — it tracks
+  rejuvenation in the OSKM phase, which is what the model needs. The escalation **downgrades** toward
+  "absolute-age invalid, within-phase ΔAge OK", pending Stage 4 confirmation.
+- **E1b NO_TREND / WRONG_DIRECTION** → E1 and E1b agree even under the protocol-correct window: the
+  clock does not read the rejuvenation axis on this data. **Strong** evidence the ΔAge target is
+  unvalidated here; the deep escalation into Stage 4/5 hardens.
+
+**Nothing in E1b changes `src/`.** `git diff --stat src/` must be empty when it finishes.

@@ -50,6 +50,15 @@ DONOR_AGE: dict[str, float] = {"N2": 0.0, "N3": 0.0, "Y1": 29.0, "Y2": 35.0, "O1
 NEONATAL = ("N2", "N3")
 MIN_POINTS_PER_DONOR = 4          # below this a per-donor rank correlation is not worth stating
 
+# E1b (§8.5 follow-up): the REPROGRAMMING-PHASE-only cutoff. Gill 2022 is maturation-phase transient
+# reprogramming (MPTR) -- OSKM is withdrawn ~day 13, after which cells re-differentiate, so the age
+# trajectory is non-monotonic and E1's monotonic 0->54 Spearman conflates the dip with the recovery.
+# The cutoff is set at day 15 to cover the withdrawal window, and is chosen from the PROTOCOL and the
+# dense-sampling break between day 15 and day 21 -- NOT tuned on the phase-restricted ages. One
+# pre-committed cutoff, one verdict; alternative cutoffs are deliberately not scanned (that is the
+# fishing this guards against).
+REPROG_PHASE_DAY_MAX = 15.0
+
 
 def donor_trend(days: list[float], ages: list[float]) -> float:
     """Spearman(age, day) for one donor. Pure. NaN when undefined (too few points, or no spread)."""
@@ -61,6 +70,14 @@ def donor_trend(days: list[float], ages: list[float]) -> float:
         return float("nan")
     from scipy.stats import spearmanr
     return float(spearmanr(d, a).correlation)
+
+
+def restrict_to_phase(days: list[float], ages: list[float], day_max: float) -> tuple[list, list]:
+    """Keep only samples with `day <= day_max` (the E1b reprogramming-phase window). Pure."""
+    d = np.asarray(days, float)
+    a = np.asarray(ages, float)
+    m = d <= day_max
+    return d[m].tolist(), a[m].tolist()
 
 
 def e1_power(true_rho: float, donor_sd: float = 0.25, n: int = 6, alpha: float = 0.05) -> float:
@@ -104,14 +121,24 @@ def e1_verdict(rhos_by_donor: dict[str, float]) -> dict:
 
 def bars() -> list[dict]:
     """Pre-registered, resolvability-annotated (§5b)."""
-    return [{
-        "id": "E1",
-        "bar": "paired 95% CI on the mean per-donor Spearman(age, day) excludes 0 and is negative",
-        "null": "a clock that reads nothing about the reprogramming axis (per-donor rho ~ 0)",
-        "pass_rate_if_intent_holds": e1_power(-0.6, 0.25, 6),
-        "resolvability": ("CONDITIONAL on trend consistency across 6 donors (T4-style): a moderate, "
-                          "consistent trend passes ~99%; a heterogeneous one can read NO_TREND"),
-    }]
+    common_res = ("CONDITIONAL on trend consistency across 6 donors (T4-style): a moderate, "
+                  "consistent trend passes ~99%; a heterogeneous one can read NO_TREND")
+    return [
+        {
+            "id": "E1",
+            "bar": "paired 95% CI on the mean per-donor Spearman(age, day) excludes 0 and is negative",
+            "null": "a clock that reads nothing about the reprogramming axis (per-donor rho ~ 0)",
+            "pass_rate_if_intent_holds": e1_power(-0.6, 0.25, 6),
+            "resolvability": common_res,
+        },
+        {
+            "id": "E1b",
+            "bar": f"same test, reprogramming phase only (day <= {REPROG_PHASE_DAY_MAX:.0f})",
+            "null": "no age drop during the OSKM phase (per-donor rho ~ 0)",
+            "pass_rate_if_intent_holds": e1_power(-0.6, 0.25, 6),
+            "resolvability": common_res + "; fewer points per donor than E1, so noisier per-donor rho",
+        },
+    ]
 
 
 # --------------------------------------------------------------------------- #
@@ -188,14 +215,21 @@ def main() -> int:
     traj_all, _ = donor_trajectories(gill_dir, exclude_ipsc=False)
     verdict_with_ipsc = e1_verdict({d: donor_trend(v["days"], v["ages"]) for d, v in traj_all.items()})
 
-    print(f"\n  {'donor':<7}{'chrono':>8}{'n_pts':>7}{'rho(age,day)':>14}  direction")
-    print("  " + "-" * 48)
-    for d in sorted(traj, key=lambda x: DONOR_AGE.get(x, -1)):
-        r = rhos[d]
-        arrow = "falls (rejuv)" if r < 0 else ("rises" if r > 0 else "flat") if np.isfinite(r) else "n/a"
-        print(f"  {d:<7}{str(DONOR_AGE.get(d)):>8}{len(traj[d]['days']):>7}{r:>14.3f}  {arrow}")
+    # E1b: the reprogramming phase only (day <= REPROG_PHASE_DAY_MAX), where an MPTR dip should live.
+    phase = {d: restrict_to_phase(v["days"], v["ages"], REPROG_PHASE_DAY_MAX) for d, v in traj.items()}
+    rhos_b = {d: donor_trend(dd, aa) for d, (dd, aa) in phase.items()}
+    verdict_e1b = e1_verdict(rhos_b)
 
-    print(f"\n  E1 (iPSC excluded)      : {verdict['status']}\n      {verdict['reason']}")
+    print(f"\n  {'donor':<7}{'chrono':>8}{'n(all)':>7}{'rho E1':>9}{'n(<=15)':>9}{'rho E1b':>9}")
+    print("  " + "-" * 50)
+    for d in sorted(traj, key=lambda x: DONOR_AGE.get(x, -1)):
+        r, rb = rhos[d], rhos_b[d]
+        print(f"  {d:<7}{str(DONOR_AGE.get(d)):>8}{len(traj[d]['days']):>7}{r:>9.3f}"
+              f"{len(phase[d][0]):>9}{rb:>9.3f}")
+
+    print(f"\n  E1  (full trajectory, iPSC excluded) : {verdict['status']}\n      {verdict['reason']}")
+    print(f"  E1b (reprogramming phase, day <= {REPROG_PHASE_DAY_MAX:.0f})  : {verdict_e1b['status']}\n"
+          f"      {verdict_e1b['reason']}")
     print(f"  E1 sensitivity — adults : {verdict_adults['status']} "
           f"(mean rho {verdict_adults.get('mean_rho', float('nan')):+.3f})")
     print(f"  E1 sensitivity — +iPSC  : {verdict_with_ipsc['status']} "
@@ -204,6 +238,8 @@ def main() -> int:
     out = {"script": "diag_e1_trajectory", "utc": datetime.now(UTC).isoformat(timespec="seconds"),
            "bars": bars(), "trajectory_meta": tmeta,
            "verdict_primary_ipsc_excluded": verdict,
+           "verdict_e1b_reprogramming_phase": verdict_e1b,
+           "e1b_day_max": REPROG_PHASE_DAY_MAX,
            "verdict_adults_only": verdict_adults,
            "verdict_with_ipsc": verdict_with_ipsc}
     Path("diag_e1_trajectory_results.json").write_text(json.dumps(out, indent=2), encoding="utf-8")
