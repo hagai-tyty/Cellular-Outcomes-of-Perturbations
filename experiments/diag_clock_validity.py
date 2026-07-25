@@ -162,7 +162,8 @@ def in_range_age_tracking(pred: dict[str, float], chrono: dict[str, float],
     true_gap = float(ages[ages > med].mean() - ages[ages < med].mean()) if (
         (ages > med).any() and (ages < med).any()) else float(ages.max() - ages.min())
     # rank tracking within range
-    ro = np.argsort(np.argsort(vals)); rt = np.argsort(np.argsort(ages))
+    ro = np.argsort(np.argsort(vals))
+    rt = np.argsort(np.argsort(ages))
     rho = float(np.corrcoef(ro, rt)[0, 1]) if len(in_range) > 2 else float("nan")
     tracks = contrast > 0 and rho > 0
     return {
@@ -181,7 +182,8 @@ def denominator_sensitivity(age_full: list[float], age_restricted: list[float]) 
     """H1 corollary. CP10k divides by the library size over whatever genes are in the matrix. The
     clock was fit with CP10k over ITS gene set. Comparing predictions normalised over the full data
     gene set vs over the clock-overlap set bounds how much the denominator mismatch distorts."""
-    a = np.asarray(age_full, float); b = np.asarray(age_restricted, float)
+    a = np.asarray(age_full, float)
+    b = np.asarray(age_restricted, float)
     ok = np.isfinite(a) & np.isfinite(b)
     a, b = a[ok], b[ok]
     if len(a) < 2:
@@ -398,7 +400,6 @@ def run_reproduction(known_dir: str | None) -> dict:
     if not known_dir or not Path(known_dir).exists():
         return reproduction_verdict(None, 0)
     try:
-        import glob as _glob
 
         from cellfate.data.aging import LinearClock
         from cellfate.data.normalize import normalize_counts
@@ -499,14 +500,14 @@ def main() -> int:
     print("\n  H1 — OWN-DOMAIN REPRODUCTION (gold check)")
     print(f"     {repro['status']}: {repro['reason']}")
     print("\n  H2 — IN-RANGE AGE TRACKING")
-    print(f"     baselines: " + ", ".join(f"{d}({DONOR_AGE.get(d)})={p:.0f}"
+    print("     baselines: " + ", ".join(f"{d}({DONOR_AGE.get(d)})={p:.0f}"
                                           for d, p in g["baseline_pred"].items()))
     print(f"     {inr['status']}: {inr['reason']}")
     print(f"\n  H1 — intercept dominance: {g['intercept_dominance']['status']} "
           f"({g['intercept_dominance']['reason']})")
     print(f"  H1 — CP10k denominator: {g['denominator_sensitivity']['status']} "
           f"({g['denominator_sensitivity']['reason']})")
-    print(f"\n  H3 — DIRECTIONAL ATTRIBUTION (why does age rise in reprogramming?)")
+    print("\n  H3 — DIRECTIONAL ATTRIBUTION (why does age rise in reprogramming?)")
     att = g["attribution"]
     print(f"     {att['status']}: {att.get('reason', '')}")
     if "top_contributors" in att:
