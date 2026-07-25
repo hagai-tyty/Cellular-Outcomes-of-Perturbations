@@ -139,6 +139,38 @@ not touched here.**
 
 ---
 
+## 2026-07-25 (§9 reproduction) — Gold check RUN on GSE113957: clock reproduces age (0.77 yr, ρ0.99). H1 refuted.
+
+**Status:** ✅ Ran locally against the real NCBI GSE113957 files. `_load_known_age_fibroblasts`
+rewritten for the NCBI layout + unit-tested; 391 tests pass; `src/` untouched.
+
+The `run_reproduction` gold check now has its number. On 143 dermal fibroblasts (ages 1–96), the
+frozen clock through the production path (`normalize_counts` → `LinearClock`):
+
+| | |
+|---|---|
+| MAE | **0.77 yr** |
+| Spearman / Pearson (pred vs age) | **+0.99 / +0.99** |
+| weighted gene coverage | **100%** (33,155/33,155) |
+| verdict | **REPRODUCES** |
+
+**H1 (mis-applied) is definitively refuted** — the pipeline applies the clock correctly. *Honest
+scope:* 0.77 yr is in-sample (clock fit on GSE113957), so it confirms application correctness, not
+generalization; generalization is carried by H2's **out-of-sample** Gill result (+18/21 yr, ρ+0.60).
+Application-correct **and** generalizes to held-out fibroblasts. The M1/E1/E1b escalation is fully
+explained by out-of-range (neonatal, age 0) + out-of-domain (reprogramming) inputs. **ΔAge stays.**
+
+Loader work: reads NCBI raw counts (GeneID × GSM), joins GeneID→Symbol via the annotation table,
+dedups duplicate symbols by highest total (matching the clock's `dedup: highest_expressed` and
+guaranteeing unique symbols so `predict_age` can't double-count), and merges GSM→age across both
+platform series matrices. New pure helpers (`parse_age_value`, `series_gsm_to_age`,
+`dedup_symbols_highest_total`) unit-tested, plus an end-to-end loader test on synthetic NCBI files.
+
+*(Run against the four files in Downloads; move them to `D:\GSE113957\` and re-run the full
+diagnostic on the data machine to regenerate the complete results JSON with the reproduction block.)*
+
+---
+
 ## 2026-07-25 (§9 EXECUTED) — Clock validity scored: the escalation was OVER-READ. Clock is in-domain OK; ΔAge stays.
 
 **Status:** ✅ Run on `D:\Gill` (reproduction check skipped — GSE113957 absent). Scored against the

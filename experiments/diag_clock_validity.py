@@ -409,70 +409,126 @@ def run_reproduction(known_dir: str | None) -> dict:
         if ages is None or len(ages) < 5:
             return {"status": "SKIPPED",
                     "reason": f"could not parse >=5 known-age samples from {known_dir}; format not recognised"}
-        pred = clock.predict_age(normalize_counts(mat), genes)
-        mae = float(np.mean(np.abs(np.asarray(pred) - np.asarray(ages))))
+        pred = np.asarray(clock.predict_age(normalize_counts(mat), genes), float)
+        ages = np.asarray(ages, float)
+        mae = float(np.mean(np.abs(pred - ages)))
         v = reproduction_verdict(mae, len(ages))
         v["age_range_tested"] = [float(np.min(ages)), float(np.max(ages))]
+        # Secondary, robust to absolute-scale drift (annotation-release/gene-set differences between
+        # this NCBI matrix and what fit_clock used): does predicted age RANK the samples by true age?
+        from scipy.stats import spearmanr
+        v["spearman_pred_vs_age"] = float(spearmanr(pred, ages).correlation)
+        v["pearson_pred_vs_age"] = float(np.corrcoef(pred, ages)[0, 1])
+        # coverage of the clock on THIS matrix -- if low, a poor MAE is application, not the clock
+        cov = weighted_coverage(clock.weights, genes)
+        v["weighted_coverage_here"] = cov["frac_abs_weight_present"]
+        v["reason"] += (f" | Spearman(pred,age)={v['spearman_pred_vs_age']:+.2f}, "
+                        f"weighted coverage {cov['frac_abs_weight_present']:.0%}")
         return v
     except Exception as exc:  # noqa: BLE001
         return {"status": "SKIPPED", "reason": f"reproduction check errored: {exc!r}"[:200]}
 
 
-def _load_known_age_fibroblasts(known_dir: str):
-    """Parse a GEO series-matrix (ages) + an expression matrix (genes x samples) from `known_dir`.
+# --- pure parsing helpers for the NCBI-generated GSE113957 layout (unit-tested) --------------- #
+def parse_age_value(cell: str) -> float:
+    """`'age: 30'` / `'30'` / `'30 years'` -> 30.0; unparseable -> NaN. Pure."""
+    import re
+    if cell is None:
+        return float("nan")
+    tail = cell.split(":", 1)[1] if ":" in cell else cell
+    m = re.search(r"(\d+(?:\.\d+)?)", tail)
+    return float(m.group(1)) if m else float("nan")
 
-    Deliberately conservative: recognises the common GSE113957 layout (a *series_matrix* with an
-    'age'/'age (years)' characteristic and a genes-x-samples expression table). Returns
-    (ages, linear_matrix samples x genes, gene_symbols) or (None, None, None) if unrecognised.
+
+def series_gsm_to_age(series_paths: list[str]) -> dict[str, float]:
+    """Merge one or more GEO series-matrix files into {GSM: age}.
+
+    Reads `!Sample_geo_accession` (the GSM ids, column-aligned) and the
+    `!Sample_characteristics_ch1` row whose values start with 'age'. Two platforms => two files,
+    unioned. Pure w.r.t. logic; only reads the files it is given.
+    """
+    import gzip
+    import re
+    out: dict[str, float] = {}
+    for path in series_paths:
+        gsm: list[str] = []
+        age_row: list[str] | None = None
+        opener = gzip.open if str(path).endswith(".gz") else open
+        with opener(path, "rt", encoding="utf-8", errors="ignore") as fh:
+            for line in fh:
+                if line.startswith("!Sample_geo_accession"):
+                    gsm = [x.strip('"') for x in line.rstrip("\n").split("\t")[1:]]
+                elif line.startswith("!Sample_characteristics_ch1"):
+                    vals = [x.strip('"') for x in line.rstrip("\n").split("\t")[1:]]
+                    if vals and re.match(r"\s*age\b", vals[0], re.I):
+                        age_row = vals
+        if gsm and age_row and len(gsm) == len(age_row):
+            for g, a in zip(gsm, age_row, strict=True):
+                v = parse_age_value(a)
+                if np.isfinite(v):
+                    out[g] = v
+    return out
+
+
+def dedup_symbols_highest_total(symbols: list[str], counts: np.ndarray) -> tuple[list[str], np.ndarray]:
+    """Collapse duplicate gene symbols keeping the row with the highest TOTAL count.
+
+    `counts` is (n_genes, n_samples). Matches the clock's `dedup: highest_expressed` and, crucially,
+    guarantees the symbol list handed to `predict_age` is UNIQUE -- otherwise a symbol appearing
+    twice would have its weight counted twice. Pure.
+    """
+    totals = counts.sum(axis=1)
+    best: dict[str, int] = {}
+    for i, s in enumerate(symbols):
+        if s not in best or totals[i] > totals[best[s]]:
+            best[s] = i
+    keep = [best[s] for s in dict.fromkeys(symbols) if s in best]  # stable, one row per symbol
+    keep_syms = [symbols[i] for i in keep]
+    return keep_syms, counts[keep]
+
+
+def _load_known_age_fibroblasts(known_dir: str):
+    """Load the NCBI-generated GSE113957 counts, map GeneID->Symbol, attach GSM ages.
+
+    Expects in `known_dir`:
+      * `*raw_counts*NCBI*.tsv(.gz)`  -- GeneID rows x GSM columns, integer counts
+      * `*annot*.tsv(.gz)`            -- GeneID -> Symbol table
+      * one or more `*series_matrix*` -- GSM -> age (both platforms)
+    Returns (ages[n], counts[n_samples, n_genes] in the SAME order, gene_symbols) so the caller can
+    run the production `normalize_counts` -> clock path. (None, None, None) if the files are absent.
     """
     import glob
-    import re
 
     import pandas as pd
-    series = next(iter(glob.glob(str(Path(known_dir) / "*series_matrix*"))), None)
-    if not series:
-        return None, None, None
-    # --- ages from the series matrix ---
-    titles: list[str] = []
-    age_row: list[str] | None = None
-    opener = __import__("gzip").open if series.endswith(".gz") else open
-    with opener(series, "rt", encoding="utf-8", errors="ignore") as fh:
-        for line in fh:
-            if line.startswith("!Sample_title"):
-                titles = [x.strip('"') for x in line.rstrip().split("\t")[1:]]
-            elif line.startswith("!Sample_characteristics_ch1"):
-                vals = [x.strip('"') for x in line.rstrip().split("\t")[1:]]
-                if vals and re.search(r"\bage\b", vals[0], re.I):
-                    age_row = vals
-    if not titles or age_row is None:
+
+    def _first(pattern):
+        hits = glob.glob(str(Path(known_dir) / pattern))
+        return hits[0] if hits else None
+
+    counts_f = _first("*raw_counts*NCBI*.tsv*") or _first("*raw_counts*.tsv*")
+    annot_f = _first("*annot*.tsv*")
+    series = glob.glob(str(Path(known_dir) / "*series_matrix*"))
+    if not counts_f or not annot_f or not series:
         return None, None, None
 
-    def _age(v: str):
-        m = re.search(r"(\d+(?:\.\d+)?)", v.split(":", 1)[1] if ":" in v else v)
-        return float(m.group(1)) if m else np.nan
-    ages = np.array([_age(v) for v in age_row], dtype=float)
+    gsm_age = series_gsm_to_age(series)                              # {GSM: age}
+    annot = pd.read_csv(annot_f, sep="\t", usecols=["GeneID", "Symbol"], dtype={"GeneID": str})
+    id2sym = dict(zip(annot["GeneID"].astype(str), annot["Symbol"].astype(str), strict=True))
 
-    # --- expression matrix: first non-series table in the dir, gene symbols in column 0 ---
-    cands = [p for ext in ("*.txt.gz", "*.tsv.gz", "*.txt", "*.tsv", "*.csv.gz", "*.csv")
-             for p in glob.glob(str(Path(known_dir) / ext)) if "series_matrix" not in p]
-    if not cands:
-        return None, None, None
-    df = pd.read_csv(cands[0], sep=None, engine="python")
-    gene_col = df.columns[0]
-    sample_cols = [c for c in df.columns[1:] if c in set(titles)]
+    cdf = pd.read_csv(counts_f, sep="\t", dtype={"GeneID": str}).set_index("GeneID")
+    # keep only GSM columns that have a known age, in a fixed order
+    sample_cols = [c for c in cdf.columns if c in gsm_age]
     if len(sample_cols) < 5:
-        # titles may not match column headers 1:1; fall back to positional if counts line up
-        if len(df.columns) - 1 == len(titles):
-            sample_cols = list(df.columns[1:])
-        else:
-            return None, None, None
-    genes = df[gene_col].astype(str).tolist()
-    expr = df[sample_cols].to_numpy(dtype=np.float64).T          # samples x genes
-    # map ages onto the used columns
-    idx = [titles.index(c) for c in sample_cols] if set(sample_cols) <= set(titles) else list(range(len(sample_cols)))
-    ages_used = ages[idx]
-    ok = np.isfinite(ages_used)
-    return ages_used[ok], expr[ok], genes
+        return None, None, None
+    ages = np.array([gsm_age[c] for c in sample_cols], dtype=float)
+
+    symbols = [id2sym.get(gid, "") for gid in cdf.index.astype(str)]
+    counts = cdf[sample_cols].to_numpy(dtype=np.float64)            # genes x samples
+    keep = [i for i, s in enumerate(symbols) if s]                  # drop unmapped GeneIDs
+    symbols = [symbols[i] for i in keep]
+    counts = counts[keep]
+    symbols, counts = dedup_symbols_highest_total(symbols, counts)  # unique symbols
+    return ages, counts.T, symbols                                  # (n_samples, n_genes)
 
 
 def main() -> int:

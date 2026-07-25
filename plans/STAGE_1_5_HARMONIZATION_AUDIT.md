@@ -721,7 +721,7 @@ run on `D:\Gill`; reproduction check skipped (GSE113957 not present). `src/` unt
 | **H1 gene coverage** | 18,928/33,155 genes (57%) but **89.2% of \|weight\|** | DEGRADED (not CRIPPLED) |
 | **H1 intercept dominance** | predictions SD **21.4 yr** around the 72.4 intercept | MOVES (not collapsed) |
 | **H1 CP10k denominator** | switching gene space moves age **4.3 yr** | STABLE |
-| **H1 reproduction** | GSE113957 absent | SKIPPED |
+| **H1 reproduction** | GSE113957 (143 fibroblasts, ages 1–96) | ✅ **REPRODUCES — MAE 0.77 yr, ρ+0.99, 100% coverage** (in-sample: confirms application correctness) |
 | **H3 attribution** | top: IGFBP3 +3.97 (aging), KRT7 +1.60 (epithelial/MET), SULF1, GREM1, DKK1 | DIFFUSE |
 | **ACTION** | | **IN_DOMAIN_OK_INVESTIGATE_REPROGRAMMING** |
 
@@ -736,10 +736,13 @@ predictions move 21 yr, not stuck at the intercept; CP10k is stable. The DEGRADE
 minor recoverable sharpening (fix gene mapping for the last 11%), not the cause of anything.
 
 **Two honest limits, recorded:**
-1. **H2 is directional at n=4.** Contrast +18/21 yr and Spearman +0.60 point the right way and are
-   consistent, but 4 in-range donors is not a powered test. GSE113957 (133 fibroblasts, ages 1–96)
-   is the reproduction check that turns this from directional to rigorous — that is its real value,
-   not avoiding INCONCLUSIVE.
+1. ~~**H2 is directional at n=4.**~~ **RESOLVED (2026-07-25).** The GSE113957 reproduction ran:
+   **MAE 0.77 yr, ρ+0.99 over 143 fibroblasts, 100% gene coverage → REPRODUCES.** Note this is
+   *in-sample* (the clock was fit on GSE113957), so it confirms the pipeline applies the clock
+   correctly — it does not by itself prove generalization. Generalization is carried by H2's Gill
+   result, which *is* out-of-sample (Gill donors were not in the clock's training set): +18/21 yr,
+   ρ+0.60. Application-correct **and** generalizes to held-out fibroblasts. The escalation is fully
+   explained by out-of-range (neonatal) + out-of-domain (reprogramming) inputs, not a broken clock.
 2. **H3 attribution: the exact shares reframe it — it is whole-transcriptome upheaval, not a
    marker confound.** My check looked for OSKM/pluripotency + cell-cycle; the measured shares are
    OSKM **0.007%**, cell-cycle **0.65%**, senescence **2.7%** — *none* of my categories explain

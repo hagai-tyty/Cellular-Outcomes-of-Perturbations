@@ -12,6 +12,7 @@ import importlib.util
 import sys
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 _ROOT = Path(__file__).resolve().parents[1]
@@ -204,6 +205,90 @@ def test_decide_crippled_beats_everything_even_with_tracking():
     """An application defect makes the other axes untrustworthy, so it must win."""
     d = dcv.decide(_crippled_cov(), _tracks(), _repro(), _confound())
     assert d["action"] == "FIX_APPLICATION"
+
+
+# ------------------------------------------- NCBI GSE113957 loader helpers (repro) ---- #
+def test_parse_age_value_handles_geo_and_plain_forms():
+    assert dcv.parse_age_value("age: 30") == 30.0
+    assert dcv.parse_age_value("30") == 30.0
+    assert dcv.parse_age_value("age: 1") == 1.0
+    assert dcv.parse_age_value("72.5 years") == 72.5
+    assert np.isnan(dcv.parse_age_value("age: unknown"))
+    assert np.isnan(dcv.parse_age_value(None))
+
+
+def test_dedup_symbols_keeps_the_highest_total_row_and_makes_them_unique():
+    # GENEA appears twice (rows 0,2); the higher-total row (2: total 30) must win
+    symbols = ["GENEA", "GENEB", "GENEA"]
+    counts = np.array([[1.0, 2.0],      # GENEA total 3
+                       [5.0, 5.0],      # GENEB total 10
+                       [10.0, 20.0]])   # GENEA total 30  <- keep this one
+    syms, mat = dcv.dedup_symbols_highest_total(symbols, counts)
+    assert syms == ["GENEA", "GENEB"]                      # unique, stable order
+    assert mat.shape == (2, 2)
+    assert mat[0].tolist() == [10.0, 20.0]                 # the higher-total GENEA row
+    assert mat[1].tolist() == [5.0, 5.0]
+
+
+def test_dedup_is_a_noop_when_symbols_already_unique():
+    symbols = ["A", "B", "C"]
+    counts = np.arange(6.0).reshape(3, 2)
+    syms, mat = dcv.dedup_symbols_highest_total(symbols, counts)
+    assert syms == ["A", "B", "C"]
+    np.testing.assert_array_equal(mat, counts)
+
+
+def test_series_gsm_to_age_merges_two_platform_files(tmp_path):
+    """Two series matrices (two platforms) union into one GSM->age map, ages parsed from the
+    'age:' characteristic row that is column-aligned with the geo_accession row."""
+    import gzip
+    a = tmp_path / "GSE-GPL1_series_matrix.txt.gz"
+    b = tmp_path / "GSE-GPL2_series_matrix.txt"
+    with gzip.open(a, "wt", encoding="utf-8") as fh:
+        fh.write('!Sample_geo_accession\t"GSM1"\t"GSM2"\n')
+        fh.write('!Sample_characteristics_ch1\t"Sex: Male"\t"Sex: Female"\n')
+        fh.write('!Sample_characteristics_ch1\t"age: 30"\t"age: 40"\n')
+    b.write_text(
+        '!Sample_geo_accession\t"GSM3"\t"GSM4"\n'
+        '!Sample_characteristics_ch1\t"age: 1"\t"age: 12"\n', encoding="utf-8")
+    m = dcv.series_gsm_to_age([str(a), str(b)])
+    assert m == {"GSM1": 30.0, "GSM2": 40.0, "GSM3": 1.0, "GSM4": 12.0}
+
+
+def test_series_gsm_to_age_ignores_non_age_characteristics(tmp_path):
+    p = tmp_path / "x_series_matrix.txt"
+    p.write_text(
+        '!Sample_geo_accession\t"GSM1"\t"GSM2"\n'
+        '!Sample_characteristics_ch1\t"cell id: AG1"\t"cell id: AG2"\n'
+        '!Sample_characteristics_ch1\t"disease: Normal"\t"disease: Normal"\n', encoding="utf-8")
+    assert dcv.series_gsm_to_age([str(p)]) == {}          # no age row -> empty, not a crash
+
+
+def test_load_known_age_end_to_end_on_synthetic_ncbi_files(tmp_path):
+    """Full loader: raw counts (GeneID x GSM) + annotation (GeneID->Symbol) + series (GSM->age),
+    returned aligned so ages[i] matches counts row i, symbols unique."""
+    import gzip
+    (tmp_path / "GSE_raw_counts_GRCh38.p13_NCBI.tsv").write_text(
+        "GeneID\tGSM1\tGSM2\tGSM3\tGSM4\tGSM5\tGSM6\n"
+        "100\t10\t20\t30\t40\t50\t60\n"      # -> FN1
+        "200\t1\t1\t1\t1\t1\t1\n"            # -> COL1A1
+        "300\t5\t5\t5\t5\t5\t5\n",           # -> unmapped (dropped)
+        encoding="utf-8")
+    with gzip.open(tmp_path / "Human.GRCh38.p13.annot.tsv.gz", "wt", encoding="utf-8") as fh:
+        fh.write("GeneID\tSymbol\tDescription\n100\tFN1\tx\n200\tCOL1A1\ty\n")  # 300 absent
+    (tmp_path / "s_series_matrix.txt").write_text(
+        '!Sample_geo_accession\t"GSM1"\t"GSM2"\t"GSM3"\t"GSM4"\t"GSM5"\t"GSM6"\n'
+        '!Sample_characteristics_ch1\t"age: 1"\t"age: 12"\t"age: 24"\t"age: 30"\t"age: 53"\t"age: 70"\n',
+        encoding="utf-8")
+    ages, mat, genes = dcv._load_known_age_fibroblasts(str(tmp_path))
+    assert ages.tolist() == [1.0, 12.0, 24.0, 30.0, 53.0, 70.0]
+    assert genes == ["FN1", "COL1A1"]                    # GeneID 300 dropped (unmapped)
+    assert mat.shape == (6, 2)                            # 6 samples x 2 genes
+    assert mat[:, 0].tolist() == [10, 20, 30, 40, 50, 60]  # FN1 across samples
+
+
+def test_load_known_age_returns_none_when_files_missing(tmp_path):
+    assert dcv._load_known_age_fibroblasts(str(tmp_path)) == (None, None, None)
 
 
 # ------------------------------------------------------------------------ bars ---- #

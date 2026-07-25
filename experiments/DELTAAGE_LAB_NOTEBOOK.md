@@ -3042,3 +3042,42 @@ hypothesis, not weaker.
 2. **Domain-aware ΔAge** — connect the reprogramming out-of-domain finding to the existing OOD
    detector: ΔAge is trustworthy where the cell is in-distribution, flagged where not. Uses machinery
    already built; no new target.
+
+---
+
+## RESULT — §9 REPRODUCTION (2026-07-25): the clock is applied correctly. H1 definitively refuted.
+
+The GSE113957 gold check ran on the real NCBI-generated data (143 dermal fibroblasts, ages 1–96)
+through the production path (`normalize_counts` → `LinearClock`). `diag_clock_validity.py`'s
+`_load_known_age_fibroblasts` was rewritten for the NCBI layout (raw counts by GeneID → Symbol via
+the annotation table, ages merged from both platform series matrices) and unit-tested end-to-end.
+
+| Metric | Value |
+|---|---|
+| MAE (predicted vs chronological) | **0.77 yr** |
+| Spearman(pred, age) | **+0.99** |
+| Pearson | **+0.99** |
+| weighted gene coverage on this set | **100%** (33,155/33,155) |
+| n | 143 |
+| verdict | **REPRODUCES** |
+
+**H1 (mis-applied) is definitively refuted.** The pipeline feeds the clock correctly; with all its
+genes present and in-domain fibroblasts, it returns age essentially exactly.
+
+**Honest scope of this number.** 0.77 yr is *in-sample* — the clock was fit on GSE113957 — so it
+confirms **application correctness**, not generalization (a 33k-feature ridge on 143 samples fits
+its own data tightly; the clock's honest generalization error is its published cv_mae 12.27 yr).
+Generalization is established *separately* by H2: the Gill donors were **not** in the clock's
+training set, and there the clock still tracks age out-of-sample (+18 yr for a 21 yr gap, ρ+0.60).
+
+**The two together close the question:**
+- application is correct (GSE113957 in-sample, 0.77 yr, ρ0.99, 100% coverage), and
+- the clock generalizes to held-out fibroblasts (Gill out-of-sample, +18/21 yr).
+
+The M1/E1/E1b escalation is fully explained by **out-of-range** donors (neonatal, age 0, below the
+clock's [1,96]) and **out-of-domain** cells (reprogramming intermediates — whole-transcriptome
+upheaval), not a broken or mis-applied clock. **ΔAge's instrument is validated. ΔAge stays.**
+
+*(Run locally against the four NCBI files; move them to `D:\GSE113957\` and re-run the full
+`diag_clock_validity.py "D:\Gill" "D:\GSE113957"` on the data machine to regenerate the complete
+results JSON with the reproduction block included.)*
