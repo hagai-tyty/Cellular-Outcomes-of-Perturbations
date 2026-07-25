@@ -139,6 +139,37 @@ not touched here.**
 
 ---
 
+## 2026-07-25 (§9 EXECUTED) — Clock validity scored: the escalation was OVER-READ. Clock is in-domain OK; ΔAge stays.
+
+**Status:** ✅ Run on `D:\Gill` (reproduction check skipped — GSE113957 absent). Scored against the
+pre-registration; full record in the notebook (*RESULT — §9*) and plan §9.5. `src/` untouched.
+
+**The §7–§8 escalation ("ΔAge target unvalidated; clock can't read age") is refuted.**
+
+| Check | Result |
+|---|---|
+| **H2 in-range tracking** | ✅ **TRACKS** — +18.0 yr for a 21 yr gap, Spearman +0.60. M1 failed by anchoring on the two age-0 neonatal donors, below the clock's [1,96] range (N2 read 98.7) |
+| H1 coverage | DEGRADED — 57% of genes but **89.2% of weight** (the fibroblast genes that matter are all present) |
+| H1 intercept dominance | MOVES — predictions SD 21.4 yr, not collapsed onto the intercept |
+| H1 CP10k denominator | STABLE — 4.3 yr |
+| H3 attribution | DIFFUSE — OSKM 0.007%, cell-cycle 0.65%, senescence 2.7%; **none of my categories explain it** |
+| ACTION | **IN_DOMAIN_OK_INVESTIGATE_REPROGRAMMING** |
+
+**H3 reframed by the exact shares:** the +20.1 yr reprogramming drift is the residual of ≈150 yr of
+positive vs ≈130 yr of negative gene contributions — the clock summing a transcriptome in upheaval,
+i.e. **extrapolating outside its training distribution (out-of-domain by nature)**, not a
+marker-gene confound. My H3 prediction (OSKM/cell-cycle) was wrong; recorded. This is exactly what
+the model's existing OOD detector is for.
+
+**Standing conclusion:** the clock reads fibroblast age; ΔAge's instrument is valid in-domain. On
+reprogramming intermediates it is out-of-domain — an interpretation limit, not a broken target. Fix
+options A/B/C/D **not triggered**; C (retreat to fate) off the table. **ΔAge stays.**
+
+**Next (priority):** (1) GSE113957 reproduction — turns the n=4 H2 into an n=133 powered
+validation; (2) domain-aware ΔAge via the existing OOD detector.
+
+---
+
 ## 2026-07-25 (§9) — Clock-validity diagnostic: is the clock broken, mis-applied, or out-of-domain?
 
 **Status:** ✅ Written and tested (**384 tests**, 28 new). ⏳ **Not yet run on the data machine** —

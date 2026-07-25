@@ -1,0 +1,165 @@
+{
+  "script": "diag_clock_validity",
+  "utc": "2026-07-25T15:59:19+00:00",
+  "gill_dir": "D:\\Gill",
+  "known_age_dir": "D:\\GSE113957",
+  "bars": [
+    {
+      "id": "H1-coverage",
+      "bar": "frac of clock |weight| present >= 90% = OK, < 70% = CRIPPLED",
+      "decides": "is the clock even fully applied"
+    },
+    {
+      "id": "H1-reproduction",
+      "bar": "MAE on known-age fibroblasts <= 18 yr = REPRODUCES",
+      "decides": "does the pipeline apply the clock correctly on its own domain"
+    },
+    {
+      "id": "H2-in-range",
+      "bar": "positive young->old contrast AND Spearman > 0 among in-range donors",
+      "decides": "does the clock track age it was actually fit to read"
+    },
+    {
+      "id": "H3-attribution",
+      "bar": "OSKM+cell-cycle share of the 'age rises' signal >= 30% = out-of-domain confound",
+      "decides": "is the reprogramming reversal cell-state, not aging"
+    }
+  ],
+  "coverage": {
+    "n_clock_genes": 33155,
+    "n_data_genes": 35720,
+    "n_overlap": 18928,
+    "frac_genes_present": 0.5708942844216559,
+    "frac_abs_weight_present": 0.8916501187694653,
+    "weight_k50": 2050,
+    "weight_k90": 8703,
+    "verdict": {
+      "status": "DEGRADED",
+      "frac_abs_weight_present": 0.8916501187694653,
+      "reason": "89.2% of the clock's weight is present -- materially reduced; predictions are partially intercept-driven and must be read with care"
+    }
+  },
+  "reproduction": {
+    "status": "SKIPPED",
+    "reason": "no known-age fibroblast set available (pass its dir)"
+  },
+  "in_range": {
+    "status": "TRACKS_IN_RANGE",
+    "n_in_range": 4,
+    "in_range_contrast_years": 18.018381010057723,
+    "true_gap_years": 21.0,
+    "spearman_in_range": 0.6000000000000001,
+    "out_of_range_donors": {
+      "N2": 0.0,
+      "N3": 0.0
+    },
+    "out_of_range_predictions": {
+      "N2": 98.65122294831565,
+      "N3": 36.44482078088295
+    },
+    "reason": "in-range contrast +18.0 yr for a 21 yr true gap, Spearman +0.60 over 4 in-range donors; 2 donors are OUT of range (1.0, 96.0)"
+  },
+  "intercept_dominance": {
+    "status": "MOVES",
+    "pred_sd_years": 21.42916298723329,
+    "mean_abs_offset_from_intercept": 16.37386069792469,
+    "intercept": 72.433349609375,
+    "reason": "predictions have SD 21.4 yr around a 72.4 yr intercept"
+  },
+  "denominator_sensitivity": {
+    "status": "STABLE",
+    "mean_abs_shift_years": 4.316438202034135,
+    "reason": "switching the CP10k gene space moves predicted age by 4.3 yr on average"
+  },
+  "attribution": {
+    "status": "DIFFUSE",
+    "share_oskm_pluripotency": 6.70146928256829e-05,
+    "share_cell_cycle": 0.0065432354812513934,
+    "share_senescence_aging": 0.027408630118578275,
+    "confound_share": 0.006610250174077076,
+    "total_change_years": 20.141459397371708,
+    "top_contributors": [
+      [
+        "IGFBP3",
+        3.9706747938512876
+      ],
+      [
+        "SULF1",
+        2.4989196235155475
+      ],
+      [
+        "GREM1",
+        2.2443479520885177
+      ],
+      [
+        "KRT7",
+        1.59942888432073
+      ],
+      [
+        "HLA-C",
+        1.5469086159843641
+      ],
+      [
+        "COTL1",
+        1.4696302459810795
+      ],
+      [
+        "TGFBI",
+        1.4661511560767337
+      ],
+      [
+        "DKK1",
+        1.3732246486516146
+      ],
+      [
+        "CXCL12",
+        1.3667795216460021
+      ],
+      [
+        "ENPP2",
+        1.2394137882683864
+      ],
+      [
+        "STC1",
+        1.2181446845862993
+      ],
+      [
+        "CLDN11",
+        1.1693340598460793
+      ],
+      [
+        "ADAMTS1",
+        1.106037249227363
+      ],
+      [
+        "HLA-B",
+        1.1012473322672776
+      ],
+      [
+        "PHLDA1",
+        1.0399104755941977
+      ]
+    ],
+    "reason": "the rise is spread across genes with no dominant category; inconclusive on H3, weight the other checks"
+  },
+  "baseline_pred": {
+    "N2": 98.65122294831565,
+    "N3": 36.44482078088295,
+    "O1": 79.12114381802968,
+    "O2": 79.49712792501873,
+    "Y1": 64.92370931781772,
+    "Y2": 57.65780040511524
+  },
+  "baseline_pred_restricted": {
+    "N2": 117.48262674758945,
+    "N3": 36.111995893396426,
+    "O1": 81.2739488472011,
+    "O2": 81.9481831729236,
+    "Y1": 65.94693959953645,
+    "Y2": 58.765110371764706
+  },
+  "decision": {
+    "action": "IN_DOMAIN_OK_INVESTIGATE_REPROGRAMMING",
+    "reason": "the clock tracks in-range adult fibroblast age (H2 confirmed), so 'the clock can't read age' is too strong. The reprogramming-phase behaviour needs the attribution check to finish before choosing between a domain fix and a new target."
+  }
+}

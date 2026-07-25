@@ -2996,3 +2996,49 @@ data instead says GENUINE_CLOCK_LIMITATION, that stands against my expectation a
   dismiss as domain shift.
 
 `git diff --stat src/` must be empty when this finishes.
+
+---
+
+## RESULT — §9 CLOCK VALIDITY (2026-07-25): the escalation was over-read. Clock is IN-DOMAIN OK.
+
+`diag_clock_validity.py` on `D:\Gill` (reproduction check skipped — GSE113957 not present).
+`diag_clock_validity_results.json` archived. Scored against the pre-registration above.
+
+| Check | Predicted | Result | Hit? |
+|---|---|---|---|
+| H2 in-range tracking | TRACKS (high conf) | **TRACKS** — +18.0/21 yr, ρ+0.60, n=4 | ✅ |
+| H1 coverage | DEGRADED, weight ≫ gene-count | **DEGRADED** — 57% genes but **89.2% weight** | ✅ (exact) |
+| H1 reproduction | SKIPPED | SKIPPED | ✅ |
+| H1 intercept dominance | — | MOVES (SD 21.4 yr) | clock not collapsed |
+| H1 CP10k denominator | — | STABLE (4.3 yr) | normalization sound |
+| H3 attribution | OUT_OF_DOMAIN_CONFOUND (mod conf) | **DIFFUSE** | ❌ my prediction wrong |
+| ACTION | TARGET_RECOVERABLE / FIX_APPLICATION | IN_DOMAIN_OK_INVESTIGATE | ΔAge-stays core held |
+
+**Headline: the §7–§8 escalation ("ΔAge unvalidated; clock can't read age") is refuted.** Among the
+donors the clock was fit to read, it tracks age (+18/21 yr, ρ+0.60). M1's failure was anchored on
+the two neonatal donors (age 0, below the clock's [1,96] range — N2 read 98.7). **ΔAge stays.**
+
+**Where I was wrong (H3), and the exact numbers make it cleaner, not muddier.** I predicted
+OSKM/cell-cycle would drive the reprogramming "age rises." Measured shares: OSKM **0.007%**,
+cell-cycle **0.65%**, senescence **2.7%** — none of my categories matter. The net **+20.1 yr** rise
+is the residual of ≈**150 yr** of positive gene contributions against ≈**130 yr** negative: the
+clock summing a transcriptome in upheaval. That is a model extrapolating far outside its training
+distribution — **out-of-domain by nature**, exactly what the model's OOD detector exists to flag,
+not a marker confound. E1b was marginal (p=0.0445) anyway.
+
+**Standing conclusion.** The clock reads fibroblast age; ΔAge's instrument is valid in-domain. On
+strongly identity-changing cells (reprogramming intermediates) it is out-of-domain and its reading
+is an unstable residual — a characterized *interpretation* limit, not a broken target. Fix options
+A/B/C/D are not triggered; C (retreat to fate) is off the table.
+
+**Predictions honoured:** H2 and H1-coverage confirmed (the ones that decide "clock works"); H3
+prediction falsified and recorded as such — the out-of-domain story is stronger than my marker
+hypothesis, not weaker.
+
+### Next, in priority order (not fishing — each is a distinct, pre-registerable question)
+1. **GSE113957 reproduction** — turns H2 from n=4-directional into an n=133 powered validation
+   (clock's own training set, ages 1–96). Highest value; it is the rigorous confirmation of the
+   central positive finding, and it matters for the manuscript.
+2. **Domain-aware ΔAge** — connect the reprogramming out-of-domain finding to the existing OOD
+   detector: ΔAge is trustworthy where the cell is in-distribution, flagged where not. Uses machinery
+   already built; no new target.

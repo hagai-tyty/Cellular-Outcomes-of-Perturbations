@@ -34,9 +34,10 @@ report. The pre-registration text in §0–§4 is left **exactly as written**; o
 | §5.4 **Phase 1** — M1/M2/M3 measurements | ✅ **EXECUTED — M1 FAILED. ACTION: ESCALATE** (§7). M2's verdict was a stub and is being fixed; M3 indeterminate as predicted |
 | §5.4 Phases 2–4 | ⛔ **BLOCKED by the M1 failure** — do not proceed until the clock's validity is settled |
 | Does the clock read chronological age on this data? | ❌ **NO at the extremes** — 11.8 yr contrast vs a 53 yr true gap; two age-0 donors read 62 yr apart (§7) |
-| §8.3 **E1** — does the clock track within-donor age *change* (bears on ΔAge)? | ❌ **NO_TREND** (§8.5) — mean rho −0.064, CI [−0.232, +0.104] |
-| §8.5 **E1b** — same, reprogramming phase only (protocol-correct window) | ❌ **WRONG_DIRECTION** (§8.6) — mean rho **+0.205**, CI [+0.009, +0.401], 5/6 positive. The clock reads age *rising* during OSKM |
-| Is ΔAge's target validated on this data? | ❌ **NO.** M1 + E1 + E1b all fail; the only PASS is the iPSC *identity* axis. Diagnostics stop; Stage 4 decision on the clock itself |
+| §8.3 **E1** — does the clock track within-donor age *change* (bears on ΔAge)? | ⚠️ NO_TREND (§8.5) — but **underpowered to the point of uninformative** (§9.1): needs ρ≈−0.4, the transient effect gives ρ≈−0.1 |
+| §8.5 **E1b** — same, reprogramming phase only (protocol-correct window) | ⚠️ WRONG_DIRECTION (§8.6) but **marginal (p=0.0445)** and on out-of-domain cells (§9.5) — not a finding |
+| ~~Is ΔAge's target validated on this data? ❌ NO~~ **← SUPERSEDED by §9** | ✅ **the escalation was OVER-READ (§9.5).** The clock TRACKS in-range fibroblast age (+18/21 yr, ρ+0.60); M1 failed by anchoring on out-of-range age-0 donors. **ΔAge stays.** Reprogramming intermediates are out-of-domain for the clock (whole-transcriptome upheaval), which is an interpretation limit, not a broken target |
+| §9 **clock validity** — broken, mis-applied, or out-of-domain? | ✅ **EXECUTED — IN_DOMAIN_OK.** Clock applied soundly (89% weighted coverage, moves 21 yr, CP10k stable) and tracks in-domain age. Fix options A/B/C/D **not triggered**; C (retreat) off the table |
 
 ---
 
@@ -708,3 +709,53 @@ target, or shipping a broken one. `experiments/diag_clock_validity.py` settles i
 **This does not weaken the discipline.** If every check says the clock is genuinely broken, that is
 recorded and the escalation stands. The point is to make the failure *locatable* so the fix is the
 right one — and to not abandon a recoverable target on an over-read null.
+
+## 9.5 EXECUTED (2026-07-25) — the clock is NOT broken. The escalation was over-read.
+
+Full record in `experiments/DELTAAGE_LAB_NOTEBOOK.md` under *RESULT — §9*. `diag_clock_validity.py`
+run on `D:\Gill`; reproduction check skipped (GSE113957 not present). `src/` untouched.
+
+| Check | Result | Verdict |
+|---|---|---|
+| **H2 in-range tracking** | contrast **+18.0 yr** for a 21 yr gap, Spearman **+0.60**, n=4 in-range | ✅ **TRACKS_IN_RANGE** |
+| **H1 gene coverage** | 18,928/33,155 genes (57%) but **89.2% of \|weight\|** | DEGRADED (not CRIPPLED) |
+| **H1 intercept dominance** | predictions SD **21.4 yr** around the 72.4 intercept | MOVES (not collapsed) |
+| **H1 CP10k denominator** | switching gene space moves age **4.3 yr** | STABLE |
+| **H1 reproduction** | GSE113957 absent | SKIPPED |
+| **H3 attribution** | top: IGFBP3 +3.97 (aging), KRT7 +1.60 (epithelial/MET), SULF1, GREM1, DKK1 | DIFFUSE |
+| **ACTION** | | **IN_DOMAIN_OK_INVESTIGATE_REPROGRAMMING** |
+
+**The §7–§8 escalation is refuted on its core claim.** The clock tracks age among the donors it was
+fit to read; M1's failure was anchored on the two NEONATAL donors (age 0, below the clock's [1,96]
+range — N2 read 99). "The clock can't read age / ΔAge is unvalidated" does not survive. **ΔAge
+stays.**
+
+**The instrument is sound, not merely present.** 89% weighted coverage (the missing 57% of *genes*
+carry only 11% of the *weight* — the fibroblast structural genes dominate and are all present);
+predictions move 21 yr, not stuck at the intercept; CP10k is stable. The DEGRADED coverage is a
+minor recoverable sharpening (fix gene mapping for the last 11%), not the cause of anything.
+
+**Two honest limits, recorded:**
+1. **H2 is directional at n=4.** Contrast +18/21 yr and Spearman +0.60 point the right way and are
+   consistent, but 4 in-range donors is not a powered test. GSE113957 (133 fibroblasts, ages 1–96)
+   is the reproduction check that turns this from directional to rigorous — that is its real value,
+   not avoiding INCONCLUSIVE.
+2. **H3 attribution: the exact shares reframe it — it is whole-transcriptome upheaval, not a
+   marker confound.** My check looked for OSKM/pluripotency + cell-cycle; the measured shares are
+   OSKM **0.007%**, cell-cycle **0.65%**, senescence **2.7%** — *none* of my categories explain
+   the drift. The net +20.1 yr "age rise" is the residual of a huge tug-of-war: from the senescence
+   share, positive contributions total ≈ **150 yr** against ≈ **130 yr** of negative, netting +20.
+   The top single genes (IGFBP3 +3.97 aging, KRT7 +1.60 epithelial/MET) are individually notable
+   but categorically tiny. **The clock is summing a transcriptome in flux** — the textbook signature
+   of a model extrapolating far outside its training distribution. That is out-of-domain by its
+   nature, not a few confound genes, and it is exactly what the model's existing OOD detector should
+   flag. E1b (the drift's original evidence) was marginal (p=0.0445) anyway. Not grounds to replace
+   the target — grounds to treat reprogramming intermediates as out-of-domain for the clock.
+
+**Standing conclusion for Stage 1.5:** the clock reads fibroblast age; ΔAge's instrument is valid
+in-domain. On strongly identity-changing cells (late reprogramming) the clock partly reads
+identity, so ΔAge there blends aging with cell-state — a characterized interpretation limit, not a
+fatal flaw. The four "the instrument is broken" fix options (A/B/C/D) are **not** triggered; C
+(retreat to fate) in particular is off the table. Remaining work is to solidify H2 (GSE113957) and,
+if desired, characterize the reprogramming mix with correct MET markers — pre-registered, not
+metric-shopping.
