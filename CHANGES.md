@@ -11,6 +11,42 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-07-25 — **Stage 1.5.1 planned: clock precision (option B).** PLAN ONLY, nothing executed
+
+**Status:** 📋 **PLAN ONLY** — `plans/STAGE_1_5_1_CLOCK_PRECISION.md`. No code written, no fit run,
+`git diff --stat src/` empty.
+
+**Why (the one number).** Stage 1.5 ran five measurements whose results only cohere one way: the
+clock's own cross-validated error is **±12.27 yr**, and *every* effect the project measures is the
+same size — per-donor offset **±12.7 yr**, D2's entire D0→D14 spread **13.1 yr**, the rejuvenation
+effect to grade **~11 yr**. **SNR ≈ 1.** That is why nothing replicated, why E1b (+0.205) and D2
+(−0.214) flipped sign on independent data, and why both verdicts were decided by hundredths.
+
+Not a modelling, calibration or target-definition problem — a **precision problem in the
+instrument**, upstream of all of them. ΔAge is the training label, so its noise is a hard floor on
+`sigma_age`, conformal width, RES, and every quantitative claim.
+
+**Root-cause candidates**, read from the artefact and `clock_fit.py`: dense `RidgeCV` over **33,155
+genes from 133 samples** with no feature selection (R1); the compression signature is visible —
+`cv_pearson 0.837` against `cv_mae 12.27`, and every donor reads high near the 72.4 intercept (R2); a
+dense clock is fragile to the 57% gene-coverage gap (R3); possible CV optimism from scaling before
+the split (R4); and out-of-range at age 0 is a **data** limit no refit can fix (R5).
+
+**Bars set now, derived from the science.** ΔAge is a difference of two clock readings (noise
+≈ √2·cv_mae), so an 11 yr effect at ≥2σ requires **`cv_mae ≤ 4.0 yr` = PASS**; 4–6 MARGINAL
+(ranking only); **>6 FAIL** → pre-registered fallback (more clock training data / restrict claims to
+large effects / ranking-only framing). Bars fixed *before* any fit so they cannot be tuned to the
+result. Per §10's lesson, any verdict within **0.5 yr** of a boundary is reported **FRAGILE**.
+
+**Structure:** cheap measurement gates expensive computation — audit the current fit under leak-free
+nested CV, evaluate four pre-specified candidates (ElasticNet / fold-internal gene filtering / slope
+recalibration / dense-ridge control) on one identical harness, and only then rebuild + retrain.
+
+**Stated in advance:** changing the clock changes `y_age`, so the four-run `+0.000` guard streak ends
+**by construction, not by defect**, and Stage 1's PARTIAL verdict does not automatically carry over.
+
+---
+
 ## 2026-07-25 (§10 D2 EXECUTED) — **E1b does not replicate.** No reliable age trend either way
 
 **Status:** ✅ Run on the data machine. Pre-registration committed *before* the run (`5360c24`).
