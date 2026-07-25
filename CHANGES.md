@@ -11,6 +11,42 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-07-25 (§10 D2 EXECUTED) — **E1b does not replicate.** No reliable age trend either way
+
+**Status:** ✅ Run on the data machine. Pre-registration committed *before* the run (`5360c24`).
+Predicted *replicates* (~65%); **falsified**. `git diff --stat src/` empty.
+
+GSE242423 (Kundaje lab, **single-cell**, different donor, different protocol — shares nothing with
+Gill but the clock), 8 timepoints D0–D14: **rho −0.214** vs Gill's E1b **+0.205** → `CONTRADICTS`.
+
+**⚠️ Fragile by 0.014.** Pre-committed boundary −0.20, cleared by 0.014, trajectory non-monotonic.
+Verdict honoured as pre-registered, but it means **"failed to replicate"**, not "opposite effect
+demonstrated".
+
+**Establishes:** E1b's age-rise does not replicate → the **E1b escalation largely dissolves**, and
+per the pre-registered branch **D1 does not run** (its spec stays locked, unused).
+
+**Does NOT establish that ΔAge is valid.** Gill +0.205 and GSE242423 −0.214 are two *weak* effects of
+*opposite sign*; with E1's NO_TREND (−0.064) the defensible claim is that **the clock reads no
+reliable age trend during reprogramming, in either direction** — noise-dominated, not backwards.
+
+**Two incidental corroborations:** HFF is a **neonatal** line yet reads **84.5 yr** at D0,
+independently reproducing M1's ~+80 yr over-prediction on age-0 donors (different lab, different
+modality); and iPSC reads **63.4**, ~20 yr below every fibroblast timepoint — the identity axis again.
+
+**Methodological lesson:** E1b cleared its bound by 0.009 and D2 by 0.014, in opposite directions.
+**Boundary-crossing verdicts at n≈6–8 are unstable.** Future bars should require a margin, or report
+`FRAGILE` within a stated distance of the boundary. Three of my predictions in this arc are now
+falsified; the consistent error is expecting cleaner signals than n≈6–8 can deliver.
+
+**Also recorded (prior commit `5360c24`):** my earlier ruling-out of the OOD-gating idea via T15's
+`AUC 0.47` is **withdrawn** — T15 measured `AUC(error → flagged)`, a different and finer task. The
+real reason the shipped detector cannot implement it is structural: `train_model.py:291` fits the
+reference on `train_ds`, which already contains the whole D0→iPSC trajectory, so it can never flag
+it. It measures distance from the *model's* training data, not the *clock's* fitted domain.
+
+---
+
 ## 2026-07-24 (Phase 1 EXECUTED) — **M1 FAILED. The clock does not read age on this data. ESCALATE.**
 
 **Status:** ✅ **RUN on the data machine.** `python experiments/diag_zero_point.py "D:\Gill"` →

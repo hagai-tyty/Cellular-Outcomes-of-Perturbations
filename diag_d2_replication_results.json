@@ -1,0 +1,146 @@
+{
+  "script": "diag_d2_replication",
+  "utc": "2026-07-25T19:45:38+00:00",
+  "gse_dir": "D:\\GSE242423",
+  "bars": [
+    {
+      "id": "D2",
+      "bar": "Spearman(predicted_age, day) over D0-D14 is positive (replicates Gill's E1b +0.205); <= -0.2 contradicts; between is ambiguous",
+      "null": "the clock reads no consistent age trend across reprogramming (rho ~ 0)",
+      "power_note": "n=8 timepoints needs |rho| ~ 0.74 for p<0.05, so this is UNDERPOWERED for significance and is judged on DIRECTION only -- fixed before the run"
+    }
+  ],
+  "timepoints": {
+    "D0": {
+      "day": 0.0,
+      "n_cells": 2000,
+      "pseudobulk_age": 84.45911378974054,
+      "replicate_ages": [
+        85.58488314699562,
+        83.36724004104403,
+        85.61715488967576,
+        83.0031822531366,
+        84.74180155310674
+      ],
+      "replicate_sd": 1.2247635734740263
+    },
+    "D2": {
+      "day": 2.0,
+      "n_cells": 2000,
+      "pseudobulk_age": 83.14789697229848,
+      "replicate_ages": [
+        83.62006159581331,
+        83.38746347756495,
+        82.47030597299162,
+        82.91887254146359,
+        83.3164233749782
+      ],
+      "replicate_sd": 0.45281770477781574
+    },
+    "D4": {
+      "day": 4.0,
+      "n_cells": 2000,
+      "pseudobulk_age": 90.16059690848724,
+      "replicate_ages": [
+        90.3251849516777,
+        89.1688377531413,
+        90.96694445598467,
+        89.550202598291,
+        90.58641451148127
+      ],
+      "replicate_sd": 0.7426869805194429
+    },
+    "D6": {
+      "day": 6.0,
+      "n_cells": 2000,
+      "pseudobulk_age": 85.21743523642131,
+      "replicate_ages": [
+        83.37733566847493,
+        86.03890327801781,
+        86.398044135536,
+        83.937717102641,
+        86.25907907208102
+      ],
+      "replicate_sd": 1.4296988992331532
+    },
+    "D8": {
+      "day": 8.0,
+      "n_cells": 2000,
+      "pseudobulk_age": 81.1632902337406,
+      "replicate_ages": [
+        80.81836769033937,
+        80.80258021893664,
+        82.27240829103526,
+        80.9334500440464,
+        80.77031710983684
+      ],
+      "replicate_sd": 0.6474680670908151
+    },
+    "D10": {
+      "day": 10.0,
+      "n_cells": 2000,
+      "pseudobulk_age": 85.82898623447414,
+      "replicate_ages": [
+        86.16955170141149,
+        84.55113207445419,
+        85.95249704219663,
+        85.78631993038053,
+        86.5365322874406
+      ],
+      "replicate_sd": 0.7520237214906115
+    },
+    "D12": {
+      "day": 12.0,
+      "n_cells": 2000,
+      "pseudobulk_age": 84.86152626870154,
+      "replicate_ages": [
+        84.74183595977779,
+        81.73379959126885,
+        86.07309492097808,
+        86.33067959538417,
+        85.30438191987598
+      ],
+      "replicate_sd": 1.8450178810653457
+    },
+    "D14": {
+      "day": 14.0,
+      "n_cells": 2000,
+      "pseudobulk_age": 77.05151960648945,
+      "replicate_ages": [
+        76.26346968763814,
+        76.35174170624424,
+        76.69031129755307,
+        78.34937854628474,
+        77.31173045666254
+      ],
+      "replicate_sd": 0.8626120882086662
+    },
+    "iPSC": {
+      "day": null,
+      "n_cells": 2000,
+      "pseudobulk_age": 63.39391234642172,
+      "replicate_ages": [
+        64.35579464051665,
+        62.50840843581956,
+        63.9785520553652,
+        62.25711309984197,
+        64.1865846816651
+      ],
+      "replicate_sd": 0.9939436939046455
+    }
+  },
+  "meta": {
+    "n_timepoints": 9,
+    "max_cells": 2000,
+    "n_pseudo_replicates": 5,
+    "errors": {}
+  },
+  "verdict_primary_D0_D14": {
+    "status": "CONTRADICTS",
+    "rho": -0.2142857142857143,
+    "n_points": 8,
+    "gill_e1b_rho": 0.205,
+    "reason": "predicted age FALLS with reprogramming day (rho -0.214), the OPPOSITE of Gill's E1b (+0.205) -> the Gill result is implicated as design-specific and the E1b escalation largely dissolves"
+  },
+  "rho_with_ipsc_sensitivity": -0.45
+}

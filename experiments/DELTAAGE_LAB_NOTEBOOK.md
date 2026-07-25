@@ -3189,4 +3189,78 @@ zero. That is the honest bar for a replication check, and it is fixed here befor
 timepoints. A positive rho would show the effect is not a Gill artefact; it would **not** establish
 that ΔAge is invalid, nor by itself justify abandoning the target.
 
+## RESULT — D2 (EXECUTED 2026-07-25, data machine) — **CONTRADICTS. Prediction falsified.**
+
+`python experiments/diag_d2_replication.py "D:\GSE242423"` → `diag_d2_replication_results.json`.
+Predicted *replicates* (~65%); the independent data shows the **opposite** direction.
+
+| timepoint | day | cells | pseudobulk age | replicate SD |
+|---|---|---|---|---|
+| D0 | 0 | 2000 | 84.5 | 1.22 |
+| D2 | 2 | 2000 | 83.1 | 0.45 |
+| D4 | 4 | 2000 | 90.2 | 0.74 |
+| D6 | 6 | 2000 | 85.2 | 1.43 |
+| D8 | 8 | 2000 | 81.2 | 0.65 |
+| D10 | 10 | 2000 | 85.8 | 0.75 |
+| D12 | 12 | 2000 | 84.9 | 1.85 |
+| D14 | 14 | 2000 | 77.1 | 0.86 |
+| iPSC | — | 2000 | 63.4 | 0.99 |
+
+**Primary (D0–D14, iPSC excluded): `CONTRADICTS`, rho −0.214.** Gill's E1b was **+0.205**. On fully
+independent data the trend points the other way. Sensitivity with iPSC: rho −0.450 (reported only —
+iPSC is a cell-type change).
+
+### ⚠️ The verdict is real but FRAGILE — stated before interpreting it
+
+`rho = −0.214` against a pre-committed boundary of `−0.20`. **It clears by 0.014.** Had the boundary
+been −0.25 this would read `AMBIGUOUS`. I honour the pre-registered rule — the verdict is
+`CONTRADICTS` — but anyone reading this should treat it as *"failed to replicate"*, not as
+*"a demonstrated opposite effect"*. The trend is also visibly non-monotonic (D4 bumps to 90.2, D14
+drops to 77.1), so the rank correlation is carried by a few points.
+
+### What this actually establishes — and what it does NOT
+
+**Establishes:** E1b's "age rises during reprogramming" does **not** replicate on independent data.
+Per the pre-registered branch, **the E1b escalation largely dissolves**, and **D1 does not run** —
+there is no stable effect whose mechanism needs explaining.
+
+**Does NOT establish that ΔAge is valid.** This is the important distinction. Read the two together:
+
+| dataset | early-window rho | |
+|---|---|---|
+| Gill (bulk, 6 donors) | **+0.205** | weak, CI lower bound +0.009 |
+| GSE242423 (single-cell, HFF) | **−0.214** | weak, clears the boundary by 0.014 |
+
+Two weak effects of **opposite sign** on independent data. Combined with E1's `NO_TREND` (−0.064),
+the coherent read is not "age rises" and not "rejuvenation confirmed" — it is:
+
+> **The clock reads no reliable age trend during reprogramming, in either direction.** ΔAge in the
+> reprogramming window is dominated by noise rather than by a clean rejuvenation signal.
+
+That is a weaker claim than E1b's, and a more defensible one.
+
+### Two corroborations that fell out incidentally
+
+1. **M1's out-of-range failure is independently confirmed.** HFF is a *neonatal* (foreskin)
+   fibroblast line, yet the clock reads its D0 baseline at **84.5 yr** — the same ~+80 yr
+   over-prediction M1 found on the age-0 Gill donors (N2 → 98.7). Different lab, different modality,
+   same failure mode. The clock genuinely cannot read neonatal fibroblasts.
+2. **The identity axis reappears.** iPSC reads **63.4** — ~20 yr younger than every fibroblast
+   timepoint, the largest single move in the table. Consistent with Gill's with-iPSC sensitivity: the
+   clock tracks fibroblast→iPSC *identity* well, and aging during reprogramming poorly.
+
+### Methodological lesson, recorded because it recurs
+
+E1b (+0.205, CI lower bound **+0.009**) and D2 (−0.214, boundary cleared by **0.014**) are both
+verdicts decided by hundredths at n≈6–8. **Boundary-crossing verdicts at this sample size are not
+stable**, and this arc has now produced two that point in opposite directions. Future pre-registered
+bars in this project should either require a margin beyond the boundary, or report `FRAGILE` when the
+statistic lands within a stated distance of it — otherwise the label overstates the evidence.
+
+**Three of my predictions in this arc are now falsified** (E1 PASS→NO_TREND, E1b ~45% PASS→
+WRONG_DIRECTION, D2 replicates→CONTRADICTS). The consistent error is expecting cleaner signals than
+n≈6–8 can deliver.
+
+**`git diff --stat src/` is empty — nothing was touched.**
+
 **Nothing in §10 changes `src/`.** `git diff --stat src/` must be empty when it finishes.

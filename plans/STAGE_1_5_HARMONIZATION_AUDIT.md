@@ -762,3 +762,41 @@ fatal flaw. The four "the instrument is broken" fix options (A/B/C/D) are **not*
 (retreat to fate) in particular is off the table. Remaining work is to solidify H2 (GSE113957) and,
 if desired, characterize the reprogramming mix with correct MET markers — pre-registered, not
 metric-shopping.
+
+---
+
+# 10. §10 D2 EXECUTED (2026-07-25) — **CONTRADICTS.** E1b does not replicate; D1 does not run.
+
+Full record + per-timepoint table in the notebook under *RESULT — D2*. Predicted *replicates* (~65%);
+falsified.
+
+**Result.** GSE242423 (Kundaje; **single-cell**, different donor, different protocol — shares nothing
+with Gill but the clock), 8 timepoints D0–D14: **rho −0.214** against Gill's E1b **+0.205**.
+
+**⚠️ Fragile by 0.014.** The pre-committed boundary was −0.20; the statistic cleared it by 0.014, and
+the trajectory is non-monotonic. The verdict stands as pre-registered, but it should be read as
+**"failed to replicate"**, not "a demonstrated opposite effect".
+
+**What it establishes.** E1b's age-rise does **not** replicate → per the pre-registered branch the
+**E1b escalation largely dissolves** and **D1 is not run** (no stable effect to explain; its spec
+stays locked and unused).
+
+**What it does NOT establish.** That ΔAge is valid. Gill **+0.205** and GSE242423 **−0.214** are two
+*weak* effects of *opposite sign*; with E1's `NO_TREND` (−0.064) the defensible conclusion is:
+
+> **the clock reads no reliable age trend during reprogramming, in either direction** — ΔAge in that
+> window is noise-dominated, not cleanly rejuvenating and not backwards.
+
+**Two incidental corroborations.** (1) HFF is a **neonatal** line yet its D0 baseline reads **84.5
+yr** — independently reproducing M1's ~+80 yr over-prediction on age-0 donors, on different data and
+a different modality. (2) iPSC reads **63.4**, ~20 yr below every fibroblast timepoint — the identity
+axis again, consistent with §9.
+
+**Methodological lesson.** E1b cleared its bound by 0.009 and D2 by 0.014, in opposite directions.
+**Boundary-crossing verdicts at n≈6–8 are unstable.** Future bars should require a margin, or report
+`FRAGILE` inside a stated distance of the boundary.
+
+**Net position of Stage 1.5:** the clock is sound in-domain (§9), unusable below its fitted age range
+(M1, corroborated by D2's HFF baseline), and uninformative-not-inverted during reprogramming
+(E1/E1b/D2 together). ΔAge is a **characterized instrument with a stated invalid region**, which is a
+scope condition — not a broken target.
