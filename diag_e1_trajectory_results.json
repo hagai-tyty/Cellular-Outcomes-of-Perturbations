@@ -1,6 +1,6 @@
 {
   "script": "diag_e1_trajectory",
-  "utc": "2026-07-24T22:59:12+00:00",
+  "utc": "2026-07-25T10:57:26+00:00",
   "bars": [
     {
       "id": "E1",
@@ -8,6 +8,13 @@
       "null": "a clock that reads nothing about the reprogramming axis (per-donor rho ~ 0)",
       "pass_rate_if_intent_holds": 0.9995297989861898,
       "resolvability": "CONDITIONAL on trend consistency across 6 donors (T4-style): a moderate, consistent trend passes ~99%; a heterogeneous one can read NO_TREND"
+    },
+    {
+      "id": "E1b",
+      "bar": "same test, reprogramming phase only (day <= 15)",
+      "null": "no age drop during the OSKM phase (per-donor rho ~ 0)",
+      "pass_rate_if_intent_holds": 0.9995297989861898,
+      "resolvability": "CONDITIONAL on trend consistency across 6 donors (T4-style): a moderate, consistent trend passes ~99%; a heterogeneous one can read NO_TREND; fewer points per donor than E1, so noisier per-donor rho"
     }
   ],
   "trajectory_meta": {
@@ -35,6 +42,26 @@
     },
     "reason": "the age-vs-day trend is not distinguishable from a clock that reads nothing (mean rho -0.064, 95% CI [-0.232, +0.104], 4/6 negative)"
   },
+  "verdict_e1b_reprogramming_phase": {
+    "status": "WRONG_DIRECTION",
+    "n_donors": 6,
+    "mean_rho": 0.20498805553729235,
+    "ci95": [
+      0.009295938808378035,
+      0.40068017226620667
+    ],
+    "n_donors_negative": 1,
+    "per_donor": {
+      "N2": -0.09525640849568938,
+      "N3": 0.3530090432487312,
+      "O1": 0.1428846127435341,
+      "O2": 0.12607465830311831,
+      "Y1": 0.4174472019369917,
+      "Y2": 0.2857692254870682
+    },
+    "reason": "predicted age RISES with reprogramming day; the clock reads the axis backwards (mean rho +0.205, 95% CI [+0.009, +0.401], 1/6 negative)"
+  },
+  "e1b_day_max": 15.0,
   "verdict_adults_only": {
     "status": "NO_TREND",
     "n_donors": 4,

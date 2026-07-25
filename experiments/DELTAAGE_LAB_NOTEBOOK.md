@@ -2896,3 +2896,63 @@ interesting result. Either way it is informative and the verdict is pre-committe
   unvalidated here; the deep escalation into Stage 4/5 hardens.
 
 **Nothing in E1b changes `src/`.** `git diff --stat src/` must be empty when it finishes.
+
+## RESULT — E1b (EXECUTED 2026-07-25, data machine) — **WRONG_DIRECTION. Prediction falsified.**
+
+I predicted ~45% PASS, leaning NO_TREND. The result is worse than either: during the reprogramming
+phase the clock reads age **rising**, not falling.
+
+| donor | age | rho E1 (0→54) | n(≤15) | **rho E1b (0→15)** |
+|---|---|---|---|---|
+| N2 | 0 | −0.231 | 13 | −0.095 |
+| N3 | 0 | +0.065 | 13 | **+0.353** |
+| Y1 | 29 | −0.276 | 13 | **+0.417** |
+| Y2 | 35 | −0.029 | 13 | **+0.286** |
+| O1 | 53 | −0.043 | 13 | +0.143 |
+| O2 | 53 | +0.129 | 13 | +0.126 |
+
+**E1b = `WRONG_DIRECTION`** — mean rho **+0.205**, 95% CI **[+0.009, +0.401]**, **5/6 donors
+positive**. In the exact window where OSKM should be rejuvenating the cells, the frozen clock reads
+them as getting **older**.
+
+**Honest magnitude:** it is a **weak** positive that only just clears the bar — the CI's lower bound
+is +0.009, right at zero. So this is "a weak but significant trend in the wrong direction", not a
+strong reversal. It does not overturn Gill's multi-omic rejuvenation evidence; it says **this clock
+does not detect that rejuvenation and, if anything, drifts the wrong way** on these cells.
+
+### Verdict on the escalation: it HARDENS, exactly as the E1b pre-registration said it would
+
+Both pre-registered trajectory tests are now in, and they agree that the clock does not read the
+rejuvenation axis on this data:
+
+| | reads what? | result |
+|---|---|---|
+| M1 | absolute chronological age | FAIL |
+| E1 | within-donor age change, full trajectory | NO_TREND |
+| **E1b** | within-donor age change, reprogramming phase | **WRONG_DIRECTION (weak)** |
+| with-iPSC | fibroblast→iPSC identity | PASS — but that is cell-type, not aging |
+
+The coherent read across all four: **the clock tracks the fibroblast→iPSC *identity* axis (iPSC reads
+young) but not the *aging/rejuvenation* axis during reprogramming, where it reads backwards.** ΔAge —
+computed mostly on non-iPSC reprogramming cells — therefore does not measure rejuvenation on this
+data; it measures something that runs the wrong way during the phase of interest.
+
+**This is upstream of everything.** ΔAge is the target the whole model trains on. If it is not a
+valid rejuvenation signal here, that reaches past Stage 2 and Stage 1 into **Stage 4 (validation)**
+and **Stage 5 (what can honestly be claimed)**. It is the most consequential finding of the Stage
+1.5 arc.
+
+### Discipline: STOP refining the diagnostic — this is now a Stage 4 decision, not another test
+
+Two trajectory tests were pre-registered and both failed; a third metric tweak (E1c…) would be the
+fishing this project guards against, and I am **not** proposing one. The question is no longer "find
+a metric under which the clock passes" — it is the Stage 4 question: **is the frozen Fleischer clock
+a valid ΔAge source for OSKM-reprogramming cells at all, and if not, what would a valid rejuvenation
+target on this data even be?** Candidate directions (each its own pre-registered work, not decided
+here): a clock validated on reprogramming/pluripotency data; an independent rejuvenation readout to
+anchor the target; or restricting claims to what the identity axis supports. Handoff to Stage 4.
+
+**Caveats kept in view:** n=6 donors, bulk RNA-seq, and a fibroblast clock applied out of domain to
+reprogramming cells. The finding is about *this clock on this data*, not about reprogramming biology.
+
+**`git diff --stat src/` is empty — nothing was touched.**

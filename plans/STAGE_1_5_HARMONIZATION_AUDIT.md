@@ -34,8 +34,9 @@ report. The pre-registration text in §0–§4 is left **exactly as written**; o
 | §5.4 **Phase 1** — M1/M2/M3 measurements | ✅ **EXECUTED — M1 FAILED. ACTION: ESCALATE** (§7). M2's verdict was a stub and is being fixed; M3 indeterminate as predicted |
 | §5.4 Phases 2–4 | ⛔ **BLOCKED by the M1 failure** — do not proceed until the clock's validity is settled |
 | Does the clock read chronological age on this data? | ❌ **NO at the extremes** — 11.8 yr contrast vs a 53 yr true gap; two age-0 donors read 62 yr apart (§7) |
-| §8.3 **E1** — does the clock track within-donor age *change* (bears on ΔAge)? | ❌ **NO_TREND** (§8.5) — mean rho −0.064, CI [−0.232, +0.104]. Escalation now supported on both absolute (M1) and relative (E1) axes. Caveat: monotonic metric vs Gill's transient protocol → **E1b** to pre-register |
-| Is ΔAge's target validated on this data? | ❌ **not as of E1** — burden on a pre-registered E1b (reprogramming-phase-only) |
+| §8.3 **E1** — does the clock track within-donor age *change* (bears on ΔAge)? | ❌ **NO_TREND** (§8.5) — mean rho −0.064, CI [−0.232, +0.104] |
+| §8.5 **E1b** — same, reprogramming phase only (protocol-correct window) | ❌ **WRONG_DIRECTION** (§8.6) — mean rho **+0.205**, CI [+0.009, +0.401], 5/6 positive. The clock reads age *rising* during OSKM |
+| Is ΔAge's target validated on this data? | ❌ **NO.** M1 + E1 + E1b all fail; the only PASS is the iPSC *identity* axis. Diagnostics stop; Stage 4 decision on the clock itself |
 
 ---
 
@@ -617,3 +618,32 @@ maturation recovery. That is a limitation of my pre-registration, not grounds to
 0→~15), where the dip should live. Guard stated in the notebook: this is not a retry until something
 passes; a null E1b plus E1 is strong evidence against ΔAge validity. Until then, **ΔAge's
 rejuvenation signal is NOT validated.**
+
+## 8.6 E1b EXECUTED (2026-07-25) — **WRONG_DIRECTION. Escalation hardens. Diagnostics stop here.**
+
+Full record + per-donor table in the notebook under *RESULT — E1b*. Predicted ~45% PASS; result
+`WRONG_DIRECTION`.
+
+- **E1b (reprogramming phase, day ≤ 15): `WRONG_DIRECTION`** — mean per-donor rho **+0.205**, 95% CI
+  **[+0.009, +0.401]**, 5/6 donors positive. In the OSKM window where cells should rejuvenate, the
+  clock reads them getting **older**. Weak (CI lower bound +0.009, at the boundary), but the wrong
+  sign, robustly across donors.
+
+**All four tests now agree the clock does not read the aging axis on this data:** M1 (absolute) FAIL,
+E1 (full trajectory) NO_TREND, E1b (reprogramming phase) WRONG_DIRECTION; the only PASS is with-iPSC,
+which is the fibroblast→iPSC *identity* axis, not aging. Coherent read: **the clock tracks identity
+(iPSC = young) but not rejuvenation during reprogramming, where it runs backwards.** ΔAge — computed
+mostly on non-iPSC reprogramming cells — is therefore not a validated rejuvenation target here.
+
+**This is upstream of the whole model** (ΔAge is its target), so it reaches into **Stage 4** and
+**Stage 5**, not just Stage 2. It is the most consequential finding of the Stage 1.5 arc.
+
+**Diagnostics stop.** Two trajectory tests were pre-registered and both failed; a third metric tweak
+would be fishing and is **not** proposed. The next step is a Stage 4 decision, not another diagnostic:
+*is the frozen Fleischer clock a valid ΔAge source for OSKM-reprogramming cells at all, and if not,
+what is a valid rejuvenation target on this data?* Candidate directions (each pre-registered
+separately, not decided here): a clock validated on reprogramming/pluripotency data; an independent
+rejuvenation readout to anchor the target; or restricting claims to what the identity axis supports.
+
+**Caveats:** n=6 donors, bulk, and a fibroblast clock out of domain on reprogramming cells — the
+finding is about *this clock on this data*, not about reprogramming biology.

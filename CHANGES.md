@@ -107,6 +107,31 @@ pre-register before running: **E1b** over the reprogramming phase only (days 0�
 not a retry until something passes — a null E1b plus E1 is strong evidence against ΔAge validity.
 Until then ΔAge's rejuvenation signal is **NOT validated**. `src/` untouched.
 
+### E1b EXECUTED — WRONG_DIRECTION. Escalation hardens; diagnostics stop
+
+Pre-registered and committed before the run (`15ad575`, cutoff `REPROG_PHASE_DAY_MAX = 15.0` chosen
+from the protocol, not the ages). Predicted ~45% PASS; result **`WRONG_DIRECTION`**.
+
+- E1b (reprogramming phase, day ≤ 15): mean per-donor Spearman(age, day) **+0.205**, 95% CI
+  **[+0.009, +0.401]**, 5/6 donors positive. In the OSKM window where cells should rejuvenate, the
+  clock reads them getting **older**. Weak (CI lower bound at +0.009) but the wrong sign, robustly.
+
+All four tests now agree the clock does not read the aging axis on this data: **M1 FAIL** (absolute),
+**E1 NO_TREND** (full trajectory), **E1b WRONG_DIRECTION** (reprogramming phase); the only PASS is
+with-iPSC, which is the fibroblast→iPSC *identity* axis, not aging. Coherent read: the clock tracks
+identity (iPSC = young) but not rejuvenation during reprogramming, where it runs backwards. ΔAge —
+computed mostly on non-iPSC reprogramming cells — is **not a validated rejuvenation target here.**
+
+This is upstream of the whole model (ΔAge is its target), so it reaches into **Stage 4 / Stage 5**,
+not just Stage 2 — the most consequential finding of the Stage 1.5 arc.
+
+**Diagnostics stop.** Two trajectory tests were pre-registered and both failed; a third metric tweak
+would be fishing and is **not** proposed. Next is a Stage 4 decision — is the frozen Fleischer clock
+a valid ΔAge source for OSKM-reprogramming cells at all, and if not, what is a valid rejuvenation
+target on this data? Caveats kept in view: n=6, bulk, fibroblast clock out of domain on reprogramming
+cells — the finding is about this clock on this data, not about reprogramming biology. `src/`
+untouched.
+
 Also fixed while here: a pre-existing `N802` in `tests/test_diag_zero_point.py` that would have
 failed CI's `ruff check src/ tests/ scripts/`, and two dead imports in the diagnostic. **CI lint is
 still red from 11 other pre-existing errors elsewhere in `tests/` (e.g. `test_verify_1a.py:108`) —
