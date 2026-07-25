@@ -3081,3 +3081,112 @@ upheaval), not a broken or mis-applied clock. **ΔAge's instrument is validated.
 *(Run locally against the four NCBI files; move them to `D:\GSE113957\` and re-run the full
 `diag_clock_validity.py "D:\Gill" "D:\GSE113957"` on the data machine to regenerate the complete
 results JSON with the reproduction block included.)*
+
+---
+
+# STAGE 1.5 §10 — DOMAIN DISTANCE + INDEPENDENT REPLICATION (pre-registered 2026-07-25)
+
+§9 left exactly one live question: the clock reads fibroblast age correctly (H2 tracks, reproduction
+0.8 yr) yet reads age **rising** during reprogramming (E1b), and H3 could not say why (`DIFFUSE`).
+Two hypotheses remain, and they imply opposite fixes:
+
+| | if true | fix |
+|---|---|---|
+| **out-of-domain** — reprogramming cells leave the clock's fitted fibroblast domain, so ΔAge there blends aging with identity change | scope condition | restrict/flag by domain; keep ΔAge where valid |
+| **real signal** — early OSKM genuinely induces stress/senescence, and the clock is right | not a defect at all | keep ΔAge; reinterpret the sign |
+
+Nothing measured so far separates them. §10 does, with two independent measurements.
+
+## Why the EXISTING OOD detector cannot answer this (no test run — determined by code)
+
+The proposal "trust ΔAge where in-distribution, flag it where not" is the right shape, but the
+shipped detector cannot implement it, for a structural reason rather than a statistical one:
+
+`train_model.py:291` fits the OOD reference on `train_ds` latent features, and that training split
+is **33,613 HFF cells spanning D0 → D14 → iPSC** plus ~75 Gill samples. **The reprogramming
+trajectory is inside the reference distribution by construction**, so the detector can never flag it.
+It measures distance from *the model's training data*; the ΔAge question is distance from *the
+clock's fitted domain* (Fleischer normal dermal fibroblasts, ages 1–96). Different distributions.
+
+**A prior claim of mine is withdrawn:** I cited T15's `AUC 0.47` as the reason the gate fails. T15
+measured `AUC(error → flagged)` — whether OOD flags predict *ΔAge error among held-out donors*. That
+is a different, much finer task than detecting loss of fibroblast identity, and the number does not
+transfer. The structural argument above is the real one; the 0.47 is irrelevant here.
+
+## SCOPE DECISION — D2 runs now; D1 is specified, locked, and DEFERRED
+
+**D2 is logically prior to D1.** If the age-rise does not replicate on independent data there is
+**no effect to explain**, and D1 would be hunting a mechanism for a phantom. Only if D2 replicates
+does "why?" become worth a run. D2 is also the cleaner instrument: a replication with a
+pre-committed *direction* and no free parameters, whereas D1 carries design choices (distance
+metric, PC count) and therefore fishing surface.
+
+So D1's specification below is **written and committed now, unrun** — locked in advance so it cannot
+be tuned after D2's result is known — and executes **only if D2 replicates**. Pre-commitment without
+spending the run.
+
+## D1 — clock-domain distance (the repaired OOD idea) — *SPEC LOCKED, NOT RUN*
+
+Fit the reference on the **clock's own domain** (GSE113957 fibroblasts) and measure where Gill sits.
+
+- **Primary metric (no free parameters):** `dist = 1 − Pearson r` between a sample's log-expression
+  profile over the **clock's gene space** and the **centroid** of GSE113957.
+- **Secondary (sensitivity):** Mahalanobis distance in the top-**10** PCs fit on GSE113957. `k = 10`
+  is pre-committed here; it will not be swept.
+- **D1a:** does distance rise with reprogramming day? Spearman(dist, day) per donor, aggregated.
+- **D1b — the decisive one:** does distance track the ΔAge anomaly? Spearman(dist, predicted_age)
+  across all Gill samples. If leaving the clock's domain is what drives the apparent ageing, distance
+  and predicted age move together.
+
+**Bar.** D1a PASS: aggregate CI excludes 0 and is positive. D1b PASS: |rho| ≥ 0.5 and CI excludes 0.
+
+## D2 — independent replication (the anchor) — *RUNS NOW*
+
+Does "age rises during early reprogramming" replicate on **independent data**? `D:\GSE242423` is a
+different lab (Kundaje), different modality (**single-cell**, not bulk), a different donor (HFF), and
+an independent protocol — but the same biology (OSKM D0 → iPSC). It shares **nothing** with Gill
+except the clock, so it is a genuine anchor rather than a re-analysis.
+
+**Design (pre-committed).** 9 timepoints: **D0, D2, D4, D6, D8, D10, D12, D14, iPSC**.
+- **Primary window = D0–D14** (8 points), which matches E1b's day ≤ 15 window. **iPSC is excluded**
+  from the primary — it is a completed cell-type change, the same confound E1 excluded — and is
+  reported as a sensitivity.
+- **Pseudobulk** per timepoint via the production path (`normalize_counts` → frozen clock), capped at
+  **2000 cells/timepoint**, seed 0. Pseudobulk (not per-cell) because the clock is bulk-fit and
+  Gill's data is bulk — this keeps the comparison like-for-like.
+- **Stability check:** 5 disjoint pseudo-replicate pools per timepoint, reported as spread. These are
+  **not** treated as independent samples for significance (that would be pseudo-replication).
+- **Statistic:** Spearman(predicted_age, day) over the 8 timepoint-level pseudobulks.
+
+**Power, stated up front.** n = 8 timepoints, so |rho| ≈ 0.74 is needed for p < 0.05. This test is
+**underpowered for significance** and is therefore judged on **direction**, not on a CI excluding
+zero. That is the honest bar for a replication check, and it is fixed here before the run.
+
+**Bar.** *Replicates* if the D0–D14 rho is **positive** (same direction as Gill's E1b +0.205).
+*Contradicts* if clearly negative (≤ −0.2). *Ambiguous* in between.
+
+## Predictions, recorded now
+
+- **D2 (the live one): replicates, moderate confidence (~65%).** If the age-rise is a property of
+  *this clock applied to reprogramming cells*, it should reappear on independent data. The main way
+  it fails to replicate is if Gill's specific design drove it — n=6 bulk, the Exp1/Exp2 structure, or
+  the single unreplicated baseline (§5.2). I hold this only moderately: E1b's own effect was weak
+  (+0.205, CI lower bound +0.009), and weak effects replicate unreliably.
+- *(Deferred, spec locked)* **D1a: PASS ~85%** — cells demonstrably leave fibroblast identity, so
+  distance almost has to rise; closer to a positive control than a test. **D1b: ~50%, genuinely
+  uncertain** — a strong positive rho would show the apparent ageing is domain drift, but H3 came
+  back `DIFFUSE` with **IGFBP3 (a senescence gene)** as top contributor, which points the other way.
+
+## What each D2 outcome licenses
+
+| D2 result | Conclusion | Next |
+|---|---|---|
+| **replicates** (rho > 0) | the age-rise is real and independent of Gill's design — a genuine property of this clock on reprogramming cells | **run D1** to separate domain-drift from real stress/senescence biology; that choice decides gate-vs-reinterpret |
+| **contradicts** (rho ≤ −0.2) | independent data shows the *opposite*; Gill's E1b is implicated as design-specific | the E1b escalation **largely dissolves**; ΔAge stands and the burden shifts back onto Gill's n=6 bulk design. **Do not run D1** — there is no effect to explain |
+| **ambiguous** (−0.2 < rho ≤ 0) | no clear replication either way at n=8 | report as **underpowered/inconclusive**; do not over-read. Neither escalate nor clear ΔAge on this evidence |
+
+**Note on what D2 cannot do.** It anchors *direction*, not magnitude, and it is one donor at n=8
+timepoints. A positive rho would show the effect is not a Gill artefact; it would **not** establish
+that ΔAge is invalid, nor by itself justify abandoning the target.
+
+**Nothing in §10 changes `src/`.** `git diff --stat src/` must be empty when it finishes.
