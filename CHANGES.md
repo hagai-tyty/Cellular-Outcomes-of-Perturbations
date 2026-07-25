@@ -139,6 +139,59 @@ not touched here.**
 
 ---
 
+## 2026-07-25 (§9) — Clock-validity diagnostic: is the clock broken, mis-applied, or out-of-domain?
+
+**Status:** ✅ Written and tested (**384 tests**, 28 new). ⏳ **Not yet run on the data machine** —
+needs `D:\Gill` (and optionally `D:\GSE113957` for the gold reproduction check). `src/` untouched.
+
+### Why
+
+The §7–§8 escalation ("ΔAge target unvalidated; diagnostics stop") **reaches past its evidence**.
+An independent re-check found three confounds that each produce M1/E1/E1b's failures *without* the
+clock being wrong about aging, and none were ruled out:
+
+- **H1 (mis-applied):** `predict_age` sums only over genes present (`weights.get(g, 0)`). The clock
+  has **33,155 genes**; if the Gill matrix misses many, most of the model is silently dropped and
+  predictions collapse toward the 72.4 intercept — which is exactly where the M1 ages (36–99)
+  cluster.
+- **H2 (out-of-range):** M1's "young" anchor was the two **neonatal donors (age 0)**, below the
+  clock's fitted range [1, 96]; N2 read 98.7. Among **in-range adults** the day-0 contrast is
+  **~18 yr for a ~21 yr true gap** — the clock tracking in-domain fibroblast age.
+- **H3 (out-of-domain):** days 0–15 of OSKM are cells leaving fibroblast identity; a "reads older"
+  signal driven by pluripotency/cell-cycle genes is cell-STATE, not aging.
+
+Also corrected: the `with-iPSC` config **PASSES** (6/6 donors, p=0.0295) — the clock has real
+signal; E1b is marginal (**p=0.0445**); and E1 is underpowered (needs ρ≈−0.4, the transient effect
+gives ρ≈−0.1) so its null is uninformative. All four fix options assume the instrument is broken —
+this settles that first.
+
+### `experiments/diag_clock_validity.py` (new) — read-only, four independent axes
+
+| Check | Verdicts | Decides |
+|---|---|---|
+| H1 gene coverage | OK / DEGRADED / CRIPPLED (by fraction of \|weight\|, not gene count) | is the clock fully applied |
+| H1 own-domain reproduction | REPRODUCES / DEGRADED / BROKEN / SKIPPED | is it applied correctly on known-age fibroblasts |
+| H2 in-range tracking | TRACKS_IN_RANGE / NO_IN_RANGE_TRACKING (neonatal excluded, median split) | does it track age it was fit to read |
+| H3 directional attribution | OUT_OF_DOMAIN_CONFOUND / AGING_GENES_DRIVE_IT / DIFFUSE | is the reprogramming reversal cell-state |
+
+`decide()` folds them: CRIPPLED/BROKEN → **FIX_APPLICATION** (recoverable, ΔAge stays as-is);
+in-range TRACKS + reprogramming CONFOUNDED → **TARGET_RECOVERABLE_DOMAIN_FIX**; clean application +
+no in-range tracking → **GENUINE_CLOCK_LIMITATION** (the first point at which A/B/D are earned, not
+assumed). Bars pre-registered (§5b); predictions recorded in the notebook before running.
+
+Supporting checks: intercept dominance, and CP10k-denominator sensitivity (predictions normalised
+over the full data gene set vs the clock-overlap set only).
+
+### Tests — `tests/test_diag_clock_validity.py` (28)
+
+Every verdict branch, plus hand-worked coverage math (weight ≠ gene count), the in-range median
+split that excludes the out-of-range neonatal donors (the M1 error), attribution counting only the
+positive "age rises" contribution, and the full `decide()` table including application-fix
+priority. Found one bug while writing them: the in-range contrast used single min/max donors
+(dropping Y2); switched to a median group split — more robust at n=4.
+
+---
+
 ## 2026-07-24 (Phase 1) — Stage 1.5 Phase 1 written: zero-point diagnostics, bars pre-registered
 
 **Status:** ✅ Written and tested (**332 tests**, 28 new + 1 new registry bar). ⏳ **Not yet run on

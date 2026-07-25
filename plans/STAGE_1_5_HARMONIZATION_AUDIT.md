@@ -647,3 +647,64 @@ rejuvenation readout to anchor the target; or restricting claims to what the ide
 
 **Caveats:** n=6 donors, bulk, and a fibroblast clock out of domain on reprogramming cells — the
 finding is about *this clock on this data*, not about reprogramming biology.
+
+---
+
+# 9. CLOCK VALIDITY — is the clock BROKEN, MIS-APPLIED, or OUT-OF-DOMAIN? (before any fix)
+
+§7–§8 concluded "ΔAge target unvalidated" from M1 (absolute age) and E1/E1b (trajectory). A second,
+independent review found that conclusion **reaches past its evidence**, and that three confounds
+were never ruled out — each of which produces those exact failures without the clock being wrong
+about aging. Four fix options are on the table (replace the clock / replace the target / narrow to
+fate / more data); **all four assume the instrument is fundamentally broken, which has not been
+established.** Picking one before settling that is the expensive mistake — abandoning a working
+target, or shipping a broken one. `experiments/diag_clock_validity.py` settles it. Read-only,
+`src/` untouched, pure verdict functions unit-tested on every branch.
+
+## 9.1 What the escalation missed
+
+- **The clock has real signal it was denied credit for.** E1's `with-iPSC` configuration PASSES —
+  6/6 donors negative, p=0.0295. A clock that "reads nothing" cannot do that. It reads *large*
+  rejuvenation; the open question is the *small* transient effect, which is a different claim.
+- **E1b is marginal, not a finding.** WRONG_DIRECTION rests on **p=0.0445** — one donor from
+  flipping — and the cells there are mid-reprogramming (not fibroblasts), so it is most likely
+  out-of-domain, not "aging backwards."
+- **E1's null is underpowered to the point of being uninformative.** E1 needs a per-donor ρ ≈ −0.4
+  to detect a trend at n=6; Gill's transient effect (~3 yr) under a 12.27 yr-error clock produces
+  ρ ≈ −0.1. NO_TREND is the *expected* result whether or not rejuvenation is real.
+- **M1's failure is anchored on donors the clock cannot read.** Its "young" group was the two
+  NEONATAL donors (age 0), below the clock's fitted range [1, 96]; N2 read 98.7. Among **in-range
+  adults** (Y1,Y2 ~32 vs O1,O2 =53) the day-0 contrast is **~18 yr for a ~21 yr true gap** — the
+  clock tracking in-domain fibroblast age.
+
+## 9.2 The three hypotheses and their decisive checks
+
+| | Hypothesis | Check | If true |
+|---|---|---|---|
+| **H1** | the clock is MIS-APPLIED — a large fraction of its 33,155 genes are missing from the data (silently dropped by `weights.get(g, 0)`), collapsing predictions toward the 72.4 intercept | weighted gene coverage; own-domain reproduction; intercept dominance; CP10k-denominator sensitivity | **recoverable by fixing gene mapping / normalisation** — best case, ΔAge stays as-is |
+| **H2** | the clock is fine in-domain; M1 failed by anchoring on out-of-range neonatal donors | in-range young→old contrast + Spearman, neonatal excluded | "clock can't read age" is too strong; ΔAge stays |
+| **H3** | the reprogramming reversal is out-of-domain cell-STATE, not aging | attribute the "age rises" signal to OSKM/pluripotency + cell-cycle genes vs aging genes | domain restriction or a reprogramming-aware target (option B); NOT a retreat |
+
+## 9.3 Pre-registered bars (ground rule §5b)
+
+| Check | Bar | Decides |
+|---|---|---|
+| H1 coverage | frac of clock \|weight\| present ≥ 90% = OK; < 70% = CRIPPLED | is the clock even fully applied |
+| H1 reproduction | MAE on known-age fibroblasts ≤ 1.5× the clock's 12.27 yr CV = REPRODUCES | is it applied correctly on its own domain |
+| H2 in-range | positive young→old contrast AND Spearman > 0 among in-range donors | does it track age it was fit to read |
+| H3 attribution | OSKM+cell-cycle share of the "age rises" signal ≥ 30% = out-of-domain confound | is the reversal cell-state, not aging |
+
+## 9.4 What each outcome licenses (the decision table, `decide()`)
+
+- **coverage CRIPPLED or reproduction BROKEN → `FIX_APPLICATION`.** The instrument is mis-read;
+  fix mapping/normalisation and RE-RUN M1/E1 before any talk of replacing the clock. ΔAge likely
+  recoverable as-is. This is the outcome the escalation did not consider.
+- **in-range TRACKS and reprogramming CONFOUNDED → `TARGET_RECOVERABLE_DOMAIN_FIX`.** ΔAge stays;
+  restrict the clock to its domain or move to a reprogramming-aware target (option B).
+- **application clean AND no in-range tracking → `GENUINE_CLOCK_LIMITATION`.** Only *now* are
+  options A/B/D justified — and this is the first point at which the §7–§8 escalation would be
+  earned rather than assumed.
+
+**This does not weaken the discipline.** If every check says the clock is genuinely broken, that is
+recorded and the escalation stands. The point is to make the failure *locatable* so the fix is the
+right one — and to not abandon a recoverable target on an over-read null.

@@ -2956,3 +2956,43 @@ anchor the target; or restricting claims to what the identity axis supports. Han
 reprogramming cells. The finding is about *this clock on this data*, not about reprogramming biology.
 
 **`git diff --stat src/` is empty — nothing was touched.**
+
+---
+
+## STAGE 1.5 §9 — CLOCK VALIDITY: PRE-REGISTRATION (2026-07-25, written BEFORE the run)
+
+`experiments/diag_clock_validity.py`. Read-only. Settles whether the clock is BROKEN, MIS-APPLIED
+(H1), or OUT-OF-DOMAIN (H2/H3) before any of the four fix options is chosen. Bars in the plan §9.3
+and in the script's `bars()`, registered before any number is produced.
+
+### Predictions, recorded now (so a convenient result can't be rationalised later)
+
+1. **H2 in-range tracking → TRACKS_IN_RANGE.** Strongest prediction. Already visible in the M1
+   ages: in-range adults give an ~18 yr contrast for a ~21 yr gap. If this comes back
+   NO_IN_RANGE_TRACKING I am wrong about the whole rescue. **High confidence.**
+2. **H1 coverage → uncertain, leaning DEGRADED.** The clock has 33,155 genes; a SeqMonk bulk
+   report likely carries ~20k, so gene-count overlap ~50–70%. But the top-weight genes are
+   fibroblast structural genes (FN1, COL1A1/2) that any fibroblast RNA-seq will have, so *weighted*
+   coverage may be markedly higher than gene-count coverage. **This is the check I most want the
+   real number for** — it is the difference between FIX_APPLICATION and the domain story.
+3. **H1 reproduction → probably SKIPPED** (GSE113957 likely not downloaded). If present, I predict
+   REPRODUCES or DEGRADED, not BROKEN.
+4. **H3 attribution → OUT_OF_DOMAIN_CONFOUND.** During OSKM days 0–15, pluripotency/cell-cycle
+   genes switch on; the clock plausibly loads on them and reads "older." **Moderate confidence** —
+   it could come back DIFFUSE at bulk resolution.
+
+**Predicted ACTION:** `TARGET_RECOVERABLE_DOMAIN_FIX` if coverage is OK/DEGRADED, or
+`FIX_APPLICATION` if coverage is CRIPPLED. **Either way ΔAge stays** — the escalation's
+"unvalidated, stop" is predicted to be an over-read. I am recording that prediction so that if the
+data instead says GENUINE_CLOCK_LIMITATION, that stands against my expectation and is honoured.
+
+### What would prove me wrong, and what it would mean
+
+- **H2 NO_IN_RANGE_TRACKING** → the clock genuinely cannot read fibroblast age; the escalation was
+  right and options A/B are justified.
+- **H1 coverage OK + reproduction REPRODUCES + H2 no tracking** → the cleanest possible "the clock
+  is simply wrong on this data" verdict; no application excuse remains.
+- **H3 AGING_GENES_DRIVE_IT** → the wrong-direction signal is in real aging genes, much harder to
+  dismiss as domain shift.
+
+`git diff --stat src/` must be empty when this finishes.
