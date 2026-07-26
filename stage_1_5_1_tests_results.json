@@ -1,6 +1,6 @@
 {
   "script": "stage_1_5_1_tests",
-  "utc": "2026-07-26T17:11:46+00:00",
+  "utc": "2026-07-26T17:34:33+00:00",
   "gse113957_dir": "D:\\GSE113957",
   "gill_dir": "D:\\Gill",
   "tests": {
@@ -277,6 +277,21 @@
       },
       "best_cv_mae": 12.199749121988626
     },
+    "T16_loo_vs_5fold": {
+      "variants": {
+        "5-fold (ours)": {
+          "cv_mae": 12.268792087870432,
+          "cv_median_error": 9.473621368408203,
+          "cv_pearson": 0.8366442996264527
+        },
+        "leave-one-out (paper's)": {
+          "cv_mae": 12.296490748125807,
+          "cv_median_error": 10.053852081298828,
+          "cv_pearson": 0.8431778761550048
+        }
+      },
+      "protocol_effect_years": -0.02769866025537482
+    },
     "T8_bar_feasibility": {
       "cv_mae": 13.010742330909672,
       "cv_median_error": 10.924041748046875,
@@ -291,6 +306,61 @@
         658
       ],
       "bar_verdict": "FAIL"
+    },
+    "T13_elasticnet_convergence": {
+      "variants": {
+        "l1=0.1 loose (T8 settings)": {
+          "cv_mae": 12.93040004529451,
+          "alpha": 0.31622776601683794,
+          "convergence_warnings": 0
+        },
+        "l1=0.1 tight": {
+          "cv_mae": 12.93052793803968,
+          "alpha": 0.31622776601683794,
+          "convergence_warnings": 0
+        },
+        "l1=0.5 loose (T8 settings)": {
+          "cv_mae": 12.968924845071664,
+          "alpha": 0.1,
+          "convergence_warnings": 0
+        },
+        "l1=0.5 tight": {
+          "cv_mae": 12.970925209217501,
+          "alpha": 0.1,
+          "convergence_warnings": 0
+        },
+        "l1=0.9 loose (T8 settings)": {
+          "cv_mae": 14.17395003756186,
+          "alpha": 0.31622776601683794,
+          "convergence_warnings": 0
+        },
+        "l1=0.9 tight": {
+          "cv_mae": 14.171938530484537,
+          "alpha": 0.31622776601683794,
+          "convergence_warnings": 0
+        }
+      },
+      "best_cv_mae": 12.93040004529451,
+      "beats_dense_control": false
+    },
+    "T12_lda_ensemble": {
+      "n_genes_kept": 6625,
+      "bin_width": 20,
+      "n_pcs": 50,
+      "variants": {
+        "LDA ensemble": {
+          "cv_mae": 11.281954887218046,
+          "cv_median_error": 7.5,
+          "cv_pearson": 0.8109921915351822,
+          "slope": 0.7087565311858735
+        },
+        "LDA single-binning": {
+          "cv_mae": 11.819548872180452,
+          "cv_median_error": 6.0,
+          "cv_pearson": 0.786031638741266,
+          "slope": 0.795353301949153
+        }
+      }
     },
     "T7_label_noise_from_replicates": {
       "n_pairs": 12,
@@ -366,6 +436,76 @@
           }
         ]
       }
+    },
+    "T14_label_noise_uncertainty": {
+      "sd": 17.9048243796511,
+      "n_pairs": 12,
+      "ci95": [
+        12.683690767585317,
+        30.400207725418465
+      ],
+      "assumed": 17.350694111596354,
+      "assumption_inside_ci": true
+    },
+    "T15_snr_after_each_fix": {
+      "effect_years": 11.0,
+      "single_sample_sd": 12.66062273480551,
+      "grid": [
+        {
+          "clock": "current clock",
+          "replicates": 1,
+          "label_noise_sd": 17.9048243796511,
+          "snr": 0.6143595584495953
+        },
+        {
+          "clock": "current clock",
+          "replicates": 3,
+          "label_noise_sd": 10.337355175384536,
+          "snr": 1.0641019693502807
+        },
+        {
+          "clock": "current clock",
+          "replicates": 10,
+          "label_noise_sd": 5.662002614500882,
+          "snr": 1.9427755069960655
+        },
+        {
+          "clock": "published SOTA (E bar)",
+          "replicates": 1,
+          "label_noise_sd": 11.237221338925808,
+          "snr": 0.9788896799510327
+        },
+        {
+          "clock": "published SOTA (E bar)",
+          "replicates": 3,
+          "label_noise_sd": 6.4878127649722215,
+          "snr": 1.6954866606800263
+        },
+        {
+          "clock": "published SOTA (E bar)",
+          "replicates": 10,
+          "label_noise_sd": 3.5535214002452484,
+          "snr": 3.0955209666785257
+        },
+        {
+          "clock": "sufficiency target (S bar)",
+          "replicates": 1,
+          "label_noise_sd": 5.837517578662756,
+          "snr": 1.8843626339057384
+        },
+        {
+          "clock": "sufficiency target (S bar)",
+          "replicates": 3,
+          "label_noise_sd": 3.3702923454401144,
+          "snr": 3.2638118218090515
+        },
+        {
+          "clock": "sufficiency target (S bar)",
+          "replicates": 10,
+          "label_noise_sd": 1.8459851429845442,
+          "snr": 5.9588778608561634
+        }
+      ]
     }
   }
 }

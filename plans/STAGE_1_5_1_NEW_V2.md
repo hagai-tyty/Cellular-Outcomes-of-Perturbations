@@ -2,290 +2,302 @@
 
 **Supersedes** `STAGE_1_5_1_NEW_CHANGES.md` as the execution guide. Both earlier documents —
 `STAGE_1_5_1_CLOCK_PRECISION.md` (V1) and `STAGE_1_5_1_NEW_CHANGES.md` (the review) — are left
-**byte-unmodified**; everything here is additive, per the project's annotate-never-rewrite rule.
+**byte-unmodified**, per the project's annotate-never-rewrite rule.
 
-**Status:** adjudication **EXECUTED** 2026-07-26 on the real GSE113957 + Gill. Every claim below was
-re-derived from raw data by `experiments/stage_1_5_1_tests.py`
-(→ `stage_1_5_1_tests_results.json`); **nothing was accepted on either document's report.** The
-execution steps in §6 are PLANNED, not run. `git diff --stat src/` is empty.
+**Status:** adjudication **EXECUTED** 2026-07-26 against real GSE113957 + Gill. Sixteen tests in
+`experiments/stage_1_5_1_tests.py` → `stage_1_5_1_tests_results.json`. **Nothing was accepted on
+either document's report — including my own first draft of this file, whose errors are recorded in
+§2.** Execution steps (§7) are PLANNED. `git diff --stat src/` is empty.
 
 ---
 
-## 0. Bottom line — what actually changed
+## 0. Bottom line
 
 | | Finding | Consequence |
 |---|---|---|
-| ✅ | The review's **R4 refutation is correct** — I reproduced all three of its tests independently | V1's Step 1 leak-audit is genuinely unnecessary |
-| ✅ | The review's **C3 elimination is correct** | C3 drops to a reported control |
-| ❌ | The review's **P3 ("🔴 CORRECTNESS", ten samples unexplained)** is **wrong in severity and its suggested remedy is dangerous** | §2 — the ten are **progeria patients** |
-| 🔴 | **V1's primary bar (`cv_mae ≤ 4.0`) is unreachable**: the published result on this exact dataset is **mean MAE 7.7 yr** | §4 — **the single most important correction in this document** |
-| 🔴 | **V1's lead candidate C1 (ElasticNet) is worse than the control** — measured 13.01 vs 12.27 | §5 — the plan's main hope is already falsified |
-| 🆕 | The published method (**LDA ensemble on ~4.8k filtered genes**) is absent from both documents, and the paper **explicitly tested and rejected ridge** | §5 — this becomes the lead candidate |
-| ✅ | The bar's `√2·cv_mae` label-noise assumption — never checked by either document — is **empirically correct** (measured 17.90 vs assumed 17.35) | §3 — V1's arithmetic is vindicated |
+| ✅ | The review's **R4 refutation** and **C3 elimination** are both correct — reproduced independently | V1's leak-audit is cancelled; C3 demoted |
+| ❌ | The review's only 🔴 CORRECTNESS claim (**P3**) is wrong in severity, and its suggested remedy would **corrupt the clock** | §1.3 — the ten are **progeria patients** |
+| 🔴 | **V1's PASS bar (mean ≤ 4.0) is unreachable** — published SOTA on this exact data is **mean 7.7** | §4 |
+| 🔴 | **V1's lead candidate C1 (ElasticNet) is worse than the control** — 12.93 vs 12.27, and *not* a convergence artefact | §6 |
+| 🔴 | **Matching published SOTA would still leave SNR ≈ 1.0.** The clock fix, executed perfectly, does not on its own make the effect resolvable | §5 |
+| 🔴 | **`MASTER_PLAN` §5b-ter already prescribes the cheaper, stronger lever** (condition-level scoring) and it is **untested** | §5 |
+| 🆕 | The published **LDA-ensemble family — now tested by me** — beats ridge (11.28 / 7.50 vs 12.27 / 9.47) but does not reach 7.7 / 4.0 | §6 |
+| ✅ | The `√2·cv_mae` label-noise assumption both documents relied on is **empirically sound**, though imprecise (CI [12.7, 30.4]) | §3 |
 
-**The precision diagnosis (SNR ≈ 1) survives everything.** What changes is *which bar to hold it to*,
-*which method to try*, and *what outcome to expect*.
+**The SNR ≈ 1 diagnosis survives.** What changes is that clock precision is **one of two necessary
+levers, and the more expensive one** — a material amendment to V1's framing of it as *the*
+root-cause fix.
 
 ---
 
 ## 1. Adjudication of the review's three claims
 
-Every number below is mine, from my own run — not the review's.
+Every number is from my own run.
 
-### P1 / R4 — "no scaler leak exists" → ✅ **UPHELD**
+### 1.1 P1 / R4 "no scaler leak" → ✅ **UPHELD**
 
-| Test | Method | My result |
+| Test | Method | Result |
 |---|---|---|
-| T1 | `normalize_counts(X[:5])` vs `normalize_counts(X)[:5]`; then rescale rows 10+ ×7 and re-check rows 0–4 | `0.000e+00` **both** ways → strictly per-row |
-| T2 | token scan of `clock_fit.py` for `StandardScaler`/`scaler`/`fit_transform`/… | **NONE** |
-| T3 | donor identity across both series matrices | **143 values, 143 unique, 0 repeated** → no group leakage either |
-| T4b | exact protocol replay on the correct sample set | **cv_mae 12.27, pearson 0.837, alpha 0.2721** — matches the artefact to 4 s.f. |
+| T1 | `normalize_counts(X[:5])` vs `…(X)[:5]`, then rescale rows 10+ ×7 and re-check rows 0–4 | **0.000e+00 both ways** → strictly per-row |
+| T2 | token scan of `clock_fit.py` | **no** scaler tokens |
+| T3 | donor identity, both series matrices | **143 values, 143 unique, 0 repeated** → no group leakage |
+| T4b | exact protocol replay, correct sample set | **12.27 / 0.837 / alpha 0.2721** — matches the artefact to 4 s.f. |
 
-**R4 is refuted, and V1's Step 1 leak-audit would indeed find nothing.** The review's reasoning
-(normalisation ≠ standardisation) is correct.
+**R4 refuted; V1's Step 1 leak-audit is cancelled.** The review's reasoning (normalisation ≠
+standardisation) is right.
 
-**But keep the guard it motivated.** The review says this and is right: gene selection by
-age-correlation *is* a cross-sample statistic and **will** leak outside the fold. V1's §3 guard stays,
-and §5's new candidates make it load-bearing. *(Nuance neither document notes: the published feature
-filter — expression range and abundance — is **age-blind**, so it does not leak and may sit outside
-the fold. Supervised selection may not. The guard must distinguish the two.)*
+**Keep the guard it motivated** — the review says this and is correct. One refinement neither
+document makes: the published gene filter (dynamic range + abundance) is **age-blind**, so it does
+not leak and may sit outside the fold; **supervised** selection may not. The guard must distinguish
+the two, or it will forbid a legitimate step.
 
-### P2 / C3 — "slope recalibration eliminated" → ✅ **UPHELD**
+### 1.2 P2 / C3 "slope recalibration eliminated" → ✅ **UPHELD**
+Out-of-fold recalibration: **12.67 → 13.16 (+3.9% worse)**; review measured +1%. Same conclusion.
 
-Out-of-fold recalibration, my run: **12.67 → 13.16 (+3.9% worse)**. The review measured
-12.67 → 12.78 (+1%). Magnitudes differ; the conclusion is identical and directionally robust.
-Correcting the slope of a model that is memorising rescales errors without removing them.
+### 1.3 P3 "ten samples unexplained, 🔴 CORRECTNESS" → ❌ **SEVERITY WRONG, REMEDY DANGEROUS**
 
-### P3 — "ten samples unexplained; 🔴 CORRECTNESS" → ❌ **OBSERVATION RIGHT, SEVERITY WRONG, REMEDY DANGEROUS**
-
-The **arithmetic is right** (143 in GEO, 133 in the artefact) and worth documenting. Everything built
-on it is not. Neither document read the `disease` field:
+Arithmetic right (143 in GEO, 133 in the artefact); everything built on it wrong. Neither document
+read the `disease` field:
 
 ```
-T10:  disease across all 143 samples  ->  {'Normal': 133, 'HGPS': 10}
+T10:  disease across all 143  ->  {'Normal': 133, 'HGPS': 10}
 ```
 
-**The ten are Hutchinson–Gilford Progeria (HGPS) patients.** Corroborated externally: Fleischer et
-al. 2018 trained on **133 healthy** individuals and used **10 progeria patients as a separate
-validation set**. And confirmed decisively by measurement:
+**The ten are Hutchinson–Gilford Progeria patients.** Fleischer et al. trained on **133 healthy** and
+used **10 progeria as a separate validation set**. Confirmed decisively:
 
 ```
-T4b (Normal-only, n=133):  cv_mae 12.27  |  pearson 0.837  |  alpha 0.2721
-shipped artefact        :  cv_mae 12.27  |  pearson 0.837  |  alpha 0.2721
+T4b Normal-only n=133 :  cv_mae 12.27 | pearson 0.837 | alpha 0.2721
+shipped artefact      :  cv_mae 12.27 | pearson 0.837 | alpha 0.2721      <- exact
 ```
 
-**An exact reproduction.** So:
+1. The exclusion is **recorded** (GEO metadata) and **scientifically required** — HGPS fibroblasts
+   look old at young chronological ages; training on them teaches the clock backwards.
+2. **The review's remedy is harmful.** It floats that the ten may be "**7.5% more training data**".
+3. **Both prior replications were contaminated** — the review's 12.67 *and my own first run's 12.67*
+   included the 10 HGPS. The review blamed "a newer NCBI annotation"; the cause was solely the
+   sample set, and the correct set reproduces exactly.
 
-1. The exclusion is **not** unrecorded — it is in the GEO metadata, and it is **scientifically
-   required**: HGPS fibroblasts show accelerated ageing at young chronological ages, so training on
-   them teaches the clock that old-looking transcriptomes are young.
-2. **P3's suggested remedy is actively harmful.** The review floats that the ten may have been
-   "dropped by an accident of parsing" and are "**7.5% more training data** for a p≫n problem."
-   Adding them would corrupt the clock.
-3. **Both replications reported so far were contaminated.** The review's 12.67 *and* my own first
-   run's 12.67 both included the 10 HGPS. The review attributed the 12.67-vs-12.27 gap to "143 vs
-   133 and a newer NCBI annotation" — the sample count was the cause, but the annotation was not,
-   and the correct set reproduces exactly.
-
-**P3 downgrades from 🔴 CORRECTNESS to 🟡 documentation.** Step 0 is still worth doing — but it is
-"filter `disease == Normal`", not "investigate an unknown exclusion".
+**P3 → 🟡 documentation.** Step 0 becomes "filter `disease == Normal`", not "investigate".
 
 ---
 
-## 2. The label-noise assumption — checked for the first time
+## 2. Adjudication of my own first V2 draft — three errors
 
-Both documents derive the bar from `ΔAge noise ≈ √2 · cv_mae`. That is an **assumption**, and a
-questionable one: `cv_mae` is a *between-donor* error, while ΔAge is a *within-donor* difference, and
-any per-donor systematic offset **cancels** in a difference (the same cancellation proved in Stage
-1.5 §2 Group A). If most of `cv_mae` were per-donor bias, the true label noise would be far smaller
-and **the bar would be far too strict**.
+A review that only audits the other side is not a review. My draft asserted things I had not tested.
 
-Measured directly (T7), with no reference to `cv_mae`: Gill's Exp1/Exp2 pairs are the **same donor,
-same day, same marker**, so their true ages are identical and the spread of their predicted-age
-differences *is* the ΔAge label noise.
-
-```
-12 matched pairs ->  SD of differences        = 17.90 yr   [MEASURED]
-                     sqrt(2) * cv_mae         = 17.35 yr   [ASSUMED by both documents]
-                     ratio                    = 1.03
-```
-
-**The assumption is correct to 3%.** Single-measurement within-donor SD is **12.66 yr** ≈ `cv_mae`
-12.27 — i.e. the clock's error is *not* mostly per-donor bias; it is per-measurement noise that does
-**not** cancel. V1's bar arithmetic is vindicated, now on evidence rather than assumption.
-
-*(Scope: this is the noise on **Gill bulk** labels — the age-valid arm. D2's pseudobulk replicate SD
-was ~1 yr because averaging 400 cells suppresses sampling noise; that is technical reproducibility,
-not accuracy, and does not transfer to Gill's one-sample-per-donor-day design.)*
+| # | My error | What testing showed |
+|---|---|---|
+| **M1** | I criticised V1 for leading with an **untested** candidate (C1) — then proposed **C5 (LDA ensemble) as the new lead on the paper's authority alone.** Same error. | Now tested (T12): C5 **does** beat ridge — 11.28 / 7.50 vs 12.27 / 9.47 — but reaches **nowhere near** the published 7.7 / 4.0. It is promising, **not** proven |
+| **M2** | I hypothesised the alpha grid was mis-specified (alpha pinned at the 0.1 edge) | **Artefact of the HGPS contamination.** On the correct set alpha = 0.2721, not at the edge; widening the grid gains **0.07 yr** (T11). Withdrawn |
+| **M3** | I claimed the paper's **leave-one-out** vs our **5-fold** was "not apples-to-apples" and might explain part of the gap | **It explains −0.03 yr** (T16: 12.27 vs 12.30). The gap is method, not protocol. Withdrawn |
+| **M4** | I quoted the measured label noise as "17.90, ratio 1.03" — implying precision it does not have | n=12 pairs ⇒ 95% CI **[12.68, 30.40]** (T14). The assumption sits inside it, but the measurement is coarse |
 
 ---
 
-## 3. Root causes — what the evidence now says
+## 3. The label-noise assumption — checked, and its uncertainty stated
 
-| | V1's claim | Verdict on my evidence |
-|---|---|---|
-| **R1** dense ridge at p/n≈250 overfits | ✅ **confirmed, dramatically** — in-sample MAE **0.05** vs CV **12.67** on n=143 (**252×**). Near-total memorisation |
-| **R2** shrinkage compression | ✅ **confirmed and quantified** — slope **0.717**, and T9's decile bias is textbook regression-to-the-mean: young read **old** (+7.6, +11.7), old read **young** (−14.1, −8.1) |
-| **R3** fragile to gene-set mismatch | ⏳ still plausible, untested here |
-| **R4** CV optimism | ❌ **refuted** (§1) |
-| **R5** age-0 out of range | ✅ **confirmed structural** — T6: **0 samples below age 1**. No refit on this dataset can fix it |
+Both documents derived the bar from `ΔAge noise ≈ √2·cv_mae` without testing it. That deserved a
+check: `cv_mae` is *between-donor*, while ΔAge is a *within-donor difference*, so any per-donor
+systematic offset **cancels** (as proved in Stage 1.5 §2 Group A). If most of `cv_mae` were per-donor
+bias, the bar would be far too strict.
 
-### ⚠️ A hypothesis of my own that I must withdraw
+Measured with no reference to `cv_mae` — Gill's Exp1/Exp2 pairs share donor, day and marker, so their
+true ages are identical:
 
-My first run showed `alpha = 0.1` sitting exactly on the grid's lower edge, and I was ready to
-report "the alpha grid is mis-specified" as a new finding. It was an artefact of including the 10
-HGPS samples. On the correct set, `alpha = 0.2721`, **not** at the edge, and widening the grid
-changes almost nothing (T11: 12.27 → 12.25 → 12.20). **The alpha grid is fine; my hypothesis was
-wrong.** Recorded because a review document that only reports the other side's errors is not a
-review.
+```
+12 pairs -> SD of differences = 17.90 yr   [MEASURED]   95% CI [12.68, 30.40]
+            sqrt(2)*cv_mae    = 17.35 yr   [ASSUMED]    -> inside the CI
+```
+
+**The assumption is sound.** Single-measurement within-donor SD is **12.66 yr ≈ cv_mae 12.27** — the
+clock's error is *not* mostly per-donor bias, so it does **not** cancel in ΔAge. V1's arithmetic is
+vindicated on evidence. *(Caveat: the CI is wide; treat 17.9 as "≈ the clock's own error", not as a
+precise constant.)*
 
 ---
 
-## 4. 🔴 THE BAR IS UNREACHABLE — the most important correction
+## 4. 🔴 The bar is unreachable
 
-V1's primary bar: **PASS = `cv_mae ≤ 4.0 yr`**, derived (correctly, per §2) from what the tool needs.
-Neither document asked what is *achievable*. The published result on **this exact dataset**:
+V1's **PASS = mean MAE ≤ 4.0**, derived (correctly, §3) from what the tool needs. Neither document
+asked what is *achievable*:
 
-> **Fleischer et al. 2018** (Genome Biology), *same 133 samples*: **median absolute error 4.0 yr**,
-> **mean absolute error 7.7 yr**, R² 0.81, using an **ensemble of LDA classifiers** over ~4,852
-> filtered genes — having **explicitly tested and rejected ridge regression**, linear regression and
-> SVR.
+> **Fleischer et al. 2018**, *these exact 133 samples*: **median 4.0 yr, mean 7.7 yr**, R² 0.81, via
+> an **ensemble of LDA classifiers** over ~4,852 filtered genes — having **explicitly tested and
+> rejected ridge regression, linear regression and SVR**. (Confirmed by a second source.)
 
-| | mean MAE | median |
+| | mean | median |
 |---|---|---|
-| our shipped clock | **12.27** | 9.47 |
+| our shipped clock | 12.27 | 9.47 |
 | **published, same data** | **7.7** | **4.0** |
 | V1's PASS bar | **≤ 4.0** | — |
 
-**V1's PASS bar demands beating the published state of the art by ~1.9× on its own data.** A perfect
-reimplementation of the best known method would score 7.7 and be labelled **FAIL**. Wider context:
-field-leading transcriptomic clocks report ~4–6 yr *median* (BiT age 5.55 yr on human cortex;
-ATAC-clock 5.27 yr median) — so a **mean** ≤ 4.0 is at or beyond the frontier.
+**V1's bar demands beating published SOTA by ~1.9× on its own data**; field-leading transcriptomic
+clocks report 4–6 yr *median*. By ground rule §5b — *a bar a correct system cannot pass is a
+description, not a test* — **it fails resolvability and must be corrected before running.**
 
-By this project's own ground rule §5b — *a bar a correct system cannot pass is a description, not a
-test* — **the V1 bar fails resolvability and must be corrected before running.**
-
-### The fix: split the bar in two (do NOT simply lower it)
-
-V1 conflated two different questions. Separating them keeps the science honest without
-goalpost-moving:
+**Fix — split the bar (do not simply lower it):**
 
 | Bar | Question | Threshold | Achievable? |
 |---|---|---|---|
-| **E — Engineering** | is our clock as good as the method allows? | **mean ≤ 7.7 AND median ≤ 4.0** (match published) | **Yes** — a known method reaches it |
-| **S — Sufficiency** | is the clock good enough for per-cell rejuvenation claims? | **mean ≤ 4.0** (from §2's verified arithmetic) | **Probably not on this dataset** |
+| **E — Engineering** | is our clock as good as the method allows? | mean ≤ 7.7 **and** median ≤ 4.0 | plausibly — a published method reaches it |
+| **S — Sufficiency** | is it good enough for the tool? | mean ≤ 4.0 | **almost certainly not on this dataset** |
 
-Both get reported. **The likely outcome is E pass / S fail** — a real 37% error reduction that still
-does not make per-cell quantification measurable. That routes to V1 §6's fallback, which is
-therefore the **expected** path rather than a remote contingency.
-
-**Also fixed:** V1 compares a mean to a literature median. **Report both, always**; the distributions
-are skewed (ours: mean 12.27 vs median 9.47; published: 7.7 vs 4.0).
+**Also fixed:** V1 compares our *mean* to a literature *median*. **Report both, always** — the
+distributions are skewed (ours 12.27/9.47; published 7.7/4.0).
 
 ---
 
-## 5. 🔴 The lead candidate is already falsified — and the right one is missing
+## 5. 🔴 The deeper problem: the clock fix cannot succeed alone
 
-V1's Step 2 leads with **C1 (ElasticNet/Lasso)**, "sparse selection, targets R1 + R3". Tested, with
-all selection inside each fold, on the correct Normal-only set:
+Neither document asked the obvious follow-up — *if we hit the bar, is the problem solved?* Measured
+(T15), using the **measured** single-sample SD of 12.66 yr against the recorded **−11.35 yr** effect
+(`MASTER_PLAN` §5b-ter). SNR ≥ 2.0 is needed for a 2σ-resolvable effect:
 
-| candidate | mean MAE | median | pearson | slope | non-zero genes |
-|---|---|---|---|---|---|
-| **C4 dense ridge (control)** | **12.27** | 9.47 | 0.837 | 0.717 | 33,155 |
-| **C1 ElasticNet (l1_ratio 0.5)** | **13.01** ❌ | 10.92 | 0.823 | 0.684 | 1,166 |
-| C3 slope recalibration | 13.16 ❌ | — | — | — | — |
+| clock | k=1 | k=3 | k=10 |
+|---|---|---|---|
+| **current** | 0.61 | 1.06 | **1.94** |
+| **published SOTA (E bar)** | **0.98** | 1.70 | 3.10 |
+| sufficiency target (S bar) | 1.88 | 3.26 | 5.96 |
 
-**Sparse linear regression is *worse* than the dense control.** So the fix is *not* "sparse instead
-of dense" — the linear-regression family itself is the limit, which is exactly what Fleischer found
-when they rejected ridge, linear regression and SVR in favour of LDA.
+Three readings, all consequential:
 
-### Revised candidate list
+1. **Achieving the E bar leaves SNR ≈ 1.0.** Matching the published clock — the best realistic
+   outcome of this entire stage — **does not make the effect resolvable.**
+2. **Even the S bar reaches only 1.88 at k=1**, short of its own 2.0 target. V1's arithmetic was
+   marginally optimistic.
+3. **The current clock at k=10 (SNR 1.94) ≈ a perfect clock at k=1 (1.88).** **Replication is as
+   powerful a lever as a 3× better clock — and far cheaper.**
 
-| | Candidate | Rationale |
+### The project already knew this, and it is untested
+
+`MASTER_PLAN` §5b-ter contains the same arithmetic and its conclusion:
+
+> *"Uncertainty on a mean shrinks by √n … n=21 cells → SE 3.7–4.6 yr → comfortably detectable"*
+> *"**RES should score CONDITIONS (populations of cells), not individual cells.**"*
+
+So the cheaper lever is **already specified in the project's own master plan and has never been
+run.** V1 proposed the expensive lever without referencing it.
+
+### But the two levers fix *different* defects — both are needed
+
+This is the reason Stage 1.5.1 still earns its place:
+
+| lever | fixes | cannot fix |
 |---|---|---|
-| **C5 (NEW, lead)** | **Ensemble of LDA classifiers over staggered age bins** + the paper's age-blind gene filter (5-fold expression range, >5 FPKM ⇒ ~4.8k genes) | the published method; the only one demonstrated to reach 7.7/4.0 on this data. **Absent from both documents** |
-| **C2 (keep)** | ridge on a fold-internal filtered gene set | untested, cheap, isolates R3 from R1 |
-| C1 (demote) | ElasticNet | **tested, worse than control** — report as a result, not a hope |
-| C3 (demote) | slope recalibration | tested, worse — reported control |
-| C4 (keep) | dense ridge | control |
+| **Aggregation** (§5b-ter) | **variance** — SE shrinks by √n | **bias**: the slope is **0.717**, so ΔAge magnitudes are compressed ~28% low. Averaging a biased estimator gives a *precise wrong answer* |
+| **Clock precision** (this stage) | **bias/compression**, and variance | it cannot reach SNR 2 alone (row 2 above) |
 
-**Why C5 should work where C1 failed:** age is being predicted from a compressed, noisy signal;
-discretising it into overlapping bins and ensembling classifiers is more robust to that than fitting
-one continuous linear map, and it directly attacks R2 (the classifier ensemble has no single
-regression slope to compress). This is mechanism, not hope — and it is the mechanism the source
-paper reports.
+**Amendment to V1's framing:** Stage 1.5.1 is **necessary but not sufficient**, and it is the more
+expensive of the two levers. It should not be sold as *the* root-cause fix.
+
+⚠️ **Scope limit on aggregation, so it is not oversold:** averaging helps where many cells share a
+condition (HFF single-cell; a patient sample at deployment). It does **not** help Gill's *training
+labels*, which are ~1 bulk sample per donor-timepoint and cannot be averaged across timepoints
+without mixing biology.
 
 ---
 
-## 6. Corrected execution plan
+## 6. Candidates — now tested rather than argued
 
-### Step 0 (rewritten) — pin the sample set: **filter `disease == Normal`**
-Not "discover which ten". Record the rule (`disease == Normal` ⇒ n=133) and the 10 HGPS GSM ids in
-the clock metadata so Stage 5 can state the training set. **Reserve the 10 HGPS as a held-out
-validation set** — reproducing the paper's accelerated-ageing result on them is a strong, free
-external check of any new clock. *(Neither document proposed this.)*
+All on the correct Normal-only set, selection inside each fold.
 
-### Step 1 (mostly complete) — nothing left but confirmation
-R4 ✅ refuted, slope ✅ 0.717, decile profile ✅ done (worst/best ratio 1.94, monotonic bias). The
-leak audit V1 budgeted is **cancelled**.
+| candidate | mean | median | pearson | slope | verdict |
+|---|---|---|---|---|---|
+| **C5 LDA ensemble** (approximated) | **11.28** | **7.50** | 0.811 | 0.709 | **best tested** — beats control, far short of published |
+| C5b LDA, single binning | 11.82 | **6.00** | 0.786 | 0.795 | best *median*; ensemble wins on mean |
+| C4 dense ridge (control) | 12.27 | 9.47 | 0.837 | 0.717 | control |
+| C1 ElasticNet (best of l1 0.1/0.5/0.9) | 12.93 | 10.92 | 0.823 | 0.684 | ❌ **worse than control** |
+| C3 slope recalibration | 13.16 | — | — | — | ❌ worse |
 
-### Step 2 (rewritten) — evaluate **C5** and C2 against C4, reporting C1/C3 as measured failures
-One leak-free harness; **age-blind** filters may sit outside the fold, **supervised** selection may
-not. Report mean **and** median for every candidate.
+**C1's failure is robust, not a convergence artefact** (T13): loose (`max_iter` 3000, `tol` 1e-3) and
+tight (60000, 1e-6) give **identical** MAEs with **zero** convergence warnings, across three
+`l1_ratio` values. **Sparse linear regression does not beat dense** — the *linear family* is the
+limit, exactly what Fleischer found when they rejected ridge, linear regression and SVR.
 
-### Step 3 (rewritten) — gate on **two** bars
-Report E and S separately. **E fail ⇒ stop and diagnose** (we cannot match a published method on its
-own data). **E pass / S fail ⇒ ship the better clock AND invoke V1 §6's fallback** — that is a
-success and a scope finding simultaneously, not a defeat.
+**On C5, honestly:** my implementation approximates the paper (age-blind filter → 6,625 genes →
+in-fold PCA-50 → 20 staggered LDA classifiers). It improves the mean 8% and the median 21% over
+ridge, confirming the family is the right direction — but it lands at 11.28, not 7.7. The remaining
+gap is the paper's exact recipe (FPKM units, ~4.8k genes, no PCA). **C5 is the best lead available
+and it is not yet close to the target.**
+
+---
+
+## 7. Corrected execution plan
+
+### Step 0 — pin the sample set: filter `disease == Normal` (n=133)
+Record the rule and the 10 HGPS GSM ids in the clock metadata so Stage 5 can state its training set.
+**Reserve the 10 HGPS as a held-out check** — reproducing the paper's accelerated-ageing result on
+them is a free, strong external validation. *(Neither earlier document proposed this.)*
+
+### Step 0b (NEW, and it should come first) — test the cheaper lever
+Before spending this stage's effort, run the **condition-level aggregation** `MASTER_PLAN` §5b-ter
+already prescribes and quantify SNR at realistic n. If it delivers, Stage 1.5.1's *urgency* drops
+even though its *necessity* (the compression bias) remains.
+
+### Step 1 — complete
+R4 ✅ refuted, slope ✅ 0.717, decile profile ✅ (ratio 1.94; bias +7.6 young → −14.1 old). The
+budgeted leak-audit is **cancelled**.
+
+### Step 2 — pursue **C5 exactly**, report C1/C3/C4 as measured
+The family is validated (11.28); the gap to 7.7 is recipe fidelity. Reproduce the paper's units,
+gene filter and bin width before concluding anything about achievability.
+
+### Step 3 — gate on **both** bars
+**E fail ⇒ stop and diagnose.** **E pass / S fail ⇒ ship the better clock AND invoke the fallback** —
+success and scope finding simultaneously, which §5 says is the *expected* outcome.
 
 ### Step 4 — rebuild + revalidate
-Only after Step 3, and **only if the new clock beats the shipped one on E**. Everything in V1 §5
-(V1–V7) stands unchanged.
+Only after Step 3, and only if the new clock beats the shipped one on E. V1 §5's V1–V7 stand.
 
 ---
 
-## 7. Honest expectation, recorded before Step 2
+## 8. Honest expectation, recorded before Step 2
 
-| outcome | my estimate | note |
+| outcome | estimate | basis |
 |---|---|---|
-| **E pass** (mean ≤7.7, median ≤4.0) | **~55%** | reimplementing a published method on its own data — the main risks are the FPKM-vs-counts filter mismatch and bin-width tuning |
-| **S pass** (mean ≤4.0) | **~10%** | would require beating the published mean by ~1.9×. The review's 25–35% PASS estimate was made without the literature comparison and is, I think, too optimistic |
-| **Neither** | **~35%** | C5 fails to transfer; the fallback triggers on weaker evidence |
+| **E pass** (mean ≤7.7, median ≤4.0) | **~40%** | C5 tested at 11.28; closing to 7.7 needs recipe fidelity that may not survive the counts-vs-FPKM difference. Lower than my draft's 55% because I have now measured the gap instead of assuming the paper transfers |
+| **S pass** (mean ≤4.0) | **~5%** | requires beating published SOTA by ~1.9×. The review's 25–35% was made without the literature comparison |
+| **Neither** | **~55%** | |
 
-**Most likely single outcome: a materially better clock that is still not sufficient for per-cell
-rejuvenation claims.** Recorded now so that result is read as the pre-registered outcome it is.
-
----
-
-## 8. What stands unchanged from V1
-
-Not re-litigated: the **SNR ≈ 1 diagnosis** (§0), the **revalidation suite** (§5 V1–V7), the
-**fallback** (§6), the **discipline** (§7), the guard-streak warning (`y_age` moves ⇒ the `+0.000`
-record ends by construction), and `FRAGILE` reporting within 0.5 yr of any boundary.
+**Most likely: a materially better clock that still does not make per-cell quantification
+measurable** — which §5 shows was never achievable by this lever alone.
 
 ---
 
-## 9. Reproduction
+## 9. Unchanged from V1
+
+The SNR ≈ 1 diagnosis; the revalidation suite (§5 V1–V7); the fallback (§6); the discipline (§7);
+the guard-streak warning (`y_age` moves ⇒ the `+0.000` record ends **by construction**); and
+`FRAGILE` reporting within 0.5 yr of any boundary.
+
+---
+
+## 10. Reproduction
 
 ```bash
-python experiments/stage_1_5_1_tests.py "D:\GSE113957" "D:\Gill"   # -> stage_1_5_1_tests_results.json
+python experiments/stage_1_5_1_tests.py "D:\GSE113957" "D:\Gill"
 ```
 
 | Test | Question | Result |
 |---|---|---|
-| T1/T2 | is there a cross-sample scaler? | no — `0.000e+00`, no tokens |
+| T1/T2 | cross-sample scaler? | none — `0.000e+00`, no tokens |
 | T3 | group leakage? | 143/143 unique donors |
-| T4 | replay CV on all 143 | 12.67 / 0.841 / slope 0.717 / 252× in-sample gap |
-| **T4b** | replay on Normal-only 133 | **12.27 / 0.837 / alpha 0.2721 — exact match** |
+| T4 | replay CV on all 143 | 12.67 / 0.841 / slope 0.717 / **252× in-sample gap** |
+| **T4b** | replay on Normal-only 133 | **12.27 / 0.837 / 0.2721 — exact match** |
 | T5 | does C3 help? | no, +3.9% |
-| T6 | sample count | 143 parsed vs 133 in artefact; 0 below age 1 |
-| **T7** | ΔAge label noise, measured | **17.90 yr** vs 17.35 assumed (ratio 1.03) |
-| **T8** | is ≤4.0 reachable by sparse? | **13.01 — FAIL, worse than control** |
-| T9 | error by decile | ratio 1.94; bias +7.6 → −14.1 |
+| T6 | sample count | 143 parsed vs 133 shipped; **0 below age 1** (R5) |
+| **T7** | ΔAge label noise, measured | **17.90 yr** (assumed 17.35) |
+| T8 | sparse feasibility | 13.01 — FAIL |
+| T9 | error by decile | ratio 1.94; bias **+7.6 → −14.1** |
 | **T10** | who are the 10? | **Normal 133 / HGPS 10** |
-| T11 | alpha at grid edge? | no (0.2721); widening gains 0.07 yr |
+| T11 | alpha at grid edge? | no (0.2721); widening gains 0.07 |
+| **T12** | does LDA-ensemble beat regression? | **11.28 / 7.50** vs control 12.27 / 9.47 |
+| **T13** | is C1's failure a convergence artefact? | **no** — loose ≡ tight, 0 warnings |
+| **T14** | how precise is the label noise? | 95% CI **[12.68, 30.40]** |
+| **T15** | does hitting the bar fix SNR? | **no** — E bar ⇒ SNR **0.98** at k=1 |
+| **T16** | LOO vs 5-fold? | **−0.03 yr** — protocol is not the gap |
 
-**Sources for the external comparison:**
-[Fleischer et al. 2018, *Genome Biology*](https://pmc.ncbi.nlm.nih.gov/articles/PMC6300908/) ·
+**Sources:** [Fleischer et al. 2018, *Genome Biology*](https://pmc.ncbi.nlm.nih.gov/articles/PMC6300908/) ·
 [BiT age (Meyer & Schumacher 2021)](https://onlinelibrary.wiley.com/doi/full/10.1111/acel.13320) ·
 [ATAC-clock (2023)](https://link.springer.com/article/10.1007/s11357-023-00986-0)

@@ -374,6 +374,179 @@ def t9_error_by_decile(t4: dict) -> dict:
     return {"bins": rows, "worst_over_best_ratio": ratio}
 
 
+def t12_lda_ensemble(ages, counts, mask) -> dict:
+    """NEW — TEST the candidate V2 proposes as lead, instead of recommending it untested.
+
+    V2 criticised V1 for leading with an untested candidate (C1), then proposed C5 (the published
+    LDA ensemble) on the paper's authority alone. That is the same error. This tests the METHOD
+    FAMILY: age-blind gene filter -> in-fold PCA -> ensemble of LDA classifiers over staggered age
+    bins, averaged. An approximation of Fleischer's exact recipe (they used FPKM and ~4.8k genes with
+    no PCA), so it bounds the family's promise rather than reproducing their number exactly.
+    """
+    _hdr("T12 — does the LDA-ENSEMBLE family beat continuous regression? (NEW; tests V2's own lead)")
+    from sklearn.decomposition import PCA
+    from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+    from sklearn.metrics import mean_absolute_error
+    from sklearn.model_selection import KFold
+
+    from cellfate.data.normalize import normalize_counts
+    raw = np.asarray(counts, float)[mask]
+    y = np.asarray(ages, float)[mask]
+    Xn = normalize_counts(raw)
+
+    # paper-style AGE-BLIND filter: >=5x dynamic range and a decent abundance somewhere.
+    # Age-blind => legitimately outside the fold (see the guard discussion in V2 §1).
+    cpm = raw / np.maximum(raw.sum(axis=1, keepdims=True), 1) * 1e6
+    hi, lo = cpm.max(axis=0), np.maximum(cpm.min(axis=0), 1e-9)
+    keep = (hi >= 5.0) & ((hi / lo) >= 5.0)
+    Xf = Xn[:, keep]
+    print(f"  age-blind filter keeps {int(keep.sum())} genes (paper reported ~4,852)")
+
+    BIN_W, N_PC = 20, 50
+    out = {}
+    for name, mk in (("LDA ensemble", "ens"), ("LDA single-binning", "one")):
+        pred = np.empty_like(y)
+        for tr, te in KFold(5, shuffle=True, random_state=0).split(Xf):
+            pca = PCA(n_components=min(N_PC, len(tr) - 2), random_state=0).fit(Xf[tr])
+            Ztr, Zte = pca.transform(Xf[tr]), pca.transform(Xf[te])
+            offs = range(BIN_W) if mk == "ens" else [0]
+            acc = np.zeros(len(te))
+            for off in offs:
+                b = np.floor((y[tr] - off) / BIN_W).astype(int)
+                if len(np.unique(b)) < 2:
+                    acc += y[tr].mean()
+                    continue
+                m = LinearDiscriminantAnalysis(solver="lsqr", shrinkage="auto").fit(Ztr, b)
+                # bin index -> that bin's centre in years
+                acc += (m.predict(Zte) + 0.5) * BIN_W + off
+            pred[te] = acc / len(list(offs))
+        mae = float(mean_absolute_error(y, pred))
+        med = float(np.median(np.abs(pred - y)))
+        pear = float(np.corrcoef(pred, y)[0, 1])
+        slope = float(np.polyfit(y, pred, 1)[0])
+        out[name] = {"cv_mae": mae, "cv_median_error": med, "cv_pearson": pear, "slope": slope}
+        print(f"  {name:22s} mean={mae:6.2f}  median={med:6.2f}  pearson={pear:.3f}  slope={slope:.3f}")
+    print("  reference -- dense ridge control 12.27 mean / 9.47 median; "
+          "published (exact recipe) 7.7 mean / 4.0 median")
+    return {"n_genes_kept": int(keep.sum()), "bin_width": BIN_W, "n_pcs": N_PC, "variants": out}
+
+
+def t13_elasticnet_convergence(ages, counts, mask) -> dict:
+    """NEW — is T8's ElasticNet FAIL real, or an under-converged artefact? V2 leaned on it hard."""
+    _hdr("T13 — is the ElasticNet result trustworthy? convergence + l1_ratio sweep (NEW)")
+    import warnings
+
+    from sklearn.exceptions import ConvergenceWarning
+    from sklearn.linear_model import ElasticNetCV
+    from sklearn.metrics import mean_absolute_error
+    from sklearn.model_selection import KFold
+
+    from cellfate.data.normalize import normalize_counts
+    Xn = normalize_counts(np.asarray(counts, float)[mask])
+    y = np.asarray(ages, float)[mask]
+    from sklearn.linear_model import ElasticNet
+    # Isolate CONVERGENCE, not the whole nested search: pick one alpha per l1_ratio ONCE (inside
+    # fold 0's training data), then run the same outer CV at loose vs tight settings. If the answer
+    # barely moves, T8's number is trustworthy. `selection='random'` is the fast coordinate-descent
+    # path; a full 20k-iteration nested sweep over 33k features runs for hours and answers nothing
+    # extra (my first attempt at this test did exactly that and had to be killed).
+    out = {}
+    folds = list(KFold(5, shuffle=True, random_state=0).split(Xn))
+    for l1 in (0.1, 0.5, 0.9):
+        tr0 = folds[0][0]
+        a0 = float(ElasticNetCV(l1_ratio=l1, alphas=np.logspace(-2, 1.5, 8), cv=3, max_iter=4000,
+                                tol=1e-3, random_state=0, selection="random"
+                                ).fit(Xn[tr0], y[tr0]).alpha_)
+        for tag, (mi, tl) in (("loose (T8 settings)", (3000, 1e-3)), ("tight", (60000, 1e-6))):
+            pred = np.empty_like(y)
+            n_warn = 0
+            for tr, te in folds:
+                with warnings.catch_warnings(record=True) as w:
+                    warnings.simplefilter("always", ConvergenceWarning)
+                    en = ElasticNet(alpha=a0, l1_ratio=l1, max_iter=mi, tol=tl,
+                                    random_state=0, selection="random").fit(Xn[tr], y[tr])
+                    n_warn += sum(1 for x in w if issubclass(x.category, ConvergenceWarning))
+                pred[te] = en.predict(Xn[te])
+            mae = float(mean_absolute_error(y, pred))
+            out[f"l1={l1} {tag}"] = {"cv_mae": mae, "alpha": a0,
+                                     "convergence_warnings": int(n_warn)}
+            print(f"  l1_ratio={l1}  {tag:20s} alpha={a0:7.3g}  cv_mae={mae:6.2f}  warnings={n_warn}")
+    best = min(v["cv_mae"] for v in out.values())
+    print(f"  best sparse = {best:.2f} vs dense ridge control 12.27  "
+          f"-> sparse {'BEATS' if best < 12.27 else 'does NOT beat'} dense")
+    return {"variants": out, "best_cv_mae": best, "beats_dense_control": bool(best < 12.27)}
+
+
+def t14_label_noise_uncertainty(t7: dict) -> dict:
+    """NEW — an SD from 12 pairs is itself uncertain. V2 quoted 17.90 as if exact."""
+    _hdr("T14 — how uncertain is the measured label noise? chi-square CI on the SD (NEW)")
+    if "sd_of_differences" not in t7:
+        return {"status": "CANNOT_VERIFY"}
+    from scipy.stats import chi2
+    sd, n = float(t7["sd_of_differences"]), int(t7["n_pairs"])
+    df = n - 1
+    lo = sd * np.sqrt(df / chi2.ppf(0.975, df))
+    hi = sd * np.sqrt(df / chi2.ppf(0.025, df))
+    assumed = float(t7["assumed_sqrt2_cv_mae"])
+    print(f"  SD = {sd:.2f} yr from n={n} pairs -> 95% CI [{lo:.2f}, {hi:.2f}]")
+    print(f"  assumed sqrt(2)*cv_mae = {assumed:.2f} -> "
+          f"{'INSIDE' if lo <= assumed <= hi else 'OUTSIDE'} the CI")
+    return {"sd": sd, "n_pairs": n, "ci95": [float(lo), float(hi)], "assumed": assumed,
+            "assumption_inside_ci": bool(lo <= assumed <= hi)}
+
+
+def t15_snr_after_each_fix(t7: dict) -> dict:
+    """NEW — the question V2 never asked: does achieving the ENGINEERING bar actually fix the SNR?"""
+    _hdr("T15 — SNR after a better clock, and what replication would add (NEW)")
+    sd1 = float(t7.get("single_measurement_sd", 12.66))       # measured, one bulk sample
+    cur_mae, pub_mae, suff_mae = 12.26879346460328, 7.7, 4.0
+    effect = 11.0
+    rows = []
+    for name, mae in (("current clock", cur_mae), ("published SOTA (E bar)", pub_mae),
+                      ("sufficiency target (S bar)", suff_mae)):
+        s = sd1 * (mae / cur_mae)                              # scale measured SD by MAE ratio
+        for k in (1, 3, 10):
+            noise = np.sqrt(2.0 / k) * s                       # k replicates each side
+            rows.append({"clock": name, "replicates": k, "label_noise_sd": float(noise),
+                         "snr": float(effect / noise)})
+    print(f"  effect = {effect:.0f} yr; single-sample SD = {sd1:.2f} yr (MEASURED, T7)")
+    print(f"  {'clock':<28}{'k=1':>10}{'k=3':>10}{'k=10':>10}   (SNR = effect / label noise)")
+    for name in ("current clock", "published SOTA (E bar)", "sufficiency target (S bar)"):
+        sn = [r["snr"] for r in rows if r["clock"] == name]
+        print(f"  {name:<28}{sn[0]:>10.2f}{sn[1]:>10.2f}{sn[2]:>10.2f}")
+    print("  SNR 2.0 is the threshold for a 2-sigma-resolvable effect.")
+    return {"effect_years": effect, "single_sample_sd": sd1, "grid": rows}
+
+
+def t16_loo_vs_5fold(ages, counts, mask) -> dict:
+    """NEW — the published 7.7 was LEAVE-ONE-OUT CV; ours is 5-fold. Not apples-to-apples.
+
+    LOO trains on n-1=132 samples per fold vs ~106 for 5-fold. At p>>n more training data matters,
+    so part of our apparent 1.6x deficit may be protocol, not method. Neither document noticed.
+    """
+    _hdr("T16 — is our 5-fold vs the paper's LEAVE-ONE-OUT a like-for-like comparison? (NEW)")
+    from sklearn.linear_model import RidgeCV
+    from sklearn.metrics import mean_absolute_error
+    from sklearn.model_selection import KFold, LeaveOneOut, cross_val_predict
+
+    from cellfate.data.normalize import normalize_counts
+    Xn = normalize_counts(np.asarray(counts, float)[mask])
+    y = np.asarray(ages, float)[mask]
+    alphas = np.logspace(-1.0, 4.0, 24)
+    out = {}
+    for name, cv in (("5-fold (ours)", KFold(5, shuffle=True, random_state=0)),
+                     ("leave-one-out (paper's)", LeaveOneOut())):
+        pred = cross_val_predict(RidgeCV(alphas=alphas), Xn, y, cv=cv)
+        out[name] = {"cv_mae": float(mean_absolute_error(y, pred)),
+                     "cv_median_error": float(np.median(np.abs(pred - y))),
+                     "cv_pearson": float(np.corrcoef(pred, y)[0, 1])}
+        print(f"  {name:26s} mean={out[name]['cv_mae']:6.2f}  "
+              f"median={out[name]['cv_median_error']:6.2f}  pearson={out[name]['cv_pearson']:.3f}")
+    d = out["5-fold (ours)"]["cv_mae"] - out["leave-one-out (paper's)"]["cv_mae"]
+    print(f"  protocol accounts for {d:+.2f} yr of the gap to the published 7.7")
+    return {"variants": out, "protocol_effect_years": float(d)}
+
+
 def main() -> int:
     known = sys.argv[1] if len(sys.argv) > 1 else r"D:\GSE113957"
     gill = sys.argv[2] if len(sys.argv) > 2 else r"D:\Gill"
@@ -404,7 +577,10 @@ def main() -> int:
                 mask = np.ones(len(ages), dtype=bool)
             RESULTS["T4b_cv_normal_only"] = t4b_cv_normal_only(ages, counts, mask)
             RESULTS["T11_alpha_grid"] = t11_alpha_grid_boundary(ages, counts, mask)
+            RESULTS["T16_loo_vs_5fold"] = t16_loo_vs_5fold(ages, counts, mask)
             RESULTS["T8_bar_feasibility"] = t8_bar_feasibility(ages, counts, mask)
+            RESULTS["T13_elasticnet_convergence"] = t13_elasticnet_convergence(ages, counts, mask)
+            RESULTS["T12_lda_ensemble"] = t12_lda_ensemble(ages, counts, mask)
 
     if Path(gill).exists():
         try:
@@ -414,6 +590,11 @@ def main() -> int:
             RESULTS["T7_label_noise_from_replicates"] = {"error": repr(exc)[:200]}
     else:
         print(f"\n  !! {gill} missing; T7 skipped")
+
+    t7 = RESULTS.get("T7_label_noise_from_replicates", {})
+    if "sd_of_differences" in t7:
+        RESULTS["T14_label_noise_uncertainty"] = t14_label_noise_uncertainty(t7)
+        RESULTS["T15_snr_after_each_fix"] = t15_snr_after_each_fix(t7)
 
     out = {"script": "stage_1_5_1_tests", "utc": datetime.now(UTC).isoformat(timespec="seconds"),
            "gse113957_dir": known, "gill_dir": gill, "tests": RESULTS}
