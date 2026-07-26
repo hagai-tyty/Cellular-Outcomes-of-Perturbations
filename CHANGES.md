@@ -213,8 +213,8 @@ not touched here.**
 
 ## 2026-07-26 (review, tested) — R4 refuted BY RUNNING; Step 1 effectively complete; C3 eliminated
 
-**Status:** ✅ Tests run on the real GSE113957 (~3 s compute). Recorded as
-`STAGE_1_5_1_CLOCK_PRECISION.md` §9 and §9.5. No code changed.
+**Status:** ✅ Tests run on the real GSE113957 (~3 s compute). Recorded in **`plans/STAGE_1_5_1_NEW_CHANGES.md`** (a companion file — the original
+`STAGE_1_5_1_CLOCK_PRECISION.md` is left **byte-identical**). No code changed.
 
 R4 was challenged rather than accepted, so it was tested three ways instead of argued:
 
@@ -247,7 +247,7 @@ reproduction covered 133 of 143.
 
 ## 2026-07-26 (review) — Reviewed Stage 1.5.1: diagnosis endorsed, R4 refuted, OOD route withdrawn
 
-**Status:** ✅ Review only, no code changed. Recorded as `STAGE_1_5_1_CLOCK_PRECISION.md` §9.
+**Status:** ✅ Review only, no code changed. Recorded in **`plans/STAGE_1_5_1_NEW_CHANGES.md`**; the original plan doc is left byte-identical.
 
 Pulled 3 commits (D2 replication + the 1.5.1 plan) and checked the plan against the tree.
 
