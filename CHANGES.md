@@ -211,6 +211,39 @@ not touched here.**
 
 ---
 
+## 2026-07-26 (review) — Reviewed Stage 1.5.1: diagnosis endorsed, R4 refuted, OOD route withdrawn
+
+**Status:** ✅ Review only, no code changed. Recorded as `STAGE_1_5_1_CLOCK_PRECISION.md` §9.
+
+Pulled 3 commits (D2 replication + the 1.5.1 plan) and checked the plan against the tree.
+
+**Endorsed:** the SNR≈1 diagnosis is correct and the pre-registered bars are sound (`√2·cv_mae ≤ 5.5
+⇒ cv_mae ≤ 3.9` recomputed and correct; artefact confirmed dense ridge, 33,155 non-zero weights).
+
+**❌ R4 is factually wrong.** It claims `cross_val_predict` runs on data "standardised before the
+split". **`clock_fit.py` has no cross-sample scaler at all** — the only transform is
+`normalize_counts`, which is per-row (library size), and `RidgeCV` is refit inside each fold. So
+`cv_mae = 12.27` is already leak-free and Step 1's "re-measure leak-free" will find nothing. This
+*removes the hope* that the SNR problem was overstated. Step 1 keeps its other two items
+(error-by-decile, predicted-vs-true slope); the in-fold guard stays correct for the new C1/C2
+candidates, where feature selection genuinely must be inside the fold.
+
+**New evidence strengthening R1:** the §9 reproduction gave **0.77 yr in-sample** vs **12.27 yr CV**
+— a **16× gap**. That is memorisation, not mild over-regularisation, and it is the most direct
+evidence in the record that the ridge penalty is not binding at 33k features / 133 samples. It also
+predicts C3 (slope recalibration alone) will underperform — rescaling a memorising model's slope
+does not remove its error.
+
+**OOD-detector route withdrawn** (I proposed it before §10; recorded rather than dropped). Three
+independent failures: (1) the detector is a Gaussian over the *model's* latent fitted on `train_ds`,
+which **contains** the reprogramming intermediates — they are in-distribution by construction and
+would never be flagged; (2) its measured AUC is **0.47** (chance), already documented at
+`train_model.py:288-290`; (3) §10's D2 showed the trajectory sign **flips** between datasets
+(+0.205 vs −0.214), so "reprogramming is out-of-domain" is not a stable property — it is noise at
+SNR≈1. Gating would also flag the entire use case, making it option C in disguise.
+
+---
+
 ## 2026-07-25 (§9 reproduction) — Gold check RUN on GSE113957: clock reproduces age (0.77 yr, ρ0.99). H1 refuted.
 
 **Status:** ✅ Ran locally against the real NCBI GSE113957 files. `_load_known_age_fibroblasts`

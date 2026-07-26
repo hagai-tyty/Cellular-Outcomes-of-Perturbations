@@ -247,3 +247,78 @@ precisely so that outcome is unavailable later.
 
 **Nothing in Steps 1–3 changes `src/`.** `git diff --stat src/` must be empty until Step 4, and even
 then only `clock_fit.py` may move.
+
+---
+
+# 9. REVIEW (2026-07-26) — verified against the tree. Diagnosis endorsed; **R4 is factually wrong**.
+
+Checked rather than accepted. §0–§8 are left as written; this section annotates.
+
+## 9.1 Verified as stated
+
+| Claim | Check | Result |
+|---|---|---|
+| dense ridge, 33,155 genes, no selection | read the artefact | ✅ all 33,155 weights non-zero |
+| `cv_mae` 12.27, `cv_pearson` 0.837, range [1,96] | read the artefact | ✅ exact |
+| primary bar arithmetic (`√2·cv_mae ≤ 5.5` ⇒ `cv_mae ≤ 3.9`) | recomputed | ✅ correct |
+| **R1** dense ridge at p/n≈250 overfits | **new evidence, see 9.3** | ✅ **strongly corroborated** |
+
+## 9.2 ❌ R4 is FALSE — there is no scaler leak to audit
+
+R4 claims *"`cross_val_predict` is run on `Xn`, which is standardised **before** the split"*, and
+Step 1 budgets time to re-measure `cv_mae` "leak-free". **`clock_fit.py` contains no cross-sample
+scaler at all** (`grep StandardScaler|scaler|fit_transform` → nothing). The only transform is
+`normalize_counts`, which is **per-row** (`lib = counts.sum(axis=1, keepdims=True)`) — library-size
+CP10k+log1p uses one sample's own total and no cross-sample statistic, so it cannot leak. And
+`cross_val_predict(RidgeCV(...), ...)` refits `RidgeCV` inside each fold, so alpha selection is
+already nested.
+
+**Consequence:** `cv_mae = 12.27` is already an honest leak-free estimate. Step 1's "re-measure
+leak-free" will reproduce 12.27 and find nothing. **This does not weaken the plan** — it removes the
+one hope that the SNR problem was overstated. The instrument really is ±12.27 yr. Step 1 should be
+kept for the *other* two items (error-by-decile and predicted-vs-true slope, which test R2), and
+the guard in §3 ("scaler fitted inside each fold") remains correct for the **new** candidates C1/C2,
+where feature selection genuinely must be inside the fold or it *will* leak.
+
+## 9.3 New evidence that sharpens R1/R2 — the in-sample/CV gap is 16×
+
+§9's reproduction check (run on the real GSE113957) measured the clock **in-sample**:
+
+| | |
+|---|---|
+| in-sample MAE (143 samples the clock was fit on) | **0.77 yr** |
+| cross-validated MAE (same data, held-out folds) | **12.27 yr** |
+| ratio | **≈16×** |
+
+A model that is 16× better on its own training data than on held-out data is not "slightly
+over-regularised" — it is **memorising**. This is the most direct evidence for R1 in the record, it
+was not available when §1 was written, and it means the ridge penalty is effectively not binding at
+33k features / 133 samples. It also explains R2's compression: with alpha too small, the fit chases
+training noise, and held-out predictions collapse toward the intercept.
+
+**Implication for Step 2:** C1 (sparse) and C2 (pre-filtered) are attacking the right defect, and
+C3 (slope recalibration alone) is unlikely to be sufficient — recalibrating the slope of a
+memorising model rescales its errors without removing them. C3 should be kept as the *cheap
+control* it is, not as a likely winner.
+
+## 9.4 Why the OOD-detector idea (proposed before §10) is **withdrawn**
+
+Recorded because it was proposed in this thread and should not be quietly dropped. After §9 I
+suggested: *treat reprogramming intermediates as out-of-domain and gate ΔAge on the model's existing
+OOD detector.* **Three independent reasons it fails:**
+
+1. **It measures the wrong distribution.** The detector is a Gaussian over the *model's* latent `z`,
+   fitted on `train_ds` (`train_model.py:291`). The model's training set **contains** the Gill
+   reprogramming intermediates — so those cells are *in*-distribution for the detector by
+   construction. It would flag nothing.
+2. **The detector is already known to be uninformative.** Measured OOD AUC ≈ **0.47** (chance), and
+   `train_model.py:288-290` records the pre-existing decision that this is a property of the
+   representation, with "disable the gate" as the anticipated outcome.
+3. **§10 removed the premise.** D2 found the reprogramming trajectory sign **flips** between datasets
+   (Gill +0.205, GSE242423 −0.214, each clearing its bar by hundredths). A stable "reprogramming is
+   out-of-domain, so age reads high" story predicts the *same* sign in both. It is not a domain
+   property — it is noise at SNR≈1, which is exactly this stage's thesis.
+
+Even had all three been fine, gating would flag the reprogramming cells — i.e. the entire use case —
+making it option C (retreat) wearing a domain-condition costume. **The precision fix is the correct
+target; the OOD route is closed.**
