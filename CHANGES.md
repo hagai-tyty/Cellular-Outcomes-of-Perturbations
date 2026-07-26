@@ -211,6 +211,40 @@ not touched here.**
 
 ---
 
+## 2026-07-26 (review, tested) — R4 refuted BY RUNNING; Step 1 effectively complete; C3 eliminated
+
+**Status:** ✅ Tests run on the real GSE113957 (~3 s compute). Recorded as
+`STAGE_1_5_1_CLOCK_PRECISION.md` §9 and §9.5. No code changed.
+
+R4 was challenged rather than accepted, so it was tested three ways instead of argued:
+
+| Test | Result |
+|---|---|
+| does any cross-sample statistic exist? | `normalize_counts(X[:5])` vs `normalize_counts(X)[:5]` → **max diff 0.0**; no `StandardScaler` anywhere. **The scaler R4 describes does not exist** |
+| is there a *different* leak (group leakage from repeated donors)? | **143 samples, 143 unique cell ids, 0 repeats** — none |
+| reproduce the CV directly | **12.67 yr / ρ 0.841** vs the artefact's 12.27 / 0.837 — **it reproduces** |
+
+**`cv_mae = 12.27` is honest.** R4 is wrong in mechanism *and* conclusion. The error is
+understandable — scaler-before-split is *the* classic leak, and the code reads
+`Xn = normalize_counts(X)` right above `cross_val_predict` — but **normalisation ≠
+standardisation**: per-sample library size uses one row's own total; per-gene standardisation uses
+a column statistic across samples. Right instinct, wrong identification. Removing R4 removes the
+one route by which the SNR problem could have been *overstated*.
+
+**The same run answered two more Step 1 items and killed a candidate:**
+
+- **R2 confirmed:** predicted-vs-true slope on held-out folds = **0.717** (bar S1 wants 0.85–1.15).
+- **R1 confirmed:** `alpha` = 0.272, near the *bottom* of `logspace(-1,4)` → penalty barely binding;
+  with in-sample 0.77 vs CV 12.67 (**16×**), this is memorisation, not mild over-regularisation.
+- **C3 eliminated:** slope recalibration (fitted out-of-fold) gives **12.78 yr — 1% *worse***.
+  Rescaling a memorising model's slope does not remove its error. Step 2 should run C1/C2 vs C4 only.
+
+Also noted: the artefact says `n_samples = 133` but GSE113957 has **143** — 10 samples were excluded
+when the clock was fit, and which ten is not recorded. Minor, but it means my earlier "in-sample"
+reproduction covered 133 of 143.
+
+---
+
 ## 2026-07-26 (review) — Reviewed Stage 1.5.1: diagnosis endorsed, R4 refuted, OOD route withdrawn
 
 **Status:** ✅ Review only, no code changed. Recorded as `STAGE_1_5_1_CLOCK_PRECISION.md` §9.

@@ -322,3 +322,88 @@ OOD detector.* **Three independent reasons it fails:**
 Even had all three been fine, gating would flag the reprogramming cells — i.e. the entire use case —
 making it option C (retreat) wearing a domain-condition costume. **The precision fix is the correct
 target; the OOD route is closed.**
+
+## 9.5 R4 TESTED, NOT ARGUED (2026-07-26) — and Step 1 is effectively complete
+
+§9.2 refuted R4 by reading. It has now been refuted by **running**, on the real GSE113957, and two
+of Step 1's three items are answered as a by-product. Total compute: ~3 seconds.
+
+### Test 1 — does any cross-sample statistic exist? (the stated mechanism)
+
+```
+normalize_counts(X[:5])  vs  normalize_counts(X)[:5]      ->  max |difference| = 0.0
+```
+
+A sample's normalised value is **identical** whether or not the other 138 samples are present.
+`normalize_counts` divides each row by its **own** library size (`lib = counts.sum(axis=1,
+keepdims=True)`), so no cross-sample quantity is ever computed. A train/test split cannot leak
+through a function that never looks across samples. `grep StandardScaler|scaler|fit_transform`
+over `clock_fit.py` → **no match**. **The scaler R4 describes does not exist.**
+
+### Test 2 — is there a DIFFERENT leak R4 might have been sensing? (group leakage)
+
+The plausible alternative: if GSE113957 contained several samples per donor, `KFold(shuffle=True)`
+would split replicates across folds and the CV *would* be optimistic — a real leak, unrelated to
+scalers. Measured:
+
+```
+143 samples   ->   143 unique `cell id`s   ->   0 donors appearing twice
+```
+
+Every sample is a distinct donor. **No group leakage either.**
+
+### Test 3 — reproduce the CV directly (the decisive one)
+
+Ran the exact protocol (`KFold(5, shuffle, seed=0)`, `RidgeCV` refit inside each fold, per-row
+normalisation) on the real data:
+
+| | replicated | shipped artefact |
+|---|---|---|
+| `cv_mae` | **12.67 yr** | 12.27 yr |
+| `cv_pearson` | **0.841** | 0.837 |
+
+It reproduces. (The small gap is expected: 143 samples here vs the artefact's 133, and a slightly
+different gene set from the newer NCBI annotation.) **`cv_mae = 12.27` is an honest, leak-free
+number.** R4 is wrong in its mechanism *and* in its conclusion.
+
+**Why the error is an understandable one:** scaler-before-split is *the* classic CV leak, and the
+code does read `Xn = normalize_counts(X)` immediately above `cross_val_predict`. But
+**normalisation ≠ standardisation**: per-sample library-size normalisation uses one row's own total,
+while per-gene standardisation uses a column statistic across samples. They look alike in code and
+leak completely differently. The instinct was right; the identification was not. R4 was correctly
+hedged ("possible", "to be audited, not assumed") — the cost of leaving it in would have been an
+audit that could not find anything.
+
+### What the same run DID find — R2 confirmed and quantified
+
+| quantity | value | reading |
+|---|---|---|
+| predicted-vs-true **slope** on held-out folds | **0.717** | **R2 confirmed.** Well below 1.0 → real shrinkage compression, exactly the S1 bar's target (`slope ∈ [0.85, 1.15]`) |
+| `alpha` chosen by RidgeCV | **0.272** | near the **bottom** of `logspace(-1, 4)` → the penalty is barely binding → **R1 confirmed** |
+| in-sample MAE vs CV MAE | **0.77 vs 12.67 (16×)** | memorisation, not mild over-regularisation |
+
+### C3 pre-emptively eliminated
+
+§9.3 predicted slope recalibration alone would underperform. Tested (recalibration fitted
+out-of-fold so it cannot cheat):
+
+| candidate | `cv_mae` | verdict vs §3 bar |
+|---|---|---|
+| C4 dense ridge (control) | 12.67 yr | FAIL |
+| **C3 + slope recalibration** | **12.78 yr (−1%, i.e. no help)** | **FAIL** |
+
+Correcting the slope of a model that is memorising rescales its errors without removing them.
+**C3 is answered — it is not a candidate.** Step 2 should run C1 (sparse) and C2 (pre-filtered)
+against C4 only.
+
+### Net effect on the plan
+
+| Step 1 item | Status |
+|---|---|
+| re-measure `cv_mae` leak-free (R4) | ✅ **done — no leak exists; 12.27 is honest** |
+| predicted-vs-true slope (R2) | ✅ **done — 0.717, compression confirmed** |
+| error profile by age decile | ⏳ still worth running (S4) |
+
+**The plan's thesis is untouched and strengthened.** Removing R4 removes the one route by which the
+SNR problem could have been *overstated*: the ruler really is ±12.3 yr, honestly measured. The
+remaining work is Step 2 with C1/C2 vs C4.
