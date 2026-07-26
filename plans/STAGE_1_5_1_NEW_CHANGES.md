@@ -8,6 +8,46 @@ the tests that settled them, and the plan changes those tests imply.
 
 ---
 
+## 0. ⚠️ THE PROBLEM — what goes wrong if you follow `STAGE_1_5_1_CLOCK_PRECISION.md` literally
+
+**Read this before executing that document.** Its bars, discipline, revalidation suite and fallback
+are all correct and unchanged (§1). But three things in its *execution steps* are now known to be
+wrong, and one of them is not merely wasteful:
+
+| # | Problem in the plan as written | Where | Severity |
+|---|---|---|---|
+| **P1** | **Step 1 budgets an audit for a leak that does not exist.** R4 claims the CV is optimistic because data is "standardised before the split". There is **no cross-sample scaler in `clock_fit.py` at all** — proven three ways (§2). Re-measuring "leak-free" reproduces 12.27 and finds nothing. | §1 R4, §2 Step 1 | ⚠️ **Wasted time.** Harmless to correctness |
+| **P2** | **Step 2 lists a candidate already eliminated.** C3 (slope recalibration) was measured at **12.78 yr — 1% *worse* than the control** (§4). Compression is a *symptom* of R1, not a patchable defect. | §2 Step 2 (C3) | ⚠️ **Wasted time.** Harmless to correctness |
+| **P3** | **No step pins the training sample set — and it is currently unknown.** The artefact records `n_samples = 133`; GSE113957 contains **143**. **Which ten were excluded is recorded nowhere** (§5). | missing entirely | 🔴 **CORRECTNESS.** See below |
+
+### Why P3 is the one that actually matters
+
+Every bar in §3 is a comparison against `cv_mae = 12.27`. If the refit trains on a different sample
+set than the original did, then "12.27 → X" is **not a like-for-like comparison**, and a PASS could
+come from the 7.5% extra data rather than from the new estimator. The stage would then have proven
+nothing about C1/C2 while appearing to succeed — the exact failure mode this project's discipline
+exists to prevent.
+
+It also propagates: whatever clock ships inherits the same undocumented sample set, so Stage 5
+cannot state its training data — a question a reviewer *will* ask.
+
+**Fix:** run **Step 0** (§6) before anything else — identify the original 133, or explicitly define
+and record the set the refit will use. Minutes of work; without it the rest is uninterpretable.
+
+### What to do
+
+**Follow `STAGE_1_5_1_CLOCK_PRECISION.md` for the bars, revalidation, fallback and discipline —
+those stand.** Take the execution steps from **§6 of this file**, which drops P1 and P2 and adds
+Step 0 for P3.
+
+> **One caution that cuts against my own finding.** Refuting R4 does **not** mean the leakage worry
+> was baseless. The original's §3 guard — *"any feature selection inside each fold"* — is
+> **correct and load-bearing for C1/C2**: unlike per-row normalisation, selecting genes by
+> age-correlation **is** a cross-sample statistic and **will** leak if done outside the fold. R4
+> named the wrong culprit; the guard it motivated must still be honoured.
+
+---
+
 ## 1. Verdict on the original plan: **endorsed**
 
 Checked against the tree, not accepted on report.
