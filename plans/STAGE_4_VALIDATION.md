@@ -7,6 +7,42 @@
 
 ---
 
+> ## 🆕 ADDED 2026-07-26 — two validation gates that would have prevented a false escalation
+>
+> *Additive note; nothing below is modified. Added after `STAGE_1_5_1_REVISED.md`, where the Stage
+> 1.5 arc concluded "the ΔAge target is unvalidated" — a conclusion that was **wrong**, and wrong for
+> two reasons this stage is the right place to catch.*
+>
+> ### G1 — Every effect claim needs a NEGATIVE CONTROL arm
+>
+> Gill's data contains **47 samples labelled `Failing to reprogram fibroblast`**: cells given OSKM
+> that did not reprogram. They **cannot** rejuvenate, so they are a built-in negative control — and
+> they read **+36.5 yr "older" over 11 days**, which is how the identity artefact was finally
+> measured. Without that arm the artefact is invisible and gets mistaken for biology (or for a broken
+> clock).
+>
+> **Gate:** any rejuvenation claim must report the same statistic on a non-responding / untreated arm.
+> **A claim whose negative control moves with it is not validated.**
+>
+> ### G2 — The statistic must match the effect's expected SHAPE
+>
+> E1/E1b used a **monotonic Spearman over days**. The real effect is a **dip that recovers** after
+> OSKM withdrawal (~day 13). A fall-then-rise rank-correlates to ≈0, so the test reported `NO_TREND`
+> and `WRONG_DIRECTION` **on data containing a significant −28.3 yr effect**.
+>
+> **Gate:** before running a test, state the expected shape and confirm the statistic can detect it.
+> For a non-monotonic effect use a **contrast at the predicted window**, not a trend over all points.
+>
+> ### G3 — Pooling check
+>
+> E1/E1b/D2 averaged responders together with non-responders (65 vs 47). Pooled, the same contrast
+> reads **+22.4 yr**; split, **−28.3 yr**. **Gate:** state the population each statistic is computed
+> over, and confirm it excludes non-responders.
+>
+> These three are cheap, and each one alone would have prevented the escalation.
+
+---
+
 ## 0. What this stage is for
 
 Everything up to here has been *building*. This stage asks whether it works — and is written so

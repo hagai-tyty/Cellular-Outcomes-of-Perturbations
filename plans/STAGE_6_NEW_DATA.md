@@ -6,6 +6,34 @@ work with downloads, checks, gates and acceptance criteria. This file is that wo
 **Depends on:** nothing — it can run in parallel with Stages 1–5.
 **Blocking for:** the cross-perturbation thesis, and possibly the tool (see §2).
 
+> ## 🆕 ADDED 2026-07-26 — a NEW hard acquisition requirement for any reprogramming dataset
+>
+> *Additive note; nothing below is modified. Added after `STAGE_1_5_1_REVISED.md`.*
+>
+> **Any reprogramming dataset acquired from here on MUST allow responders to be separated from
+> non-responders.** This is now a **gate on acquisition**, not a nice-to-have.
+>
+> **Why.** A valid ΔAge requires a *contemporaneous* control that underwent the same OSKM exposure
+> but did **not** reprogram. Without one, the label carries an identity-change artefact measured at
+> **+36.5 yr over 11 days** — large enough to cancel and even invert the ~30 yr rejuvenation signal.
+> A day-0 baseline is **not** an adequate substitute; that is precisely the defect being fixed.
+>
+> **Acceptable forms:**
+>
+> | form | example | usable? |
+> |---|---|---|
+> | **sorted arms** with an outcome label per sample | Gill GSE165176 — CD13 / SSEA4 sorting, labelled `Reprogramming` vs `Failing to reprogram` | ✅ ideal |
+> | **single-cell**, unsorted | GSE242423 | ⚠️ usable **only if** responders can be identified computationally (marker score) — validate before relying on it |
+> | **bulk, unsorted, no outcome label** | — | ❌ **cannot yield a clean ΔAge.** Do not acquire for the age arm |
+>
+> **Add to every acquisition checklist in this stage:** *"Does this dataset let me identify cells that
+> failed to reprogram at each timepoint?"* If no, it can still serve the **fate/safety** head, but its
+> **ΔAge labels must be masked** (`age_mask=False`) rather than used.
+>
+> **Also note for prioritisation:** DNA-methylation data is substantially more cell-type-stable
+> through reprogramming than RNA, which is why the field's rejuvenation results lean on it. If a
+> methylation option is available for the same samples, it is worth more than additional RNA-seq.
+
 ---
 
 ## 0. READ THIS FIRST — the species blocker

@@ -171,6 +171,24 @@ Once `R_eff` uses an **honest** uncertainty, the arithmetic is unforgiving:
 | honest, uncorrected model | −11.0 | ~39 | **0.0** | 0.00 |
 | honest, after level correction | −11.0 | ~19 | **0.0** | 0.00 |
 
+> **⚠️ ADDED 2026-07-26 — the "~11 yr effect" below is now known to be artefact-suppressed.**
+> *Additive note; nothing in this section is modified.* The −11.35 yr effect was measured against the
+> **day-0** ΔAge baseline, which leaves an identity-change artefact in every label
+> (`STAGE_1_5_1_REVISED.md`). Measured against a **contemporaneous non-responder** control, the same
+> data gives **−28.3 yr (95% CI [−51.6, −5.0])**, peaking at **−37.3 yr on day 13** — replicating
+> Gill et al.'s published ~−30 yr.
+>
+> **Two consequences for the arithmetic below, both favourable:**
+> 1. **The `R_eff = 0` conclusion may no longer hold.** `R_eff = −(μ + z·σ)`. At μ = −11, σ ≈ 19 it
+>    clips to 0 — the row below. At **μ ≈ −28** it is **+9, i.e. non-zero**, so *per-cell* confident
+>    rejuvenation may be reachable after all. **This must be re-measured on corrected labels before
+>    either claim is repeated.**
+> 2. **The condition-level conclusion (§5b-ter) still stands and gets easier** — a larger effect
+>    against the same SE is comfortably detectable at every n in the table below.
+>
+> Anywhere "~11 yr" is quoted as the effect size (here, §5b-ter, §9, and the Stage 5 claim list), it
+> is a floor set by a contaminated label, not the biology.
+
 **With honest per-cell uncertainty (~19 yr) and a real effect (~11 yr), R_eff = 0.**
 **Per-cell "confident rejuvenation" is unachievable at this data scale** — not because of a bug,
 but because the uncertainty genuinely exceeds the effect size. **RES's current design asks a

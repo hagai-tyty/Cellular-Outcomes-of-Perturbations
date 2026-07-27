@@ -6,6 +6,43 @@
 
 ---
 
+> ## 🆕 ADDED 2026-07-26 — claim limits, and one finding worth publishing
+>
+> *Additive note; nothing below is modified. Added after `STAGE_1_5_1_REVISED.md`.*
+>
+> ### Claims that must carry a stated limit
+>
+> | claim | limit | evidence |
+> |---|---|---|
+> | absolute transcriptomic age | **invalid below age 1.** GSE113957 has **0 samples under 1 yr**; N2, N3 and HFF (neonatal) read 98.7 / 36.4 / 84.5 against true ~0 | measured, Stage 1.5 §7 + §10 |
+> | ΔAge **magnitudes** | understated by ~28% — predicted-vs-true slope is **0.717**. **Rankings are unaffected** | measured, `stage_1_5_1_tests` T4 |
+> | ΔAge on reprogramming intermediates | valid **only** against a contemporaneous non-responder control; against day-0 it carries a **+36.5 yr** artefact | measured, `diag_gill_replication` |
+> | clock accuracy | ours is **mean 12.27 / median 9.47 yr**; the source paper's own method reaches **7.7 / 4.0** on the same data. Do not cite the paper's figure as ours | Fleischer 2018 |
+>
+> ### A finding worth publishing in its own right
+>
+> **A fibroblast-trained transcriptomic clock reads loss of fibroblast identity as ageing.** Cells
+> given OSKM that *failed* to reprogram read **+36.5 yr older in 11 days** — impossible biologically,
+> and large enough to cancel or invert a real ~30 yr rejuvenation. A contemporaneous non-responder
+> control removes it, recovering **−28.3 yr (95% CI [−51.6, −5.0])**, which replicates Gill et al.'s
+> published ~−30 yr.
+>
+> This is a **methodological caution the field can use**, and it has precedent: Gill et al. report
+> that *"existing transcription clocks failed to accurately predict the age of our negative control
+> samples"* and built a batch-corrected clock in response. **Our failure is a known field problem,
+> not an embarrassment** — framed that way it strengthens the paper rather than weakening it.
+>
+> ### Reviewer questions to be ready for
+>
+> 1. *"Why is your clock 1.6× less accurate than the published result on the same data?"* — because
+>    we refit with ridge; they used an LDA ensemble and explicitly rejected regression. Answer with
+>    the number, not a hedge.
+> 2. *"How do you know your rejuvenation isn't identity change?"* — the non-responder control. Lead
+>    with it.
+> 3. *"Your clock can't read your own neonatal donors."* — true, stated as a scope limit above.
+
+---
+
 ## 0. Two gates that can change what you are allowed to claim
 
 **Both must run before drafting.** Either can alter the central claim.

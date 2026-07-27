@@ -7,6 +7,49 @@
 
 ---
 
+> ## 🛑 ADDED 2026-07-26 — DO NOT SPEND WET-LAB BUDGET ON THIS PLAN UNTIL §0 BELOW IS RESOLVED
+>
+> *Added after `STAGE_1_5_1_REVISED.md`. Nothing below this box is modified; this is an additive
+> note about a premise that has since been measured and found unsafe.*
+>
+> **This stage's entire premise — the ±12.72 yr per-donor level shift — was measured on ΔAge labels
+> that are now known to be contaminated**, and it may be substantially an artefact rather than donor
+> biology. Acting on it as written could spend a wet-lab protocol change (k≈3 reference cells per
+> donor) correcting something that a free code fix removes.
+>
+> **The evidence.** `delta_age` currently baselines against each donor's **day-0** control
+> (`sources.py:471` Gill, `:607` HFF). That baseline never underwent OSKM-driven identity change, so
+> every ΔAge carries an identity artefact. Measured directly: cells that were exposed to OSKM and
+> **failed to reprogram** read **+36.5 yr older after 11 days** — and, critically for this stage,
+> **the artefact's size varies enormously between donors:**
+>
+> | donor | N2 | N3 | O1 | O2 | Y1 | Y2 |
+> |---|---|---|---|---|---|---|
+> | non-responder day0→peak (pure artefact) | −15.7 | +36.5 | +33.3 | +44.8 | +50.3 | +69.8 |
+>
+> A per-donor-varying artefact of this magnitude is **exactly the shape of the "per-donor level
+> shift" this stage exists to correct** (mean abs 12.72, std 14.71, §1). The two are currently
+> indistinguishable.
+>
+> ### §0 — what must happen before any of this stage runs
+>
+> 1. Implement the corrected ΔAge control (`STAGE_1_5_1_REVISED.md` Steps 2–3): contemporaneous
+>    non-responder instead of day-0.
+> 2. **Re-measure the per-donor level shift on the corrected labels.** Same statistic, same folds.
+> 3. **Only then** decide the wet-lab protocol:
+>    - shift still ≈12.7 yr → this stage proceeds as written;
+>    - shift materially smaller → **rescope or drop it**, and do not buy reference cells;
+>    - shift ≈0 → it was the artefact, and this stage is unnecessary.
+>
+> **Do not skip step 2 because the numbers in §1 look solid.** They are solid measurements *of the
+> contaminated label*. Their provenance, not their precision, is the problem.
+>
+> **Related:** the ±12.7 figure is *also* mis-attributed — `STAGE_1_DEVIATIONS.md` §C1 records that
+> it is the **ridge baseline's** shift, not the model's (model: mean −5.71, 95% CI [−22.9, +11.5],
+> which **includes zero**). Both corrections point the same way: re-measure before spending.
+
+---
+
 ## 0. READ THIS FIRST — this stage has a non-code prerequisite
 
 **Fix B requires k ≈ 3 cells per new donor with known true ΔAge.** True ΔAge means the clock was

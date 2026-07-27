@@ -5,6 +5,30 @@ same object, see §0.3.
 **Depends on:** Stage 1 **required**; Stage 2 optional.
 **Scope:** 3 new modules (~600 lines), 4 internal sub-stages.
 
+> ## 🆕 ADDED 2026-07-26 — the tool needs an INTERNAL CONTROL at inference time
+>
+> *Additive note; nothing below is modified. Added after `STAGE_1_5_1_REVISED.md`.*
+>
+> **A ΔAge computed against a day-0 baseline is not trustworthy on reprogramming intermediates** — it
+> carries an identity-change artefact measured at **+36.5 yr over 11 days**, enough to invert the
+> sign of a real ~30 yr effect. The fix (a contemporaneous non-responder control) is straightforward
+> for *training* data, but the tool must also do it **at inference**, and that is an open design
+> question this stage owns:
+>
+> - **Single-cell input (expected case):** score the culture's non-reprogramming cells as the internal
+>   control and report ΔAge as responders **minus** that control. Natural, and it also gives the
+>   condition-level aggregation §5b-ter already requires.
+> - **Bulk input:** **no internal control exists.** Either require a paired non-responder sample, or
+>   refuse to report absolute ΔAge and fall back to ranking only. **Decide this explicitly** — a bulk
+>   ΔAge with no control is exactly the number that reads +36.5 yr on cells that did nothing.
+>
+> **Add to the sub-stage that defines the inference contract:** the input schema must carry (or let
+> the tool derive) a responder/non-responder split, and the tool should **decline to report ΔAge**
+> when it cannot — consistent with this project's "can say no" design.
+>
+> **Unaffected:** the fate/safety head needs no control and is not touched by this. Test 18's STOP on
+> the forward Δt signal is a separate, still-open question.
+
 | Sub-stage | Produces | Blocking for |
 |---|---|---|
 | **3a Gate** | GO / WEAK GO / STOP | everything below |

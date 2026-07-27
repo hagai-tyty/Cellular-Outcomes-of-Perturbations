@@ -2,6 +2,25 @@
 
 **These apply to every stage.** Covers `MASTER_PLAN.md` §8, §9, §10b.
 
+> **🆕 ADDED 2026-07-26 — two rules earned the hard way.** *Additive; no existing rule is modified.*
+> The Stage 1.5 arc spent four diagnostics and concluded "the ΔAge target is unvalidated." That
+> conclusion was **wrong**, and both causes were method, not data
+> (`STAGE_1_5_1_REVISED.md`). These are cheap, and either alone would have prevented it.
+>
+> **§10 — Every effect claim needs a negative control, and you must report it.**
+> Gill's data contained 47 samples of cells that received OSKM and *failed* to reprogram. They cannot
+> rejuvenate — yet they read **+36.5 yr older in 11 days**. That is how the artefact was finally
+> seen. Before claiming an effect, ask: *what in this dataset should show no effect, and does it?*
+> **A claim whose negative control moves with it is not validated.** Corollary: **do not pool
+> responders with non-responders** — pooled, the same contrast read +22.4 yr; split, −28.3 yr.
+>
+> **§11 — State the effect's expected SHAPE before choosing the statistic.**
+> E1/E1b used a monotonic Spearman on an effect that *dips and recovers*. A fall-then-rise
+> rank-correlates to ≈0, so the test returned `NO_TREND` and `WRONG_DIRECTION` **on data containing a
+> significant −28.3 yr effect**. A statistic that cannot detect the shape you expect is not a test of
+> it. For a non-monotonic effect, use a **contrast at the predicted window**, and say where that
+> window comes from *before* running.
+
 ---
 
 ## 1. The evidence provenance rule
