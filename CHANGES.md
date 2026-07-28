@@ -211,6 +211,39 @@ not touched here.**
 
 ---
 
+## 2026-07-26 (A1/A3 re-run) — labels not rescued; the "-28.3 rejuvenation" is entirely the control arm
+
+**Status:** ✅ Executed on real Gill data. `experiments/diag_e1_corrected.py` + 21 tests; 405 tests
+pass; `src/` untouched. Detail in `plans/STAGE_1_5_1_REVISED_REVIEW.md` §5.
+
+Ran the one test both plans agree on: fix only the **undisputed** errors from
+`STAGE_1_5_1_REVISED.md` — A1 (stop pooling the 47 non-responders into the treatment arm) and A3
+(window contrast instead of a monotonic Spearman on a dip) — while **keeping the current day-0
+control**, so the result is independent of the disputed control swap.
+
+**Responders vs their own day-0: NO_EFFECT at every window** (10–13 d: **+8.2 yr**, CI [−20.1,
++36.5]; also 7–9, 13–15, 15–21, 21–29). Leave-one-donor-out STABLE; every point estimate positive.
+Non-responders are significantly **AGEING** from day 10 on (+36.5 … +44.6).
+
+**The decomposition is the finding:** `−28.3 = +8.2 − 36.5`. **100% of the "rejuvenation" comes from
+the CONTROL arm rising, 0% from the treatment arm falling.** This is arithmetic — immune to sample
+size and to the identity-adjustment argument. Redefining `is_control` to the non-responder arm would
+define ΔAge as "how much less the reference inflates."
+
+**Power, stated honestly:** at n=6 (sd 27.0) power for a Gill-scale −30 yr effect is **56%**, so the
+null is underpowered, *not* proof no rejuvenation exists. What is informative is the direction — the
+estimate is +8.2, not negative-but-short. The decomposition carries no such caveat.
+
+**All three candidate label definitions now fail** (day-0 as built; day-0 with A1/A3 fixed;
+non-responder control). This is the honest end of the transcriptomic-only route on this dataset —
+Gill used **methylation**, and their paper states existing transcription clocks "failed to accurately
+predict the age of our negative control samples."
+
+**Next step is not a label change:** either an identity-independent anchor (second modality → Stage 6)
+or scoping the quantitative rejuvenation claim. The fate/safety head (PR-AUC 0.99) is untouched.
+
+---
+
 ## 2026-07-26 (review, tested) — R4 refuted BY RUNNING; Step 1 effectively complete; C3 eliminated
 
 **Status:** ✅ Tests run on the real GSE113957 (~3 s compute). Recorded in **`plans/STAGE_1_5_1_NEW_CHANGES.md`** (a companion file — the original

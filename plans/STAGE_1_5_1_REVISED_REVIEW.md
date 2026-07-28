@@ -162,3 +162,94 @@ non-responder control (−28.3), identity-adjusted (−11.1). **Deciding between
 identity-independent anchor**, which transcriptomics alone cannot supply. Gill solved it with
 multi-omic evidence (methylation). That is the real shape of the problem, and it is worth stating
 plainly rather than picking whichever control gives the most publishable number.
+
+---
+
+# 5. THE A1/A3 RE-RUN — EXECUTED (2026-07-26)
+
+`experiments/diag_e1_corrected.py` (+21 tests). Fixes **only** the two undisputed errors — stop
+pooling non-responders (A1), use a window contrast instead of a monotonic Spearman (A3) — and
+**keeps the current day-0 control**, so it is independent of the disputed control swap.
+
+**Question:** once the pooling and the statistic are fixed, do the *current* labels show
+rejuvenation in responders?
+
+## 5.1 Answer: no — at any window
+
+Responders only, ΔAge vs their own day-0 baseline:
+
+| window | n | mean ΔAge | 95% CI | verdict |
+|---|---|---|---|---|
+| 7–9 d | 6 | **+20.6** | [−10.6, +51.8] | NO_EFFECT |
+| **10–13 d** (pre-registered) | 6 | **+8.2** | [−20.1, +36.5] | **NO_EFFECT** |
+| 13–15 d | 6 | +5.7 | [−18.4, +29.8] | NO_EFFECT |
+| 15–21 d | 6 | +10.6 | [−15.6, +36.8] | NO_EFFECT |
+| 21–29 d | 6 | +22.6 | [−4.1, +49.4] | NO_EFFECT |
+
+Leave-one-donor-out: **STABLE** — a real null, not one donor carrying it. **Every point estimate is
+positive** (mildly ageing), none significant.
+
+**So the escalation was NOT purely a method artefact.** A1 and A3 are real errors, but fixing them
+does not rescue the current labels.
+
+## 5.2 The decomposition — this is the finding
+
+```
+separation  =  responder arm  −  non-responder arm
+   −28.3     =     +8.2       −      +36.5
+```
+
+> **100% of the "−28.3 yr rejuvenation" comes from the CONTROL arm rising. 0% comes from the
+> treatment arm falling.**
+
+The responders never get younger — they drift slightly *older* (+8.2). The entire effect is
+non-responders reading +36.5 yr. This is arithmetic, not a hypothesis test, so it does not depend on
+sample size or on the identity adjustment in §2.3.
+
+Non-responders, for contrast, are the only arm with a significant signal — and it is **AGEING** at
+every window from day 10 on (+36.5, +44.6, +42.4, +43.7).
+
+**This is the strongest single argument against the proposed fix.** Redefining `is_control` to the
+non-responder arm would define ΔAge as "how much *less* the control arm inflates" — a quantity whose
+entire dynamic range is supplied by an artefact in the reference, not by the treatment.
+
+## 5.3 Power — stated honestly, because it limits the claim
+
+| true effect | power at n=6 with the observed spread (sd 27.0) |
+|---|---|
+| −10 yr | 9% |
+| −20 yr | 25% |
+| **−30 yr (Gill-scale)** | **56%** |
+| −40 yr | 83% |
+
+**56% is a coin flip**, so §5.1 is *not* proof that no rejuvenation exists — it is an underpowered
+null. What makes it informative is the **direction**: the point estimate is **+8.2**, not
+"negative but short of significance". A true −30 yr effect would have to be masked by ~38 yr of
+noise in the wrong direction.
+
+**§5.2 is not subject to this caveat.** The decomposition holds regardless of power.
+
+## 5.4 What this changes
+
+| | before this run | after |
+|---|---|---|
+| "A1/A3 explain the escalation" | plausible | ❌ **refuted** — fixed, and the null persists |
+| "current day-0 labels are fine" | possible | ❌ **no rejuvenation signal at any window** |
+| "non-responder control recovers the effect" | proposed | ❌ **the effect *is* the control arm** |
+
+**All three candidate label definitions now fail**, each for its own reason. That is a real result,
+and it is the honest end of the transcriptomic-only route on this dataset: Gill needed **methylation**
+to establish rejuvenation, and our own §2.4 check found Gill saying existing transcription clocks
+*"failed to accurately predict the age of our negative control samples."*
+
+**Recommended next step is no longer a label change.** It is to decide, with the user, between:
+
+1. **An identity-independent anchor** (methylation or a second modality) — the only route that can
+   actually settle it, and the one Gill took. Links to Stage 6.
+2. **Scope the claim to what is supported** — the fate/safety head remains strong (PR-AUC 0.99) and
+   is untouched by any of this; the quantitative rejuvenation claim is not currently supportable on
+   this data.
+
+Stage 2's intervention (k≈3 reference cells/donor) remains worth doing under either, because it
+attacks the n=1 baseline directly — but its *justification* should now be baseline replication, not
+"correcting a known biological offset."

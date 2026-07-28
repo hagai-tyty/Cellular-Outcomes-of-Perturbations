@@ -3264,3 +3264,59 @@ n≈6–8 can deliver.
 **`git diff --stat src/` is empty — nothing was touched.**
 
 **Nothing in §10 changes `src/`.** `git diff --stat src/` must be empty when it finishes.
+
+---
+
+## RESULT — A1/A3 CORRECTED RE-RUN (2026-07-26): the labels are not rescued, and the effect is the control arm
+
+`experiments/diag_e1_corrected.py` (+21 tests). Fixes only the two **undisputed** errors from
+`STAGE_1_5_1_REVISED.md` — stop pooling non-responders (A1), window contrast instead of monotonic
+Spearman (A3) — while **keeping the current day-0 control**, so the answer is independent of the
+disputed control swap. Full detail in `plans/STAGE_1_5_1_REVISED_REVIEW.md` §5.
+
+**Responders only, ΔAge vs their own day-0 baseline — NO_EFFECT at every window:**
+
+| window | mean ΔAge | 95% CI |
+|---|---|---|
+| 7–9 d | +20.6 | [−10.6, +51.8] |
+| **10–13 d** (pre-registered) | **+8.2** | [−20.1, +36.5] |
+| 13–15 d | +5.7 | [−18.4, +29.8] |
+| 15–21 d | +10.6 | [−15.6, +36.8] |
+| 21–29 d | +22.6 | [−4.1, +49.4] |
+
+Leave-one-donor-out **STABLE**. Every point estimate **positive**. Non-responders, by contrast, are
+significantly **AGEING** at every window from day 10 (+36.5, +44.6, +42.4, +43.7).
+
+### The decomposition — the finding
+
+```
+separation  =  responder arm  −  non-responder arm
+   −28.3     =     +8.2       −      +36.5
+```
+
+**100% of the "−28.3 yr rejuvenation" is the CONTROL arm rising; 0% is the treatment arm falling.**
+Arithmetic, so it is immune to sample size and to the identity-adjustment debate. Redefining
+`is_control` to the non-responder arm would define ΔAge as "how much less the reference inflates."
+
+### Power — stated because it bounds the claim
+
+At n=6 with the observed spread (sd 27.0), power to detect a Gill-scale −30 yr effect is **56%** — a
+coin flip. So §above is an **underpowered null, not proof of no rejuvenation**. What makes it
+informative is the *direction*: the estimate is **+8.2**, not "negative but short of significance."
+The decomposition is not subject to this caveat.
+
+### Standing position — all three label definitions now fail
+
+| definition | verdict |
+|---|---|
+| day-0 control, as built | no rejuvenation signal at any window |
+| day-0 control + A1/A3 fixed | **same** — the errors were real but are not the cause |
+| non-responder control | the effect *is* the control arm; identity gap not reduced (review §2) |
+
+This is the honest end of the **transcriptomic-only** route on this dataset. Gill established
+rejuvenation with **methylation**; and Gill's own paper states existing transcription clocks *"failed
+to accurately predict the age of our negative control samples"* — which is what we independently hit.
+
+**Next decision is not a label change.** Either (1) obtain an identity-independent anchor (second
+modality — links to Stage 6), or (2) scope the quantitative rejuvenation claim to what this data
+supports. The fate/safety head (PR-AUC 0.99) is untouched by any of this.
