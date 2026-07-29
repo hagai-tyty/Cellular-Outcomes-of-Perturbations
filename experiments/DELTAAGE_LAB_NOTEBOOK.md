@@ -3320,3 +3320,92 @@ to accurately predict the age of our negative control samples"* — which is wha
 **Next decision is not a label change.** Either (1) obtain an identity-independent anchor (second
 modality — links to Stage 6), or (2) scope the quantitative rejuvenation claim to what this data
 supports. The fate/safety head (PR-AUC 0.99) is untouched by any of this.
+
+
+---
+
+## RESULT — METHYLATION ANCHOR EXECUTED (2026-07-26): the RNA artefact is confirmed dead; no rejuvenation detected
+
+`experiments/diag_methylation_anchor.py` (+28 tests) on GSE165179. Horvath **skin & blood (2018)**,
+391 CpGs, **100% probe coverage** on all 96 samples. Identity-matched design: every comparison is
+fibroblast-vs-fibroblast at the same donor and reprogramming-phase length, against Gill's **real
+untreated negative control**.
+
+### M-3 — the negative control. This is the headline.
+
+**Failed-to-reprogram fibroblasts vs matched untreated control: +0.5 yr, 95% CI [−2.3, +3.2], 12 pairs.**
+
+They are **indistinguishable from untreated cells**. The transcriptomic clock read the same cells at
+**+36.5 yr**. That +36.5 was an instrument artefact, and it is now **definitively dead** — measured
+against a proper control with a sharp, identity-matched instrument.
+
+It also settles the direction of our contradiction with Gill: Gill reported non-responders showed
+*"a moderate reduction in transcription age"*; we now measure ≈0 on methylation. Either way,
+**not +36.5 yr older.**
+
+### M-1 — transiently reprogrammed vs untreated control: NO significant effect
+
+**−5.8 yr, 95% CI [−19.5, +7.9], 5/9 pairs negative.** Broken out by reprogramming-phase length:
+
+| length | n | mean | pairs |
+|---|---|---|---|
+| 10 d | 3 | −2.7 | +11.8, −21.5, +1.7 |
+| **13 d** (Gill optimum) | 2 | **−14.1** | −21.4, −6.8 |
+| 15 d | 1 | −0.6 | −0.6 |
+| 17 d | 3 | −5.1 | −36.9, +2.5, +19.0 |
+
+The **sign is right and largest at Gill's pre-registered 13-day optimum**, but n=2 there and the
+scatter elsewhere is large. **This is neither a demonstration of rejuvenation nor a clean
+refutation.**
+
+### Why M-1 is noisy while M-3 is tight — a real observation
+
+| arm | age range | sd |
+|---|---|---|
+| treated (transiently reprogrammed) | **12.6 – 59.4** | **14.9** |
+| untreated control | 37.6 – 55.7 | 7.1 |
+
+The controls are tight; the **treated arm is enormously heterogeneous**. Because M-3's CI is only
+±2.8 yr wide on the same instrument and samples, the instrument is demonstrably stable here — so the
+treated-arm spread is most likely **real variability in reprogramming response**, not measurement
+noise.
+
+### Robustness — the conclusions do not depend on the intercept
+
+`biolearn`'s Horvath coefficient tables carry **no intercept row**, so one was derived from the three
+known-age day-0 samples (implied −0.112, spread 5.3 yr). That makes **G2 partly self-fulfilling**, so
+it was stress-tested across the whole plausible range:
+
+| intercept | −0.60 | −0.45 | −0.20 | −0.11 | 0.00 | +0.20 | +0.70 |
+|---|---|---|---|---|---|---|---|
+| M-1 mean | −5.2 | −5.4 | −5.7 | −5.8 | −5.9 | −6.0 | −6.0 |
+| M-3 mean | +0.5 | +0.5 | +0.5 | +0.5 | +0.5 | +0.5 | +0.5 |
+
+**Both verdicts are unchanged everywhere.** The intercept uncertainty is real but immaterial —
+most predictions sit above age 20, where Horvath's transform is linear and a constant cancels in a
+difference.
+
+### A bug found and fixed mid-run
+
+The first pairing required a *unique* sample per (donor, day, arm), which silently discarded **6 of
+9** M-1 pairs — GSE165179 runs every condition as `exp1` **and** `exp2`. The first run therefore
+reported only 3 day-10 pairs and a misleadingly wide CI. Replicates are now averaged, with a
+regression test naming the defect.
+
+### Honest limits
+
+1. **G2 is weak.** 3 known-age samples, implied intercept, 5.3 yr spread, MAE 4.0 against a 5.0
+   tolerance. It passes, but barely and partly by construction — the intercept sweep is what
+   actually carries the result.
+2. **We do not reproduce Gill's ~30 yr.** We measure −5.8 (ns). Whether that is a difference of
+   clock, timepoint, or which samples Gill contrasted is **not established** and is not guessed at.
+3. **n is small** — 9 pairs from 3 donors for M-1.
+4. **A ~15 yr effect is not excluded** by M-1's CI.
+
+### What this changes
+
+- **The +36.5 yr artefact is confirmed and closed** — on evidence, not argument. Every conclusion
+  that rested on it, including the V3 non-responder-control plan, is now formally dead.
+- **The instrument question is answered; the effect question is not.** M-3 proves the methylation
+  anchor works on these samples; M-1 says the effect is not detectable at this n.
+- **This was never a label-definition problem.** No further control redefinition is warranted.

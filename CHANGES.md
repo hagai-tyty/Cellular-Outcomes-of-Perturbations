@@ -211,6 +211,43 @@ not touched here.**
 
 ---
 
+## 2026-07-26 (executed) — Methylation anchor RUN: +36.5 yr artefact confirmed dead; no rejuvenation detected
+
+**Status:** ✅ Executed on GSE165179. `experiments/diag_methylation_anchor.py` + 28 tests; `src/`
+untouched. Horvath clocks exported to `configs/clocks/` from `biolearn` (Biomarkers of Aging
+Consortium) and verified against the publications — 2013 multi-tissue **353** CpGs, 2018
+**skin & blood 391** CpGs. **100% probe coverage** on all 96 samples.
+
+**M-3 (the negative control) is the headline.** Failed-to-reprogram fibroblasts vs their matched
+untreated control: **+0.5 yr, CI [−2.3, +3.2]** over 12 identity-matched pairs — *indistinguishable
+from untreated cells*. The transcriptomic clock read the same cells at **+36.5 yr**. That artefact
+is now **definitively dead**, measured against a real control with a sharp instrument rather than
+argued about.
+
+**M-1: no significant rejuvenation.** Transiently reprogrammed vs untreated control: **−5.8 yr,
+CI [−19.5, +7.9]**, 5/9 pairs negative. By reprogramming-phase length: 10 d −2.7, **13 d −14.1
+(Gill's optimum, n=2)**, 15 d −0.6, 17 d −5.1. The sign is right and largest at the pre-registered
+optimum, but underpowered. **Neither a demonstration nor a clean refutation.**
+
+**Bug found and fixed mid-run:** the first pairing required a unique sample per (donor, day, arm),
+which silently discarded **6 of 9** M-1 pairs — GSE165179 runs every condition as `exp1` **and**
+`exp2`. The first run therefore reported only 3 day-10 pairs. Replicates are now averaged, with a
+regression test naming the defect.
+
+**Robustness:** the coefficient tables carry no intercept row, so one was implied from the three
+known-age day-0 samples — making G2 partly self-fulfilling. Swept the intercept from −0.60 to +0.70:
+**M-1 stays −5.2 to −6.0 and M-3 stays +0.5 throughout.** The conclusions do not depend on it,
+because most predictions sit above age 20 where Horvath's transform is linear and a constant cancels
+in a difference.
+
+**Honest limits:** G2 passes but barely (3 known-age samples, MAE 4.0 against a 5.0 tolerance, 5.3 yr
+implied-intercept spread); we do **not** reproduce Gill's ~30 yr and the reason is not established;
+n=9 pairs from 3 donors; a ~15 yr effect is not excluded. The treated arm is far more heterogeneous
+(age sd 14.9) than the control arm (7.1) — and since M-3's CI is only ±2.8 yr on the same
+instrument, that spread is most likely real biological variability, not measurement noise.
+
+---
+
 ## 2026-07-26 — STAGE 1.5.1 REV FINAL written: anchor ΔAge to methylation (GSE165179)
 
 **Status:** PLAN ONLY, nothing executed. `plans/STAGE_1_5_1_REV_FINAL.md`. All five prior 1.5.1

@@ -1,0 +1,368 @@
+{
+  "script": "diag_methylation_anchor",
+  "utc": "2026-07-29T13:14:37+00:00",
+  "data_dir": "C:\\Users\\hagay\\Desktop\\GSE165179",
+  "clock": {
+    "name": "Horvath skin & blood (2018)",
+    "year": 2018,
+    "tissue": "Skin + blood",
+    "source": "https://www.aging-us.com/article/101508/text",
+    "n_cpg": 391,
+    "transform": "horvath_log_linear",
+    "adult_age": 20,
+    "units": "years",
+    "input": "beta values (0-1)",
+    "provenance": "biolearn ModelGallery (Biomarkers of Aging Consortium)",
+    "usage_note": "{'commercial': 'For cosmetics or life insurance applications, contact UCLA TDG regarding licensing status. For all other commercial usage `contact the Clock Foundation <https://clockfoundation.org/contact-us/>`_.'}"
+  },
+  "n_samples": 96,
+  "mean_cpg_coverage": 391.0,
+  "n_clock_cpgs": 391,
+  "G2": {
+    "status": "REPRODUCES",
+    "mae_years": 4.021743869762726,
+    "n": 3,
+    "predicted": [
+      46.96738419535591,
+      56.64305738021539,
+      40.3895584244287
+    ],
+    "true": [
+      53.0,
+      53.0,
+      38.0
+    ],
+    "reason": "MAE 4.0 yr on 3 known-age samples (tolerance 5.0) -> the clock reads age here; it is a usable anchor",
+    "implied_intercept": {
+      "status": "OK",
+      "n": 3,
+      "mean": -0.11168686554828251,
+      "sd": 0.25056469101397144,
+      "spread_years": 5.261858511293401,
+      "per_sample": [
+        0.17558055372048353,
+        -0.28516578841568196,
+        -0.22547536194964912
+      ]
+    },
+    "intercept_used": -0.11168686554828251,
+    "intercept_source": "implied from known ages"
+  },
+  "M1": {
+    "status": "NO_EFFECT",
+    "mean_years": -5.80924547903072,
+    "ci95": [
+      -19.502730663569558,
+      7.884239705508117
+    ],
+    "n_pairs": 9,
+    "n_negative": 5,
+    "reason": "transiently reprogrammed fibroblasts: CI includes 0 (mean -5.8 yr, 95% CI [-19.5, +7.9], 5/9 pairs negative)",
+    "pairs": [
+      {
+        "donor": "O1",
+        "day": 10.0,
+        "n_treated": 1,
+        "n_control": 1,
+        "treated_age": 55.358559016555446,
+        "control_age": 43.5300216810452,
+        "diff_years": 11.828537335510248
+      },
+      {
+        "donor": "O1",
+        "day": 17.0,
+        "n_treated": 1,
+        "n_control": 2,
+        "treated_age": 12.608219863138599,
+        "control_age": 49.51930420218282,
+        "diff_years": -36.91108433904422
+      },
+      {
+        "donor": "O2",
+        "day": 10.0,
+        "n_treated": 1,
+        "n_control": 1,
+        "treated_age": 34.11223788403362,
+        "control_age": 55.65616062923438,
+        "diff_years": -21.54392274520076
+      },
+      {
+        "donor": "O2",
+        "day": 13.0,
+        "n_treated": 2,
+        "n_control": 2,
+        "treated_age": 32.78398989159686,
+        "control_age": 54.20830659805096,
+        "diff_years": -21.4243167064541
+      },
+      {
+        "donor": "O2",
+        "day": 17.0,
+        "n_treated": 1,
+        "n_control": 2,
+        "treated_age": 56.32090252179086,
+        "control_age": 53.859475585049154,
+        "diff_years": 2.4614269367417094
+      },
+      {
+        "donor": "O3",
+        "day": 10.0,
+        "n_treated": 1,
+        "n_control": 1,
+        "treated_age": 42.6957528521385,
+        "control_age": 40.99674871837004,
+        "diff_years": 1.6990041337684545
+      },
+      {
+        "donor": "O3",
+        "day": 13.0,
+        "n_treated": 2,
+        "n_control": 2,
+        "treated_age": 33.62431455994745,
+        "control_age": 40.46706127071753,
+        "diff_years": -6.842746710770079
+      },
+      {
+        "donor": "O3",
+        "day": 15.0,
+        "n_treated": 2,
+        "n_control": 2,
+        "treated_age": 37.05151117095643,
+        "control_age": 37.602867899199005,
+        "diff_years": -0.551356728242574
+      },
+      {
+        "donor": "O3",
+        "day": 17.0,
+        "n_treated": 2,
+        "n_control": 2,
+        "treated_age": 59.36651265444269,
+        "control_age": 40.36526314202784,
+        "diff_years": 19.001249512414844
+      }
+    ]
+  },
+  "M3": {
+    "status": "NO_EFFECT",
+    "mean_years": 0.4641015999138786,
+    "ci95": [
+      -2.270928301648623,
+      3.19913150147638
+    ],
+    "n_pairs": 12,
+    "n_negative": 6,
+    "reason": "failed-to-reprogram fibroblasts: CI includes 0 (mean +0.5 yr, 95% CI [-2.3, +3.2], 6/12 pairs negative)",
+    "pairs": [
+      {
+        "donor": "O1",
+        "day": 10.0,
+        "n_treated": 1,
+        "n_control": 1,
+        "treated_age": 43.49570245979109,
+        "control_age": 43.5300216810452,
+        "diff_years": -0.034319221254108356
+      },
+      {
+        "donor": "O1",
+        "day": 13.0,
+        "n_treated": 2,
+        "n_control": 2,
+        "treated_age": 45.84203792152937,
+        "control_age": 44.23734110124436,
+        "diff_years": 1.6046968202850067
+      },
+      {
+        "donor": "O1",
+        "day": 15.0,
+        "n_treated": 2,
+        "n_control": 2,
+        "treated_age": 47.861669263731585,
+        "control_age": 46.109461985994066,
+        "diff_years": 1.7522072777375186
+      },
+      {
+        "donor": "O1",
+        "day": 17.0,
+        "n_treated": 2,
+        "n_control": 2,
+        "treated_age": 47.12320264368448,
+        "control_age": 49.51930420218282,
+        "diff_years": -2.3961015584983443
+      },
+      {
+        "donor": "O2",
+        "day": 10.0,
+        "n_treated": 1,
+        "n_control": 1,
+        "treated_age": 53.7359274232882,
+        "control_age": 55.65616062923438,
+        "diff_years": -1.9202332059461753
+      },
+      {
+        "donor": "O2",
+        "day": 13.0,
+        "n_treated": 2,
+        "n_control": 2,
+        "treated_age": 61.52431457104678,
+        "control_age": 54.20830659805096,
+        "diff_years": 7.31600797299582
+      },
+      {
+        "donor": "O2",
+        "day": 15.0,
+        "n_treated": 2,
+        "n_control": 2,
+        "treated_age": 61.984706920169906,
+        "control_age": 53.09632766110081,
+        "diff_years": 8.888379259069097
+      },
+      {
+        "donor": "O2",
+        "day": 17.0,
+        "n_treated": 2,
+        "n_control": 2,
+        "treated_age": 53.715290038438994,
+        "control_age": 53.859475585049154,
+        "diff_years": -0.14418554661016003
+      },
+      {
+        "donor": "O3",
+        "day": 10.0,
+        "n_treated": 1,
+        "n_control": 1,
+        "treated_age": 41.210588565652806,
+        "control_age": 40.99674871837004,
+        "diff_years": 0.21383984728276317
+      },
+      {
+        "donor": "O3",
+        "day": 13.0,
+        "n_treated": 2,
+        "n_control": 2,
+        "treated_age": 41.487936920366664,
+        "control_age": 40.46706127071753,
+        "diff_years": 1.0208756496491347
+      },
+      {
+        "donor": "O3",
+        "day": 15.0,
+        "n_treated": 2,
+        "n_control": 2,
+        "treated_age": 32.47307925517001,
+        "control_age": 37.602867899199005,
+        "diff_years": -5.1297886440289915
+      },
+      {
+        "donor": "O3",
+        "day": 17.0,
+        "n_treated": 2,
+        "n_control": 2,
+        "treated_age": 34.763103690312825,
+        "control_age": 40.36526314202784,
+        "diff_years": -5.602159451715018
+      }
+    ]
+  },
+  "decision": {
+    "action": "NO_EFFECT_AT_THIS_RESOLUTION",
+    "reason": "with an instrument sharper than the effect and an identity-matched control, no rejuvenation is detected. That is a real finding, not a power failure -- it escalates to Stage 4/5 rather than to another label change."
+  },
+  "ages": {
+    "O1_failed_to_transiently_reprogram_15days_exp1": 46.69514874950443,
+    "O1_negative_control_15days_exp1": 47.24029236218685,
+    "O2_failed_to_transiently_reprogram_15days_exp1": 53.52543219415766,
+    "O2_negative_control_15days_exp1": 50.03722891779479,
+    "O3_transiently_reprogrammed_15days_exp1": 24.447839847082555,
+    "O3_failed_to_transiently_reprogram_15days_exp1": 27.016548134699736,
+    "O3_negative_control_15days_exp1": 34.95030558672889,
+    "O1_transiently_reprogrammed_17days_exp1": 12.608219863138599,
+    "O1_failed_to_transiently_reprogram_13days_exp1": 47.762332299254396,
+    "O1_negative_control_13days_exp1": 46.28972082743822,
+    "O2_transiently_reprogrammed_13days_exp1": 35.32777479419467,
+    "O2_failed_to_transiently_reprogram_13days_exp1": 53.26809975692704,
+    "O2_negative_control_13days_exp1": 52.53786389356286,
+    "O3_transiently_reprogrammed_13days_exp1": 33.15096239383072,
+    "O3_failed_to_transiently_reprogram_13days_exp1": 42.22404392600837,
+    "O3_negative_control_13days_exp1": 38.26172468511926,
+    "O1_failed_to_transiently_reprogram_17days_exp1": 48.62284245588534,
+    "O1_negative_control_17days_exp1": 51.54552104043385,
+    "O2_transiently_reprogrammed_17days_exp1": 56.32090252179086,
+    "O2_failed_to_transiently_reprogram_17days_exp1": 54.033776226186745,
+    "O2_negative_control_17days_exp1": 51.87931691302673,
+    "O3_transiently_reprogrammed_17days_exp1": 63.56171184871107,
+    "O3_failed_to_transiently_reprogram_17days_exp1": 31.97659612711581,
+    "O3_negative_control_17days_exp1": 36.724937230287715,
+    "O1_failed_to_transiently_reprogram_17days_exp2": 45.62356283148361,
+    "O1_negative_control_17days_exp2": 47.49308736393179,
+    "O2_failed_to_transiently_reprogram_17days_exp2": 53.39680385069124,
+    "O2_negative_control_17days_exp2": 55.83963425707158,
+    "O3_transiently_reprogrammed_17days_exp2": 55.171313460174304,
+    "O3_failed_to_transiently_reprogram_17days_exp2": 37.54961125350984,
+    "O3_negative_control_17days_exp2": 44.00558905376796,
+    "O1 Fib": 46.96738419535591,
+    "O1_failing_to_transiently_reprogram_intermediate_17days_exp2": 49.28485782605556,
+    "O1_negative_control_intermediate_17days_exp2": 48.192175387806806,
+    "O2_transient_reprogramming_intermediate_17days_exp2": 9.151812958215436,
+    "O2_failing_to_transiently_reprogram_intermediate_17days_exp2": 56.65579360341436,
+    "O2_negative_control_intermediate_17days_exp2": 60.15934634873725,
+    "O3_transient_reprogramming_intermediate_17days_exp2": 18.58454273504175,
+    "O3_failing_to_transiently_reprogram_intermediate_17days_exp2": 44.1148177474417,
+    "O3_negative_control_intermediate_17days_exp2": 42.58096280535587,
+    "O1_negative_control_intermediate_15days_exp2": 47.19584544643905,
+    "O2_transient_reprogramming_intermediate_15days_exp2": 20.567584482869076,
+    "O2_failing_to_transiently_reprogram_intermediate_15days_exp2": 56.51602514001532,
+    "O2_negative_control_intermediate_15days_exp2": 57.16197732364292,
+    "O3_transient_reprogramming_intermediate_15days_exp2": 22.19933124068775,
+    "O3_failing_to_transiently_reprogram_intermediate_15days_exp2": 41.856482909782656,
+    "O3_negative_control_intermediate_15days_exp2": 41.75103511737947,
+    "O1_transient_reprogramming_intermediate_17days_exp2": 15.99271363651517,
+    "O2_failing_to_transiently_reprogram_intermediate_10days_exp2": 55.125678463911875,
+    "O2_negative_control_intermediate_10days_exp2": 57.033895696925995,
+    "O3_transient_reprogramming_intermediate_10days_exp2": 27.41424433769477,
+    "O3_failing_to_transiently_reprogram_intermediate_10days_exp2": 44.05185434728773,
+    "O3_negative_control_intermediate_10days_exp2": 41.58616016821449,
+    "O1_transient_reprogramming_intermediate_13days_exp2": 29.598866297150202,
+    "O1_failing_to_transiently_reprogram_intermediate_13days_exp2": 44.01425093409392,
+    "O1_negative_control_intermediate_13days_exp2": 46.45478842286357,
+    "O2_transient_reprogramming_intermediate_13days_exp2": 33.049160422700545,
+    "O2_failing_to_transiently_reprogram_intermediate_13days_exp2": 54.55787359439544,
+    "O2_negative_control_intermediate_13days_exp2": 55.353125344420306,
+    "O3_transient_reprogramming_intermediate_13days_exp2": 23.601261680135696,
+    "O3_failing_to_transiently_reprogram_intermediate_13days_exp2": 42.256036627099675,
+    "O3_negative_control_intermediate_13days_exp2": 42.093518520507445,
+    "O1_transient_reprogramming_intermediate_15days_exp2": 21.79900591387416,
+    "O1_failing_to_transiently_reprogram_intermediate_15days_exp2": 44.38421711640919,
+    "O1_transiently_reprogrammed_10days_exp2": 55.358559016555446,
+    "O1_failed_to_transiently_reprogram_10days_exp2": 43.49570245979109,
+    "O1_negative_control_10days_exp2": 43.5300216810452,
+    "O2_transiently_reprogrammed_10days_exp2": 34.11223788403362,
+    "O2_failed_to_transiently_reprogram_10days_exp2": 53.7359274232882,
+    "O2_negative_control_10days_exp2": 55.65616062923438,
+    "O3_transiently_reprogrammed_10days_exp2": 42.6957528521385,
+    "O3_failed_to_transiently_reprogram_10days_exp2": 41.210588565652806,
+    "O3_negative_control_10days_exp2": 40.99674871837004,
+    "O1_failed_to_transiently_reprogram_13days_exp2": 43.92174354380434,
+    "O1_negative_control_13days_exp2": 42.184961375050506,
+    "O2_transiently_reprogrammed_13days_exp2": 30.240204988999047,
+    "O2_failed_to_transiently_reprogram_13days_exp2": 69.78052938516652,
+    "O2_negative_control_13days_exp2": 55.87874930253906,
+    "O3_transiently_reprogrammed_13days_exp2": 34.09766672606419,
+    "O3_failed_to_transiently_reprogram_13days_exp2": 40.75182991472495,
+    "O3_negative_control_13days_exp2": 42.6723978563158,
+    "O1_failed_to_transiently_reprogram_15days_exp2": 49.02818977795874,
+    "O1_negative_control_15days_exp2": 44.97863160980128,
+    "O2_failed_to_transiently_reprogram_15days_exp2": 70.44398164618215,
+    "O2_negative_control_15days_exp2": 56.155426404406825,
+    "O3_transiently_reprogrammed_15days_exp2": 49.6551824948303,
+    "O3_failed_to_transiently_reprogram_15days_exp2": 37.929610375640294,
+    "O3_negative_control_15days_exp2": 40.25543021166912,
+    "O2 Fib": 56.64305738021539,
+    "O3 Fib": 40.3895584244287,
+    "iPSC 13": -0.8858455055559791,
+    "iPSC 21": -0.8865872305974951,
+    "O1_transient_reprogramming_intermediate_10days_exp2": 34.497424898564915,
+    "O1_failing_to_transiently_reprogram_intermediate_10days_exp2": 40.25659182734071,
+    "O1_negative_control_intermediate_10days_exp2": 47.04683780666572,
+    "O2_transient_reprogramming_intermediate_10days_exp2": 41.54938637896294
+  }
+}
