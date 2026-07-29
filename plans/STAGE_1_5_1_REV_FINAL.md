@@ -262,3 +262,101 @@ transient reprogramming [Transient array]"*, Illumina MethylationEPIC (GPL21145)
 ⚠ **Check the supplementary file's format before running** — as with GSE113957, the first file GEO
 offers may be the wrong representation. Beta values (0–1 per CpG, rows = `cg…` probe IDs) are what
 is needed; if only IDATs are provided, that requires a preprocessing step and Step 1 must budget for it.
+
+---
+
+# 10. AMENDMENT (2026-07-26) — the data is in, and it is better than §2–§4 assumed
+
+§0–§9 are left as written (pre-registration integrity). This section corrects them against the
+**actual** contents of GSE165179, now downloaded and inspected. Nothing has been run beyond parsing
+the metadata and one row of the beta matrix.
+
+## 10.1 Format — a non-issue
+
+| worry | reality |
+|---|---|
+| "structured very differently — a huge problem?" | **No.** The processed matrix is **comma-separated** (not tab) with a `Detection Pval` column interleaved after every sample. Both are two lines of parsing. |
+| beta values or IDATs? | ✅ **Beta values.** Probe IDs `cg…`, values in [0, 1] (row 1 spans 0.0118–0.0264). Exactly what a Horvath clock consumes — **no preprocessing needed**, so §9's IDAT contingency does not apply. |
+| do the columns match the series matrix? | ✅ **96 sample columns, 96 samples.** |
+
+## 10.2 🔴 What §2–§4 got wrong
+
+| § | assumed | actually |
+|---|---|---|
+| §2 | "same donors" as the RNA data | **3 donors: O1 (53), O2 (53), O3 (38).** The RNA set has 6. Overlap is **O1 and O2 only** |
+| §3.1 | ΔAge = responder vs **own day-0** | the dataset carries a **proper untreated negative control at every timepoint** — a far better comparator (10.3) |
+| §3.0 | resolvability for **6 donors** | recomputed below — the unit is the **(donor, day) pair**, not the donor |
+| **§4 Step 0** | *"if fewer than 4 donors … STOP"* | **this gate is WRONG and would have wrongly halted the stage.** 3 donors, but **9 identity-matched pairs** — ample. The gate counted the wrong unit. |
+
+**Step 0's gate is replaced by:** proceed if **≥ 6 identity-matched (donor, day) pairs** exist for
+M-1. Measured: **9**.
+
+## 10.3 What the dataset contains — and why it solves the core problem
+
+96 samples, days 10/13/15/17, donors O1/O2/O3:
+
+| type | n | identity |
+|---|---|---|
+| **Transiently reprogrammed fibroblast** | 13 | **fibroblast** — went through MPTR and *returned* |
+| **Negative control fibroblast** | 21 | **fibroblast** — untreated, cultured in parallel |
+| **Failed to transiently reprogram fibroblast** | 21 | **fibroblast** |
+| Transient reprogramming *intermediate* | 12 | mid-reprogramming (identity changed) |
+| Negative control *intermediate* | 12 | mid-reprogramming control |
+| Failing to reprogram *intermediate* | 12 | mid-reprogramming |
+| Fibroblast (day 0) | 3 | baseline |
+| iPSC | 2 | pluripotent |
+
+> **This is the identity-matched design that was impossible in the RNA data.**
+> `Transiently reprogrammed fibroblast` vs `Negative control fibroblast` compares **two fibroblast
+> populations** — same identity, same culture time, differing only in treatment. It removes the
+> confound that broke every RNA analysis (`corr(age, pluripotency) = −0.62`) **by design rather than
+> by adjustment**.
+
+**And it supplies the negative control the RNA data does not have.** The review §2.4 verified that
+GSE165176 contains **no untreated sample at any day > 0**. GSE165179 has **21**. This is Gill's
+actual comparison, now available to us.
+
+**Bonus:** the *intermediate* samples measure the identity artefact directly on methylation — the
+same cells mid-reprogramming — a clean read on whether the +36.5 yr RNA reading is
+instrument-specific.
+
+## 10.4 Corrected design and resolvability
+
+Unit of analysis: the **(donor, day) pair**, matched between arms.
+
+| measurement | comparison | pairs | SE | **min detectable effect** |
+|---|---|---|---|---|
+| **M-1** | transiently reprogrammed *vs* negative control | **9** | 1.41 yr | **3.3 yr** |
+| **M-3** | failed to reprogram *vs* negative control | **12** | 1.22 yr | **2.7 yr** |
+
+(assuming a 3.0 yr methylation-clock error; to be re-confirmed against the measured spread.)
+
+**Both RESOLVABLE with room to spare** — a Gill-scale −30 yr effect is detectable ~10× over, and
+even −5 yr clears the bar. **This is the first time in the entire Stage 1.5 arc that the instrument
+is comfortably sharper than the effect.**
+
+## 10.5 What is weaker than §2 hoped — stated plainly
+
+- **M-2 (RNA ↔ methylation agreement) is thin.** Only **O1 and O2** appear in both datasets, and the
+  day grids differ (RNA 7/9/11/13/15/21/29 vs methylation 10/13/15/17), overlapping at **13 and 15**.
+  M-2 therefore rests on ~2 donors × 2 days. **Report as indicative; never use as a gate.** §3.2's
+  ρ ≥ 0.7 threshold must be read with that n in mind.
+- **Consequence for HFF.** §4 Step 3a assumed M-2 could license calibrating the RNA clock for the
+  79% of labels methylation cannot reach. With ~4 pairs that licence is weak. **Step 3a is downgraded
+  from "calibrate and apply broadly" to "estimate a correction and report its uncertainty
+  honestly"**; if the correction is not well determined, **Step 3b** (methylation as the target for
+  Gill, HFF's age labels flagged) is the honest landing.
+- **The two datasets are companion experiments, not the same samples** — different donors, day grids
+  and sorting. M-1/M-3 stand alone; only M-2 needs the pairing.
+
+## 10.6 Net
+
+**M-1 and M-3 — the questions that decide whether ΔAge has a valid anchor — are fully answerable, on
+an identity-matched design, with an instrument sharper than the effect.** That is a better position
+than any point in Stage 1.5 so far.
+
+**M-2 — whether the RNA clock can be rescued for HFF — is under-powered and must not be oversold.**
+
+Next action unchanged in spirit, corrected in detail: implement the Horvath clock (**guard G2**
+first — now judged on donors aged 53/53/38, all comfortably in range, so G2 is a fair test), then
+run M-1 and M-3.
