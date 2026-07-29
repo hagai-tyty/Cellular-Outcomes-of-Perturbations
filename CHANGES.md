@@ -211,6 +211,47 @@ not touched here.**
 
 ---
 
+## 2026-07-26 — STAGE 1.5.1 REV FINAL written: anchor ΔAge to methylation (GSE165179)
+
+**Status:** PLAN ONLY, nothing executed. `plans/STAGE_1_5_1_REV_FINAL.md`. All five prior 1.5.1
+documents left byte-unmodified (verified).
+
+Four fixes were proposed across V1/V2/V3/review; all four were tested and all four failed. The
+reason is now established rather than suspected: **the transcriptomic clock is correctly built and
+correctly applied, but out of domain on reprogramming cells — and no RNA-only analysis can fix that,
+because every RNA route to "age" runs through that same clock.** Scoping the claim is not an option
+(user decision), so the instrument problem must be solved.
+
+**The plan:** acquire **GSE165179** — Gill's own multi-omic companion, 96 Illumina MethylationEPIC
+samples, *same experiment and donors* as our GSE165176 RNA data — and use it as the
+identity-independent anchor. It is a public download: no wet lab, no new samples, no GPU.
+
+**Why methylation rather than a fourth RNA dataset:** different molecular layer, independently
+validated clocks, it is what Gill used for the ~30 yr claim, and it is ~4× more precise —
+Horvath skin & blood ≈3 yr vs Fleischer 12.27 yr, taking ΔAge SNR from **1.7 to ≈7**. That precision
+also dissolves the n=1 day-0 baseline problem (`corr(baseline, ΔAge) = −0.986`), which is a
+consequence of clock imprecision.
+
+**Three pre-registered measurements:** M-1 does methylation show rejuvenation in responders
+(resolvability checked: MDE ≈5.2 yr at n=6, so a −30 yr effect is overwhelmingly detectable);
+M-2 does transcriptomic ΔAge agree with it (decides whether the RNA clock can be *calibrated* rather
+than replaced — this is what covers the 79% of labels HFF holds, which methylation cannot reach);
+M-3 the negative control (§10), which directly adjudicates our +36.5 yr against Gill's reported
+*"moderate reduction"* in the same cells.
+
+**Load-bearing guard G2:** the methylation clock must first reproduce known chronological age on the
+six day-0 samples — the same in-domain check that vindicated the transcriptomic clock. If it cannot,
+it is not an anchor either.
+
+**Four-way decision fork** pre-registered, including the outcome that would be bad news
+(M-1 NULL = the effect is not there at ~5 yr resolution, a publishable finding escalating to
+Stage 4/5) and the one that would mean a bug hunt (CONTRADICTS).
+
+**Adopted from V3 unconditionally:** A1 (stop pooling non-responders) and A3 (never test a dip with
+a monotonic statistic) — already ground rules §10/§11.
+
+---
+
 ## 2026-07-26 (stress test) — self-correction; conclusion strengthened; the anchor exists (GSE165179)
 
 **Status:** ✅ Stress-tested the previous entry after being asked "are we completely sure?". The
