@@ -253,3 +253,119 @@ to establish rejuvenation, and our own §2.4 check found Gill saying existing tr
 Stage 2's intervention (k≈3 reference cells/donor) remains worth doing under either, because it
 attacks the n=1 baseline directly — but its *justification* should now be baseline replication, not
 "correcting a known biological offset."
+
+---
+
+# 6. STRESS-TESTING MY OWN §5 — one self-correction, conclusion strengthened
+
+§5's conclusion was challenged ("are we completely sure?"). Three further tests. **The conclusion
+survives, but §5.2's *justification* was weak and is corrected here.**
+
+## 6.1 🔴 SELF-CORRECTION — §5.2's decomposition was baseline-contaminated
+
+§5.2 decomposed `−28.3 = +8.2 − 36.5` and concluded "100% comes from the control arm." Both terms
+are measured **against the same n=1 day-0 baseline**, and that baseline is the noisiest thing in the
+dataset. Measured:
+
+```
+corr(day-0 baseline age, responder ΔAge)  =  −0.986
+```
+
+Near-perfect negative correlation, because **responder ages cluster tightly (66–86, sd ≈ 7) while
+the day-0 baselines scatter wildly (36–99, sd ≈ 21)**. The day-0-referenced ΔAge is therefore mostly
+the *baseline error with its sign flipped* — it is not a clean measure of anything. The arithmetic
+was right; the inference from it was not properly supported.
+
+*(Note this also cuts in the plan's favour: the separation `R − F` is **baseline-free**, since the
+shared baseline cancels. That is a genuine advantage of the non-responder contrast which §2 did not
+credit.)*
+
+## 6.2 The baseline-free tests — same conclusion, properly supported
+
+**Within responders, day 7 → peak window (no day-0 sample involved at all):**
+
+| arm | day 7 → peak | 95% CI | donors negative |
+|---|---|---|---|
+| **RESPONDERS** | **−1.1 yr** | [−14.7, +12.5] | 4/6 |
+| **NON-responders** | **+17.5 yr** | **[+6.0, +28.9]** | **0/6** |
+
+**Only the non-responder arm moves.** Responders are flat; non-responders rise significantly and
+*every single donor* agrees. §5.2's claim is now established without any baseline dependence.
+
+**And the gap already exists before the window:**
+
+| | gap (responder − non-responder) | 95% CI |
+|---|---|---|
+| **at day 7** | **−9.7 yr** | [−18.5, −0.9] |
+| at peak (10–13) | −28.3 yr | [−49.9, −6.7] |
+
+A **−9.7 yr difference is already present at day 7**, and the widening to −28.3 (≈ −18.6) is
+accounted for almost exactly by the non-responder rise (+17.5). So the contrast measures **a
+standing difference between two cell populations plus the control arm deteriorating** — not
+reprogramming making cells younger.
+
+## 6.3 What the stronger test now rules out
+
+The baseline-free responder CI is **[−14.7, +12.5]**. A **Gill-scale −30 yr rejuvenation in the
+responder arm is excluded** — it lies outside the interval. §5.3's "56% power / underpowered null"
+caveat applied to the *day-0-referenced* test; the baseline-free test is tighter and does exclude the
+headline effect. A smaller effect (≲15 yr) remains possible.
+
+## 6.4 Sample-level noise, for the record
+
+Mean responder age by day: 7→**78.7**, 9→**101.3**, 11→77.2, 13→78.3, 15→71.8, 21→88.2, 29→96.9,
+34→69.5, 40→56.1, 47→**47.2** (iPSC at day 54 = 49.1).
+
+The **+23 yr swing between day 7 and day 9, reversed by day 11**, is not biology — it is the
+instrument's per-sample noise on these cells. The only clean, monotone signal in the whole series is
+the **late approach to iPSC** (34→47 d), i.e. the identity axis again.
+
+## 6.5 Am I completely sure?
+
+**Yes, of these three, with the stated bounds:**
+
+1. ✅ Responders show **no significant age change** in the reprogramming window — by two independent
+   tests, one baseline-dependent (+8.2, ns) and one baseline-free (−1.1, ns).
+2. ✅ Non-responders **rise significantly** (+17.5, 0/6 donors dissenting).
+3. ✅ Therefore the −28.3 contrast is **the control arm deteriorating plus a pre-existing population
+   gap**, not the treatment arm improving. Baseline-free and unanimous across donors.
+
+**Not claimed:** that no rejuvenation exists. An effect ≲15 yr is not excluded, and every one of
+these numbers comes from a clock we have shown reads identity (`corr = −0.62`) with ~20 yr
+sample-level noise. **Nothing here is evidence about biology — it is evidence about this
+instrument on these cells.**
+
+---
+
+# 7. Given that scoping the claim is NOT an option
+
+Then the instrument problem must be solved rather than disclosed, and there is a concrete route.
+
+## 7.1 The anchor exists and is public — **GSE165179**
+
+Gill's own multi-omic companion series: **96 samples, Illumina MethylationEPIC**, *"Multi-omic
+rejuvenation of human cells by maturation phase transient reprogramming [Transient array]"* — the
+**same experiment, same donors** as the RNA data we already have (GSE165176).
+
+This is exactly the identity-independent anchor §5 said was needed, and it is how Gill established
+the ~30 yr claim in the first place. Methylation clocks (Horvath 2013; **Horvath skin & blood 2018**,
+which is fitted on fibroblasts) are the field standard and do not read pluripotency the way a
+transcriptomic ridge does.
+
+## 7.2 What it unlocks — two uses, in order of value
+
+1. **Validate/calibrate the transcriptomic ΔAge against methylation ΔAge on paired samples.** If the
+   two agree on the responder arm, ΔAge is vindicated and the whole Stage 1.5 escalation resolves
+   with the target intact. If they disagree, we learn precisely where the transcriptomic clock fails
+   — which is the missing piece in every analysis above.
+2. **Use methylation age as the target where available**, keeping the transcriptomic model as the
+   predictor. This preserves the quantitative rejuvenation claim rather than scoping it.
+
+## 7.3 Proposed next step
+
+Acquire GSE165179 and run the same discipline: pre-registered bars, paired-donor CIs, negative
+control reported (**§10**), shape stated before the statistic (**§11**). **First measurement:** do
+methylation and transcriptomic ΔAge agree on the six donors' responder arms?
+
+This is a **data acquisition**, not a code change, and it links to Stage 6. It is the only route
+identified so far that can keep the quantitative claim *and* be defensible.

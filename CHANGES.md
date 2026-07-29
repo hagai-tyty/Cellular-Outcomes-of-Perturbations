@@ -211,6 +211,52 @@ not touched here.**
 
 ---
 
+## 2026-07-26 (stress test) — self-correction; conclusion strengthened; the anchor exists (GSE165179)
+
+**Status:** ✅ Stress-tested the previous entry after being asked "are we completely sure?". The
+conclusion survives; **its justification did not and is corrected.** Detail in
+`plans/STAGE_1_5_1_REVISED_REVIEW.md` §6–§7.
+
+**🔴 Self-correction.** The decomposition `−28.3 = +8.2 − 36.5` used two terms measured against the
+**same n=1 day-0 baseline** — the noisiest quantity in the dataset. Measured:
+`corr(day-0 baseline, responder ΔAge) = −0.986`, because responder ages cluster tightly (66–86,
+sd≈7) while baselines scatter (36–99, sd≈21). That decomposition was baseline-contaminated and did
+not support the claim I drew from it. *(It also cuts in the plan's favour: `R − F` is baseline-free,
+a real advantage the review had not credited.)*
+
+**Baseline-free re-test — same conclusion, now properly supported.** Within-arm, day 7 → peak
+window, using no day-0 sample:
+
+| arm | change | 95% CI | donors negative |
+|---|---|---|---|
+| responders | **−1.1 yr** | [−14.7, +12.5] | 4/6 |
+| non-responders | **+17.5 yr** | **[+6.0, +28.9]** | **0/6** |
+
+Only the control arm moves. And the gap is **already −9.7 yr at day 7** (CI [−18.5, −0.9]), widening
+to −28.3 — the widening (≈18.6) is accounted for by the non-responder rise (17.5). So the contrast
+measures a **standing population difference plus the control arm deteriorating.**
+
+**Stronger than before:** the baseline-free CI [−14.7, +12.5] **excludes a Gill-scale −30 yr effect**
+in responders. The earlier "56% power" caveat applied to the day-0-referenced test only. An effect
+≲15 yr is still not excluded.
+
+**Instrument noise, for the record:** mean responder age by day — 7→78.7, **9→101.3**, 11→77.2,
+13→78.3. A +23 yr swing in two days, reversed in two more. The only clean monotone signal in the
+series is the late approach to iPSC (34→47 d): the identity axis again.
+
+**Scoping the claim is not an option (user decision), so the instrument must be fixed — and the
+anchor exists.** **GSE165179**: Gill's own multi-omic companion, **96 Illumina MethylationEPIC
+samples**, same experiment and donors as our GSE165176 RNA data. Methylation clocks (Horvath
+skin & blood 2018, fitted on fibroblasts) do not read pluripotency the way a transcriptomic ridge
+does, and methylation is how Gill established the ~30 yr claim.
+
+**Next step is a data acquisition, not a code change:** get GSE165179 and ask first whether
+methylation and transcriptomic ΔAge agree on the six donors' responder arms. Agreement vindicates
+ΔAge and resolves the escalation with the target intact; disagreement localises exactly where the
+transcriptomic clock fails. Links to Stage 6.
+
+---
+
 ## 2026-07-26 (A1/A3 re-run) — labels not rescued; the "-28.3 rejuvenation" is entirely the control arm
 
 **Status:** ✅ Executed on real Gill data. `experiments/diag_e1_corrected.py` + 21 tests; 405 tests
