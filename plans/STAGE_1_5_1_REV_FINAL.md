@@ -10,7 +10,7 @@
 **Scope:** acquire one public dataset; compute methylation age; one decisive comparison. Steps 1–2
 are **read-only** — `git diff --stat src/` must be empty until Step 4.
 
-**Status:** PLANNED. This document is the pre-registration. Nothing in §4 has been executed.
+**Status:** ✅ **EXECUTED** (2026-07-26). §0–§9 are the pre-registration, left as written. §10 amends them against the real data; **§11 is the close-out: results, plus EIGHT logical holes this plan contained, each named and closed.** Read §11 first if you are reviewing.
 
 ---
 
@@ -360,3 +360,164 @@ than any point in Stage 1.5 so far.
 Next action unchanged in spirit, corrected in detail: implement the Horvath clock (**guard G2**
 first — now judged on donors aged 53/53/38, all comfortably in range, so G2 is a fair test), then
 run M-1 and M-3.
+
+---
+
+# 11. EXECUTED — results, and **eight holes in §0–§10 of this plan**, each closed
+
+§0–§10 are left as written. This section is the honest close-out: what was run, what it found, and
+**every logical hole the execution exposed in my own pre-registration**. Written so a reviewer can
+audit it without me.
+
+## 11.1 Status of every registered measurement
+
+| ID | registered as | status |
+|---|---|---|
+| **G2** | clock reproduces known chronological age | ✅ run — REPRODUCES on both clocks, **but see Hole 4** |
+| **M-1** | "responder vs control" rejuvenation | ✅ run — **but the plan's definition was ambiguous; see Holes 1–3** |
+| **M-3** | negative control | ✅ run — **inert on both clocks**, the cleanest result here |
+| **M-2** | RNA ↔ methylation agreement | ❌ **NOT RUN — and it is ill-defined; see Hole 8** |
+
+## 11.2 The results
+
+Two clocks (Gill used several and reported both of these rejuvenated), three contrasts, all
+identity-matched within a (donor, reprogramming-length) row:
+
+| contrast | Horvath skin & blood | Horvath multi-tissue |
+|---|---|---|
+| **intermediates** (cells *still* reprogramming) | **−24.1** [−31.1, −17.0] REJUVENATION | **−27.5** [−33.7, −21.4] REJUVENATION |
+| **returned fibroblasts** (MPTR — Gill's claim) | −5.8 [−19.5, +7.9] NO_EFFECT | −9.4 [−18.3, −0.5] REJUVENATION_**FRAGILE** |
+| **failed to reprogram** (NEGATIVE CONTROL) | **+0.5** [−2.3, +3.2] | **−2.4** [−5.7, +0.8] |
+
+By reprogramming length, the returned fibroblasts peak at **13 days** on both clocks
+(−14.1 / −18.4) and diminish at 15–17 — **exactly the shape Gill describe**. The intermediates run
+the opposite way (−14 → −36 monotonically), which is simply "closer to iPSC".
+
+**Gill's ~30 yr is reproduced on the intermediates. The negative control is inert on both clocks, so
+the transcriptomic +36.5 yr artefact is dead twice over.**
+
+## 11.3 The eight holes — each stated, then closed
+
+### 🔴 Hole 1 — the decision fork (§4 Step 3) **cannot be evaluated**
+
+It is a table of `M-1 × M-2`. But M-2 was never run (Hole 8), and "M-1" turns out to name **two
+different contrasts with opposite verdicts** (intermediates REJUVENATION, returned fibroblasts
+NO_EFFECT/FRAGILE). **As written, the plan cannot tell anyone what to do next.**
+
+**Closed by 11.4**, which restates the fork on quantities that actually exist.
+
+### 🔴 Hole 2 — the intermediate arm was never a registered measurement
+
+§10.3 calls it a *"bonus"*. It became the headline. **That transition must be declared, not glossed:**
+the intermediates were pre-registered only as a read on the identity artefact, and they are where the
+effect was found. **Anyone reviewing this should treat the intermediate result as
+hypothesis-generating-then-confirmed-on-a-second-clock, not as a pre-registered primary endpoint.**
+It is honest because (a) it was named in the plan before running, (b) both clocks agree, (c) the
+negative control is inert, and (d) the day-profile distinguishes it from the returned-fibroblast
+contrast on an *a priori* basis. It would be dishonest to present it as the registered primary.
+
+### 🔴 Hole 3 — §3.1's definition of M-1 is stale and would mislead
+
+§3.1 says *"minus that donor's own **day-0** methylation age"* over *"**6** donors"*. Neither is what
+was done or what should be done: the dataset carries **matched untreated negative controls**, which
+are strictly better, and there are **3 donors / 9–12 (donor, day) pairs**. §10.2 flagged this but did
+not rewrite §3.1's verdict table, so a reader following §3.1 literally would run the wrong analysis.
+**Superseded: the comparator is the matched negative control, and the unit is the (donor, day) pair.**
+
+### 🔴 Hole 4 — G2 is partly self-fulfilling, which §3.4 did not anticipate
+
+The coefficient tables ship **no intercept row**, so an intercept was derived from the three
+known-age day-0 samples. G2's **MAE is therefore partly circular** and "REPRODUCES at MAE 4.0/4.4 vs
+a 5.0 tolerance" is **not** strong evidence on its own.
+
+**Closed:** G2 must be judged on (i) the **spread** of the implied intercept across donors (5.3 yr
+skin & blood, 6.4 yr multi-tissue — mediocre), and (ii) the **intercept sweep**, which is what
+actually carries the result: over −0.60 to +0.70 the intermediates stay REJUVENATION and the negative
+control stays inert, while **the returned-fibroblast verdict flips** between NO_EFFECT and
+REJUVENATION_FRAGILE. Any future use of this clock must report the sweep.
+
+### 🔴 Hole 5 — Step 3's every "PASS" row depends on M-2, which does not exist
+
+So Steps 3–4 were unreachable as written. Closed by 11.4.
+
+### 🟠 Hole 6 — "same donors" (§2) is false
+
+3 donors (O1=53, O2=53, O3=38) vs the RNA set's 6; overlap **{O1, O2}** *by label*, and **it is not
+verified that these are the same physical donors** — only that both are labelled O1/O2 and aged 53.
+§10.2 corrected the count but not this identity assumption. **Treat donor identity across the two
+series as unverified.**
+
+### 🟠 Hole 7 — no bar was ever set for the actual scientific question
+
+The live question is now *"how much rejuvenation survives the return to fibroblast identity?"* — the
+returned-fibroblast contrast. The plan has **no pre-registered bar for it**, so the −5.8 / −9.4
+result cannot be graded. **It must be pre-registered before any further analysis of that contrast**,
+per ground rule §5b, and its resolvability checked at n=9.
+
+### 🔴 Hole 8 — M-2 is not merely under-powered, it is **ill-defined**
+
+§3.2 assumed the two datasets could be paired sample-to-sample. Measured, they cannot:
+
+| | RNA (GSE165176) | methylation (GSE165179) |
+|---|---|---|
+| arms | `Reprogramming fibroblast`, `Failing to reprogram`, `iPSC`, `Dermal fibroblast` | `Transiently reprogrammed fibroblast`, **`Transient reprogramming intermediate`**, `Negative control` (×2), `Failed`(×2), `Fibroblast`, `iPSC` |
+| untreated control at day > 0 | ❌ **none** | ✅ 21 + 12 |
+| days | 7, 9, 11, 13, 15, 21, 29, 34, 40, 47 | 10, 13, 15, 17 |
+
+Three independent blockers:
+1. **The RNA labels do not distinguish "still reprogramming" from "returned to fibroblast."** The
+   methylation data does, and the two give **−24 vs −5.8** — so the RNA arm cannot be mapped to a
+   methylation arm without choosing the answer.
+2. **The contrasts differ.** RNA can only reference day 0 (no untreated control exists); methylation
+   references matched untreated controls. Correlating them compares two different quantities.
+3. Overlap is **2 donors × 2 days**.
+
+**Closed: M-2 as specified is withdrawn.** It cannot be executed honestly on these two datasets.
+Consequence: **§4 Step 3a's promise to "calibrate the RNA clock and apply it to HFF" has no
+evidential basis and must not be attempted on this data.**
+
+## 11.4 The decision fork, restated so it can actually be evaluated
+
+Replaces §4 Step 3. Keyed on quantities that exist.
+
+| condition | met? | action |
+|---|---|---|
+| negative control inert on both clocks | ✅ **yes** (+0.5, −2.4) | the design is valid; the RNA +36.5 artefact is **closed** |
+| rejuvenation detectable on an identity-matched methylation contrast | ✅ **yes**, intermediates −24.1 / −27.5, both clocks, intercept-robust | **ΔAge has a valid anchor. The target is not the problem — the RNA instrument is.** |
+| rejuvenation *retained* after return to fibroblast identity | ⚠️ **unresolved** — right sign, Gill's exact day-shape, but ns on one clock, FRAGILE on the other, and intercept-sensitive | **needs a pre-registered bar + more donors. Do not claim it.** |
+| RNA ↔ methylation calibration feasible | ❌ **no** — ill-defined (Hole 8) | **Step 3a is off the table.** HFF's age labels cannot be anchored from this data |
+
+**Therefore the licensed next step is neither 3a nor 3b as written.** It is:
+
+> **Use methylation as the ΔAge source where methylation exists (Gill's 3 donors), and treat HFF's
+> age labels as unanchored** — with the fate head unaffected. Any attempt to extend the age target to
+> HFF requires methylation data for HFF, which is a Stage 6 acquisition, not an analysis choice.
+
+## 11.5 Discipline audit — pre-registered vs discovered
+
+Stated plainly so a reviewer can judge the epistemics rather than reconstruct them:
+
+| item | status |
+|---|---|
+| G2, M-1, M-3, their verdict tables, the FRAGILE rule | **pre-registered** (§3, before any data) |
+| the (donor, day) pair as the unit; ≥6 pairs gate | **amended §10.4 after seeing metadata only**, before any age was computed |
+| running **both** clocks | **not** pre-registered — adopted from Gill's published methods after reading them. Both are always reported |
+| the **intermediate** contrast | named as a "bonus" in §10.3 pre-run; **promoted to headline after the fact** (Hole 2) |
+| the intercept sweep | **not** pre-registered — added because the missing intercept was discovered mid-run |
+| replicate averaging | **bug fix** — the first run silently dropped 6 of 9 pairs |
+
+**Nothing was selected on its p-value**: all three contrasts and both clocks are reported in every
+table, including the one that undercuts the retention claim.
+
+## 11.6 What a reviewer should check hardest
+
+1. **Is promoting the intermediate contrast legitimate?** (Hole 2.) My argument: named pre-run, two
+   independent clocks agree, negative control inert, and the day-profile separates it from the
+   returned-fibroblast contrast on a priori grounds. A reviewer may reasonably want this
+   re-registered and re-run on new donors before it enters a manuscript.
+2. **Is the implied intercept acceptable?** (Hole 4.) The sweep says the two robust conclusions do
+   not depend on it. Someone should nevertheless obtain the **published** Horvath intercepts and
+   confirm.
+3. **Is donor identity across GSE165176/165179 real?** (Hole 6.) Assumed from labels, never verified.
+4. **Is the retention question worth n=9?** (Hole 7.) I think it needs more donors; the plan should
+   say so before anyone spends GPU on Step 4.
