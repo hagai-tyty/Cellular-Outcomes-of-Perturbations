@@ -1,7 +1,9 @@
 # STAGE 1.5.1 — ΔAge anchored to methylation
 
-**Status:** ✅ **EXECUTED** (2026-07-26). This document is the clean, self-contained statement of the
-method, the results, and the one question that remains open. It is written to be read cold.
+**Status:** ✅ **EXECUTED and VALIDATED** (2026-07-26). This document is the clean, self-contained
+statement of the method, the results, and the one question that remains open. It is written to be
+read cold. **§10 validates every claim in it and states how** — including two errors that validation
+found and corrected.
 
 **Scope:** one public dataset acquired; methylation age computed with two published clocks; three
 identity-matched contrasts measured. **`src/` untouched throughout** — no model, training,
@@ -183,7 +185,7 @@ nine. Stating that now prevents a re-analysis being mistaken for new evidence.
 ## 6. What this stage does *not* establish
 
 1. **Retention after return to fibroblast identity** — §5, open.
-2. **Any anchor for HFF.** HFF (79% of the project's age labels) has no methylation data. It cannot
+2. **Any anchor for HFF.** HFF (**~99.8%** of the age-labelled cells — 33,613 of 33,688 training cells) has no methylation data. It cannot
    be anchored from this dataset, and **calibrating the RNA clock against methylation is not possible
    here**: the RNA labels do not distinguish "still reprogramming" from "returned to fibroblast"
    (the two differ by −24 vs −6, so the mapping would decide the answer), the RNA series has no
@@ -230,7 +232,7 @@ age labels as unanchored** — the fate head is unaffected and remains strong.
 Two things unlock the rest, both data acquisitions rather than analyses:
 
 1. **More donors with paired methylation** — the only way to settle §5's retention question.
-2. **Methylation for HFF** — the only way to anchor the 79% of age labels it holds.
+2. **Methylation for HFF** — the only way to anchor the ~99.8% of age labels it holds.
 
 Neither is a code change, and no further RNA-side re-analysis will move either question.
 
@@ -245,3 +247,98 @@ Neither is a code change, and no further RNA-side re-analysis will move either q
 | `configs/clocks/horvath_skin_blood_2018.json`, `horvath_multitissue_2013.json` | clock coefficients, with provenance in `meta` |
 | `diag_methylation_anchor_results.json` | full output including per-pair values and the intercept sweep |
 | `experiments/DELTAAGE_LAB_NOTEBOOK.md` | dated results entries |
+
+---
+
+## 10. Validation — every claim in this document, and how it was checked
+
+Written so a reviewer does not have to re-derive anything. Each row states the claim, the method of
+verification, and the result. **Two errors were found and corrected this way; both are listed.**
+
+### 10.1 The problem statement (§1)
+
+| claim | how validated | result |
+|---|---|---|
+| non-responders read **+36.5 yr** after 11 days | re-derived from `GSE165176` with independently written code (not by re-running the original script) | ✅ +36.5 |
+| responder age **78.7 → 101.3 → 77.2** at days 7/9/11 | same | ✅ exact |
+| corr(age, pluripotency) = **−0.62**, corr(age, fibroblast) = **+0.62** | computed over all 112 OSKM-exposed fibroblasts using curated marker sets | ✅ −0.617 / +0.618 |
+| the two RNA datasets give **opposite signs** | read `diag_e1_trajectory_results.json` (Gill) and `diag_d2_replication_results.json` (HFF) | ✅ Gill **+0.205**, HFF **−0.2143** |
+| Gill's quote on existing transcription clocks | fetched the paper text directly | ✅ verbatim |
+| GSE113957 gives **MAE 0.77 yr, ρ 0.99** through our path | ran the clock on the real NCBI counts, 143 samples | ✅ 0.769 / 0.9923 |
+| Gill day-0 adults: **+18.0 yr for a 21 yr gap, ρ +0.60** | median-split of in-range donors (neonatal excluded) | ✅ +18.02 / +0.60 |
+
+### 10.2 Method (§2)
+
+| claim | how validated | result |
+|---|---|---|
+| 96 samples, **3 donors O1=53, O2=53, O3=38** | parsed the series matrix directly | ✅ exact |
+| values are **beta values**, not IDATs | read the first data rows; range check | ✅ `cg…` IDs, 0.0118–0.0264 on row 1, all in [0,1] |
+| file is **comma-separated with `Detection Pval` interleaved** | parsed the header | ✅ 193 header cols → 96 sample cols |
+| GSE165176 has **no untreated control at day > 0** | enumerated cell types × days | ✅ only 6 day-0 `Dermal fibroblast` |
+| GSE165179 has **21 (+12) untreated controls** | same | ✅ 21 fibroblast + 12 intermediate |
+| skin & blood **391 CpGs, 100% coverage**; multi-tissue **353, 94.6%** | counted coefficients; counted CpGs actually matched per sample | ✅ 391/391 and 334/353 |
+| CpG counts match the **published** clocks | 2013 = 353, 2018 skin & blood = 391, from the papers | ✅ both match exactly |
+| coefficient tables carry **no intercept row** | searched both CSVs for an `intercept` row | ✅ none in either |
+| Horvath transform is implemented correctly | unit tests against published fixed points: `F(20)=0`, `F(0)=−log 21`, and `anti_trafo(trafo(x))=x` across 0–96 | ✅ all pass to 1e-9 |
+| replicates are `exp1`/`exp2` of one condition | listed the duplicate `(donor, day, arm)` groups | ✅ every duplicate is an exp1/exp2 pair |
+
+### 10.3 Results (§3) and robustness (§4)
+
+| claim | how validated | result |
+|---|---|---|
+| all nine result cells in §3 | produced by `diag_methylation_anchor.py`; per-pair values written to the results JSON for inspection | ✅ reproducible |
+| pair counts **9 / 12 / 12** | derived from the metadata before ages were computed | ✅ and cross-checked against an independent earlier count of 9 |
+| conclusions are **intercept-independent** | swept the intercept −0.60 → +0.70 and re-ran all three contrasts at each value | ✅ A and C stable throughout; **B flips**, which is why B is treated as open |
+| day-profile peaks at **13 d** for contrast B on both clocks | per-day breakdown | ✅ −14.1 and −18.4, both maximal at 13 d |
+
+### 10.4 The open question (§5)
+
+| claim | how validated | result |
+|---|---|---|
+| pair-to-pair spread **sd ≈ 17.8 yr** | recomputed from contrast B's own CI: half-width 13.7 at t(8)=2.306 ⇒ SE 5.94 ⇒ sd = SE·√9 | ✅ 17.8 |
+| **MDE ≈ 13.7 yr at n=9** | `t(8)·sd/√9` = 2.306 · 17.8 / 3 | ✅ 13.7 |
+| **≈14–18 pairs** needed for a 10 yr MDE | solve `t(n−1)·17.8/√n = 10` | ✅ n ≈ 17 (16 gives 10.3; 18 gives 9.6) |
+
+### 10.5 ⚠️ Two errors found by this validation — both corrected
+
+**Error 1 — "HFF is 79% of age labels" was wrong; the true figure is ~99.8%.**
+This figure was inherited from an earlier draft (`STAGE_1_5_1_REVISED.md`) and repeated here without
+being checked. It divided **HFF-in-the-train-split (33,613)** by **total cells across all splits
+(42,584)** — a numerator and denominator drawn from different populations. Validated correctly two
+independent ways:
+
+* the inner-LODO skip line states holding out HFF *"leaves 75 of 33,688 training cells"* ⇒ HFF is
+  **33,613 / 33,688 = 99.8%** of training cells;
+* the project's own record already says **"33,613 of 33,688 pooled residuals (99.8%)"**.
+
+**This makes §6's point stronger, not weaker:** HFF is essentially the entire age-labelled dataset,
+so the inability to anchor it matters more than the 79% figure implied. §6 now reads 99.8%.
+
+**Error 2 — an earlier pairing bug that dropped two-thirds of the data.**
+The first implementation required a *unique* sample per `(donor, day, arm)`, silently discarding
+**6 of 9** contrast-B pairs and leaving only day 10. Caught by cross-checking against a metadata-only
+pair count computed before the ages existed. Replicates are now averaged, with a regression test that
+names the defect. Already reflected in §2.
+
+### 10.6 Claims deliberately NOT validated, and why
+
+| claim | status |
+|---|---|
+| O1/O2 are the **same physical donors** in GSE165176 and GSE165179 | ❌ **not verifiable** from the metadata — matched by label and age only. Stated as an assumption in §6.3. Nothing in §3–§5 depends on it, because no cross-dataset comparison is made |
+| the **published** Horvath intercepts | ❌ not obtained. Mitigated by the sweep (§4.3), which shows the two robust conclusions hold for any value in a range wider than any published one |
+| Gill's ~30 yr is the **median across clocks** | ⚠️ taken from the paper's own wording; not recomputed from their data |
+| absolute methylation ages | ⚠️ approximate by construction (derived intercept). Only differences are used |
+
+### 10.7 Test and hygiene status
+
+| check | result |
+|---|---|
+| full suite | ✅ **455 passed**, three consecutive runs |
+| `diag_methylation_anchor` tests | ✅ 28, covering every verdict branch, the transform's fixed points, and the replicate regression |
+| `git diff --stat src/` | ✅ **empty** — no model, training, calibration or inference code touched |
+| the five earlier 1.5.1 drafts | ✅ verified **byte-unmodified** |
+
+> **One flake, recorded rather than hidden:** on a single suite run one test failed and the name was
+> not captured; 455 passed on the three runs before and after. Most likely a Windows temp-file lock,
+> which has occurred in this repository before — but it is unconfirmed, so it is noted here rather
+> than described as clean.
