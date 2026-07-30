@@ -257,33 +257,51 @@ is closed. **Open:** how much rejuvenation survives the return to fibroblast ide
 
 ---
 
-## 2026-07-26 (correction) — REV FINAL section 8 was not executable; zero sample overlap
+## 2026-07-26 (correction) — REV FINAL §8 was not executable; the two series share zero samples
 
 **Status:** ✅ Corrected. No code changed; 455 tests pass.
 
-Asked whether anything in  remained to execute. Checking that exposed an
-error in its own section 8, which said *"use methylation as the ΔAge source where methylation
+Asked whether anything in `STAGE_1_5_1_REV_FINAL.md` remained to execute. Checking that exposed an
+error in its own §8, which instructed *"use methylation as the ΔAge source where methylation
 exists."* **It is not executable.** Measured directly:
 
-
+```
+GSE165176 (RNA)   124 samples, e.g. N2_d11_CD13_Sendai_Exp1
+GSE165179 (meth)   96 samples, e.g. O1_negative_control_15days_exp1
+sample-title overlap: 0
+```
 
 The two series are **separate experiments** — no shared samples, different donor rosters
 (N2/N3/Y1/Y2/O1/O2 vs O1/O2/O3), different day grids (7–47 vs 10–17), different arm vocabularies.
 **There is no join key, so a methylation age cannot be attached to any cell the model trains on.**
 
-**Consequence:** the project ΔAge labels are **unchanged** by that stage and remain RNA-derived from
-a clock the same stage proved is out of domain on reprogramming cells. The stage delivered
-*knowledge* — the +36.5 yr artefact is closed, rejuvenation is real (−24 to −28), the failure is
+**Consequence:** the project's ΔAge labels are **unchanged** by that stage and remain RNA-derived
+from a clock the same stage proved is out of domain on reprogramming cells. The stage delivered
+*knowledge* — the +36.5 yr artefact is closed, rejuvenation is real (−24 to −28 yr), the failure is
 localised to the instrument — but **not labels**, and it cannot produce them.
 
-Section 6 item 2 had the same gap: it implied Gill RNA samples could be anchored and only HFF could
-not. With zero overlap, **neither** can. Both sections corrected.
+§6 item 2 carried the same gap: it implied Gill's RNA samples could be anchored and only HFF could
+not. With zero overlap, **neither** can. Both sections corrected, and §8 now carries an explicit
+ledger of what the stage did and did not deliver.
 
-**Executable state:** nothing remains in 1.5.1. Stage 2 may proceed on the both-hypotheses
-justification in its annotation; Stage 3 depends on Stage 1 (required) and Stage 2 (optional) and is
-not gated by any of this. Both open questions need **data**: more donors with paired methylation for
-the retention question, and methylation on our own samples to anchor labels — the latter meaning new
-profiling, since no public series pairs methylation to GSE165176 or HFF.
+**Executable state:** nothing remains in 1.5.1. **Stage 2** may proceed on the both-hypotheses
+justification in its annotation; **Stage 3** depends on Stage 1 (required) and Stage 2 (optional) and
+is not gated by any of this. Both open questions need **data**, not code: more donors with paired
+methylation for the retention question (≈16 pairs), and methylation on the samples we actually train
+on to anchor the labels — the latter meaning **new profiling**, since no public series pairs
+methylation to GSE165176 or to HFF.
+
+### ⚠️ Known intermittent test failure — recorded, not dismissed
+
+A single test has now failed on **2 of ~15** full-suite runs, passing on every other run including
+**5 consecutive** clean runs immediately after. The failing test's name was **not captured** either
+time, so it is unidentified. Most likely a Windows temp-file lock (this repository has hit that
+before), but that is **unverified**.
+
+**Why this is recorded rather than waved off:** this project has already had one "flake" that turned
+out to be a real batch-size-dependent defect. Anyone seeing a red suite should capture the test name
+(`pytest -p no:warnings --tb=short` and keep the output) rather than immediately re-running, since
+re-running is what has destroyed the evidence twice.
 
 ---
 
