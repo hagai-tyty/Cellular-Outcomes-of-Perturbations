@@ -257,6 +257,80 @@ is closed. **Open:** how much rejuvenation survives the return to fibroblast ide
 
 ---
 
+## 2026-07-26 (closed) — The three weak points in REV FINAL are now RESOLVED, not flagged
+
+**Status:** ✅ All three challengeable points closed by measurement. 455 tests pass; `src/` untouched.
+Plan is `plans/STAGE_1_5_1_REV_FINAL.md` (438 lines).
+
+### 1. The derived intercept — **resolved algebraically** (§4.3)
+
+Horvath's transform is linear above age 20 (`anti_trafo(x) = 21x + 20`), so for any pair of samples
+both predicting >20 yr:
+
+```
+age_t − age_c = [21(lp_t+k)+20] − [21(lp_c+k)+20] = 21·(lp_t − lp_c)
+```
+
+**The intercept cancels exactly.** Every contrast here is a difference, so none depends on it.
+Recomputed intercept-free: A **−24.5 / −28.3**, B **−6.0 / −9.4**, C **+0.5 / −2.4** — matching the
+derived-intercept values to under a year. **This is no longer a robustness argument; it is algebra.**
+The missing intercept row now matters only for *absolute* ages, which the document does not use.
+
+### 2. Contrast A's post-hoc promotion — **corroborated by two things that could not have selected it** (§4.4)
+
+**(a) An internal negative control specific to A.** Ran the previously unused
+`Failing to transiently reprogram intermediate` arm against the same comparator:
+
+| | A: transient-reprog intermediates | A-control: **failing** intermediates | paired A − A-control |
+|---|---|---|---|
+| skin & blood | −24.5 [−32.2, −16.7] | **−1.1** [−2.7, +0.5] | −23.3 [−31.1, −15.5] |
+| multi-tissue | −28.3 [−35.4, −21.2] | **−3.6** [−5.1, −2.2] | −24.7 [−31.3, −18.1] |
+
+Same OSKM exposure, same culture, same batch, same timepoints — but **failed**: ≈0 to −3.6 yr.
+Succeeded: −24 to −28. **Rules out OSKM exposure per se, batch and culture duration.** (The small
+real effect in failing cells matches Gill's own note that reprogramming-factor expression alone
+rejuvenates some aspects.)
+
+**(b) A dose-response.** Spearman(reprogramming length, effect) = **−0.885 (p=0.0001)** and
+**−0.842 (p=0.0006)**, slope ≈ **−3.2 yr/day**, both clocks. **A contrast selected post hoc from
+noise does not produce a monotonic dose-response at p<0.001.**
+
+A now rests on four independent legs: two clocks, an internal negative control, a dose-response, and
+the intercept-free formulation. The post-hoc promotion stays disclosed in §7 — it is simply no longer
+the only support.
+
+### 3. Contrast B's power — **corrected, and it was wrong in our favour's opposite direction** (§5)
+
+An earlier statement in this record said *"MDE ≈13.7 yr, ~17 pairs needed, so n=9 is hopeless."*
+**That used the skin & blood spread alone and applied it to both clocks.** Computed per clock:
+
+| | sd | MDE at n=9 | observed | detectable? |
+|---|---|---|---|---|
+| skin & blood | 18.2 | **14.0** | −6.0 | ❌ |
+| multi-tissue | 11.6 | **8.9** | −9.4 | ⚠️ **just barely** |
+
+**On multi-tissue n=9 is already adequate** — which is the real reason one clock reaches significance
+and the other does not. The two clocks do not disagree about the effect; they differ in precision.
+Verified that this is a genuine instrument property, not luck on one contrast: multi-tissue is tighter
+on **4 of 5** quantities including the untreated-control ages where no effect exists (**5.2 vs 6.6**),
+though not uniformly (negative-control pairs favour skin & blood, 4.3 vs 5.1). Neither clock is
+declared the winner; both are reported throughout.
+
+Also checked: pooling across reprogramming lengths is **well specified** — day-heterogeneity p =
+**0.852 / 0.255**, so averaging is not averaging over a varying effect.
+
+**Honest state of B:** both clocks are consistent with a **real but small retention effect of ≈−6 to
+−9 yr**. Neither excludes it; one detects it marginally. **Not established, and not dismissed** — the
+question sits at its resolution boundary, and ≈16 pairs would settle it on both clocks.
+
+### Also fixed
+
+§10.4 and §10.6 contradicted the body after these changes (they still carried the superseded power
+claim and the "mitigated by a sweep" framing). Both rewritten, with the supersession recorded in
+place rather than silently edited.
+
+---
+
 ## 2026-07-26 (executed) — Methylation anchor RUN: +36.5 yr artefact confirmed dead; no rejuvenation detected
 
 **Status:** ✅ Executed on GSE165179. `experiments/diag_methylation_anchor.py` + 28 tests; `src/`

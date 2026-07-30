@@ -3483,3 +3483,33 @@ negative control all agree.
 - ✅ **The +36.5 yr artefact is closed** on two independent clocks.
 - ⏳ **Open:** how much rejuvenation survives the return to fibroblast identity. Direction and shape
   agree with Gill; significance does not survive the intercept sweep at n=9.
+
+---
+
+## RESULT — the three weak points CLOSED (2026-07-26)
+
+
+**Status:** ✅ All three challengeable points closed by measurement. 455 tests pass; `src/` untouched.
+Plan is `plans/STAGE_1_5_1_REV_FINAL.md` (438 lines).
+
+### 1. The derived intercept — **resolved algebraically** (§4.3)
+
+Horvath's transform is linear above age 20 (`anti_trafo(x) = 21x + 20`), so for any pair of samples
+both predicting >20 yr:
+
+```
+age_t − age_c = [21(lp_t+k)+20] − [21(lp_c+k)+20] = 21·(lp_t − lp_c)
+```
+
+**The intercept cancels exactly.** Every contrast here is a difference, so none depends on it.
+Recomputed intercept-free: A **−24.5 / −28.3**, B **−6.0 / −9.4**, C **+0.5 / −2.4** — matching the
+derived-intercept values to under a year. **This is no longer a robustness argument; it is algebra.**
+The missing intercept row now matters only for *absolute* ages, which the document does not use.
+
+### 2. Contrast A's post-hoc promotion — **corroborated by two things that could not have selected it** (§4.4)
+
+**(a) An internal negative control specific to A.** Ran the previously unused
+`Failing to transiently reprogram intermediate` arm against the same comparator:
+
+| | A: transient-reprog intermediates | A-control: **failing** intermediates | paired A − A-control |
+|

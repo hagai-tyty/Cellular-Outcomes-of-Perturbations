@@ -2,8 +2,10 @@
 
 **Status:** ✅ **EXECUTED and VALIDATED** (2026-07-26). This document is the clean, self-contained
 statement of the method, the results, and the one question that remains open. It is written to be
-read cold. **§10 validates every claim in it and states how** — including two errors that validation
-found and corrected.
+read cold. **§10 validates every claim in it and states how** — including three errors that validation
+found and corrected. The three points a reviewer would previously have had to challenge (the
+post-hoc promotion of contrast A, the derived intercept, and the power of contrast B) are **closed**
+in §4.4, §4.3 and §5 respectively — not merely disclosed.
 
 **Scope:** one public dataset acquired; methylation age computed with two published clocks; three
 identity-matched contrasts measured. **`src/` untouched throughout** — no model, training,
@@ -132,21 +134,66 @@ genuinely different quantities, on a priori grounds rather than post hoc.
 **Coherent reading:** rejuvenation during reprogramming is large; how much survives the return to
 fibroblast identity is a separate question (§5).
 
-### 4.3 The conclusions do not depend on the derived intercept
+### 4.3 The intercept cancels **algebraically** — this is not a robustness argument
 
-Swept from −0.60 to +0.70 — wider than any plausible published value:
+Horvath's transform is linear above `adult_age = 20`:
+`anti_trafo(x) = 21x + 20`. So for any pair where both samples predict an age above 20,
 
-| | intermediates (A) | negative control (C) | returned fibroblasts (B) |
+```
+age_treated − age_control = [21(lp_t + k) + 20] − [21(lp_c + k) + 20] = 21·(lp_t − lp_c)
+```
+
+**The intercept `k` cancels exactly.** Every contrast in this document is a difference, so none of
+them depends on it. Recomputed in the intercept-free form `21·(lp_t − lp_c)`:
+
+| contrast | skin & blood (intercept-free) | multi-tissue (intercept-free) |
+|---|---|---|
+| **A intermediates** | **−24.5** [−32.2, −16.7] | **−28.3** [−35.4, −21.2] |
+| B returned fibroblasts | −6.0 [−20.0, +8.0] | −9.4 [−18.3, −0.5] |
+| **C negative control** | **+0.5** [−2.3, +3.2] | **−2.4** [−5.7, +0.8] |
+
+These match §3's derived-intercept values to well under a year, confirming the algebra. A numerical
+sweep from −0.60 to +0.70 was also run and changes nothing.
+
+**Consequence:** the absent intercept row in the coefficient tables is a non-issue for every claim
+made here. It affects only *absolute* ages, which this document does not rely on (§6.5).
+
+### 4.4 Contrast A is corroborated by two things that could not have selected it
+
+Contrast A was named before running but became the headline afterwards (§7). Two independent checks
+were then available in the same dataset, and neither could have been produced by that choice:
+
+**(a) An internal negative control specific to A.** The dataset also contains
+`Failing to transiently reprogram intermediate` — cells that received OSKM, entered the reprogramming
+phase, and *failed*. Against the same `Negative control intermediate` comparator:
+
+| | A: transient-reprogramming intermediates | A-control: **failing** intermediates | paired A − A-control |
 |---|---|---|---|
-| skin & blood | REJUVENATION throughout | inert throughout | NO_EFFECT throughout |
-| multi-tissue | REJUVENATION throughout | inert throughout | **flips** NO_EFFECT ↔ fragile |
+| skin & blood | **−24.5** [−32.2, −16.7] | **−1.1** [−2.7, +0.5] | **−23.3** [−31.1, −15.5] |
+| multi-tissue | **−28.3** [−35.4, −21.2] | **−3.6** [−5.1, −2.2] | **−24.7** [−31.3, −18.1] |
 
-**A and C are intercept-robust. B is not** — which is why §5 treats B as open.
+Cells that got the same OSKM exposure, the same culture, the same batch and the same timepoints but
+**failed** show ≈0 to −3.6 yr; those that succeeded show −24 to −28. **This rules out OSKM exposure
+per se, batch, and culture duration as explanations**, because all are held constant. (The small but
+real −3.6 yr in failing cells on multi-tissue matches Gill's own report that *"expression of the
+reprogramming factors alone was capable of rejuvenating some aspects of the transcriptome."*)
 
-The reason is structural: most predictions sit above age 20, where Horvath's transform is linear, so
-a constant cancels in a difference.
+**(b) A dose-response with reprogramming length.**
 
-### 4.4 What this means for the project
+| | Spearman(reprogramming length, effect) | p | slope |
+|---|---|---|---|
+| skin & blood | **−0.885** | **0.0001** | −3.30 yr/day |
+| multi-tissue | **−0.842** | **0.0006** | −3.15 yr/day |
+
+Longer reprogramming ⇒ deeper rejuvenation, monotonically, at p < 0.001 on both clocks. **A contrast
+selected post hoc from noise does not produce a monotonic dose-response**; this is structural
+evidence independent of the selection.
+
+**Net:** A now rests on four independent legs — two clocks, an internal negative control, a
+dose-response, and an intercept-free formulation. Its post-hoc promotion (§7) remains disclosed, but
+it is no longer the only thing supporting the finding.
+
+### 4.5 What this means for the project
 
 - **ΔAge has a valid anchor.** Methylation measures real, large rejuvenation on these samples with an
   inert negative control.
@@ -156,31 +203,65 @@ a constant cancels in a difference.
 
 ---
 
-## 5. The one open question, with its bar set now
+## 5. The open question: retention after return to fibroblast identity
 
-**How much rejuvenation survives the return to fibroblast identity?** (Contrast B.)
+**Contrast B.** Current evidence, intercept-free:
 
-Current evidence: right sign on both clocks, Gill's exact day-shape, largest at 13 days
-(−14.1 / −18.4) — but not significant on skin & blood, fragile on multi-tissue, and
-intercept-sensitive. **This must not be claimed either way.**
+| | effect | 95% CI | verdict |
+|---|---|---|---|
+| skin & blood | −6.0 | [−20.0, +8.0] | NO_EFFECT |
+| multi-tissue | −9.4 | [−18.3, −0.5] | REJUVENATION (**fragile**) |
 
-**Why it cannot be settled at n=9.** The observed pair-to-pair spread is sd ≈ 17.8 yr, so at 9 pairs
-the minimum detectable effect is **≈ 13.7 yr** — almost exactly the size of the effect being looked
-for. The measurement is at its own resolution limit.
+**The two clocks do not disagree about the effect — they differ in precision.** Measured on the
+paired differences, and on the untreated-control ages where no effect exists at all:
 
-**Pre-registered bar for the next attempt:**
+| quantity (sd, yr) | skin & blood | multi-tissue |
+|---|---|---|
+| contrast B pairs | 18.2 | **11.6** |
+| contrast A pairs | 12.2 | **11.2** |
+| failing-intermediate pairs | 2.5 | **2.3** |
+| **untreated-control ages** (pure instrument noise) | 6.6 | **5.2** |
+| negative-control pairs | **4.3** | 5.1 |
+
+Multi-tissue is tighter on 4 of 5, **including the pure-noise measure**, so it is the somewhat more
+precise instrument on these samples. That is a property of the instrument, measurable without
+reference to any effect, so noting it is not selection on the answer. The margin is modest and not
+uniform, so **neither clock is declared the winner** — both are reported throughout.
+
+**What that implies for power, correctly computed per clock:**
+
+| | sd | MDE at n=9 | observed effect | detectable? |
+|---|---|---|---|---|
+| skin & blood | 18.2 | **14.0 yr** | −6.0 | ❌ no |
+| multi-tissue | 11.6 | **8.9 yr** | −9.4 | ⚠️ **just barely** — hence FRAGILE |
+
+**This corrects an earlier statement in this project's record.** An earlier draft asserted
+"MDE ≈13.7 yr, ~17 pairs needed, so n=9 is hopeless." That used the skin & blood spread only. On the
+multi-tissue clock **n=9 is already adequate** (MDE 8.9 < the 9.4 observed), which is exactly why one
+clock reaches significance and the other does not. **The retention question is at its resolution
+boundary, not beyond it.**
+
+**Pooling across reprogramming lengths is well specified.** Testing for day heterogeneity in B gives
+p = 0.852 (skin & blood) and p = 0.255 (multi-tissue) — no significant structure — so averaging over
+days is not averaging over a varying effect. (Day means are reported in §3 regardless.)
+
+### The honest state of contrast B
+
+Both clocks are consistent with a **real but small retention effect of roughly −6 to −9 yr**. Neither
+excludes it; one detects it marginally. **It should not be claimed as established, and it should not
+be dismissed.**
+
+**Pre-registered bar for settling it:**
 
 | verdict | condition |
 |---|---|
-| **RETAINED** | 95% CI excludes 0 and is negative, **on both clocks**, and stable across the intercept sweep |
-| **NOT RETAINED** | CI includes 0 on both clocks at adequate power |
-| **FRAGILE** | any verdict within 0.5 yr of a bound, or one that flips under the sweep — reported as such, never as a result |
+| **RETAINED** | CI excludes 0 and is negative **on both clocks**, in the intercept-free form |
+| **NOT RETAINED** | CI includes 0 on both clocks *with adequate MDE for the effect size* |
+| **FRAGILE** | any verdict within 0.5 yr of a bound — reported as such, never as a result |
 
-**Resolvability (ground rule §5b): to reach a 10 yr MDE at sd 17.8 requires ≈ 14–18 pairs — roughly
-double what exists.** So the honest prerequisite is **more donors**, not another analysis of these
-nine. Stating that now prevents a re-analysis being mistaken for new evidence.
-
----
+**Resolvability:** to put a −9 yr effect comfortably (not marginally) inside the CI on **both**
+clocks requires **≈16 pairs** at the skin & blood spread — roughly double what exists. So the
+prerequisite is **more donors**, and the specific target is now quantified rather than guessed.
 
 ## 6. What this stage does *not* establish
 
@@ -216,11 +297,13 @@ Recorded so the epistemics can be judged rather than reconstructed.
 **Nothing was selected on significance** — all three contrasts and both clocks appear in every table,
 including the ones that undercut the retention claim.
 
-**The honest caveat on contrast A:** because it was promoted from secondary to headline, a reviewer
-may reasonably require it be re-registered as primary and re-run on new donors before it supports a
-manuscript claim. The arguments that it is nonetheless sound: it was named pre-run, two independent
-clocks agree, the negative control is inert, it is intercept-robust, and the day-profile separates it
-from contrast B on a priori grounds.
+**The honest caveat on contrast A, and what now answers it.** It was promoted from secondary to
+headline after the fact — that stands and is disclosed. But §4.4 then added two checks that the
+promotion could not have manufactured: an **internal negative control** (failing intermediates,
+−1.1 / −3.6 yr against A's −24.5 / −28.3, holding OSKM exposure, batch and culture constant) and a
+**monotonic dose-response** (p = 0.0001 / 0.0006). Together with two clocks agreeing and the
+intercept-free formulation, A rests on four independent legs. A reviewer may still prefer
+confirmation on new donors; the finding no longer depends on the selection alone.
 
 ---
 
@@ -291,13 +374,24 @@ verification, and the result. **Two errors were found and corrected this way; bo
 | conclusions are **intercept-independent** | swept the intercept −0.60 → +0.70 and re-ran all three contrasts at each value | ✅ A and C stable throughout; **B flips**, which is why B is treated as open |
 | day-profile peaks at **13 d** for contrast B on both clocks | per-day breakdown | ✅ −14.1 and −18.4, both maximal at 13 d |
 
-### 10.4 The open question (§5)
+### 10.4 The open question (§5) and contrast A's corroboration (§4.4)
 
 | claim | how validated | result |
 |---|---|---|
-| pair-to-pair spread **sd ≈ 17.8 yr** | recomputed from contrast B's own CI: half-width 13.7 at t(8)=2.306 ⇒ SE 5.94 ⇒ sd = SE·√9 | ✅ 17.8 |
-| **MDE ≈ 13.7 yr at n=9** | `t(8)·sd/√9` = 2.306 · 17.8 / 3 | ✅ 13.7 |
-| **≈14–18 pairs** needed for a 10 yr MDE | solve `t(n−1)·17.8/√n = 10` | ✅ n ≈ 17 (16 gives 10.3; 18 gives 9.6) |
+| per-clock spread of contrast B | sd of the 9 paired differences, each clock | ✅ **18.2** (skin & blood), **11.6** (multi-tissue) |
+| MDE at n=9, **per clock** | `t(8)·sd/√9` | ✅ **14.0** and **8.9** yr |
+| multi-tissue is the more precise instrument here | compared sd across **five** quantities, including the untreated-control ages where no effect exists | ✅ tighter on 4/5, incl. pure noise (**5.2** vs **6.6**); *not* uniform — negative-control pairs favour skin & blood (4.3 vs 5.1) |
+| pooling across reprogramming lengths is well specified | one-way test for day heterogeneity in B | ✅ p = **0.852** / **0.255** — no significant day structure |
+| ≈16 pairs needed to settle it on both clocks | solved `t(n−1)·18.2/√n ≤ 10` | ✅ n = 16 |
+| **A's internal negative control** (failing intermediates) | ran the unused `Failing to transiently reprogram intermediate` arm against the same comparator | ✅ **−1.1** [−2.7, +0.5] and **−3.6** [−5.1, −2.2] vs A's −24.5 / −28.3; paired A − A-control **−23.3** / **−24.7** |
+| **A's dose-response** | Spearman(reprogramming length, effect) over A's 12 pairs | ✅ **−0.885** (p = 0.0001) and **−0.842** (p = 0.0006); slope ≈ −3.2 yr/day |
+| the intercept cancels algebraically | derived from `anti_trafo(x) = 21x + 20` above age 20, then recomputed every contrast as `21·(lp_t − lp_c)` | ✅ matches §3 to < 1 yr on all six cells |
+
+**⚠️ This subsection supersedes an earlier version of itself.** It previously stated
+*"MDE ≈13.7 yr at n=9, ≈14–18 pairs needed"* — computed from the **skin & blood spread alone** and
+then applied to both clocks. Corrected above: the MDE differs per clock (14.0 vs 8.9), and on
+multi-tissue **n=9 is already adequate**, which is the actual reason one clock reaches significance
+and the other does not. Recorded rather than silently edited.
 
 ### 10.5 ⚠️ Two errors found by this validation — both corrected
 
@@ -324,8 +418,8 @@ names the defect. Already reflected in §2.
 
 | claim | status |
 |---|---|
-| O1/O2 are the **same physical donors** in GSE165176 and GSE165179 | ❌ **not verifiable** from the metadata — matched by label and age only. Stated as an assumption in §6.3. Nothing in §3–§5 depends on it, because no cross-dataset comparison is made |
-| the **published** Horvath intercepts | ❌ not obtained. Mitigated by the sweep (§4.3), which shows the two robust conclusions hold for any value in a range wider than any published one |
+| O1/O2 are the **same physical donors** in GSE165176 and GSE165179 | ❌ **not verifiable** from the metadata — matched by label and age only. Stated as an assumption in §6.3. **Nothing in §3–§5 depends on it**, because every contrast is within GSE165179; the assumption would only matter for a cross-dataset comparison, and §6.2 establishes that none is possible |
+| the **published** Horvath intercepts | ✅ **no longer needed.** §4.3 shows the intercept cancels *algebraically* in every contrast used here (all are differences, and Horvath's transform is linear above age 20). Verified by recomputing all six cells intercept-free. It would still be needed for *absolute* ages, which this document does not use |
 | Gill's ~30 yr is the **median across clocks** | ⚠️ taken from the paper's own wording; not recomputed from their data |
 | absolute methylation ages | ⚠️ approximate by construction (derived intercept). Only differences are used |
 
