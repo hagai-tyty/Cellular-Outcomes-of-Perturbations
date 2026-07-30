@@ -257,6 +257,53 @@ is closed. **Open:** how much rejuvenation survives the return to fibroblast ide
 
 ---
 
+## 2026-07-26 (unblocked) — The paired dataset exists: GSE165178 anchors our RNA labels
+
+**Status:** ✅ Verified against real sample titles. No code changed; 455 tests pass. Plan §8 corrected.
+
+Asked what the next step is if 1.5.1 passes review. Checking that found **my own previous answer was
+wrong twice over**, and the correction unblocks the route I had declared closed.
+
+Both of our series are SubSeries of SuperSeries **GSE165180**, which has **four** parts:
+
+| accession | contents | have it? |
+|---|---|---|
+| GSE165176 | `[Sendai_RNAseq]` — the RNA we train on | yes |
+| GSE165177 | `[Transient_RNAseq]` | no |
+| **GSE165178** | **`[Sendai array]` — methylation on the SAME Sendai samples** | **no — get this** |
+| GSE165179 | `[Transient array]` — §3's results | yes |
+
+**GSE165178 pairs to our training data sample-for-sample.** Verified on the real titles, not assumed:
+
+- 22 methylation samples titled `{donor}_{day}_{marker}` (e.g. `Y2_d11_SSEA4`);
+- our RNA titles are the same key plus a batch suffix (`Y2_d11_SSEA4_Sendai_Exp1`);
+- **22/22 join on `donor_day_marker`, zero unmatched**;
+- donors **O1, O2, Y1, Y2** — 4 of our 6, the two missing being the neonatal N2/N3 that sit outside
+  the clock's fitted range anyway; days 9/11/15;
+- and the **sort marker IS the arm label** in our data: `CD13` → *Failing to reprogram fibroblast*
+  (47), `SSEA4` → *Reprogramming fibroblast* (65). The arm assignment transfers unambiguously.
+
+**What I had said, and why it was wrong.** §6.2 withdrew the RNA↔methylation agreement test (M-2) as
+*"ill-defined"* — arms unmappable, overlap 2 donors × 2 days. §8.3 then said the remaining work needed
+*"new profiling, since no public series pairs methylation to GSE165176."* **Both statements are true
+of GSE165179 and false in general.** I checked only the series I had rather than the SuperSeries, and
+generalised from it. The zero-overlap finding stands for GSE165179; it is not a property of the study.
+
+**What this unlocks:** M-2 becomes well-defined and adequately powered (22 paired samples, 4 donors,
+arms mapped); Gill's RNA labels gain a direct methylation anchor; and the calibration route — old
+Step 3a, previously written off — is testable again. Whether a Gill-trained correction generalises to
+HFF remains open, since HFF is a different cell system with no methylation anywhere.
+
+**Next action:** download **GSE165178** (series matrix + processed beta matrix; check the format
+first, as with the others), pre-register bars including resolvability at n=22/4 donors, then run M-2:
+*does the transcriptomic ΔAge agree with the methylation ΔAge on the same samples?* Agreement ⇒ the
+RNA clock is calibratable and ΔAge is recoverable for Gill. Disagreement ⇒ localises exactly where it
+fails, against paired ground truth. Either answer is decisive and needs no new experiments.
+**GSE165177** is worth taking at the same time — it pairs with GSE165179 and extends the comparison
+to the transient arm.
+
+---
+
 ## 2026-07-26 (correction) — REV FINAL §8 was not executable; the two series share zero samples
 
 **Status:** ✅ Corrected. No code changed; 455 tests pass.

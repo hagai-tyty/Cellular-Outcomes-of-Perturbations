@@ -267,8 +267,7 @@ prerequisite is **more donors**, and the specific target is now quantified rathe
 
 1. **Retention after return to fibroblast identity** — §5, open.
 2. **Any anchor for the training labels — HFF *or* Gill.** GSE165176 (RNA) and GSE165179
-   (methylation) share **zero samples** (§8.1), so no methylation age can be attached to *any* cell
-   the model trains on. HFF (**~99.8%** of the age-labelled cells — 33,613 of 33,688 training cells)
+   (methylation) share **zero samples** (§8.1) — though **GSE165178 does pair to our RNA sample-for-sample** (§8.3), so this limitation is specific to GSE165179, not general. HFF (**~99.8%** of the age-labelled cells — 33,613 of 33,688 training cells)
    additionally has no methylation data at all. Neither can
    be anchored from this dataset, and **calibrating the RNA clock against methylation is not possible
    here**: the RNA labels do not distinguish "still reprogramming" from "returned to fibroblast"
@@ -323,7 +322,7 @@ GSE165179 (meth)  96 samples, e.g. O1_negative_control_15days_exp1
 sample-title overlap: 0
 ```
 
-**The two series share no samples.** They are separate experiments — different sample sets,
+**GSE165176 and GSE165179 share no samples.** They are separate experiments — different sample sets,
 different donor rosters (RNA: N2, N3, Y1, Y2, O1, O2; methylation: O1, O2, O3), different day grids
 (7–47 vs 10–17) and different arm vocabularies. **There is no join key, so a methylation age cannot
 be attached to any cell the model trains on.**
@@ -343,24 +342,65 @@ delivered *knowledge*, not labels.
 
 That is the honest ledger: the *concept* of ΔAge is vindicated; the *labels* are not repaired.
 
-### 8.3 What is executable now
+### 8.3 🔴 CORRECTION — the paired dataset exists, and it is a free download
 
-**Nothing here.** The project is not blocked, though:
+An earlier version of this subsection said the open questions needed *"new profiling, since no
+public series pairs methylation to GSE165176 or to HFF."* **That was wrong.** Both of our series are
+SubSeries of SuperSeries **GSE165180**, which has **four** parts:
 
-* **Stage 2** may proceed — see its updated annotation. Its intervention (k ≈ 3 reference cells per
-  donor) helps whether the per-donor offset is real biology or n = 1 baseline noise.
-* **Stage 3** depends on *Stage 1 required, Stage 2 optional*, and the fate head is untouched and
-  strong. It is not gated by anything here.
+| accession | contents | have it? |
+|---|---|---|
+| **GSE165176** | `[Sendai_RNAseq]` — the RNA we train on | ✅ |
+| **GSE165177** | `[Transient_RNAseq]` | ❌ |
+| **GSE165178** | **`[Sendai array]` — methylation on the SAME Sendai samples** | ❌ **← get this** |
+| **GSE165179** | `[Transient array]` — methylation, §3's results | ✅ |
 
-**The two open questions both need data, not code:**
+**GSE165178 pairs to our training data sample-for-sample.** Verified against the real titles:
 
-1. **More donors with paired methylation** — the only way to settle §5's retention question (≈16
-   pairs needed).
-2. **Methylation on the samples we actually train on** — the only way to anchor the labels. Note
-   this means *new profiling of our own samples*, not another public download: no existing series
-   pairs methylation to GSE165176 or to HFF.
+* 22 methylation samples, titles `{donor}_{day}_{marker}` (e.g. `Y2_d11_SSEA4`);
+* our RNA titles are the same key plus a batch suffix (`Y2_d11_SSEA4_Sendai_Exp1`);
+* **22/22 join on `donor_day_marker`, zero unmatched**;
+* donors **O1, O2, Y1, Y2** (4 of our 6 — the two missing are the neonatal N2/N3, which are out of
+  the clock's fitted range anyway), days 9/11/15;
+* and the **sort marker *is* the arm label** in our data — `CD13` → *Failing to reprogram
+  fibroblast* (47), `SSEA4` → *Reprogramming fibroblast* (65). So the arm assignment transfers
+  unambiguously, which is exactly what §6.2 said was impossible for GSE165179.
 
-**No further RNA-side re-analysis will move either question.** That is the point of §1.
+**What this unlocks, and it is the gate everything else was waiting on:**
+
+1. **M-2 becomes well-defined and adequately powered.** §6.2 withdrew the RNA↔methylation agreement
+   test because the arms could not be mapped and overlap was 2 donors × 2 days. On GSE165178 the
+   arms map exactly and there are 22 paired samples across 4 donors. **The withdrawal applies to
+   GSE165179 only, not to this series.**
+2. **A direct anchor for Gill's RNA labels** on those 22 samples — a methylation age attached to a
+   sample the model actually trains on.
+3. **The calibration route (old Step 3a) is back on the table** — learn the RNA→true-age correction
+   on the paired samples, validate leave-one-donor-out. Whether it *generalises to HFF* remains a
+   separate question (§6), since HFF is a different cell system, but it can now at least be
+   attempted and measured rather than assumed impossible.
+
+### 8.4 The next step, concretely
+
+**Download GSE165178** (series matrix + processed beta matrix — check the format first, as with the
+others). Then run the M-2 test that has been blocked all along:
+
+> **Does the transcriptomic ΔAge agree with the methylation ΔAge on the same 22 samples?**
+> Agreement ⇒ the RNA clock is calibratable and ΔAge is recoverable for Gill.
+> Disagreement ⇒ localises exactly where the RNA clock fails, with paired ground truth.
+
+Either answer is decisive, and it needs no new experiments. **GSE165177** is worth taking at the same
+time — it pairs with GSE165179 and would extend the same comparison to the transient arm.
+
+**Bars must be pre-registered before this runs** (ground rule §5b), including the resolvability check
+at n = 22 paired samples / 4 donors.
+
+### 8.5 What still needs new data
+
+* **HFF's labels.** No methylation exists for HFF in any series; it is a different cell system, so
+  GSE165178 anchors Gill only. Whether a Gill-trained correction transfers to HFF is testable but
+  not assumable.
+* **§5's retention question** still wants ≈16 pairs; GSE165178 does not address it (it is the Sendai
+  arm, not the transient one).
 
 ## 9. Artefacts
 
