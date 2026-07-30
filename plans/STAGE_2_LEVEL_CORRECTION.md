@@ -7,46 +7,56 @@
 
 ---
 
-> ## 🛑 ADDED 2026-07-26 — DO NOT SPEND WET-LAB BUDGET ON THIS PLAN UNTIL §0 BELOW IS RESOLVED
+> ## ⚠️ UPDATED 2026-07-26 — the control-swap threat is gone; the premise is still unverified
 >
-> *Added after `STAGE_1_5_1_REVISED.md`. Nothing below this box is modified; this is an additive
-> note about a premise that has since been measured and found unsafe.*
+> *Additive note. Nothing below this box is modified. Supersedes the earlier warning that cited
+> `STAGE_1_5_1_REVISED.md`, which proposed a fix that has since been rejected.*
 >
-> **This stage's entire premise — the ±12.72 yr per-donor level shift — was measured on ΔAge labels
-> that are now known to be contaminated**, and it may be substantially an artefact rather than donor
-> biology. Acting on it as written could spend a wet-lab protocol change (k≈3 reference cells per
-> donor) correcting something that a free code fix removes.
+> **What is settled.** The earlier warning demanded this stage wait for a **non-responder control
+> swap**. That swap is **REJECTED as unsafe** — `STAGE_1_5_1_REVISED_REVIEW.md` showed the arms are
+> not identity-matched, and `STAGE_1_5_1_REV_FINAL.md` then confirmed on DNA methylation
+> (`GSE165179`) that the **+36.5 yr non-responder reading is a transcriptomic artefact**: measured
+> against a real untreated control, failed-to-reprogram cells are **inert (+0.5 / −2.4 yr)**.
+> Rejuvenation itself is **real and large** (−24 to −28 yr). **So this stage is no longer blocked by
+> a pending label change.** `src/` remains **100% untouched**.
 >
-> **The evidence.** `delta_age` currently baselines against each donor's **day-0** control
-> (`sources.py:471` Gill, `:607` HFF). That baseline never underwent OSKM-driven identity change, so
-> every ΔAge carries an identity artefact. Measured directly: cells that were exposed to OSKM and
-> **failed to reprogram** read **+36.5 yr older after 11 days** — and, critically for this stage,
-> **the artefact's size varies enormously between donors:**
+> **What is NOT settled — do not read the above as clearance.** The original blocker asked for one
+> specific thing: *re-measure the per-donor level shift on corrected labels before spending.*
+> **That was never done, because the labels were never corrected.** `REV FINAL` §8 states the
+> position plainly: methylation anchors ΔAge only *where methylation exists* (Gill's 3 donors), and
+> **HFF's age labels — ~99.8% of all age labels — remain unanchored.** The shift in §1 is still
+> measured on RNA labels produced by a clock now **proven out of domain on reprogramming cells**.
 >
-> | donor | N2 | N3 | O1 | O2 | Y1 | Y2 |
-> |---|---|---|---|---|---|---|
-> | non-responder day0→peak (pure artefact) | −15.7 | +36.5 | +33.3 | +44.8 | +50.3 | +69.8 |
+> **Two live findings that still apply to §1's numbers:**
 >
-> A per-donor-varying artefact of this magnitude is **exactly the shape of the "per-donor level
-> shift" this stage exists to correct** (mean abs 12.72, std 14.71, §1). The two are currently
-> indistinguishable.
+> 1. **The artefact varies enormously between donors**, which is the exact shape this stage exists to
+>    correct — so the two remain confounded in the RNA labels:
 >
-> ### §0 — what must happen before any of this stage runs
+>    | donor | N2 | N3 | O1 | O2 | Y1 | Y2 |
+>    |---|---|---|---|---|---|---|
+>    | non-responder day0→peak (RNA, now known artefactual) | −15.7 | +36.5 | +33.3 | +44.8 | +50.3 | +69.8 |
 >
-> 1. Implement the corrected ΔAge control (`STAGE_1_5_1_REVISED.md` Steps 2–3): contemporaneous
->    non-responder instead of day-0.
-> 2. **Re-measure the per-donor level shift on the corrected labels.** Same statistic, same folds.
-> 3. **Only then** decide the wet-lab protocol:
->    - shift still ≈12.7 yr → this stage proceeds as written;
->    - shift materially smaller → **rescope or drop it**, and do not buy reference cells;
->    - shift ≈0 → it was the artefact, and this stage is unnecessary.
+> 2. **§1's ±12.72 yr is mis-attributed** (`STAGE_1_DEVIATIONS.md` §C1, independent of all the above):
+>    it is the **ridge** baseline's shift. The **model's** is mean **−5.71**, 95% CI
+>    **[−22.9, +11.5] — which includes zero.** Use the model numbers when judging whether this stage
+>    is worth its cost.
 >
-> **Do not skip step 2 because the numbers in §1 look solid.** They are solid measurements *of the
-> contaminated label*. Their provenance, not their precision, is the problem.
+> ### Why this stage may nonetheless proceed
 >
-> **Related:** the ±12.7 figure is *also* mis-attributed — `STAGE_1_DEVIATIONS.md` §C1 records that
-> it is the **ridge baseline's** shift, not the model's (model: mean −5.71, 95% CI [−22.9, +11.5],
-> which **includes zero**). Both corrections point the same way: re-measure before spending.
+> Not because the premise was verified — it wasn't — but because **k ≈ 3 reference cells per donor
+> helps under both hypotheses**:
+>
+> * if the per-donor offset is **real donor biology**, correcting it is exactly the point;
+> * if it is **n = 1 baseline noise** (every donor's zero-point is a single unreplicated day-0
+>   sample), then replicating the baseline fixes it directly.
+>
+> **The justification changes; the action does not.** State it that way in any write-up — do not
+> claim the ±12.7 yr offset has been established as biology.
+>
+> **Worth weighing first:** now that methylation is in hand, budget spent on **methylation for more
+> donors** would settle more than reference cells will — it would resolve the open retention question
+> (`REV FINAL` §5, needs ≈ 16 pairs) *and* begin anchoring the labels. Reference cells address only
+> the baseline-noise half.
 
 ---
 
