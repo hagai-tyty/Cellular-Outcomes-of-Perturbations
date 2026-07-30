@@ -266,7 +266,10 @@ prerequisite is **more donors**, and the specific target is now quantified rathe
 ## 6. What this stage does *not* establish
 
 1. **Retention after return to fibroblast identity** — §5, open.
-2. **Any anchor for HFF.** HFF (**~99.8%** of the age-labelled cells — 33,613 of 33,688 training cells) has no methylation data. It cannot
+2. **Any anchor for the training labels — HFF *or* Gill.** GSE165176 (RNA) and GSE165179
+   (methylation) share **zero samples** (§8.1), so no methylation age can be attached to *any* cell
+   the model trains on. HFF (**~99.8%** of the age-labelled cells — 33,613 of 33,688 training cells)
+   additionally has no methylation data at all. Neither can
    be anchored from this dataset, and **calibrating the RNA clock against methylation is not possible
    here**: the RNA labels do not distinguish "still reprogramming" from "returned to fibroblast"
    (the two differ by −24 vs −6, so the mapping would decide the answer), the RNA series has no
@@ -307,19 +310,57 @@ confirmation on new donors; the finding no longer depends on the selection alone
 
 ---
 
-## 8. Next step
+## 8. Next step — and what is *not* executable here
 
-**Use methylation as the ΔAge source where methylation exists** (Gill's three donors). **Treat HFF's
-age labels as unanchored** — the fate head is unaffected and remains strong.
+### 8.1 ⚠️ Nothing in this stage remains to be run, and no label change follows from it
 
-Two things unlock the rest, both data acquisitions rather than analyses:
+An earlier version of this section said *"use methylation as the ΔAge source where methylation
+exists."* **That is not executable, and the correction matters.** Checked directly:
 
-1. **More donors with paired methylation** — the only way to settle §5's retention question.
-2. **Methylation for HFF** — the only way to anchor the ~99.8% of age labels it holds.
+```
+GSE165176 (RNA)  124 samples, e.g. N2_d11_CD13_Sendai_Exp1
+GSE165179 (meth)  96 samples, e.g. O1_negative_control_15days_exp1
+sample-title overlap: 0
+```
 
-Neither is a code change, and no further RNA-side re-analysis will move either question.
+**The two series share no samples.** They are separate experiments — different sample sets,
+different donor rosters (RNA: N2, N3, Y1, Y2, O1, O2; methylation: O1, O2, O3), different day grids
+(7–47 vs 10–17) and different arm vocabularies. **There is no join key, so a methylation age cannot
+be attached to any cell the model trains on.**
 
----
+**Consequence, stated plainly:** the project's ΔAge labels are **unchanged** by this stage and remain
+RNA-derived from a clock this stage proved is out of domain on reprogramming cells. This stage
+delivered *knowledge*, not labels.
+
+### 8.2 What it did deliver
+
+| | |
+|---|---|
+| the +36.5 yr non-responder artefact | **closed** — inert on methylation against a real control |
+| is rejuvenation real? | **yes** — −24 to −28 yr, two clocks, dose-response, internal negative control |
+| why did the RNA route fail? | **localised to the instrument**, not the biology and not the target definition |
+| are the ΔAge labels now fixed? | **no** — and this stage cannot fix them |
+
+That is the honest ledger: the *concept* of ΔAge is vindicated; the *labels* are not repaired.
+
+### 8.3 What is executable now
+
+**Nothing here.** The project is not blocked, though:
+
+* **Stage 2** may proceed — see its updated annotation. Its intervention (k ≈ 3 reference cells per
+  donor) helps whether the per-donor offset is real biology or n = 1 baseline noise.
+* **Stage 3** depends on *Stage 1 required, Stage 2 optional*, and the fate head is untouched and
+  strong. It is not gated by anything here.
+
+**The two open questions both need data, not code:**
+
+1. **More donors with paired methylation** — the only way to settle §5's retention question (≈16
+   pairs needed).
+2. **Methylation on the samples we actually train on** — the only way to anchor the labels. Note
+   this means *new profiling of our own samples*, not another public download: no existing series
+   pairs methylation to GSE165176 or to HFF.
+
+**No further RNA-side re-analysis will move either question.** That is the point of §1.
 
 ## 9. Artefacts
 

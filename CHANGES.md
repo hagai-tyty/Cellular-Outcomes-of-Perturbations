@@ -257,6 +257,36 @@ is closed. **Open:** how much rejuvenation survives the return to fibroblast ide
 
 ---
 
+## 2026-07-26 (correction) — REV FINAL section 8 was not executable; zero sample overlap
+
+**Status:** ✅ Corrected. No code changed; 455 tests pass.
+
+Asked whether anything in  remained to execute. Checking that exposed an
+error in its own section 8, which said *"use methylation as the ΔAge source where methylation
+exists."* **It is not executable.** Measured directly:
+
+
+
+The two series are **separate experiments** — no shared samples, different donor rosters
+(N2/N3/Y1/Y2/O1/O2 vs O1/O2/O3), different day grids (7–47 vs 10–17), different arm vocabularies.
+**There is no join key, so a methylation age cannot be attached to any cell the model trains on.**
+
+**Consequence:** the project ΔAge labels are **unchanged** by that stage and remain RNA-derived from
+a clock the same stage proved is out of domain on reprogramming cells. The stage delivered
+*knowledge* — the +36.5 yr artefact is closed, rejuvenation is real (−24 to −28), the failure is
+localised to the instrument — but **not labels**, and it cannot produce them.
+
+Section 6 item 2 had the same gap: it implied Gill RNA samples could be anchored and only HFF could
+not. With zero overlap, **neither** can. Both sections corrected.
+
+**Executable state:** nothing remains in 1.5.1. Stage 2 may proceed on the both-hypotheses
+justification in its annotation; Stage 3 depends on Stage 1 (required) and Stage 2 (optional) and is
+not gated by any of this. Both open questions need **data**: more donors with paired methylation for
+the retention question, and methylation on our own samples to anchor labels — the latter meaning new
+profiling, since no public series pairs methylation to GSE165176 or HFF.
+
+---
+
 ## 2026-07-26 (closed) — The three weak points in REV FINAL are now RESOLVED, not flagged
 
 **Status:** ✅ All three challengeable points closed by measurement. 455 tests pass; `src/` untouched.
