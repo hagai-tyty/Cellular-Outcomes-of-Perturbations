@@ -211,6 +211,52 @@ not touched here.**
 
 ---
 
+## 2026-07-26 (answered) — Why we did not match Gill: we DO, on the intermediates. ΔAge has a valid anchor.
+
+**Status:** ✅ Executed. `experiments/diag_methylation_anchor.py` extended to both Horvath clocks and
+all three contrasts; 28 tests; 455 pass; `src/` untouched.
+
+Read Gill's methylation methods instead of speculating. Three facts: their comparison was
+transiently reprogrammed **vs negative control fibroblasts** (what we did ✓); their optimum was
+**13 days** (where our largest effect sits ✓); and they used **several clocks**, reporting
+**multi-tissue *and* skin & blood both rejuvenated** — the ~30 yr being the **median across clocks**,
+not one clock (✗ we had run one). So both clocks were run and the **intermediate** arm added.
+
+| contrast | skin & blood | multi-tissue |
+|---|---|---|
+| **INTERMEDIATES** (still reprogramming) | **−24.1** [−31.1, −17.0] **REJUVENATION** | **−27.5** [−33.7, −21.4] **REJUVENATION** |
+| transiently reprogrammed fibroblasts (MPTR) | −5.8 [−19.5, +7.9] NO_EFFECT | −9.4 [−18.3, −0.5] REJUVENATION_**FRAGILE** |
+| **failed to reprogram (NEGATIVE CONTROL)** | **+0.5** [−2.3, +3.2] | **−2.4** [−5.7, +0.8] |
+
+**The answer: Gill's ~30 yr is reproduced on the cells still in the reprogramming phase** — −24.1 and
+−27.5 yr, both clocks, both highly significant, 12 identity-matched pairs. **We had been measuring
+the wrong arm.**
+
+**The negative control is inert on both clocks** (+0.5, −2.4; both CIs contain zero), so the design
+is valid and the transcriptomic **+36.5 yr artefact is dead twice over**.
+
+**The returned fibroblasts match Gill's SHAPE exactly** — by reprogramming length, skin & blood
+−2.7 / **−14.1** / −0.6 / −5.1 and multi-tissue −13.4 / **−18.4** / −5.6 / −0.6 for 10/13/15/17 d:
+**maximal at 13 days, diminished at 15–17**, precisely as Gill describe. The intermediates show the
+*opposite* trend (−14 → −36 monotonically), which is simply "closer to iPSC" — the day-profile
+distinguishes two different quantities.
+
+**Coherent reading:** rejuvenation during reprogramming is large (−24 to −27.5 yr); retention after
+return to fibroblast identity is partial and peaks at 13 days. First result in the arc where sign,
+magnitude, shape *and* the negative control all agree.
+
+**What must NOT be claimed:** the MPTR-fibroblast retention is **not solid** — skin & blood says
+NO_EFFECT, multi-tissue says FRAGILE (CI bound −0.5), and the **intercept sweep flips it**. The
+intermediates and the negative control are intercept-robust; this is not. Also: G2 is weak (MAE
+4.0/4.4 vs a 5.0 tolerance on 3 known-age samples, implied intercept, 5.3/6.4 yr spread);
+multi-tissue coverage is 94.6%; n = 9–12 pairs from 3 donors.
+
+**Settles for the project:** ΔAge **has a valid anchor**; the transcriptomic clock's failure is fully
+localised to the instrument (the biology is real, the RNA clock cannot see it); the +36.5 yr artefact
+is closed. **Open:** how much rejuvenation survives the return to fibroblast identity.
+
+---
+
 ## 2026-07-26 (executed) — Methylation anchor RUN: +36.5 yr artefact confirmed dead; no rejuvenation detected
 
 **Status:** ✅ Executed on GSE165179. `experiments/diag_methylation_anchor.py` + 28 tests; `src/`

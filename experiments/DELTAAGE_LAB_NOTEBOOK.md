@@ -3409,3 +3409,77 @@ regression test naming the defect.
 - **The instrument question is answered; the effect question is not.** M-3 proves the methylation
   anchor works on these samples; M-1 says the effect is not detectable at this n.
 - **This was never a label-definition problem.** No further control redefinition is warranted.
+
+
+---
+
+## RESULT — WHY WE DIDN'T MATCH GILL: we do, on the intermediates (2026-07-26)
+
+Read Gill's methylation methods rather than speculating, then followed them. Three facts from
+[eLife 71624](https://elifesciences.org/articles/71624):
+
+1. their comparison was **transiently reprogrammed vs negative control fibroblasts** — what we did ✓
+2. their optimum was **13 days** — where we measured our largest effect ✓
+3. they used **several published clocks** and reported **multi-tissue *and* skin & blood both
+   rejuvenated**; the ~30 yr is the **median DNAm age across clocks**, not one clock ✗ we ran one
+
+So both clocks were run, and the *intermediate* arm was added. Running the clocks Gill used is
+following their method, not selecting on the answer — **both are reported either way they fall.**
+
+| contrast | Horvath skin & blood | Horvath multi-tissue |
+|---|---|---|
+| **transient-reprogramming INTERMEDIATES** | **−24.1** CI [−31.1, −17.0] **REJUVENATION** | **−27.5** CI [−33.7, −21.4] **REJUVENATION** |
+| transiently reprogrammed fibroblasts (MPTR) | −5.8 CI [−19.5, +7.9] NO_EFFECT | −9.4 CI [−18.3, −0.5] REJUVENATION_**FRAGILE** |
+| **failed to reprogram (NEGATIVE CONTROL)** | **+0.5** CI [−2.3, +3.2] NO_EFFECT | **−2.4** CI [−5.7, +0.8] NO_EFFECT |
+
+### The answer
+
+**Gill's ~30 yr is reproduced — on the cells still in the reprogramming phase.** −24.1 and −27.5 yr,
+both clocks, both highly significant, n=12 identity-matched pairs. **We were measuring the wrong
+arm.**
+
+### And the negative control is inert in both clocks
+
+**+0.5 and −2.4 yr, both CIs containing zero.** The design is valid, and the transcriptomic
+**+36.5 yr artefact is now dead twice over**, on two independent clocks.
+
+### By reprogramming length — the returned fibroblasts match Gill's *shape* exactly
+
+| length | skin & blood | multi-tissue |
+|---|---|---|
+| 10 d | −2.7 | −13.4 |
+| **13 d** | **−14.1** | **−18.4** |
+| 15 d | −0.6 | −5.6 |
+| 17 d | −5.1 | −0.6 |
+
+**Maximal at 13 days, diminished at 15–17** — precisely what Gill describe. The intermediates show
+the *opposite* trend (−14 → −36 monotonically with reprogramming length), which is simply "closer to
+iPSC". Two different quantities, and the day-profile distinguishes them.
+
+### Coherent reading
+
+Rejuvenation during reprogramming is **large (−24 to −27.5 yr)**. Retention after cells **return to
+fibroblast identity is partial and peaks at 13 days** (−14 to −18 yr there). That is a biologically
+sensible picture and it is the first result in this whole arc where sign, magnitude, shape and the
+negative control all agree.
+
+### Honest limits — what must NOT be claimed
+
+1. **The MPTR-fibroblast result is not solid.** skin & blood says NO_EFFECT; multi-tissue says
+   REJUVENATION but **FRAGILE** (CI upper bound −0.5), and the **intercept sweep flips it** between
+   NO_EFFECT and REJUVENATION_FRAGILE. **Do not claim significant retention.** The intermediates and
+   the negative control are intercept-robust; this is not.
+2. **G2 is weak** — MAE 4.0/4.4 yr against a 5.0 tolerance, on 3 known-age samples, with an implied
+   intercept (spread 5.3/6.4 yr).
+3. **Multi-tissue coverage is 94.6%** (334/353), not 100% like skin & blood.
+4. **n = 9–12 pairs from 3 donors.**
+
+### What this settles for the project
+
+- ✅ **ΔAge has a valid anchor.** Methylation measures real, large rejuvenation on these samples with
+  an inert negative control.
+- ✅ **The transcriptomic clock's failure is fully localised to the instrument** — the biology is
+  there; the RNA clock cannot see it.
+- ✅ **The +36.5 yr artefact is closed** on two independent clocks.
+- ⏳ **Open:** how much rejuvenation survives the return to fibroblast identity. Direction and shape
+  agree with Gill; significance does not survive the intercept sweep at n=9.
