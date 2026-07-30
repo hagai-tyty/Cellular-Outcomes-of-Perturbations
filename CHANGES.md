@@ -11,6 +11,235 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-07-30 — Adversarial audit of REV FINAL and STAGE 2 before external review; 5 defects fixed
+
+**Status:** ✅ Executed and verified. **1 new artefact script + 2 annotated plan files.**
+`src/` untouched (`git diff --stat src/` empty). Suite not re-run — no existing `.py` modified; the
+new script is standalone pure-stdlib and was run directly, output below.
+
+Asked to make both documents bulletproof before external critique. Audited for a **different**
+failure mode than last time: not "is each sentence true" but **is the claim reproducible, is the
+ledger complete, and does it survive being quoted out of context.**
+
+### REV FINAL — three defects
+
+**F1 — §4.3's "the intercept cancels EXACTLY" never admitted its own violations.** `anti_trafo` is
+linear only at age >= 20; below that it is exponential and the intercept does **not** cancel. This is
+why §3 and §4.3 disagree (−24.1 vs −24.5, −27.5 vs −28.3) — and the document never said so. A
+reviewer comparing the two tables would have hit it immediately. **Measured:** 4 of 66 predicted ages
+per clock fall below 20, all deeply-rejuvenated day-15/17 intermediates.
+
+**The fix makes it a strength.** Where **zero** pairs violate the condition, the two forms agree to
+**exactly 0.00** — contrast C on both clocks, contrast B on multi-tissue. Zero violations => zero
+difference, every time, which *demonstrates* the algebra rather than asserting it. Max deviation is
+**0.79 yr against an effect of −24 to −28**, and every deviation is **negative**, so the §3 headline
+values are the **conservative** ones. Claim restated precisely instead of unconditionally.
+
+**F2 — §4.4 had NO artefact, and it is the load-bearing defensive section.** §4.4 answers the one
+challenge a reviewer is most likely to press (contrast A's post-hoc promotion, §7). Neither of its
+two checks is produced by anything: `diag_methylation_anchor.py`'s `CONTRASTS` has **no
+failing-intermediate arm and no dose-response**, and §9 nonetheless described the results JSON as
+"full output". So the numbers were right but **unreproducible**.
+
+Closed with **`experiments/verify_rev_final_4_4.py`** — an independent re-derivation from the raw
+555 MB beta matrix, **pure stdlib, no numpy, no shared code** with the measurement script, so
+agreement is corroboration rather than the same code answering twice. It reproduces a **known**
+value first (V1) before its new numbers are trusted. **All four checks reproduce:**
+
+| check | recomputed | document |
+|---|---|---|
+| V1 contrast A *(pipeline validation)* | −24.05 [−31.12, −16.98] / −27.55 [−33.69, −21.40] | −24.1 / −27.5 |
+| V2 §4.4(a) failing intermediates | **−1.13 [−2.75, +0.49] / −3.62 [−5.07, −2.16]** | −1.1 / −3.6 |
+| V3 §4.4(b) dose-response | **rho −0.885 p 0.0001 / −0.842 p 0.0006** | −0.885 / −0.842 |
+| V3 slope | **−3.30 / −3.15 yr/day** | −3.30 / −3.15 |
+
+Also found: **§4.4(b)'s slopes are the intercept-free form** (derived-intercept gives −3.10 / −2.77)
+and the table never said which convention it used. Now stated. rho and p are identical either way.
+
+**F3 — two sentences false or overclaimed when quoted out of context.** §8.1's *"There is no join
+key, so a methylation age cannot be attached to any cell the model trains on"* is true of GSE165179
+only — **GSE165178 joins 22/22** — and would have been quoted against §8.3. §4.5's *"ΔAge has a valid
+anchor"* reads as "the labels are anchored", which §8.2 explicitly denies. Both scoped.
+
+### STAGE 2 — two defects, both bearing on the wet-lab spend
+
+**S1 — §1 and §4 quote different models and the file never says so.** §1's table is the **ridge**
+baseline's shifts; §4's is the **model's**. Every donor disagrees (O1: +5.72 vs +0.64). Recorded in
+`STAGE_1_DEVIATIONS.md` §C1, but a reader of Stage 2 sees only two contradictory tables. Mapping
+table added; §4's are the ones to use.
+
+**S2 — §2's headline benefit predates §4's rule, and nobody re-measured.** §2 reports
+**14.3 → 6.9 (−52%)**; §4 then says the same T16 run *"helps 4 donors and hurts 2"*, so **§2's figure
+is the UNCONDITIONAL correction applied to everyone.** §4's `|d| > 2·SE` rule exists to suppress some
+of those corrections. The benefit of the stage **as specified** is therefore between −50% and zero
+and is **currently unknown**.
+
+**S3 — whether the rule fires at k = 3 was never computed, and it decides the spend.** Substituting
+k = 3 into `SE ≈ 1.253·s/√k` gives `fires <=> |d| > 1.447·s`, where `s` is the within-donor sd of
+`pred − true`. With `s ≈ 1.253 × 6.9 ≈ 8.65` (inferred from §2's corrected MAE, **not measured**),
+the threshold is **12.5 yr** and the rule **fires for only 3 of 6 donors — N3, Y2, N2**. It correctly
+declines both donors T16 damaged (O1, Y1), but **also declines O2, which T16 helped**; capturing O2
+needs `k > 6.28·s²/d²` ≈ **11 cells**, not 3. So **"k = 3 minimum" is the number at which the
+*unconditional* correction passed — it is not established for the *conditional* one this document
+specifies.** All arithmetic re-verified numerically.
+
+**Pre-registered before any spend:** measure `s` directly (needs no new cells); re-measure the
+benefit with the rule active at k = 3 and k = 5; **grade §12's ≥25% TARGET bar on the conditional
+number**, since that is what would ship. If it misses: raise k, or take §0's stated fallback of a
+within-donor ranker — **not** relax the bar (ground rule §5), and **not** silently revert to the
+unconditional correction that damaged O1 and Y1.
+
+**Nothing was rewritten in either document.** All changes are additive annotation boxes plus two
+scoping corrections to sentences that were false as written.
+
+---
+
+
+## 2026-07-30 — Two open findings were being carried silently; 1.5.2 gated behind them
+
+**Status:** ✅ Annotations applied. **Markdown only — no `.py` file touched, `src/` untouched**
+(`git diff --stat src/` empty). Suite not re-run: this machine has no `numpy`/`pytest`, and nothing
+that could move it was modified.
+
+Challenged on whether the original Stage 1.5 problem was ever actually solved, or whether stages
+were being stacked instead of closed. Checked the record rather than answering from memory. **The
+challenge was half right, and the half that was right matters more.**
+
+### What WAS solved — the premise that this was all drift is wrong
+
+Stage 1.5 asked one question: **is the ±12.7 yr per-donor offset an artefact of the silent
+zero-point fallback at `aging.py:88`?** It was executed, pre-registered, and answered:
+
+> **51 of 51 chunks carry >=1 vehicle control. The fallback never fired.**
+
+It also delivered the 21 tests that four plan documents already *claimed* existed while **no test
+imported `harmonize.py`** — `STAGE_6`'s acceptance gate had named a test that could never fail, and
+`STAGE_5` had promised a reviewer a proof nobody wrote. And it corrected two overstatements by
+measurement: "batch-immune by construction" is false (a per-dataset multiplicative gain survives),
+and intercept cancellation is numerical, not bit-identical.
+
+Nor did `REV FINAL` ever conclude "no fix needed" — its own §8.2 ledger reads *"are the ΔAge labels
+now fixed? **no** — and this stage cannot fix them."*
+
+### What was NOT solved, and was being carried silently
+
+Stage 1.5 surfaced three findings. **D1 was measured and downgraded** (paired Exp1−Exp2 offset
+**−2.99 yr, 95% CI [−13.12, +7.14], n=12, `NO_BATCH_EFFECT`** — structurally true but not
+demonstrated to drive the offset; the ~10 yr CI half-width excludes a *large* effect, not a
+meaningful one). **D2 and D3 are still OPEN**, have a fix plan recorded in
+`STAGE_1_5_HARMONIZATION_AUDIT.md` §5, and **nothing was executed**:
+
+* **D2** — every Gill donor's zero-point rests on **one unreplicated control sample**.
+* **D3** — donor chronological age is **parsed nowhere in `src/`** (re-grepped: still zero hits)
+  though GEO declares it (N2/N3=0, Y1=29, Y2=35, O1/O2=53).
+
+### Two failures of my own, recorded rather than quietly patched
+
+1. **`REV FINAL` §6 ("what this stage does not establish") omitted D2 and D3.** Every statement in
+   that section is true; the **ledger of open work was incomplete**. A reviewer reading it cold
+   would close it believing the harmonization arc was finished. I had validated whether each
+   *sentence* was true, not whether the *list* was complete — and had called the document hole-free
+   on that basis.
+2. **`STAGE_1_5_2` §9-R3 re-raised D1 as a novel risk** when a measured answer already existed.
+   Re-deriving a closed finding as a fresh risk is the same drift in miniature.
+
+### Applied
+
+| file | change |
+|---|---|
+| `plans/STAGE_1_5_1_REV_FINAL.md` §6 | **Additive box only; the body list is byte-unmodified.** Records D1/D2/D3 with status, states that the omission was the defect, and explains **why this stage's conclusions survive D2 by design** — every §3 contrast is a *paired arm comparison* (same donor, same day, methylation) that **never touches the RNA day-0 baseline**. Notes that immunity is not a fix, and that with D1 measured small and the clock convicted in §1, **`n=1` is now one of only two live explanations for the ±12.7 yr offset Stage 2 is premised on**. Also records that **D3 is *unwired*, not *unknown*** — this stage's own guard **used** those donor ages and returned **MAE 4.0 / 4.4 yr**, so they parse and are accurate; only `src/` ignores them |
+| `plans/STAGE_1_5_2_LABEL_ANCHOR.md` | New **§0 GATE**: does not start until D2 and D3 are closed. Header status and `Depends on` updated. §9-R3 corrected to cite D1's measured −2.99 yr, with an explicit "do not over-read the null" |
+
+**Sequencing rationale, recorded so it can be challenged:** D2 is cheaper than 1.5.2, needs no
+download, and bears directly on **Stage 2's premise** — a bigger question than whether the RNA clock
+is calibratable. D3 is nearly free and supplies ground truth that 1.5.2 would otherwise download
+methylation to approximate. **D3's limit is stated in §0 so it is not oversold:** donor age is a
+per-donor *constant*, so it cannot measure rejuvenation *within* a donor and does **not** make
+1.5.2 unnecessary — it anchors the absolute-calibration question only.
+
+**Next:** execute D2 and D3 (read-only metadata work — no downloads, no label changes).
+
+---
+
+
+## 2026-07-30 — Stage 1.5.2 written: the missing stage between "labels are wrong" and "correct them"
+
+**Status:** 🔵 **PRE-REGISTERED, NOT EXECUTED.** New plan file only. No code, no data, no labels
+touched. `src/` untouched — verified with `git diff --stat src/` (empty); the only changes are this
+entry and one new `plans/` file. **The suite was NOT re-run:** this machine has no `numpy`/`pytest`
+(they live on the data machine), and since **no `.py` file was modified** there is nothing here that
+could move it. Per the convention at the top of this file, that is recorded as unverified rather
+than asserted — an earlier draft of this entry claimed "455 tests still pass", which had not been
+checked.
+
+Asked which stage the newly-unblocked RNA↔methylation agreement test belongs to. Checking the stage
+graph showed the honest answer is **none of them** — there is a real gap:
+
+```
+1.5.1   "the labels come from an instrument that fails here"   done
+  ???   "here is whether that instrument can be repaired"      NO OWNER
+Stage 2 "correct per-donor offsets ON those labels"            blocked on exactly that
+```
+
+`STAGE_2_LEVEL_CORRECTION.md`'s own annotation names the blocker: *"re-measure the per-donor level
+shift on corrected labels before spending — that was never done, because the labels were never
+corrected."* Verified against each candidate owner: 1.5.1 is closed and measurement-only (its §6.2
+withdrew this test as ill-defined **on GSE165179**); Stage 2 consumes the labels; Stage 4 depends on
+Stage 3; Stage 6 owns acquisition, not label anchoring. So a new file was added rather than
+reopening a validated one — reopening a doc stamped EXECUTED to slip in a change that moves the
+training target is precisely the silent-target-change the ground rules exist to prevent.
+
+**Added:** `plans/STAGE_1_5_2_LABEL_ANCHOR.md`. Additive only; no existing plan file edited.
+
+**The design point that decides the stage, closed in §4 rather than flagged.** The obvious test —
+"does age_rna correlate with age_meth?" — is **not sufficient and would prove nothing alone**.
+1.5.1 measured `corr(age_rna, pluripotency) = -0.62`, and methylation age also falls sharply during
+reprogramming (-24 to -27 yr). Both modalities move with reprogramming progress, so a clock carrying
+**zero** age information would still correlate strongly across a sample set whose dominant axis is
+exactly that — the +36.5 yr identity artefact re-entering through the back door. The headline
+correlation is therefore **barred from being a pass criterion**; the decisive readings are
+within-arm (CD13 only, where cells are not reprogramming) and partialled on the existing
+`OSKM_PLURIPOTENCY` signature, reused so it cannot be tuned for this stage.
+
+**Geometry constraints recorded before the run, not discovered after:** GSE165178 has 4 donors x 3
+days x 2 markers = 24 grid cells, 22 exist, and **no day-0 or untreated arm**. So the only internal
+contrast is SSEA4 vs CD13, and CD13 is a *treated non-responder*, not an untreated control. 1.5.1's
+inertness result (+0.5/-2.4) came from the **transient** arm; GSE165178 is the **Sendai** arm, so
+that result **does not automatically transfer** and is carried as an explicit assumption with a
+fixed response (§9-R1).
+
+**Two errors in my own recollection, caught while writing and corrected in the file:**
+
+1. I was about to cite ground rules "§10 negative controls / §11 shape-before-statistic". Those
+   sections **do not exist** — `REF_GROUND_RULES.md` ends at §6. The negative-control and shape
+   gates are **G1/G2 in `STAGE_4_VALIDATION.md`**. Cited correctly.
+2. The value of this stage is **not** label volume, and the file says so up front (§2): Gill is
+   **~75 of 33,688 age labels, about 0.2%**. HFF's ~99.8% stays unanchored either way because no
+   public methylation exists for it. The deliverable is the **instrument verdict**, which is what
+   Stage 2's premise and Stage 5's claims actually rest on.
+
+**Pre-registration discipline (ground rule §5b).** Bars are stated with their intent, geometry and
+resolvability recipe, to be frozen by `audit_metrics.bar_verdict` **before GSE165178 is opened**,
+with each added to `tests/test_bars_resolvable.py` — a bar with no resolvability test is not
+considered pre-registered. Anticipated in advance rather than discovered later: **n=11 per arm may
+come back UNRESOLVABLE**, so the fallback (ρ_partial at n=22 becomes decisive) is fixed now so it
+cannot be chosen after seeing data. M-2c is **gated** on M-2a — fitting a calibration to a clock
+that is not tracking the target would manufacture a meaningless number.
+
+**Three of the four pre-registered outcomes do not produce a label change**, and the file says that
+is a real result: the two negative verdicts retire a route the project has already spent four failed
+attempts on, on paired ground truth rather than argument.
+
+**Phase 2 (the actual label change) is gated and separated** because it is the one place the
+training target moves: one change only, snapshot with an *exercised* rollback, every Stage 1 guard
+re-run and reported, and applying a Gill-learned correction to HFF **defaults to NO** — different
+cell system, no ground truth to validate transfer against.
+
+**Nothing here is executed.** The status line changes only when it has run.
+
+---
+
+
 ## 2026-07-25 — **Stage 1.5.1 planned: clock precision (option B).** PLAN ONLY, nothing executed
 
 **Status:** 📋 **PLAN ONLY** — `plans/STAGE_1_5_1_CLOCK_PRECISION.md`. No code written, no fit run,

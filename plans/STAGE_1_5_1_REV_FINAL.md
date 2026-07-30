@@ -155,6 +155,49 @@ them depends on it. Recomputed in the intercept-free form `21·(lp_t − lp_c)`:
 These match §3's derived-intercept values to well under a year, confirming the algebra. A numerical
 sweep from −0.60 to +0.70 was also run and changes nothing.
 
+> ### 🆕 ADDED 2026-07-30 — where "exactly" does NOT hold, counted
+>
+> *A reviewer will ask the obvious question: if the intercept cancels **exactly**, why do §3 and the
+> table above differ at all (−24.1 vs −24.5, −27.5 vs −28.3)? The condition is stated above — "both
+> samples predict an age above 20" — but the document never said it is **violated**, or how often.
+> It is, and here is the full accounting.*
+>
+> `anti_trafo` is linear **only** at age ≥ 20; below that it is exponential
+> (`21·exp(x) − 1`) and the intercept does **not** cancel. Measured on the actual predictions:
+>
+> | | ages below 20 | contrast A pairs affected | derived-intercept | intercept-free | difference |
+> |---|---|---|---|---|---|
+> | skin & blood | **4 of 66** | 3 of 12 | −24.05 | −24.46 | **−0.41** |
+> | multi-tissue | **4 of 66** | 4 of 12 | −27.55 | −28.33 | **−0.79** |
+>
+> All eight are deeply-rejuvenated day-15/17 **intermediates** — the cells the effect is largest in,
+> which is exactly where a 53- or 38-year-old donor's cells are driven below age 20.
+>
+> **The algebra is demonstrated, not merely asserted.** Where **no** pair violates the condition, the
+> two forms agree to **exactly 0.00**:
+>
+> | contrast | pairs violating | difference |
+> |---|---|---|
+> | **C negative control**, both clocks | **0** | **+0.00** — exact |
+> | **B returned fibroblasts**, multi-tissue | **0** | **+0.00** — exact |
+> | B returned fibroblasts, skin & blood | 1 | −0.19 |
+> | A intermediates, skin & blood | 3 | −0.41 |
+> | A intermediates, multi-tissue | 4 | −0.79 |
+>
+> **Zero violations ⇒ exactly zero difference, every time.** That is a stronger confirmation of the
+> cancellation than the sweep, because it isolates the one condition the algebra depends on.
+>
+> **Why no conclusion moves.** The largest deviation is **0.79 yr against an effect of −24 to −28**.
+> And every deviation is **negative**, so the intercept-free form reads *larger*: **the §3 values
+> reported as headline are the conservative ones.** Using them cannot overstate the effect.
+>
+> **Precision of the claim:** "the intercept cancels exactly" holds for **every pair in contrast C
+> and for contrast B on multi-tissue**, and holds to within 0.79 yr everywhere else. It is not an
+> unconditional identity, and this document does not need it to be.
+>
+> Reproduced independently (pure stdlib, no shared code with the measurement script) by
+> `experiments/verify_rev_final_4_4.py`, check **V4**.
+
 **Consequence:** the absent intercept row in the coefficient tables is a non-issue for every claim
 made here. It affects only *absolute* ages, which this document does not rely on (§6.5).
 
@@ -193,10 +236,40 @@ evidence independent of the selection.
 dose-response, and an intercept-free formulation. Its post-hoc promotion (§7) remains disclosed, but
 it is no longer the only thing supporting the finding.
 
+> ### 🆕 ADDED 2026-07-30 — this section had NO artefact; it now does, and it reproduces
+>
+> **The gap.** §9 lists `diag_methylation_anchor_results.json` as "full output", and **neither of
+> the two checks above is in it.** `diag_methylation_anchor.py`'s `CONTRASTS` list contains no
+> failing-**intermediate** arm and no dose-response at all. So the section that carries this
+> document's entire answer to the post-hoc-promotion challenge — the thing §7 explicitly leans on —
+> rested on ad-hoc computation with nothing a reviewer could re-run. **That is a provenance defect
+> even though the numbers turned out to be right.**
+>
+> **Closed by `experiments/verify_rev_final_4_4.py`**, which re-derives §4.4 from the raw beta
+> matrix through an **independent** path — pure stdlib, no numpy, **no shared code** with the
+> measurement script — so agreement is corroboration, not the same code answering twice. It first
+> reproduces a **known** value (V1) before its new numbers are trusted:
+>
+> | check | recomputed | this document | |
+> |---|---|---|---|
+> | **V1** contrast A *(pipeline validation)* | −24.05 [−31.12, −16.98] / −27.55 [−33.69, −21.40] | −24.1 / −27.5 | ✅ |
+> | **V2** §4.4(a) failing intermediates | **−1.13 [−2.75, +0.49] / −3.62 [−5.07, −2.16]** | −1.1 / −3.6 | ✅ |
+> | **V3** §4.4(b) dose-response | **ρ −0.885, p 0.0001 / ρ −0.842, p 0.0006** | −0.885 / −0.842 | ✅ |
+> | **V3** slope | **−3.30 / −3.15 yr/day** | −3.30 / −3.15 | ✅ |
+>
+> **One convention this section did not state.** The slopes **−3.30 / −3.15 are the intercept-free
+> form** (§4.3), not the derived-intercept form, which gives **−3.10 / −2.77**. Both were checked;
+> the intercept-free figures are correct as printed and are the ones consistent with §4.3, but the
+> table above never said which convention it used. It does now. **ρ and p are identical either way**
+> — Spearman is rank-based, and the two forms preserve the ordering of these 12 pairs.
+
 ### 4.5 What this means for the project
 
-- **ΔAge has a valid anchor.** Methylation measures real, large rejuvenation on these samples with an
-  inert negative control.
+- **ΔAge is a measurable quantity — *in this dataset*.** Methylation measures real, large
+  rejuvenation on these samples with an inert negative control.
+  ⚠️ **This is not a statement about the training labels.** An earlier wording, *"ΔAge has a valid
+  anchor"*, was quotable as "the labels are anchored" — which §8.2 explicitly denies. The *concept*
+  is vindicated here; **the labels are not anchored by this stage** (§6.2, §8.1).
 - **The transcriptomic clock's failure is fully localised to the instrument.** The biology is there;
   the RNA clock cannot see it. ΔAge as a *concept* is vindicated.
 - **The target definition was never the problem.** No further control redefinition is warranted.
@@ -265,6 +338,47 @@ prerequisite is **more donors**, and the specific target is now quantified rathe
 
 ## 6. What this stage does *not* establish
 
+> ## 🆕 ADDED 2026-07-30 — two OPEN findings inherited from Stage 1.5 that this list omitted
+>
+> *Additive note. Nothing below this box is modified.*
+>
+> **Why this box exists.** This section was written to list what the stage does not establish, and
+> it was **incomplete**: it omitted two findings that Stage 1.5 surfaced and left open. Every
+> statement below the box is true; the *ledger of open work* was not. A reviewer reading this
+> document cold would close it believing the harmonization arc was finished. **It is not.** The
+> omission is recorded here rather than quietly patched into the list.
+>
+> | | finding (from `STAGE_1_5_HARMONIZATION_AUDIT.md` §5) | status |
+> |---|---|---|
+> | **D1** | zero-point is cross-batch — all 6 Gill baselines are `Exp2`, ~50% of samples are `Exp1` | ✅ **measured and downgraded** — paired offset **−2.99 yr, 95% CI [−13.12, +7.14]**, `NO_BATCH_EFFECT`, n=12. Structurally true; **not** demonstrated to drive the ±12.7 yr offset. *Not over-read:* the CI half-width (~10 yr) excludes a **large** batch effect, not a meaningful one |
+> | **D2** | **every Gill donor's zero-point rests on ONE unreplicated control sample** | 🔴 **OPEN** |
+> | **D3** | donor chronological age is **parsed nowhere in `src/`** though GEO declares it (N2/N3 = 0, Y1 = 29, Y2 = 35, O1/O2 = 53) | 🔴 **OPEN** |
+>
+> ### Why this stage's conclusions survive D2 anyway — by design, not by luck
+>
+> **Every contrast in §3 is a paired arm comparison** — treated vs control, *same donor, same day*,
+> on methylation. **None of them touches the RNA day-0 baseline.** So the `n=1` baseline cannot
+> propagate into §3, §4 or §5, and the results stand as written.
+>
+> **That immunity is not a fix.** D2 is still in the pipeline, and it matters more than it looks:
+> with D1 measured small and the clock convicted in §1, **`n=1` is now one of only two live
+> explanations for the ±12.7 yr per-donor offset — the offset Stage 2's entire premise rests on.**
+>
+> A related trap this stage already walked into once and documented: an earlier decomposition here
+> (`−28.3 = +8.2 − 36.5`) used two terms sharing that same `n=1` baseline, with
+> `corr(baseline, ΔAge) = −0.986`. It was redone baseline-free and the conclusion survived — but it
+> shows the failure mode is live, not theoretical.
+>
+> ### D3 is *unwired*, not *unknown* — and this stage proves it
+>
+> This document **used** those donor ages: the §2 guard is *"reproduce known chronological age on the
+> day-0 samples"*, returning **MAE 4.0 / 4.4 yr**, and the derived intercept comes from the three
+> known-age day-0 samples. So the values exist, parse, and are accurate enough to be useful. They
+> were read by a **diagnostic script**; `src/` still ignores them. That is the only remaining gap.
+>
+> **Consequence for sequencing:** `STAGE_1_5_2_LABEL_ANCHOR.md` is **gated behind D2 and D3** (its
+> §0). Both are read-only metadata work — no downloads, no label changes.
+
 1. **Retention after return to fibroblast identity** — §5, open.
 2. **Any anchor for the training labels — HFF *or* Gill.** GSE165176 (RNA) and GSE165179
    (methylation) share **zero samples** (§8.1) — though **GSE165178 does pair to our RNA sample-for-sample** (§8.3), so this limitation is specific to GSE165179, not general. HFF (**~99.8%** of the age-labelled cells — 33,613 of 33,688 training cells)
@@ -324,8 +438,12 @@ sample-title overlap: 0
 
 **GSE165176 and GSE165179 share no samples.** They are separate experiments — different sample sets,
 different donor rosters (RNA: N2, N3, Y1, Y2, O1, O2; methylation: O1, O2, O3), different day grids
-(7–47 vs 10–17) and different arm vocabularies. **There is no join key, so a methylation age cannot
-be attached to any cell the model trains on.**
+(7–47 vs 10–17) and different arm vocabularies. **There is no join key *between these two series*,
+so no methylation age from GSE165179 can be attached to a cell the model trains on.**
+
+> ⚠️ **Scope, added 2026-07-30 — do not quote the sentence above as a general claim.** It is true of
+> **GSE165179 only**. **GSE165178 joins our RNA training data 22/22** (§8.3). An earlier version of
+> this sentence was unqualified and would have been quoted against §8.3.
 
 **Consequence, stated plainly:** the project's ΔAge labels are **unchanged** by this stage and remain
 RNA-derived from a clock this stage proved is out of domain on reprogramming cells. This stage
@@ -409,7 +527,9 @@ at n = 22 paired samples / 4 donors.
 | `experiments/diag_methylation_anchor.py` | the measurement; read-only; pure verdict logic separated from I/O |
 | `tests/test_diag_methylation_anchor.py` | 28 tests — every verdict branch, Horvath's transform against its published fixed points, the replicate-averaging regression |
 | `configs/clocks/horvath_skin_blood_2018.json`, `horvath_multitissue_2013.json` | clock coefficients, with provenance in `meta` |
-| `diag_methylation_anchor_results.json` | full output including per-pair values and the intercept sweep |
+| `diag_methylation_anchor_results.json` | full output of the **three** contrasts in §3, per-pair values, and the intercept sweep. ⚠️ It does **not** contain §4.4's two checks — see the row below |
+| `experiments/verify_rev_final_4_4.py` | **the §4.4 artefact** (added 2026-07-30). Independent re-derivation from the raw beta matrix — pure stdlib, no shared code with the measurement script. Checks V1 contrast A (pipeline validation), V2 failing-intermediates, V3 dose-response, V4 the §4.3 below-age-20 accounting. **All reproduce** |
+| `verify_rev_final_4_4_results.json` | its output |
 | `experiments/DELTAAGE_LAB_NOTEBOOK.md` | dated results entries |
 
 ---

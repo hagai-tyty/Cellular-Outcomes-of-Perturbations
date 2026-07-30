@@ -1,0 +1,537 @@
+{
+  "script": "verify_rev_final_4_4",
+  "utc": "2026-07-30T13:48:03.735790+00:00",
+  "matrix": "C:\\Users\\hagay\\Desktop\\GSE165179\\GSE165179_Matrix_processed_transient.txt.gz",
+  "clocks": {
+    "horvath_skin_blood_2018": {
+      "intercept_used": -0.11168686554828251,
+      "n_samples": 96,
+      "V1_contrast_A": {
+        "n": 12,
+        "mean": -24.05036111721221,
+        "ci95": [
+          -31.118931201347788,
+          -16.98179103307663
+        ],
+        "pairs": [
+          {
+            "donor": "O1",
+            "day": 10.0,
+            "treated_age": 34.497424898564915,
+            "control_age": 47.04683780666572,
+            "diff_years": -12.549412908100805,
+            "intercept_free": -12.549412908100804,
+            "below_20": false
+          },
+          {
+            "donor": "O1",
+            "day": 13.0,
+            "treated_age": 29.598866297150202,
+            "control_age": 46.45478842286357,
+            "diff_years": -16.85592212571337,
+            "intercept_free": -16.85592212571337,
+            "below_20": false
+          },
+          {
+            "donor": "O1",
+            "day": 15.0,
+            "treated_age": 21.79900591387416,
+            "control_age": 47.19584544643905,
+            "diff_years": -25.39683953256489,
+            "intercept_free": -25.39683953256489,
+            "below_20": false
+          },
+          {
+            "donor": "O1",
+            "day": 17.0,
+            "treated_age": 15.99271363651517,
+            "control_age": 48.192175387806806,
+            "diff_years": -32.199461751291636,
+            "intercept_free": -32.63866908623648,
+            "below_20": true
+          },
+          {
+            "donor": "O2",
+            "day": 10.0,
+            "treated_age": 41.54938637896294,
+            "control_age": 57.033895696925995,
+            "diff_years": -15.484509317963052,
+            "intercept_free": -15.484509317963056,
+            "below_20": false
+          },
+          {
+            "donor": "O2",
+            "day": 13.0,
+            "treated_age": 33.049160422700545,
+            "control_age": 55.353125344420306,
+            "diff_years": -22.30396492171976,
+            "intercept_free": -22.303964921719757,
+            "below_20": false
+          },
+          {
+            "donor": "O2",
+            "day": 15.0,
+            "treated_age": 20.567584482869076,
+            "control_age": 57.16197732364292,
+            "diff_years": -36.59439284077385,
+            "intercept_free": -36.59439284077385,
+            "below_20": false
+          },
+          {
+            "donor": "O2",
+            "day": 17.0,
+            "treated_age": 9.151812958215436,
+            "control_age": 60.15934634873725,
+            "diff_years": -51.007533390521814,
+            "intercept_free": -55.42361911260433,
+            "below_20": true
+          },
+          {
+            "donor": "O3",
+            "day": 10.0,
+            "treated_age": 27.41424433769477,
+            "control_age": 41.58616016821449,
+            "diff_years": -14.171915830519719,
+            "intercept_free": -14.171915830519717,
+            "below_20": false
+          },
+          {
+            "donor": "O3",
+            "day": 13.0,
+            "treated_age": 23.601261680135696,
+            "control_age": 42.093518520507445,
+            "diff_years": -18.49225684037175,
+            "intercept_free": -18.49225684037175,
+            "below_20": false
+          },
+          {
+            "donor": "O3",
+            "day": 15.0,
+            "treated_age": 22.19933124068775,
+            "control_age": 41.75103511737947,
+            "diff_years": -19.55170387669172,
+            "intercept_free": -19.55170387669172,
+            "below_20": false
+          },
+          {
+            "donor": "O3",
+            "day": 17.0,
+            "treated_age": 18.58454273504175,
+            "control_age": 42.58096280535587,
+            "diff_years": -23.996420070314116,
+            "intercept_free": -24.046380995769947,
+            "below_20": true
+          }
+        ],
+        "n_pairs_below_20": 3,
+        "intercept_free": {
+          "n": 12,
+          "mean": -24.45913228241914,
+          "ci95": [
+            -32.18016928990803,
+            -16.738095274930252
+          ]
+        }
+      },
+      "V2_failing_intermediates": {
+        "n": 12,
+        "mean": -1.1279323543092303,
+        "ci95": [
+          -2.7459184724714905,
+          0.4900537638530298
+        ],
+        "pairs": [
+          {
+            "donor": "O1",
+            "day": 10.0,
+            "treated_age": 40.25659182734071,
+            "control_age": 47.04683780666572,
+            "diff_years": -6.790245979325007,
+            "intercept_free": -6.7902459793250065,
+            "below_20": false
+          },
+          {
+            "donor": "O1",
+            "day": 13.0,
+            "treated_age": 44.01425093409392,
+            "control_age": 46.45478842286357,
+            "diff_years": -2.4405374887696496,
+            "intercept_free": -2.4405374887696514,
+            "below_20": false
+          },
+          {
+            "donor": "O1",
+            "day": 15.0,
+            "treated_age": 44.38421711640919,
+            "control_age": 47.19584544643905,
+            "diff_years": -2.811628330029862,
+            "intercept_free": -2.8116283300298615,
+            "below_20": false
+          },
+          {
+            "donor": "O1",
+            "day": 17.0,
+            "treated_age": 49.28485782605556,
+            "control_age": 48.192175387806806,
+            "diff_years": 1.092682438248751,
+            "intercept_free": 1.092682438248751,
+            "below_20": false
+          },
+          {
+            "donor": "O2",
+            "day": 10.0,
+            "treated_age": 55.125678463911875,
+            "control_age": 57.033895696925995,
+            "diff_years": -1.9082172330141205,
+            "intercept_free": -1.9082172330141234,
+            "below_20": false
+          },
+          {
+            "donor": "O2",
+            "day": 13.0,
+            "treated_age": 54.55787359439544,
+            "control_age": 55.353125344420306,
+            "diff_years": -0.7952517500248675,
+            "intercept_free": -0.7952517500248657,
+            "below_20": false
+          },
+          {
+            "donor": "O2",
+            "day": 15.0,
+            "treated_age": 56.51602514001532,
+            "control_age": 57.16197732364292,
+            "diff_years": -0.6459521836275997,
+            "intercept_free": -0.6459521836276012,
+            "below_20": false
+          },
+          {
+            "donor": "O2",
+            "day": 17.0,
+            "treated_age": 56.65579360341436,
+            "control_age": 60.15934634873725,
+            "diff_years": -3.5035527453228923,
+            "intercept_free": -3.5035527453228905,
+            "below_20": false
+          },
+          {
+            "donor": "O3",
+            "day": 10.0,
+            "treated_age": 44.05185434728773,
+            "control_age": 41.58616016821449,
+            "diff_years": 2.465694179073239,
+            "intercept_free": 2.4656941790732416,
+            "below_20": false
+          },
+          {
+            "donor": "O3",
+            "day": 13.0,
+            "treated_age": 42.256036627099675,
+            "control_age": 42.093518520507445,
+            "diff_years": 0.16251810659223054,
+            "intercept_free": 0.16251810659223298,
+            "below_20": false
+          },
+          {
+            "donor": "O3",
+            "day": 15.0,
+            "treated_age": 41.856482909782656,
+            "control_age": 41.75103511737947,
+            "diff_years": 0.10544779240318292,
+            "intercept_free": 0.1054477924031807,
+            "below_20": false
+          },
+          {
+            "donor": "O3",
+            "day": 17.0,
+            "treated_age": 44.1148177474417,
+            "control_age": 42.58096280535587,
+            "diff_years": 1.5338549420858314,
+            "intercept_free": 1.5338549420858332,
+            "below_20": false
+          }
+        ],
+        "n_pairs_below_20": 0,
+        "intercept_free": {
+          "n": 12,
+          "mean": -1.1279323543092301,
+          "ci95": [
+            -2.7459184724714905,
+            0.49005376385303023
+          ]
+        }
+      },
+      "V3_dose_response": {
+        "n": 12,
+        "rho": -0.8852587100294375,
+        "p": 0.00012880556897955662,
+        "slope_intercept_free": -3.2993251659436877,
+        "slope_derived_intercept": -3.1006700202356456
+      }
+    },
+    "horvath_multitissue_2013": {
+      "intercept_used": 0.3164034274537179,
+      "n_samples": 96,
+      "V1_contrast_A": {
+        "n": 12,
+        "mean": -27.54629531863966,
+        "ci95": [
+          -33.69418177273534,
+          -21.39840886454398
+        ],
+        "pairs": [
+          {
+            "donor": "O1",
+            "day": 10.0,
+            "treated_age": 28.98417598789163,
+            "control_age": 48.678352123944414,
+            "diff_years": -19.694176136052786,
+            "intercept_free": -19.694176136052786,
+            "below_20": false
+          },
+          {
+            "donor": "O1",
+            "day": 13.0,
+            "treated_age": 24.269196304422437,
+            "control_age": 45.01352849857394,
+            "diff_years": -20.744332194151504,
+            "intercept_free": -20.744332194151504,
+            "below_20": false
+          },
+          {
+            "donor": "O1",
+            "day": 15.0,
+            "treated_age": 24.23276647844031,
+            "control_age": 45.72652546649431,
+            "diff_years": -21.493758988053997,
+            "intercept_free": -21.493758988054,
+            "below_20": false
+          },
+          {
+            "donor": "O1",
+            "day": 17.0,
+            "treated_age": 15.38282862131532,
+            "control_age": 47.57144135237531,
+            "diff_years": -32.18861273105999,
+            "intercept_free": -32.78550377314425,
+            "below_20": true
+          },
+          {
+            "donor": "O2",
+            "day": 10.0,
+            "treated_age": 32.173592164404525,
+            "control_age": 48.6859776519785,
+            "diff_years": -16.512385487573972,
+            "intercept_free": -16.512385487573972,
+            "below_20": false
+          },
+          {
+            "donor": "O2",
+            "day": 13.0,
+            "treated_age": 27.03991795222948,
+            "control_age": 52.32052796605986,
+            "diff_years": -25.280610013830383,
+            "intercept_free": -25.280610013830383,
+            "below_20": false
+          },
+          {
+            "donor": "O2",
+            "day": 15.0,
+            "treated_age": 16.937339941193514,
+            "control_age": 55.30846704970648,
+            "diff_years": -38.371127108512965,
+            "intercept_free": -38.61886226473755,
+            "below_20": true
+          },
+          {
+            "donor": "O2",
+            "day": 17.0,
+            "treated_age": 8.16909176355519,
+            "control_age": 55.603751870783206,
+            "diff_years": -47.43466010722801,
+            "intercept_free": -53.00612008513836,
+            "below_20": true
+          },
+          {
+            "donor": "O3",
+            "day": 10.0,
+            "treated_age": 24.10195686770746,
+            "control_age": 47.19414103742228,
+            "diff_years": -23.092184169714816,
+            "intercept_free": -23.092184169714816,
+            "below_20": false
+          },
+          {
+            "donor": "O3",
+            "day": 13.0,
+            "treated_age": 23.0323859884139,
+            "control_age": 43.63979806926332,
+            "diff_years": -20.60741208084942,
+            "intercept_free": -20.60741208084942,
+            "below_20": false
+          },
+          {
+            "donor": "O3",
+            "day": 15.0,
+            "treated_age": 23.160044299144467,
+            "control_age": 48.45697757774573,
+            "diff_years": -25.296933278601266,
+            "intercept_free": -25.296933278601262,
+            "below_20": false
+          },
+          {
+            "donor": "O3",
+            "day": 17.0,
+            "treated_age": 10.647913926644662,
+            "control_age": 50.48726545469147,
+            "diff_years": -39.839351528046805,
+            "intercept_free": -42.86456750724392,
+            "below_20": true
+          }
+        ],
+        "n_pairs_below_20": 4,
+        "intercept_free": {
+          "n": 12,
+          "mean": -28.333070498257687,
+          "ci95": [
+            -35.42373120647725,
+            -21.24240979003812
+          ]
+        }
+      },
+      "V2_failing_intermediates": {
+        "n": 12,
+        "mean": -3.6161418747247915,
+        "ci95": [
+          -5.073504914537095,
+          -2.1587788349124883
+        ],
+        "pairs": [
+          {
+            "donor": "O1",
+            "day": 10.0,
+            "treated_age": 42.84155008448549,
+            "control_age": 48.678352123944414,
+            "diff_years": -5.836802039458924,
+            "intercept_free": -5.836802039458924,
+            "below_20": false
+          },
+          {
+            "donor": "O1",
+            "day": 13.0,
+            "treated_age": 41.37488318157207,
+            "control_age": 45.01352849857394,
+            "diff_years": -3.638645317001867,
+            "intercept_free": -3.638645317001867,
+            "below_20": false
+          },
+          {
+            "donor": "O1",
+            "day": 15.0,
+            "treated_age": 40.47150963615611,
+            "control_age": 45.72652546649431,
+            "diff_years": -5.255015830338202,
+            "intercept_free": -5.255015830338201,
+            "below_20": false
+          },
+          {
+            "donor": "O1",
+            "day": 17.0,
+            "treated_age": 45.503564754172174,
+            "control_age": 47.57144135237531,
+            "diff_years": -2.067876598203135,
+            "intercept_free": -2.067876598203135,
+            "below_20": false
+          },
+          {
+            "donor": "O2",
+            "day": 10.0,
+            "treated_age": 50.13639063365905,
+            "control_age": 48.6859776519785,
+            "diff_years": 1.4504129816805502,
+            "intercept_free": 1.4504129816805493,
+            "below_20": false
+          },
+          {
+            "donor": "O2",
+            "day": 13.0,
+            "treated_age": 48.25422271129813,
+            "control_age": 52.32052796605986,
+            "diff_years": -4.066305254761737,
+            "intercept_free": -4.06630525476174,
+            "below_20": false
+          },
+          {
+            "donor": "O2",
+            "day": 15.0,
+            "treated_age": 49.25164556467907,
+            "control_age": 55.30846704970648,
+            "diff_years": -6.056821485027406,
+            "intercept_free": -6.0568214850274025,
+            "below_20": false
+          },
+          {
+            "donor": "O2",
+            "day": 17.0,
+            "treated_age": 49.77117298562249,
+            "control_age": 55.603751870783206,
+            "diff_years": -5.832578885160714,
+            "intercept_free": -5.832578885160714,
+            "below_20": false
+          },
+          {
+            "donor": "O3",
+            "day": 10.0,
+            "treated_age": 46.82595871252876,
+            "control_age": 47.19414103742228,
+            "diff_years": -0.36818232489351743,
+            "intercept_free": -0.36818232489351566,
+            "below_20": false
+          },
+          {
+            "donor": "O3",
+            "day": 13.0,
+            "treated_age": 39.766408605392854,
+            "control_age": 43.63979806926332,
+            "diff_years": -3.873389463870467,
+            "intercept_free": -3.873389463870465,
+            "below_20": false
+          },
+          {
+            "donor": "O3",
+            "day": 15.0,
+            "treated_age": 44.92632094897472,
+            "control_age": 48.45697757774573,
+            "diff_years": -3.5306566287710126,
+            "intercept_free": -3.5306566287710135,
+            "below_20": false
+          },
+          {
+            "donor": "O3",
+            "day": 17.0,
+            "treated_age": 46.1694238038004,
+            "control_age": 50.48726545469147,
+            "diff_years": -4.317841650891069,
+            "intercept_free": -4.31784165089107,
+            "below_20": false
+          }
+        ],
+        "n_pairs_below_20": 0,
+        "intercept_free": {
+          "n": 12,
+          "mean": -3.6161418747247915,
+          "ci95": [
+            -5.073504914537095,
+            -2.1587788349124883
+          ]
+        }
+      },
+      "V3_dose_response": {
+        "n": 12,
+        "rho": -0.8420753583206844,
+        "p": 0.000589696620585007,
+        "slope_intercept_free": -3.1470405315956116,
+        "slope_derived_intercept": -2.7708565852697076
+      }
+    }
+  }
+}

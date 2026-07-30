@@ -58,6 +58,78 @@
 > (`REV FINAL` §5, needs ≈ 16 pairs) *and* begin anchoring the labels. Reference cells address only
 > the baseline-noise half.
 
+> ## 🆕 ADDED 2026-07-30 — three things a reviewer will find in ten minutes
+>
+> *Additive note; nothing below is modified. All three bear on the **§0 spend decision**, which is
+> why they sit above it.*
+>
+> ### A. §1 and §4 quote DIFFERENT MODELS — this document never says so
+>
+> Every donor number disagrees between the two tables, with no explanation in the file:
+>
+> | donor | N2 | N3 | O1 | O2 | Y1 | Y2 | mean | mean abs |
+> |---|---|---|---|---|---|---|---|---|
+> | **§1's table** = **ridge** baseline | +20.11 | −24.40 | +5.72 | +13.04 | −4.28 | −8.81 | +0.23 | **12.72** |
+> | **§4's table** = the **model** | +15.03 | −28.35 | **+0.64** | +6.56 | −8.13 | −20.02 | **−5.71** | 13.12 |
+>
+> This is `STAGE_1_DEVIATIONS.md` **§C1**, and it is already recorded there — but a reader of *this*
+> file sees only two contradictory tables. **§4's are the deployed model's; §1's are not.** Use §4's
+> for any decision. (§C1's own correction also applies: the model's mean −5.71 has 95% CI
+> **[−22.9, +11.5]**, which includes zero, so it is *not* evidence of a global bias either.)
+>
+> ### B. §2's benefit was measured with the correction applied to EVERY donor — before §4's rule existed
+>
+> §2 reports **14.3 → 6.9 (−52%)** at k=5 and **14.3 → 7.1 (−50%)** at k=3, and §4 then says the same
+> T16 run *"helps 4 donors and hurts 2"*. **So §2's headline is the unconditional number.** §4's
+> `|d| > 2·SE` rule exists precisely to suppress some of those corrections — and **nobody re-measured
+> the benefit with the rule active.** The true figure is **between** §2's −50% and zero, and is
+> currently unknown. **Do not quote −50% as the expected gain of the stage as specified.**
+>
+> ### C. Whether the rule fires at k = 3 is never computed — and it decides the spend
+>
+> §4's rule is `|d| > 2·SE` with `SE ≈ 1.253·s/√k`, where **`s` is the within-donor sd of
+> `pred − true` across the reference cells**. Substituting k = 3:
+>
+> ```
+> fires  <=>  |d|  >  2 · 1.253 · s / sqrt(3)  =  1.447 · s
+> ```
+>
+> So a donor is corrected only if its shift exceeds **~1.45× the within-donor spread**. Against §4's
+> model shifts, the break-even `s` per donor is `|d| / 1.447`:
+>
+> | donor | model \|shift\| | needs `s` below | T16 verdict |
+> |---|---|---|---|
+> | N3 | 28.35 | **19.6** | huge gain |
+> | Y2 | 20.02 | **13.8** | gain |
+> | N2 | 15.03 | **10.4** | huge gain |
+> | Y1 | 8.13 | 5.6 | **HURT** |
+> | O2 | 6.56 | 4.5 | gain |
+> | O1 | 0.64 | 0.44 | **HURT** |
+>
+> **Best available estimate of `s`:** §2's corrected MAE is 6.9 yr, so for roughly normal residuals
+> `s ≈ 1.253 × 6.9 ≈ 8.6 yr`. **This is inferred, not measured** — see the pre-registration below.
+>
+> **At `s ≈ 8.65` the threshold is 12.5 yr, and the rule fires for 3 of 6 donors: N3, Y2, N2.**
+> That is the rule working as designed — **it correctly declines both donors T16 damaged** (O1, Y1).
+> But it **also declines O2**, which T16 *helped* (7.5 → 4.3). Capturing O2 as well needs
+> `k > 6.28·s²/d²` ≈ **11 cells**, not 3; Y1 would need ≈ 7 — and Y1 is a donor the rule *should*
+> decline.
+>
+> **Consequence for §0 and §7:** "k = 3 minimum" is the number at which the *unconditional*
+> correction passed T16. It is **not** established as sufficient for the *conditional* correction
+> this document actually specifies. k = 3 buys the three large-shift donors and nothing else.
+>
+> ### Pre-registered before any wet-lab spend (ground rule §5)
+>
+> 1. **Measure `s` directly** — the within-donor sd of `pred − true`, per donor, on existing held-out
+>    data. It needs no new cells and it is the single number this stage's cost-effectiveness turns on.
+> 2. **Re-measure the benefit with §4's rule active**, at k = 3 and k = 5, and report it beside §2's
+>    unconditional figure. The **≥25% TARGET bar in §12 must be graded on the conditional number**,
+>    since that is what would ship.
+> 3. **If the conditional benefit misses the bar**, the honest options are k > 3 (cost rises), or
+>    §0's stated fallback — ship as a within-donor ranker. **Not** relaxing the bar (§5), and **not**
+>    quietly reverting to the unconditional correction that T16 showed damages O1 and Y1.
+
 ---
 
 ## 0. READ THIS FIRST — this stage has a non-code prerequisite
