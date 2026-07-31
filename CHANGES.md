@@ -2328,3 +2328,113 @@ python experiments/diag_m2b_contrast_agreement.py --run "D:\GSE165178" "D:\Gill"
 python experiments/diag_gc_hff_signature.py --run runs/cellfate_loocv_O1
 python verify_stage1_5.py "D:\GSE242423" "D:\Gill"          # now shows the G-a baseline column
 ```
+
+---
+
+## 2026-07-31 (later) — Stage 1.5.1 REV FINAL closed out, and Stage 1.5.2 re-audited
+
+Two pieces of work: give every open question in `STAGE_1_5_1_REV_FINAL.md` an owner, and re-check
+Stage 1.5.2 now that it is closed. Both produced findings. `src/` untouched by either.
+
+### REV FINAL §6.3 is ANSWERED — the donors *are* the same people
+
+§10.6 listed *"O1/O2 are the same physical donors"* as **❌ not verifiable**. That is true of the
+**metadata** and false of the **data**: methylation carries a genotype fingerprint, and both
+GSE165178 and GSE165179 are arrays.
+
+The roster asymmetry is the control — GSE165178 has O1/O2/**Y1/Y2**, GSE165179 has O1/O2/**O3**, so
+Y1 and Y2 *cannot* match and measure what a spurious match looks like:
+
+| query (Sendai) | O1 | O2 | O3 | best | margin |
+|---|---|---|---|---|---|
+| **O1** | **0.9619** | 0.8416 | 0.4272 | **O1** ✅ | **0.1203** |
+| **O2** | 0.7719 | **0.9755** | 0.3925 | **O2** ✅ | **0.2036** |
+| Y1 *(none)* | 0.7382 | 0.6754 | 0.5897 | — | 0.0628 |
+| Y2 *(none)* | 0.7033 | 0.6529 | 0.5817 | — | 0.0504 |
+
+Both pre-registered conditions met — correct assignment **and** margin separation. The second one
+matters: a panel with no identity signal gets both right **10.9%** of the time. **⇒ `SAME_DONORS`.**
+
+**The route there is the more interesting half.** The run **aborted twice** before the assignment was
+ever computed:
+
+| | panel | cross-arm stability (bar ≥ 0.95) | |
+|---|---|---|---|
+| attempt 1 | top 5000 by between-donor F | 0.821 / 0.942 / 0.966 | ❌ aborted |
+| attempt 2 | 419 **trimodal** genotype-shaped probes | 0.938 / 0.985 / 0.990 | ❌ aborted |
+
+Then I audited the bar itself — **I had set 0.95 by assertion, the same §5b violation this project
+has caught four times.** Simulated with array noise from GSE165179's own exp1/exp2 replicates: a
+**perfect** panel scores 0.9681 and clears 0.95 **100%** of the time. **The bar was fair, so it was
+not moved.**
+
+**The diagnosis is a finding.** The panel is stable against OSKM exposure (failed arm **0.990 /
+0.994 / 0.995**) and moves *only* in cells that **succeeded** — most in O1, whose two reprogrammed
+samples are day 10 and day **17**, the deepest. Global demethylation during successful reprogramming
+reaches even genotype-shaped CpGs, in proportion to depth. That corroborates REV FINAL §4.2 from a
+direction nothing was looking in.
+
+**Nothing depended on this, and that is now checked**: every contrast in 1.5.1 and 1.5.2 is within a
+single experiment, so no result crosses the Sendai/transient boundary on a donor label.
+
+### Every other REV FINAL question now has an owner (§11)
+
+| answered | |
+|---|---|
+| §6.2 **Gill's** labels | ❌ **NO** — Stage 1.5.2 M-2a. §8.3's "the calibration route is back on the table" is superseded |
+| §6.5 absolute methylation ages | **quantified**: ±7 yr donor-level (§12-R) |
+| §10.7's uncaptured flake | **closed** — not reproduced in ~15 suite runs since |
+| §10.6 "Gill's ~30 yr" | **won't fix** — a claim about their paper; nothing depends on it |
+
+**Genuinely open, three items, all owned:** §5's retention and HFF's labels need **Stage 6**
+(more donors / new data); HFF's `age_mask` needs **1.5.2 G-c step 2** (one retrain, no new data).
+
+⚠️ One thing 1.5.2 changed about §5: the −6 to −9 yr retention effect is **the same size as the
+±7 yr between-donor error of the instrument measuring it.** More donors help the pairing; they will
+not make the instrument sharper. Stage 6 should size for that, not just for n.
+
+### Stage 1.5.2 §17 — the re-audit found §11's per-arm *reading* was wrong
+
+Every load-bearing number in §11–§16 re-verified against its JSON. All exact. One thing did not
+survive re-reading.
+
+§11 reported RNA↔methylation per arm and concluded the clock *"tracks in cells that are NOT
+reprogramming and stops — or inverts — in exactly the cells that are."* **That table has a numerator
+and no denominator.** Adding it:
+
+| arm | n | **meth↔meth** | RNA | |
+|---|---:|---:|---:|---|
+| **`transient_reprogramming_intermediate`** | 11 | **+0.936** | **−0.164** | REPROG |
+| `negative_control` | 12 | +0.860 | +0.399 | |
+| `failing_..._intermediate` | 12 | +0.762 | +0.112 | |
+| `negative_control_intermediate` | 12 | +0.671 | +0.231 | ⚠️ too blunt |
+| `failed_to_transiently_reprogram` | 12 | +0.566 | +0.430 | ⚠️ too blunt |
+| **`transiently_reprogrammed`** | 9 | **+0.233** | +0.150 | ⚠️ too blunt |
+
+**Only 3 of 6 arms have a reference sharp enough to arbitrate anything.** Three corrections:
+
+1. **§11's headline is withdrawn as stated.** `failing_..._intermediate` is a **non-reprogramming**
+   arm with a **sharp** reference (+0.762) where the RNA clock reads **+0.112** — 15% of ceiling. The
+   failure is not confined to reprogramming cells.
+2. **§11 counted an uninterpretable arm as evidence** — `transiently_reprogrammed` has the *lowest*
+   ceiling of all six.
+3. **The row that does hold is far stronger than §11 made it look, and §11 buried it:** where the two
+   methylation clocks agree at **+0.936 — the sharpest reference in the study — the RNA clock is
+   negatively correlated.** Where the ground truth is most reliable, the transcriptomic clock runs
+   backwards.
+
+**No verdict moves** — §7 was decided on ρ_partial at n=68, and every arm's n=9–12 was frozen as
+UNRESOLVABLE by §6. The defect is that §11 labelled the table "descriptive" and then drew a
+structural conclusion from it in the next sentence. **A caveat does not license a claim.**
+
+It also sharpens §12-R: the pooled ceiling +0.568 is an average over a **4× range** (+0.233 to
++0.936), so **the reference's precision is confounded with the axis under study** — a third and
+stronger reason M-2c would have been meaningless.
+
+### To verify
+
+```powershell
+python -m pytest tests/ -q                                   # 564 passing (was 537)
+python experiments/diag_donor_identity.py --run "D:\GSE165178" "D:\GSE165179"
+python experiments/diag_m2a_per_arm_ceiling.py
+```

@@ -3585,3 +3585,46 @@ absolute ages rather than the control-relative labels. Verdict **RUN_STEP_2**.
 - ⚠️ **The anchor does NOT hold for absolute ages at n=3 donors** (±7 yr donor error).
 - 🔴 **D1 and D2 are now visible in the pipeline's own output**, not reconstructible by hand.
 - ⏳ **One item open: G-c step 2**, which needs a retrain and belongs to whatever stage next rebuilds.
+
+---
+
+## REV FINAL closed out + Stage 1.5.2 re-audited (2026-07-31, later)
+
+**Status:** ✅ Both done. 564 tests pass. `src/` untouched by either.
+
+### The two findings
+
+**1. REV FINAL §6.3 — the donor labels ARE the same people.** §10.6 called this "not verifiable".
+It is not verifiable from the *metadata*; it is verifiable from the *data*. Methylation genotype,
+with the roster asymmetry (Y1/Y2/O3 have no counterpart) as the built-in control: O1→O1 at r 0.962
+margin 0.120, O2→O2 at 0.976 margin 0.204, against control margins of 0.063 / 0.050. Both
+pre-registered conditions met ⇒ `SAME_DONORS`.
+
+**2. Stage 1.5.2 §17 — §11's per-arm reading was wrong.** §11 gave RNA↔methylation per arm with no
+denominator. With the per-arm meth↔meth ceiling added, only **3 of 6 arms** are interpretable, and
+the one that matters most says something stronger than §11 claimed: where the two methylation clocks
+agree at **+0.936**, the RNA clock reads **−0.164**.
+
+### What I got wrong, again worth writing down
+
+| | |
+|---|---|
+| the donor-identity stability bar | I set 0.95 **by assertion** — the §5b violation this project has caught four times, committed by me. Audited afterwards: a perfect panel clears it 100% of the time, so it was fair and was **not** moved |
+| my first identity panel | selected by between-donor F alone. F rewards any probe that differs between donors, including for culture reasons. Necessary, not sufficient |
+| §11's per-arm table | labelled "descriptive", then used to support a structural conclusion in the very next sentence. **A caveat does not license a claim** |
+
+### The thing that surprised me
+
+The genotype panel is **rock-stable against OSKM exposure** (failed arm 0.990 / 0.994 / 0.995) and
+moves **only in cells that successfully reprogrammed**, worst in the donor whose samples are deepest
+(day 17). Global demethylation during reprogramming reaches even probes chosen *because* they should
+be genotype-driven and cell-state-invariant. That is independent corroboration of §4.2's −24 to
+−28 yr from a direction nothing was looking in.
+
+### Still open, in one place
+
+| item | owner |
+|---|---|
+| §5 retention (−6 to −9 yr) | **Stage 6** — needs ≈16 pairs, and must size for the ±7 yr between-donor instrument error, not just for n |
+| HFF's age labels | **Stage 6** — no methylation exists for HFF anywhere |
+| HFF's `age_mask` | **Stage 1.5.2 G-c step 2** — one retrain, no new data |
