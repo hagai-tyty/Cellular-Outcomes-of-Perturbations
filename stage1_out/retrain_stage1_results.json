@@ -1,0 +1,62 @@
+[
+  {
+    "donor": "N3",
+    "ok": true,
+    "minutes": 36.1,
+    "temperature": 0.8278527265308103,
+    "conformal_q": 24.391517639160156,
+    "sigma_scale": 9.88876095134592,
+    "xdonor_calibrated": true,
+    "xdonor_n_donors": 5,
+    "xdonor_ece_before_temp": 0.2942218583764382,
+    "xdonor_ece_after_temp": 0.2609200709074447
+  },
+  {
+    "donor": "O1",
+    "ok": true,
+    "minutes": 36.3,
+    "temperature": 0.7990497726138054,
+    "conformal_q": 34.642051696777344,
+    "sigma_scale": 12.671223021075782,
+    "xdonor_calibrated": true,
+    "xdonor_n_donors": 5,
+    "xdonor_ece_before_temp": 0.2728938127605661,
+    "xdonor_ece_after_temp": 0.2244956151953021
+  },
+  {
+    "donor": "O2",
+    "ok": true,
+    "minutes": 37.5,
+    "temperature": 0.8490393643040596,
+    "conformal_q": 36.27278137207031,
+    "sigma_scale": 12.465580583110109,
+    "xdonor_calibrated": true,
+    "xdonor_n_donors": 5,
+    "xdonor_ece_before_temp": 0.27684350615566217,
+    "xdonor_ece_after_temp": 0.24346143209818502
+  },
+  {
+    "donor": "Y1",
+    "ok": true,
+    "minutes": 37.6,
+    "temperature": 0.7547780103047692,
+    "conformal_q": 34.41313171386719,
+    "sigma_scale": 12.077414919169051,
+    "xdonor_calibrated": true,
+    "xdonor_n_donors": 5,
+    "xdonor_ece_before_temp": 0.37059589227040607,
+    "xdonor_ece_after_temp": 0.3129586935043334
+  },
+  {
+    "donor": "Y2",
+    "ok": true,
+    "minutes": 36.2,
+    "temperature": 0.8330724609933442,
+    "conformal_q": 34.186832427978516,
+    "sigma_scale": 14.213228132311016,
+    "xdonor_calibrated": true,
+    "xdonor_n_donors": 5,
+    "xdonor_ece_before_temp": 0.2659246120059374,
+    "xdonor_ece_after_temp": 0.2425069606419906
+  }
+]

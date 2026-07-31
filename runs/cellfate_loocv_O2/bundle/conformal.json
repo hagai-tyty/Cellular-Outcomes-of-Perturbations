@@ -3,6 +3,13 @@
     0.9
   ],
   "q": {
-    "0.9": 9.51815414428711
-  }
+    "0.9": 36.27278137207031
+  },
+  "sigma_scale": 12.465580583110109,
+  "sigma_scale_mc": 14.148534475078275,
+  "sigma_scale_mode": "ensemble",
+  "sigma_calibrated_modes": [
+    "ensemble",
+    "mc_dropout"
+  ]
 }

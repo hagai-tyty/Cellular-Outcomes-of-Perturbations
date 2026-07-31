@@ -7,8 +7,8 @@ model:
   pert_kind: tf
   n_pert: 8
 train:
-  dataset_dir: cellfate_loocv_O1
-  out: cellfate_loocv_O1
+  dataset_dir: runs\cellfate_loocv_O1
+  out: runs\cellfate_loocv_O1
   regime: holdout
   d_cell: 256
   d_u: 256
@@ -30,3 +30,6 @@ train:
   - 0.9
   device: cuda
   res: {}
+  xdonor_calibration: true
+  inference_mode: ensemble
+  mc_dropout_T: 50

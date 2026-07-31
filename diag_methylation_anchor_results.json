@@ -1,7 +1,7 @@
 {
   "script": "diag_methylation_anchor",
-  "utc": "2026-07-30T04:27:26+00:00",
-  "data_dir": "C:\\Users\\hagay\\Desktop\\GSE165179",
+  "utc": "2026-07-31T12:24:49+00:00",
+  "data_dir": "D:\\GSE165179",
   "n_samples": 96,
   "clocks": {
     "horvath_skin_blood_2018": {

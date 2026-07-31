@@ -1,0 +1,512 @@
+{
+  "N2": {
+    "donor": "N2",
+    "root": "runs\\cellfate_loocv_N2",
+    "pool_n": 103,
+    "pool_n_donors": 5,
+    "pool_residuals_per_donor": {
+      "1": 21,
+      "2": 21,
+      "3": 21,
+      "4": 19,
+      "5": 21
+    },
+    "pool_donor_scales": {
+      "1": {
+        "n": 21,
+        "mae": 23.099123001098633,
+        "sigma_mean": 2.122753620147705,
+        "sigma_mc_mean": 1.9238066673278809
+      },
+      "2": {
+        "n": 21,
+        "mae": 13.103066444396973,
+        "sigma_mean": 2.516660690307617,
+        "sigma_mc_mean": 1.4766126871109009
+      },
+      "3": {
+        "n": 21,
+        "mae": 14.11540412902832,
+        "sigma_mean": 1.5223287343978882,
+        "sigma_mc_mean": 1.7041682004928589
+      },
+      "4": {
+        "n": 19,
+        "mae": 9.906964302062988,
+        "sigma_mean": 1.8791981935501099,
+        "sigma_mc_mean": 1.583296775817871
+      },
+      "5": {
+        "n": 21,
+        "mae": 20.755172729492188,
+        "sigma_mean": 1.9900484085083008,
+        "sigma_mc_mean": 1.3654732704162598
+      }
+    },
+    "pool_donor_ids_reconstructed": true,
+    "pool_donor_ids_note": "per-row donor labels rebuilt from residuals_per_donor; totals matched",
+    "test_n": 21,
+    "calib_n": 4490,
+    "test_n_age_valid": 21,
+    "bundle_had_platt": true,
+    "conformal_q": 33.75681686401367,
+    "metrics": {
+      "temperature": 1.0,
+      "platt_a": 2.5736559556614167,
+      "platt_b": 0.5070708822480972,
+      "conformal_q": {
+        "0.9": 33.75681686401367
+      },
+      "sigma_scale": 18.64028538987241,
+      "sigma_scale_mc": 21.355680337183493,
+      "sigma_scale_mode": "ensemble",
+      "xdonor_calibrated": true,
+      "xdonor_n_donors": 5,
+      "fate_calib_n": {
+        "total": 4509,
+        "in_dist": 4406,
+        "xdonor": 103
+      },
+      "xdonor_only_platt_a": 1.532935788998875,
+      "xdonor_only_platt_b": 0.7479969230998436,
+      "xdonor_only_n": 103,
+      "xdonor_only_n_donors": 5,
+      "xdonor_only_safe_ece_insample": 0.02587937396804924,
+      "shipped_safe_ece_on_pool": 0.08488239090219907,
+      "xdonor_safe_ece_before": 0.14890381230891328,
+      "xdonor_safe_ece_after": 0.08488239090219907,
+      "xdonor_ece_before_temp": 0.2693135998781445,
+      "xdonor_ece_after_temp": 0.2693135998781445,
+      "val_loss_mean": 5.236766257180012,
+      "n_train": 33688,
+      "n_val": 4406,
+      "n_calib": 4490
+    }
+  },
+  "N3": {
+    "donor": "N3",
+    "root": "runs\\cellfate_loocv_N3",
+    "pool_n": 103,
+    "pool_n_donors": 5,
+    "pool_residuals_per_donor": {
+      "2": 21,
+      "3": 21,
+      "4": 19,
+      "5": 21,
+      "6": 21
+    },
+    "pool_donor_scales": {
+      "2": {
+        "n": 21,
+        "mae": 4.72311544418335,
+        "sigma_mean": 2.880802869796753,
+        "sigma_mc_mean": 2.684084415435791
+      },
+      "3": {
+        "n": 21,
+        "mae": 3.6816627979278564,
+        "sigma_mean": 2.3555636405944824,
+        "sigma_mc_mean": 2.8071393966674805
+      },
+      "4": {
+        "n": 19,
+        "mae": 8.593754768371582,
+        "sigma_mean": 3.1257991790771484,
+        "sigma_mc_mean": 2.6938648223876953
+      },
+      "5": {
+        "n": 21,
+        "mae": 17.21309471130371,
+        "sigma_mean": 2.0433237552642822,
+        "sigma_mc_mean": 2.8626980781555176
+      },
+      "6": {
+        "n": 21,
+        "mae": 22.119918823242188,
+        "sigma_mean": 3.4306836128234863,
+        "sigma_mc_mean": 1.9365557432174683
+      }
+    },
+    "pool_donor_ids_reconstructed": true,
+    "pool_donor_ids_note": "per-row donor labels rebuilt from residuals_per_donor; totals matched",
+    "test_n": 21,
+    "calib_n": 4490,
+    "test_n_age_valid": 21,
+    "bundle_had_platt": true,
+    "conformal_q": 24.391517639160156,
+    "metrics": {
+      "temperature": 1.0,
+      "platt_a": 2.59910531563988,
+      "platt_b": 0.5023129468553994,
+      "conformal_q": {
+        "0.9": 24.391517639160156
+      },
+      "sigma_scale": 9.88876095134592,
+      "sigma_scale_mc": 11.048689175470711,
+      "sigma_scale_mode": "ensemble",
+      "xdonor_calibrated": true,
+      "xdonor_n_donors": 5,
+      "fate_calib_n": {
+        "total": 4509,
+        "in_dist": 4406,
+        "xdonor": 103
+      },
+      "xdonor_only_platt_a": 1.2383172389421693,
+      "xdonor_only_platt_b": 0.5218006721931118,
+      "xdonor_only_n": 103,
+      "xdonor_only_n_donors": 5,
+      "xdonor_only_safe_ece_insample": 0.06533463996638315,
+      "shipped_safe_ece_on_pool": 0.09446704456342245,
+      "xdonor_safe_ece_before": 0.12334030201134175,
+      "xdonor_safe_ece_after": 0.09446704456342245,
+      "xdonor_ece_before_temp": 0.2942218583764382,
+      "xdonor_ece_after_temp": 0.2942218583764382,
+      "val_loss_mean": 7.582273094707114,
+      "n_train": 33688,
+      "n_val": 4406,
+      "n_calib": 4490
+    }
+  },
+  "O1": {
+    "donor": "O1",
+    "root": "runs\\cellfate_loocv_O1",
+    "pool_n": 103,
+    "pool_n_donors": 5,
+    "pool_residuals_per_donor": {
+      "1": 21,
+      "3": 21,
+      "4": 19,
+      "5": 21,
+      "6": 21
+    },
+    "pool_donor_scales": {
+      "1": {
+        "n": 21,
+        "mae": 29.866031646728516,
+        "sigma_mean": 3.1234734058380127,
+        "sigma_mc_mean": 2.6586480140686035
+      },
+      "3": {
+        "n": 21,
+        "mae": 7.852108955383301,
+        "sigma_mean": 2.7386057376861572,
+        "sigma_mc_mean": 2.7788617610931396
+      },
+      "4": {
+        "n": 19,
+        "mae": 8.093173027038574,
+        "sigma_mean": 3.636530876159668,
+        "sigma_mc_mean": 2.198373556137085
+      },
+      "5": {
+        "n": 21,
+        "mae": 14.572908401489258,
+        "sigma_mean": 3.048788547515869,
+        "sigma_mc_mean": 2.6390366554260254
+      },
+      "6": {
+        "n": 21,
+        "mae": 28.140548706054688,
+        "sigma_mean": 2.2829508781433105,
+        "sigma_mc_mean": 2.784024477005005
+      }
+    },
+    "pool_donor_ids_reconstructed": true,
+    "pool_donor_ids_note": "per-row donor labels rebuilt from residuals_per_donor; totals matched",
+    "test_n": 21,
+    "calib_n": 4490,
+    "test_n_age_valid": 21,
+    "bundle_had_platt": true,
+    "conformal_q": 34.642051696777344,
+    "metrics": {
+      "temperature": 1.0,
+      "platt_a": 2.5840320771725738,
+      "platt_b": 0.4551607054652754,
+      "conformal_q": {
+        "0.9": 34.642051696777344
+      },
+      "sigma_scale": 12.671223021075782,
+      "sigma_scale_mc": 14.45710226196378,
+      "sigma_scale_mode": "ensemble",
+      "xdonor_calibrated": true,
+      "xdonor_n_donors": 5,
+      "fate_calib_n": {
+        "total": 4509,
+        "in_dist": 4406,
+        "xdonor": 103
+      },
+      "xdonor_only_platt_a": 1.4042122786493088,
+      "xdonor_only_platt_b": 0.4673244788052888,
+      "xdonor_only_n": 103,
+      "xdonor_only_n_donors": 5,
+      "xdonor_only_safe_ece_insample": 0.0897866519342834,
+      "shipped_safe_ece_on_pool": 0.10286071454907188,
+      "xdonor_safe_ece_before": 0.12830833888169632,
+      "xdonor_safe_ece_after": 0.10286071454907188,
+      "xdonor_ece_before_temp": 0.2728938127605661,
+      "xdonor_ece_after_temp": 0.2728938127605661,
+      "val_loss_mean": 7.9455871378569185,
+      "n_train": 33688,
+      "n_val": 4406,
+      "n_calib": 4490
+    }
+  },
+  "O2": {
+    "donor": "O2",
+    "root": "runs\\cellfate_loocv_O2",
+    "pool_n": 103,
+    "pool_n_donors": 5,
+    "pool_residuals_per_donor": {
+      "1": 21,
+      "2": 21,
+      "4": 19,
+      "5": 21,
+      "6": 21
+    },
+    "pool_donor_scales": {
+      "1": {
+        "n": 21,
+        "mae": 28.898324966430664,
+        "sigma_mean": 2.4955267906188965,
+        "sigma_mc_mean": 3.188798189163208
+      },
+      "2": {
+        "n": 21,
+        "mae": 6.817057132720947,
+        "sigma_mean": 4.09299373626709,
+        "sigma_mc_mean": 3.508096933364868
+      },
+      "4": {
+        "n": 19,
+        "mae": 5.729935169219971,
+        "sigma_mean": 4.582253456115723,
+        "sigma_mc_mean": 2.987708330154419
+      },
+      "5": {
+        "n": 21,
+        "mae": 13.263516426086426,
+        "sigma_mean": 2.5188748836517334,
+        "sigma_mc_mean": 2.7452285289764404
+      },
+      "6": {
+        "n": 21,
+        "mae": 30.760658264160156,
+        "sigma_mean": 3.167745351791382,
+        "sigma_mc_mean": 2.4761271476745605
+      }
+    },
+    "pool_donor_ids_reconstructed": true,
+    "pool_donor_ids_note": "per-row donor labels rebuilt from residuals_per_donor; totals matched",
+    "test_n": 21,
+    "calib_n": 4490,
+    "test_n_age_valid": 21,
+    "bundle_had_platt": true,
+    "conformal_q": 36.27278137207031,
+    "metrics": {
+      "temperature": 1.0,
+      "platt_a": 2.6208099071722177,
+      "platt_b": 0.4897771669100175,
+      "conformal_q": {
+        "0.9": 36.27278137207031
+      },
+      "sigma_scale": 12.465580583110109,
+      "sigma_scale_mc": 14.148534475078275,
+      "sigma_scale_mode": "ensemble",
+      "xdonor_calibrated": true,
+      "xdonor_n_donors": 5,
+      "fate_calib_n": {
+        "total": 4509,
+        "in_dist": 4406,
+        "xdonor": 103
+      },
+      "xdonor_only_platt_a": 1.4170934347076802,
+      "xdonor_only_platt_b": 0.44655053698698705,
+      "xdonor_only_n": 103,
+      "xdonor_only_n_donors": 5,
+      "xdonor_only_safe_ece_insample": 0.07559919179287491,
+      "shipped_safe_ece_on_pool": 0.1001486486172732,
+      "xdonor_safe_ece_before": 0.12193267582689675,
+      "xdonor_safe_ece_after": 0.1001486486172732,
+      "xdonor_ece_before_temp": 0.27684350615566217,
+      "xdonor_ece_after_temp": 0.27684350615566217,
+      "val_loss_mean": 7.777515206096716,
+      "n_train": 33688,
+      "n_val": 4406,
+      "n_calib": 4490
+    }
+  },
+  "Y1": {
+    "donor": "Y1",
+    "root": "runs\\cellfate_loocv_Y1",
+    "pool_n": 105,
+    "pool_n_donors": 5,
+    "pool_residuals_per_donor": {
+      "1": 21,
+      "2": 21,
+      "3": 21,
+      "5": 21,
+      "6": 21
+    },
+    "pool_donor_scales": {
+      "1": {
+        "n": 21,
+        "mae": 28.21869468688965,
+        "sigma_mean": 4.269842624664307,
+        "sigma_mc_mean": 2.5963120460510254
+      },
+      "2": {
+        "n": 21,
+        "mae": 8.728232383728027,
+        "sigma_mean": 3.4712600708007812,
+        "sigma_mc_mean": 2.955819606781006
+      },
+      "3": {
+        "n": 21,
+        "mae": 9.10840892791748,
+        "sigma_mean": 3.519275426864624,
+        "sigma_mc_mean": 2.919858932495117
+      },
+      "5": {
+        "n": 21,
+        "mae": 15.41004753112793,
+        "sigma_mean": 2.6166937351226807,
+        "sigma_mc_mean": 2.8669276237487793
+      },
+      "6": {
+        "n": 21,
+        "mae": 28.25615882873535,
+        "sigma_mean": 3.1664302349090576,
+        "sigma_mc_mean": 2.2684717178344727
+      }
+    },
+    "pool_donor_ids_reconstructed": true,
+    "pool_donor_ids_note": "per-row donor labels rebuilt from residuals_per_donor; totals matched",
+    "test_n": 19,
+    "calib_n": 4490,
+    "test_n_age_valid": 19,
+    "bundle_had_platt": true,
+    "conformal_q": 34.41313171386719,
+    "metrics": {
+      "temperature": 1.0,
+      "platt_a": 2.5952807557062427,
+      "platt_b": 0.4805620857804852,
+      "conformal_q": {
+        "0.9": 34.41313171386719
+      },
+      "sigma_scale": 12.077414919169051,
+      "sigma_scale_mc": 14.537452590954596,
+      "sigma_scale_mode": "ensemble",
+      "xdonor_calibrated": true,
+      "xdonor_n_donors": 5,
+      "fate_calib_n": {
+        "total": 4511,
+        "in_dist": 4406,
+        "xdonor": 105
+      },
+      "xdonor_only_platt_a": 1.542072905616978,
+      "xdonor_only_platt_b": 0.5966983870198257,
+      "xdonor_only_n": 105,
+      "xdonor_only_n_donors": 5,
+      "xdonor_only_safe_ece_insample": 0.051617326306419624,
+      "shipped_safe_ece_on_pool": 0.0743739967350161,
+      "xdonor_safe_ece_before": 0.14407647649447128,
+      "xdonor_safe_ece_after": 0.0743739967350161,
+      "xdonor_ece_before_temp": 0.37059589227040607,
+      "xdonor_ece_after_temp": 0.37059589227040607,
+      "val_loss_mean": 6.895439872447328,
+      "n_train": 33690,
+      "n_val": 4406,
+      "n_calib": 4490
+    }
+  },
+  "Y2": {
+    "donor": "Y2",
+    "root": "runs\\cellfate_loocv_Y2",
+    "pool_n": 103,
+    "pool_n_donors": 5,
+    "pool_residuals_per_donor": {
+      "1": 21,
+      "2": 21,
+      "3": 21,
+      "4": 19,
+      "6": 21
+    },
+    "pool_donor_scales": {
+      "1": {
+        "n": 21,
+        "mae": 30.88736915588379,
+        "sigma_mean": 2.6761481761932373,
+        "sigma_mc_mean": 2.7320759296417236
+      },
+      "2": {
+        "n": 21,
+        "mae": 5.720139503479004,
+        "sigma_mean": 2.1337382793426514,
+        "sigma_mc_mean": 2.979299545288086
+      },
+      "3": {
+        "n": 21,
+        "mae": 6.310286521911621,
+        "sigma_mean": 3.0427470207214355,
+        "sigma_mc_mean": 3.2820346355438232
+      },
+      "4": {
+        "n": 19,
+        "mae": 7.634954929351807,
+        "sigma_mean": 2.644357681274414,
+        "sigma_mc_mean": 2.372363328933716
+      },
+      "6": {
+        "n": 21,
+        "mae": 25.387178421020508,
+        "sigma_mean": 3.1391940116882324,
+        "sigma_mc_mean": 2.5473546981811523
+      }
+    },
+    "pool_donor_ids_reconstructed": true,
+    "pool_donor_ids_note": "per-row donor labels rebuilt from residuals_per_donor; totals matched",
+    "test_n": 21,
+    "calib_n": 4490,
+    "test_n_age_valid": 21,
+    "bundle_had_platt": true,
+    "conformal_q": 34.186832427978516,
+    "metrics": {
+      "temperature": 1.0,
+      "platt_a": 2.621525283360385,
+      "platt_b": 0.35180018745929764,
+      "conformal_q": {
+        "0.9": 34.186832427978516
+      },
+      "sigma_scale": 14.213228132311016,
+      "sigma_scale_mc": 14.392183163094298,
+      "sigma_scale_mode": "ensemble",
+      "xdonor_calibrated": true,
+      "xdonor_n_donors": 5,
+      "fate_calib_n": {
+        "total": 4509,
+        "in_dist": 4406,
+        "xdonor": 103
+      },
+      "xdonor_only_platt_a": 1.1443040458082616,
+      "xdonor_only_platt_b": 0.4738000803570786,
+      "xdonor_only_n": 103,
+      "xdonor_only_n_donors": 5,
+      "xdonor_only_safe_ece_insample": 0.060179384114030406,
+      "shipped_safe_ece_on_pool": 0.1003172269510641,
+      "xdonor_safe_ece_before": 0.11171984744882124,
+      "xdonor_safe_ece_after": 0.1003172269510641,
+      "xdonor_ece_before_temp": 0.2659246120059374,
+      "xdonor_ece_after_temp": 0.2659246120059374,
+      "val_loss_mean": 7.817079781382072,
+      "n_train": 33688,
+      "n_val": 4406,
+      "n_calib": 4490
+    }
+  },
+  "_README": {
+    "FITTING set (choose on these)": "pool_* -- the cross-donor pool, ~103 rows over 5 donors. Use leave-one-donor-out WITHIN the pool via pool_donor_id.",
+    "GRADED set (confirm once, never choose)": "test_* -- the held-out donor. Choosing a calibrator by reading these is choosing on the test set.",
+    "IN-DISTRIBUTION": "calib_* -- the calib split, same regime as training.",
+    "raw vs calibrated": "*_raw are with the bundle's Platt switched off; the others are what the bundle actually ships. pool_probs_mean is always raw."
+  }
+}

@@ -1,6 +1,6 @@
 {
   "script": "diag_clock_validity",
-  "utc": "2026-07-25T15:59:19+00:00",
+  "utc": "2026-07-25T16:50:54+00:00",
   "gill_dir": "D:\\Gill",
   "known_age_dir": "D:\\GSE113957",
   "bars": [
@@ -40,8 +40,17 @@
     }
   },
   "reproduction": {
-    "status": "SKIPPED",
-    "reason": "no known-age fibroblast set available (pass its dir)"
+    "status": "REPRODUCES",
+    "mae_years": 0.7691299924402601,
+    "n": 143,
+    "reason": "MAE 0.8 yr on n=143 known-age fibroblasts, within 1.5x the clock's own CV error (12.3) -> pipeline application is clean | Spearman(pred,age)=+0.99, weighted coverage 100%",
+    "age_range_tested": [
+      1.0,
+      96.0
+    ],
+    "spearman_pred_vs_age": 0.9923218063984633,
+    "pearson_pred_vs_age": 0.9933124405936675,
+    "weighted_coverage_here": 1.0
   },
   "in_range": {
     "status": "TRACKS_IN_RANGE",
