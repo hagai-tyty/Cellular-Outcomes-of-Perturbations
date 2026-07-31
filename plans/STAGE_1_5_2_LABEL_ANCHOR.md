@@ -215,6 +215,75 @@ GSE165178.** Consequences, pre-committed:
 3. **The exact day grid and arm counts are re-verified on download** (§10 step 1) before any
    statistic is computed — ground rule §11, state the shape before the statistic.
 
+> ## 🆕 ADDED 2026-07-31 — **GSE165177 is a second, larger paired set, and it fixes §3's geometry constraint**
+>
+> *Additive; §3 above is unmodified. Found by checking the SuperSeries rather than assuming
+> GSE165178 was the only pairing.*
+>
+> **GSE165180 has four SubSeries, and we hold two.** The plan names GSE165178. But **GSE165177
+> `[Transient_RNAseq]` is the RNA half of the experiment whose methylation we already hold and have
+> already validated** (GSE165179 — `REV FINAL` §3's contrasts A/B/C, which reproduce exactly on
+> re-run).
+>
+> | | samples | pairs with | untreated arm? | status |
+> |---|---|---|---|---|
+> | **GSE165177** `[Transient_RNAseq]` | **95** | **GSE165179 — already held & validated** | ✅ **yes** (`negative_control`) | ⬇ **download** |
+> | GSE165178 `[Sendai array]` | 22 | GSE165176 (our training RNA) | ❌ **none** (§3 above) | ⬇ download |
+>
+> **Title-format match, verified:** GEO lists GSE165177 titles as
+> `O1_transiently_reprogrammed_17days_exp1`, `O3_failed_to_transiently_reprogram_15days_exp2`. Our
+> local GSE165179 titles read `O1_failed_to_transiently_reprogram_15days_exp1` — **same
+> `{donor}_{arm}_{N}days_{exp}` key, same arm vocabulary, same donors (O1/O2/O3), same day grid
+> (10/13/15/17).** *(From GEO metadata; the exact join is re-verified on download per §10 step 1.)*
+>
+> ### Why this materially improves the stage
+>
+> 1. **It removes §3's stated geometry constraint.** GSE165178 has *"no day-0 arm and no untreated
+>    arm"*, forcing the only contrast to be SSEA4-vs-CD13 and requiring the **assumption** that
+>    non-responder inertness transfers from the transient to the Sendai arm (§3 point 2, §9-R1).
+>    GSE165177/165179 carries a **real `negative_control` arm**, so that assumption is not needed —
+>    the very contrast REV FINAL validated.
+> 2. **≈95 pairs instead of 22.** §6 anticipates that **ρ_within may return UNRESOLVABLE at n=11**
+>    and pre-commits a fallback. At this sample size that risk largely disappears, and the fallback
+>    may not be needed.
+> 3. **The methylation half is already measured, validated, and re-run.** No new methylation
+>    analysis is required — only the RNA side is missing.
+>
+> ### The two are complementary, not alternatives
+>
+> | series | answers |
+> |---|---|
+> | **GSE165177** | **the verdict** — *is the RNA clock calibratable against methylation?* (§2 calls this "the value here") |
+> | **GSE165178** | **the label attachment** — the only series that joins the samples the model actually trains on |
+>
+> If only one is downloaded, **take GSE165177**: the stage's primary product is the verdict, and this
+> is the better instrument for it.
+>
+> ### Files to fetch — minimum set only
+>
+> The measurement script reads **exactly two files** per series
+> (`diag_methylation_anchor.py:383`); the `signal_intensities` matrix is **never opened** and the
+> IDAT `RAW.tar` is not needed.
+>
+> | series | file | size |
+> |---|---|---|
+> | GSE165177 | `GSE165177_series_matrix.txt.gz` | small |
+> | GSE165177 | `GSE165177_Log2_RPM_Transient_reprogramming.txt.gz` | 3.2 MB |
+> | GSE165177 | `GSE165177_Log2_RPM_Transient_reprogramming_part2_170621.txt.gz` | 12.1 MB |
+> | GSE165178 | `GSE165178_series_matrix.txt.gz` | small |
+> | GSE165178 | `GSE165178_Matrix_processed_sendai.txt.gz` | 142.5 MB |
+>
+> **Do NOT fetch** `*_signal_intensities_*.txt.gz` (188.5 MB) or `GSE165178_RAW.tar` (466.7 MB) —
+> unused. *(Note: the held `GSE165179_Matrix_signal_intensities_transient.txt.gz`, 807 MB, is also
+> unused and can be deleted.)*
+>
+> ### One implementation caveat, flagged now
+>
+> GSE165177's titles use the **transient** vocabulary (`O1_transiently_reprogrammed_17days_exp1`),
+> **not** the Sendai format `GillReprogrammingSource` parses (`N2_d11_CD13_Sendai_Exp1`), and its
+> `Log2 RPM` matrix is **split across two files**. Expect a small dedicated loader rather than reuse
+> of the production source. The clock application itself is unchanged.
+
 ---
 
 ## 4. The confound that decides the whole design
