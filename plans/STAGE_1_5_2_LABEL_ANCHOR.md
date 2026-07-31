@@ -560,3 +560,71 @@ Stated so a reviewer does not have to construct it:
 
 **Nothing in this file may be reported as a result until it has run.** The status line at the top
 changes only when it has.
+
+---
+
+# 11. ✅ M-2a EXECUTED 2026-07-31 — **SPLIT ⇒ NOT CALIBRATABLE. Phase 2 does not run.**
+
+`python experiments/diag_m2a_calibratability.py "D:\GSE165177" "D:\GSE165179"` →
+`diag_m2a_calibratability_results.json`. Bars were frozen **before** this ran (§6 block above),
+from titles only. **`src/` untouched.**
+
+| | ρ_all *(descriptive)* | **ρ_partial** *(DECISIVE, bar ≥ 0.50)* | verdict |
+|---|---|---|---|
+| Horvath **skin & blood** 2018 | +0.444 | **+0.267** | ❌ **FAIL** |
+| Horvath **multi-tissue** 2013 | +0.690 | **+0.516** | ⚠️ pass by **0.016** |
+
+**§6: "A criterion met on one clock and not the other is recorded as SPLIT, which is a failure for
+the purpose of §7."** → **M-2a FAILS** → §7 row 4: **NOT CALIBRATABLE. Phase 2 does not run.**
+
+⚠️ **The one "pass" is FRAGILE and must not be quoted as a pass.** +0.516 clears 0.50 by **0.016**.
+This project has been burned twice by exactly this (E1b cleared its bound by 0.009, D2 by 0.014, in
+opposite directions — `REV FINAL` records the lesson). At n=68 a margin of 0.016 is noise.
+
+### The confound control did real work — §4 was right to insist on it
+
+| clock | ρ_all → ρ_partial | drop |
+|---|---|---|
+| skin & blood | 0.444 → 0.267 | **−40%** |
+| multi-tissue | 0.690 → 0.516 | **−25%** |
+
+A quarter to a *half* of the raw agreement is the shared reprogramming axis, not age. Had §4 not
+pre-committed to partialling out pluripotency, ρ_all = +0.69 would have been reported as a
+comfortable pass — and it would have been the identity artefact re-entering "through the back door",
+exactly as §4 predicted.
+
+### The within-arm pattern — descriptive, but consistent across 6 arms × 2 clocks
+
+*(ρ_within was demoted to descriptive by the §6 freeze — UNRESOLVABLE at n=9–12 — so no single
+number here is reliable. The pattern across all twelve is worth recording anyway.)*
+
+| arm | skin & blood | multi-tissue | reprogramming? |
+|---|---|---|---|
+| `failed_to_transiently_reprogram` | +0.322 | **+0.538** | no |
+| `negative_control` | +0.413 | +0.385 | no |
+| `negative_control_intermediate` | +0.091 | +0.371 | no |
+| `failing_..._intermediate` | +0.140 | +0.084 | no (failed) |
+| **`transiently_reprogrammed`** | +0.267 | **+0.033** | **yes** |
+| **`transient_reprogramming_intermediate`** | **−0.136** | **−0.191** | **yes** |
+
+**The RNA clock tracks methylation age in cells that are NOT reprogramming, and stops tracking — or
+inverts — in exactly the cells that are.** That is the same in-domain/out-of-domain boundary
+`REV FINAL` §1 established, now visible in the calibration itself.
+
+### Pipeline validated before the negative result was accepted
+
+The methylation side reproduces `REV FINAL` contrast A independently:
+`negative_control_intermediate` +1.487 vs `transient_reprogramming_intermediate` +0.348 →
+**1.139 × 21 = 23.9 yr**, against REV FINAL's **−24.1 yr**. The failure is real, not a wiring bug.
+
+### What this licenses (§7, decided before the run)
+
+| ✅ licensed | ❌ not licensed |
+|---|---|
+| **Closing the RNA-clock route.** Five attempts have now failed: refit, precision, control-swap, statistical fixes, and calibration | Phase 2. **It does not run** |
+| ΔAge from **methylation where it exists** (Gill's 3 donors, `REV FINAL` §3) | Any RNA-derived ΔAge claim — **including the existing labels** |
+| **G-c becomes the live question** (§0): if the labels cannot be repaired, the decision is whether to keep training on them | Treating the current labels as "merely noisy" |
+
+**Not run: M-2b and M-2c.** M-2b is the ΔAge-shaped question and is gated on **G-a**; M-2c is gated
+on M-2a, which failed — §6: *"fitting a calibration to a clock that is not tracking the target would
+manufacture a number with no meaning."*
