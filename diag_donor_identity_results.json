@@ -1,0 +1,13 @@
+{
+  "script": "diag_donor_identity",
+  "utc": "2026-07-31T17:43:41+00:00",
+  "preregistration": {
+    "p_both_correct_by_chance": 0.1088,
+    "n_probes": 5000,
+    "stability_bar": 0.95,
+    "shared_labels": [
+      "O1",
+      "O2"
+    ]
+  }
+}
