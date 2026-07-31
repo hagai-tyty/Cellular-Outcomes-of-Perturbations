@@ -628,3 +628,67 @@ The methylation side reproduces `REV FINAL` contrast A independently:
 **Not run: M-2b and M-2c.** M-2b is the ΔAge-shaped question and is gated on **G-a**; M-2c is gated
 on M-2a, which failed — §6: *"fitting a calibration to a clock that is not tracking the target would
 manufacture a number with no meaning."*
+
+---
+
+# 12. 🔵 PRE-REGISTERED 2026-07-31 — §11's falsification check on M-2a. **NOT YET RUN.**
+
+> **§11 sets a precondition that §11's own result did not meet.** It says: *"A negative verdict is
+> falsified if the methylation ages themselves are unreliable here — so the clocks are checked
+> against donor chronological age on the CD13 arm (R1) before any negative verdict is accepted."*
+>
+> **That check had not been run when M-2a was recorded.** So the SPLIT ⇒ NOT CALIBRATABLE verdict
+> above is *recorded but not yet accepted*, and this section is the missing precondition. Written
+> and committed **before** the measurement, so no bar and no decision rule can be chosen after
+> seeing the answer.
+
+Script: `experiments/diag_r1_anchor_reliability.py`. Read-only, `src/` untouched. Phase 1
+(pre-registration) has run and reads no beta value; phase 2 is the measurement.
+
+### The four checks
+
+| | question | geometry | intercept-dependent? |
+|---|---|---|---|
+| **R1a** | LODO chronological-age recovery — intercept from the **other** donors, predict the held-out one | 3 donors, 1 day-0 sample each | no (nothing grades its own intercept) |
+| **R1b** | the real 15-yr gap (O1/O2 = 53, O3 = 38) on the **untreated** `Negative control` arm | 21 samples, 3 donors | **no** — `age_i − age_j = 21·(lp_i − lp_j)`, REV FINAL §4.3 |
+| **R1c** | drift of the treated **non-responder** arms vs their own day-0 (§9-R1's own words) | 33 samples | no (within-donor difference) |
+| **R1d** | do the **two Horvath clocks agree with each other**, under M-2a's own criterion? | **68 conditions** | no |
+
+### Bars, frozen before the data was opened
+
+| bar | pass rate for a correct clock | verdict | action taken |
+|---|---|---|---|
+| R1a LODO MAE ≤ **5.0** yr | 76.7% | ❌ UNRESOLVABLE | bar **moved to 7.17 yr** (§5b: now, not after) |
+| R1b \|gap − 15\| ≤ **7.07** yr | 87.5% | ❌ UNRESOLVABLE | bar **moved to 9.08 yr** |
+| **R1d ρ_partial ≥ 0.50 at n=68** | **99.4%** | ✅ **RESOLVABLE** | **reused verbatim from §6 — not re-derived** |
+
+Null: a clock with published Horvath accuracy (MAE 3.0 yr), error modelled as a **donor-level
+offset with no averaging benefit** — deliberately pessimistic, since an independent-error model
+would shrink the SE by √7 and make every bar look easily resolvable.
+
+### 🔴 The problem with R1a and R1b, stated before they are read
+
+This series has **3 donors carrying only 2 distinct ages.** Both chronological-age checks came back
+UNRESOLVABLE and had to be loosened. **Loosening a bar that gates a negative verdict makes that
+verdict harder to falsify** — a bias in favour of the result already recorded. So neither R1a nor
+R1b may carry this decision alone, and that is fixed here rather than discovered later.
+
+### Why R1d is the decisive one
+
+R1d asks the same question — *are the methylation readings reliable on these samples?* — as: **do
+the two independent Horvath clocks agree with each other**, over the same 68 conditions, under the
+same pluripotency partialling, against **the identical ρ_partial ≥ 0.50 bar that M-2a was graded
+on**. No new bar is introduced.
+
+That symmetry is the point. RNA↔methylation and methylation↔methylation are scored by the same
+criterion on the same samples, so **if one passes and the other fails, the failure is localised to
+an instrument rather than to the data.** The CpG overlap between the two clocks is reported
+alongside, because agreement driven by shared probes would be partly trivial.
+
+### Decision rule, pre-committed
+
+| R1d | R1a / R1b | outcome |
+|---|---|---|
+| **FAIL** | either | **M-2a's negative verdict is WITHDRAWN.** The anchor cannot arbitrate the RNA clock if it cannot arbitrate itself |
+| PASS | both pass | **M-2a's negative verdict is ACCEPTED.** §11's falsification condition is not met |
+| PASS | either fails | **ACCEPTED WITH CAVEAT** — the well-powered check supports the anchor, the under-powered ones do not, and the tension is recorded rather than resolved by picking the convenient one |

@@ -1,0 +1,30 @@
+{
+  "script": "diag_r1_anchor_reliability",
+  "utc": "2026-07-31T13:30:26+00:00",
+  "preregistration": {
+    "sigma": 3.7599424119465006,
+    "published_mae": 3.0,
+    "checks": {
+      "R1a LODO age MAE <= 5.0 yr (3 donors)": {
+        "null_median": 3.4395484948686947,
+        "null_p90": 6.322062959383843,
+        "pass_rate": 0.7673,
+        "usable_bar": 7.173260817682167,
+        "min_pass": 0.95,
+        "verdict": "UNRESOLVABLE",
+        "bar": 5.0,
+        "bar_used": 7.173260817682167
+      },
+      "R1b |gap - 15| <= 7.07 yr (2 old vs 1 young)": {
+        "null_median": 3.10924124369965,
+        "null_p90": 7.617000243489586,
+        "pass_rate": 0.87455,
+        "usable_bar": 9.083750259962386,
+        "min_pass": 0.95,
+        "verdict": "UNRESOLVABLE",
+        "bar": 7.0710678118654755,
+        "bar_used": 9.083750259962386
+      }
+    }
+  }
+}
