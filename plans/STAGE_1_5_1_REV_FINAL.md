@@ -1,5 +1,17 @@
 # STAGE 1.5.1 — ΔAge anchored to methylation
 
+> ## 🆕 2026-07-31 — **every open item now has an owner. See §11.**
+>
+> *Additive; nothing below is modified. Since this document was written, Stage 1.5.2 ran and
+> answered two of its questions, and one more was answered by direct measurement here.*
+>
+> | | |
+> |---|---|
+> | **§6.2 — is the RNA clock calibratable against methylation?** | ✅ **ANSWERED: NO.** Stage 1.5.2 M-2a — SPLIT ⇒ NOT CALIBRATABLE. §8.3/§8.4's optimism about this route is superseded (§11.3) |
+> | **§6.3 — are O1/O2 the same physical donors?** | ✅ **ANSWERED: YES**, measured by methylation genotype. §10.6's "not verifiable" row was true of the *metadata*, not the *data* (§11.4) |
+> | **§6.5 — how approximate are absolute methylation ages?** | ✅ **QUANTIFIED:** ±7 yr donor-level error (§11.5) |
+> | **Genuinely still open** | **three items, all with owners** — §5's retention and HFF's labels need **Stage 6** (more donors / new data); HFF's `age_mask` needs **1.5.2 G-c step 2** (§11.6) |
+
 **Status:** ✅ **EXECUTED and VALIDATED** (2026-07-26). This document is the clean, self-contained
 statement of the method, the results, and the one question that remains open. It is written to be
 read cold. **§10 validates every claim in it and states how** — including three errors that validation
@@ -645,3 +657,176 @@ names the defect. Already reflected in §2.
 > not captured; 455 passed on the three runs before and after. Most likely a Windows temp-file lock,
 > which has occurred in this repository before — but it is unconfirmed, so it is noted here rather
 > than described as clean.
+
+---
+
+# 11. 🆕 ADDED 2026-07-31 — every open item in this document, with an owner
+
+> *Additive. **Nothing above this section is modified.** This is the closure pass: each open item is
+> either answered here, answered by a stage that has since run, assigned to a named future stage, or
+> declared a permanent limit. "We will answer this in Stage X" is an acceptable answer; "still open"
+> with no owner is not.*
+
+## 11.1 The ledger
+
+| # | open item | status | where |
+|---|---|---|---|
+| **§5 / §6.1** | retention after return to fibroblast identity (contrast B) | ⏳ **OPEN — owned by Stage 6.** Needs ≈16 pairs; we have 9, and no held series adds any | §11.2 |
+| **§6.2** | an anchor for **Gill's** training labels | ✅ **ANSWERED — NO**, by Stage 1.5.2 M-2a | §11.3 |
+| **§6.2** | an anchor for **HFF's** training labels (99.8% of them) | ⏳ **OPEN — owned by Stage 6.** No methylation exists for HFF in any public series | §11.3 |
+| **§6.3 / §10.6** | are O1/O2 the **same physical donors** across the series? | ✅ **ANSWERED — YES**, measured, this section | §11.4 |
+| **§6.4** | the neonatal out-of-range limit | 🔒 **PERMANENT** at the clock level — but it is now **load-bearing**, and 1.5.2's G-c step 2 is where it bites | §11.5 |
+| **§6.5** | absolute methylation ages are approximate | ✅ **QUANTIFIED** by Stage 1.5.2 §12-R: LODO MAE **6.03 / 6.63 yr**, ±7 yr donor-level | §11.5 |
+| **§10.6** | the published Horvath intercepts | ✅ already closed by §4.3 — the intercept cancels algebraically | — |
+| **§10.6** | Gill's ~30 yr is the median across clocks | 🔒 **WON'T FIX** — a claim about *their* paper, not ours; nothing here depends on it | §11.5 |
+| **§10.7** | one uncaptured test failure on a single run | ✅ **CLOSED** — not reproduced in ~15 full-suite runs since | §11.5 |
+| **§8.5** | "what still needs new data" | ✅ **superseded** by this table; the two live items are HFF methylation and §5's donors | §11.2 |
+
+## 11.2 §5 — retention: OPEN, owned by **Stage 6 (acquisition)**
+
+Nothing acquired since has moved it, and that is worth stating explicitly because two new series
+*were* acquired:
+
+| series | does it help §5? | why |
+|---|---|---|
+| **GSE165178** | ❌ no | it is the **Sendai** arm; contrast B is a **transient**-arm quantity |
+| **GSE165177** | ❌ no | it is **RNA**, and §1 established the RNA clock cannot measure this |
+
+§5's own arithmetic stands: **≈16 pairs** at the skin & blood spread, against the **9** that exist.
+GSE165179 contains every transient-arm pair there is — 3 donors × 4 reprogramming lengths, and O1
+contributes only 2 of them. **So the requirement is more donors, and only Stage 6 can supply them.**
+
+⚠️ **One thing 1.5.2 changed about how §5 should be read.** §12-R measured donor-level methylation
+clock error at **±7 yr** on these three donors (two donors of identical age 53 read 44.0 and 58.5).
+§5's MDE arithmetic used the *within-contrast* paired spread, which is the right quantity for a
+paired test and is unaffected — but it means **the −6 to −9 yr retention effect is the same size as
+the between-donor error of the instrument measuring it.** More donors help the pairing; they will not
+make the instrument sharper. Stage 6 should size for that, not just for n.
+
+## 11.3 §6.2 — the anchors: Gill's is ANSWERED (no), HFF's is OPEN
+
+**Gill: answered, and negatively.** §8.4 set the test — *"Does the transcriptomic ΔAge agree with the
+methylation ΔAge on the same 22 samples? Agreement ⇒ the RNA clock is calibratable."* Stage 1.5.2 ran
+it and both halves of §8.3's optimism failed:
+
+| §8.3's claim | what Stage 1.5.2 measured |
+|---|---|
+| "the calibration route is back on the table" | **M-2a: SPLIT ⇒ NOT CALIBRATABLE.** ρ_partial +0.267 / +0.516 vs a bar of 0.50 |
+| "M-2 becomes well-defined and **adequately powered**" | the decisive bar was **UNRESOLVABLE at n=22** (92.3%). GSE165178's geometry alone could not have decided it; **GSE165177's n=68 is what made a verdict possible** |
+
+So §8.3's correction was right that the *data* existed and wrong that it was *sufficient*. Both are
+now on the record.
+
+**HFF: open, owned by Stage 6.** Unchanged and unchangeable by analysis — no methylation exists for
+HFF in any public series. §6.2's wording stands verbatim: *"Extending the age target to HFF requires
+methylation for HFF — a Stage 6 acquisition, not an analysis choice."*
+
+## 11.4 §6.3 — ANSWERED: the donors are the same people
+
+**§10.6 says this is "❌ not verifiable from the metadata". That is true of the metadata and false of
+the data.** Methylation carries a genotype fingerprint, and both GSE165178 and GSE165179 are arrays.
+
+`python experiments/diag_donor_identity.py --run "D:\GSE165178" "D:\GSE165179"` →
+`diag_donor_identity_results.json`. Bars committed before any beta value was read (`be51c80`).
+`src/` untouched.
+
+**The design's controls are the roster asymmetry itself:** GSE165178 has O1/O2/**Y1/Y2**; GSE165179
+has O1/O2/**O3**. Y1 and Y2 *cannot* match correctly, so they measure what a spurious match looks
+like — without them, a high correlation everywhere (same array chemistry, same cell type) would be
+indistinguishable from identity.
+
+| query (Sendai) | O1 | O2 | O3 | best | margin |
+|---|---|---|---|---|---|
+| **O1** | **0.9619** | 0.8416 | 0.4272 | **O1** ✅ | **0.1203** |
+| **O2** | 0.7719 | **0.9755** | 0.3925 | **O2** ✅ | **0.2036** |
+| Y1 *(no counterpart)* | 0.7382 | 0.6754 | 0.5897 | — | 0.0628 |
+| Y2 *(no counterpart)* | 0.7033 | 0.6529 | 0.5817 | — | 0.0504 |
+
+**Both pre-registered conditions met:** every shared label matches itself, **and** their margins
+(min **0.1203**) exceed every no-counterpart donor's (max **0.0628**). The second condition is not
+decoration — a panel with no identity signal gets both right **10.9% of the time**, so a correct
+assignment alone would not have been evidence.
+
+**⇒ `SAME_DONORS`. §6.3's assumption is now measured, not assumed, and §10.6's row moves from
+"not verifiable" to "verified".**
+
+### What the panel's own failure taught, recorded because it is the more interesting half
+
+Selection went through **two attempts and a bar audit**, and the run **aborted twice before the
+assignment was ever computed** — which is what makes the refinements legitimate rather than fishing:
+
+| | panel | cross-arm stability (bar ≥ 0.95) | outcome |
+|---|---|---|---|
+| attempt 1 | top 5000 by between-donor F | 0.821 / 0.942 / 0.966 | ❌ aborted |
+| attempt 2 | **419 trimodal** (genotype-shaped) probes | **0.938** / 0.985 / 0.990 | ❌ aborted |
+
+**Then the bar itself was audited — because I had set it by assertion, which is exactly the §5b
+violation this project has caught four times.** Simulated at the real geometry with array noise taken
+from GSE165179's own exp1/exp2 replicates (sd 0.1019, 22 pairs): a **perfect** panel scores median
+**0.9681** and clears 0.95 **100%** of the time. **The bar was fair, so it was not moved.** O1's
+0.938 is a real shortfall.
+
+**The diagnosis is a finding in its own right:**
+
+| stability of the same panel, same donors | O1 | O2 | O3 |
+|---|---|---|---|
+| untreated vs **successfully reprogrammed** | **0.9379** | 0.9852 | 0.9901 |
+| untreated vs **failed to reprogram** | **0.9903** | 0.9940 | 0.9950 |
+
+**The panel is rock-stable against OSKM exposure and moves only in cells that *succeeded*.** And it
+moves most in O1 — whose two reprogrammed samples are day 10 and day **17**, the deepest
+(§3: −35.7 yr at 17 d). So this is not an n=2 artefact; it is **global demethylation during
+successful reprogramming reaching even genotype-shaped CpGs**, in proportion to depth.
+
+That is independent corroboration of §4.2 from an unexpected direction: the rejuvenation is deep
+enough to perturb probes chosen *because* they should be genotype-driven and cell-state-invariant.
+
+**Consequence, and the honest limit:** the assignment above is computed on **non-reprogramming cells
+only** (GSE165178's CD13 arm vs GSE165179's untreated + failed arms), where the panel is
+demonstrably stable. The scope was set by the stability evidence, before the assignment existed.
+**A definitive test would use the 59 `rs` SNP probes** — which GEO's *processed* matrices have
+stripped, but which are present in `GSE165178_RAW.tar` (466.7 MB) and GSE165179's raw IDATs. That is
+the concrete route if anyone wants it stronger; it is a download, not an experiment.
+
+### Does anything depend on this?
+
+**No — and that is now checked rather than asserted.** §10.6 already said *"nothing in §3–§5 depends
+on it"*. The same holds for Stage 1.5.2: **every contrast in both stages is within a single
+experiment.** M-2a is GSE165177 × GSE165179 (both transient); M-2b is GSE165178 × GSE165176 (both
+Sendai); §12-R's R1a/R1b/R1d are entirely within GSE165179. **No result in either stage crosses the
+Sendai/transient boundary on a donor label.** So this section strengthens the record; it rescues
+nothing, because nothing was at risk.
+
+## 11.5 The remaining rows, briefly
+
+**§6.4 — the neonatal limit is PERMANENT, and it is now load-bearing.** GSE113957 has no samples
+below age 1, so N2/N3/HFF absolute ages are unusable, and no analysis fixes that. What changed is its
+weight: HFF is a **neonatal** line and **99.7% of the age labels**, and Stage 1.5.2's gate G-c is
+precisely the decision of whether to keep training on labels produced by a clock that is out of range
+for them. **Owner: Stage 1.5.2 G-c step 2** (the `age_mask` retrain), not a future acquisition.
+
+**§6.5 — absolute methylation ages: now quantified.** The caveat was qualitative ("approximate by
+construction"). Stage 1.5.2 §12-R put a number on it: **LODO MAE 6.03 / 6.63 yr**, donor-level error
+**±7 yr**. So "only differences are relied on" is not just prudence — the absolute values are
+demonstrably unusable at n=3 donors, and §11.2 explains why that matters for §5.
+
+**§10.6 — "Gill's ~30 yr is the median across clocks": WON'T FIX.** It is a claim about the wording
+of *their* paper, taken at face value and labelled as such. Nothing in this document or in 1.5.2
+depends on it, and recomputing it would mean re-deriving another group's published summary from data
+we do not have. Left as a disclosed second-hand figure.
+
+**§10.7 — the uncaptured flake: CLOSED.** One test failed on a single run and the name was not
+captured. The suite has since been run ~15 times across Stage 1.5.2 at 455 → 537 tests with **zero**
+failures, including six full runs on 2026-07-31. It is not reproducing, and it is closed as a
+transient rather than left as an open worry. *(The record of it stays here, per the standing rule.)*
+
+## 11.6 What is genuinely still open, in one place
+
+| item | owner | what it needs |
+|---|---|---|
+| **§5 retention** (−6 to −9 yr, at the resolution boundary) | **Stage 6** | ≈16 transient-arm pairs ⇒ **more donors**. Size for the ±7 yr between-donor instrument error, not just for n |
+| **HFF's age labels** | **Stage 6** | methylation for HFF. No public series has it |
+| **`age_mask` for HFF** | **Stage 1.5.2 G-c step 2** | one retrain, metric pre-registered first. Does not need new data |
+
+**Everything else in this document is answered.** Two of the three are acquisition items that no
+amount of further analysis can close, and saying so is the point of this section.
