@@ -73,6 +73,70 @@ unnecessary — it anchors the **absolute** calibration question only.
 notebook. Both are small and neither depends on new data. Until then this document stays
 🔵 NOT EXECUTED.
 
+> ## 🆕 G-c ADDED 2026-07-31 — decide HFF's `age_mask`. **Gates PHASE 2 ONLY, not Phase 1.**
+>
+> *Additive; no existing gate, table or bar is modified. Placement is deliberate: Phase 1 is
+> measurement with `src/` untouched and must **not** be blocked by a decision that needs a retrain —
+> that would repeat the over-broad gate this section already had to correct once.*
+>
+> ### The gap this closes
+>
+> **`age_mask` appears nowhere in this document or in `STAGE_1_5_1_REV_FINAL.md`** (verified by
+> grep, 2026-07-31). So under **every** branch of §7 — including `CALIBRATABLE` — the model keeps
+> training on **33,613 HFF ΔAge labels (99.78% of the training split)** that are produced by a clock
+> now known to be **doubly out of scope for HFF**:
+>
+> | | |
+> |---|---|
+> | **out of age range** | HFF is a **neonatal** line; GSE113957 contains **0 samples below age 1**, and HFF's D0 baseline reads **84.5 yr** |
+> | **out of domain** | reprogramming cells — established by `REV FINAL` §1, the finding this whole stage rests on |
+>
+> §2's ledger states the volume honestly ("≈99.8% stays unanchored either way") but **draws no
+> consequence from it.** This gate draws it.
+>
+> ### The evidence already in hand
+>
+> `REV FINAL` established, on methylation, what real rejuvenation looks like in this system. The HFF
+> RNA labels do not look like it:
+>
+> | | dose-response | monotone? | source |
+> |---|---|---|---|
+> | **methylation ground truth** (Gill intermediates) | **−3.30 / −3.15 yr/day**, ρ −0.885 / −0.842, p ≤ 0.0006 | **yes** | `REV FINAL` §4.4(b) |
+> | **HFF RNA labels** (D0–D14 pseudobulk) | **−0.36 yr/day**, ρ **−0.214** | **no** | `diag_d2_replication_results.json` |
+>
+> ≈**9× weaker and non-monotone.** ⚠️ **Not decisive on its own** — different protocol (standard vs
+> MPTR), different line, different modality — which is exactly why this is a gate with a test, not a
+> conclusion.
+>
+> ### G-c — the decision, pre-registered
+>
+> **Question:** are HFF's ΔAge labels informative, or is the ΔAge head learning artefact from
+> 33,613 contaminated labels while 75 usable ones are drowned out?
+>
+> **Step 1 (cheap, no retrain).** Test whether HFF's ΔAge labels carry the rejuvenation signature
+> methylation established: Spearman(ΔAge, reprogramming day) over the HFF trajectory, with the
+> iPSC endpoint excluded (a cell-type change, per the standing rule), and the dose-response slope
+> reported beside the methylation figures above.
+>
+> **Step 2 (decisive, and it must ride in Phase 2's rebuild).** If Step 1 is not clearly positive,
+> compare `age_mask=True` vs `age_mask=False` for HFF in **one** retrain, on the existing scorecard.
+>
+> | Step 1 result | action |
+> |---|---|
+> | HFF shows the signature (monotone, slope within ~2× of methylation's) | **keep** HFF labels; record the check |
+> | ambiguous | run Step 2; decide on the scorecard, pre-registering the metric before the run |
+> | no signature (current evidence points here) | **mask HFF's ΔAge in Phase 2's rebuild** and state the consequence plainly: the age head trains on ~75 labels, which may be too few — that is a finding, not a failure |
+>
+> ### Why this gates Phase 2 specifically
+>
+> Phase 2 already changes labels and pays for a rebuild + retrain. **Deciding HFF separately would
+> cost a second rebuild** and would mean shipping a run that repairs 0.2% of labels while knowingly
+> leaving 99.8% contaminated. **Both label decisions must ride in the same rebuild.**
+>
+> **What G-c does NOT do:** it does not block Phase 1, does not touch `src/` by itself, does not
+> presuppose the answer, and does not claim the HFF labels are worthless — only that the question is
+> unowned, cheap to ask, and larger in scope than the one Phase 2 answers.
+
 ---
 
 ## 1. Why this stage exists
