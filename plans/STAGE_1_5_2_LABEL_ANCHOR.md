@@ -2,12 +2,12 @@
 
 **Status:** 🔵 **PRE-REGISTERED — NOT YET EXECUTED, AND GATED.** Bars are fixed in §6 *before*
 GSE165178 is opened. Nothing in this document reports a result.
-**🔒 Does not start until findings D2 and D3 are closed — see §0.**
+**🔒 Does not start until the two prerequisites in §0 are met** — baseline-count visibility and
+donor age wired into `src/`. Both are small; neither needs new data.
 
 **Implements:** the step that no existing stage owns — see §1.
-**Depends on:** **D2 and D3** (`STAGE_1_5_HARMONIZATION_AUDIT.md` §5) — a **gate**, see §0. And
-`STAGE_1_5_1_REV_FINAL.md` (executed) for the clocks, the transform, the pairing code and the
-negative-control result it rests on.
+**Depends on:** **§0's G-a and G-b**. And `STAGE_1_5_1_REV_FINAL.md` (executed) for the clocks, the
+transform, the pairing code and the negative-control result it rests on.
 **Blocking for:** Stage 2's *premise* (§1), and any absolute ΔAge claim in Stage 5.
 **Not blocking for:** Stage 3. The fate head does not consume ΔAge.
 
@@ -20,30 +20,58 @@ negative-control result it rests on.
 
 ---
 
-## 0. 🔒 GATE — this stage does not start until D2 and D3 are closed
+## 0. 🔒 GATE — two small prerequisites, and one thing that is deliberately NOT a prerequisite
 
-**Added 2026-07-30, before any execution.** Stage 1.5 surfaced three findings; **two are still
-open**, and writing this stage without them was itself an instance of the drift it is supposed to
-avoid — adding a floor to a building whose foundation has an unresolved question.
+> ### ⚠️ CORRECTED 2026-07-30 (same day) — the first version of this gate was built on a false premise
+>
+> It read *"this stage does not start until D2 and D3 are closed"* and described both as unmeasured.
+> **They were measured on 2026-07-24** by `experiments/diag_zero_point.py`; I asserted they were open
+> without checking whether the diagnostic had already answered them. Worse, **D2's scientific half
+> cannot be closed by analysis at all**, so the gate as written was *unsatisfiable* and would have
+> blocked this stage indefinitely. Corrected below. The original wording is in git history.
 
-| | finding (`STAGE_1_5_HARMONIZATION_AUDIT.md` §5) | status | why it gates this stage |
+**What `diag_zero_point.py` actually returned** (2026-07-24, `diag_zero_point_results.json`):
+
+| | the question it asked | result |
+|---|---|---|
+| **M1** (D3's question) | does the clock read age on this data? | 🔴 **FAIL** — extreme contrast **11.8 yr** against a bar of **20.2 yr** on a true 53-yr gap, at power **0.996** |
+| **M2** (D1's question) | is the zero-point's cross-batch structure driving the offset? | ✅ **NO_BATCH_EFFECT** — **−2.99 yr, 95% CI [−13.12, +7.14]**, n=12 |
+| **M3** (D2's question) | is the per-donor offset real biology, or `n=1` baseline noise? | ⚠️ **INDETERMINATE** |
+
+**M3 is the one that matters here, and it is decisive about what is *not* knowable.** Observed
+offset SD **16.4 yr** against **12.3 yr** expected from a single unreplicated baseline ⇒ the baseline
+explains **56% of the variance, 95% CI [9%, 100%]**, leaving 10.9 yr SD for biology + batch + model.
+
+> **That CI spans almost the whole range. D2 is not unmeasured — it is measured and unresolvable at
+> n = 6.** No further analysis closes it; it needs more donors. **So D2's scientific half is NOT a
+> gate on this stage, and must never be written as one.**
+
+Its recorded decision was **ESCALATE** — *"the clock does not separate the age extremes on this
+data, so ΔAge's target is unvalidated… Stage 2's premise is void as stated."* **That is the strongest
+existing statement of why this stage exists**, and M1's failure is precisely what the methylation
+anchor is meant to resolve.
+
+### The gate, restated to only what is actually closeable
+
+| # | prerequisite | why it gates | cost |
 |---|---|---|---|
-| **D1** | cross-batch zero-point (all 6 baselines `Exp2`, ~50% of samples `Exp1`) | ✅ **measured, downgraded** — **−2.99 yr, 95% CI [−13.12, +7.14]**, `NO_BATCH_EFFECT`, n=12 | does **not** gate. Already answered — see §9-R3 |
-| **D2** | **every Gill donor's zero-point rests on ONE unreplicated control sample** | 🔴 **OPEN** | **gates.** M-2b's RNA-side contrast inherits whatever that baseline does. And it is now one of only **two** live explanations for the ±12.7 yr offset Stage 2 is premised on |
-| **D3** | donor chronological age **parsed nowhere in `src/`** (GEO declares it: N2/N3 = 0, Y1 = 29, Y2 = 35, O1/O2 = 53) | 🔴 **OPEN** | **gates, and is nearly free.** It is independent ground truth this stage would otherwise go download methylation to approximate |
+| **G-a** | **`_control_baseline` records baseline count and composition.** `aging.py:81-90` averages whatever controls exist and reports neither; Stage 1.5 made `n=0` visible, **`n=1` is still silent** | M-2b's RNA-side contrast inherits that baseline. It must be *visible in the output* which donors rest on `n=1`, or the result cannot be interpreted | small code change + test |
+| **G-b** | **Donor chronological age parsed in `src/`** (GEO declares it: N2/N3 = 0, Y1 = 29, Y2 = 35, O1/O2 = 53) | independent ground truth this stage would otherwise download methylation to approximate. *Unwired*, not unknown — `REV FINAL` §2 **used** these values as its guard and got **MAE 4.0 / 4.4 yr** | small, near-free |
 
-**On D3 specifically — do the cheap thing first.** This stage exists to obtain age ground truth.
-There is already chronological ground truth in the metadata that `src/` ignores. `REV FINAL` §2
-**used** it as its guard and got **MAE 4.0 / 4.4 yr**, so the values parse and are accurate enough
-to be useful. It is *unwired*, not *unknown*.
+**Explicitly NOT gates:**
 
-**Its limit, stated so it is not oversold:** donor age is a per-donor **constant**. It cannot measure
+* **D2's scientific question** — unresolvable at n=6 (above). Carried as a stated limitation, not a
+  blocker.
+* **D1** — answered, `NO_BATCH_EFFECT`. See §9-R3.
+* **D3's scientific question** — answered: **M1 FAIL**. Only the *wiring* (G-b) remains.
+
+**On G-b, do not oversell it:** donor age is a per-donor **constant**. It cannot measure
 rejuvenation *within* a donor, so it does **not** replace methylation or make this stage
-unnecessary — it anchors the **absolute** calibration question only. Both are needed; D3 is the one
-that costs nothing.
+unnecessary — it anchors the **absolute** calibration question only.
 
-**Gate condition:** D2 and D3 are executed and their results recorded in `CHANGES.md` and the lab
-notebook. Until then this document stays 🔵 NOT EXECUTED.
+**Gate condition:** G-a and G-b are implemented, tested, and recorded in `CHANGES.md` and the lab
+notebook. Both are small and neither depends on new data. Until then this document stays
+🔵 NOT EXECUTED.
 
 ---
 

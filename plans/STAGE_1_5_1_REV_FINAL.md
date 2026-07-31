@@ -351,8 +351,8 @@ prerequisite is **more donors**, and the specific target is now quantified rathe
 > | | finding (from `STAGE_1_5_HARMONIZATION_AUDIT.md` §5) | status |
 > |---|---|---|
 > | **D1** | zero-point is cross-batch — all 6 Gill baselines are `Exp2`, ~50% of samples are `Exp1` | ✅ **measured and downgraded** — paired offset **−2.99 yr, 95% CI [−13.12, +7.14]**, `NO_BATCH_EFFECT`, n=12. Structurally true; **not** demonstrated to drive the ±12.7 yr offset. *Not over-read:* the CI half-width (~10 yr) excludes a **large** batch effect, not a meaningful one |
-> | **D2** | **every Gill donor's zero-point rests on ONE unreplicated control sample** | 🔴 **OPEN** |
-> | **D3** | donor chronological age is **parsed nowhere in `src/`** though GEO declares it (N2/N3 = 0, Y1 = 29, Y2 = 35, O1/O2 = 53) | 🔴 **OPEN** |
+> | **D2** | **every Gill donor's zero-point rests on ONE unreplicated control sample** | ⚠️ **MEASURED, INDETERMINATE** — `diag_zero_point.py` M3: the baseline explains **56% of the offset variance, 95% CI [9%, 100%]**. That CI spans nearly the whole range, so **at n = 6 it is unresolvable — not unmeasured.** Closing it needs more donors, not more analysis. What *is* still open is the code half: `_control_baseline` still records neither count nor composition, so `n=1` is silent |
+> | **D3** | donor chronological age is **parsed nowhere in `src/`** though GEO declares it (N2/N3 = 0, Y1 = 29, Y2 = 35, O1/O2 = 53) | ⚠️ **the question is ANSWERED — M1 FAIL** (extreme contrast 11.8 yr vs a 20.2 yr bar on a true 53-yr gap, power 0.996). Only the **wiring** is open |
 >
 > ### Why this stage's conclusions survive D2 anyway — by design, not by luck
 >
@@ -376,8 +376,16 @@ prerequisite is **more donors**, and the specific target is now quantified rathe
 > known-age day-0 samples. So the values exist, parse, and are accurate enough to be useful. They
 > were read by a **diagnostic script**; `src/` still ignores them. That is the only remaining gap.
 >
-> **Consequence for sequencing:** `STAGE_1_5_2_LABEL_ANCHOR.md` is **gated behind D2 and D3** (its
-> §0). Both are read-only metadata work — no downloads, no label changes.
+> **Consequence for sequencing:** `STAGE_1_5_2_LABEL_ANCHOR.md` is gated behind the two *closeable*
+> halves only (its §0: make the `n=1` baseline visible, and wire donor age into `src/`). **D2's
+> scientific question is explicitly NOT a gate** — gating on something unresolvable at n=6 would
+> block that stage forever. An earlier version of this box and of that §0 said "gated behind D2 and
+> D3", which was wrong on both counts and is corrected here.
+>
+> **And it cuts the other way:** `diag_zero_point`'s recorded decision was **ESCALATE** —
+> *"the clock does not separate the age extremes on this data, so ΔAge's target is unvalidated…
+> Stage 2's premise is void as stated."* **M1's failure is exactly what the methylation anchor is
+> meant to resolve**, so 1.5.2 is the response to that escalation, not something queued behind it.
 
 1. **Retention after return to fibroblast identity** — §5, open.
 2. **Any anchor for the training labels — HFF *or* Gill.** GSE165176 (RNA) and GSE165179

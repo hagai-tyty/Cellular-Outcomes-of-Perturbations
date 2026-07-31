@@ -11,6 +11,71 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-07-30 (correction, same day) — Stage 1.5.2's gate was unsatisfiable; D2/D3 had already been measured
+
+**Status:** ✅ Corrected. Markdown only; `src/` untouched. Supersedes the gate wording committed in
+`75c331e` a few hours earlier.
+
+Asked to confirm that 1.5.1 REV FINAL and 1.5.2 were both "ready and pushed". Checking rather than
+confirming exposed a defect in the gate **I wrote today**.
+
+### The defect
+
+`STAGE_1_5_2_LABEL_ANCHOR.md` §0 read *"this stage does not start until D2 and D3 are closed"* and
+described both findings as unmeasured. **Both were measured on 2026-07-24** by
+`experiments/diag_zero_point.py`. I asserted they were open without checking whether the diagnostic
+had already answered them — the same failure as the §9-R3 re-derivation of D1, one day later.
+
+**And the gate was worse than merely redundant: it was unsatisfiable.** D2's scientific half cannot
+be closed by analysis, so as written it would have blocked 1.5.2 permanently.
+
+### What `diag_zero_point.py` actually returned
+
+| | question | result |
+|---|---|---|
+| **M1** (D3's question) | does the clock read age on this data? | 🔴 **FAIL** — extreme contrast **11.8 yr** vs a **20.2 yr** bar on a true 53-yr gap, power **0.996** |
+| **M2** (D1's question) | is the cross-batch zero-point driving the offset? | ✅ **NO_BATCH_EFFECT** — −2.99 yr, 95% CI [−13.12, +7.14], n=12 |
+| **M3** (D2's question) | per-donor offset: real biology or `n=1` baseline noise? | ⚠️ **INDETERMINATE** |
+
+**M3 in detail:** observed offset SD **16.4 yr** vs **12.3 yr** expected from a single unreplicated
+baseline ⇒ the baseline explains **56% of the variance, 95% CI [9%, 100%]**, leaving 10.9 yr SD for
+biology + batch + model. **That CI spans nearly the entire range — D2 is measured and unresolvable
+at n = 6.** More donors would close it; more analysis will not.
+
+Its recorded decision was **ESCALATE**: *"the clock does not separate the age extremes on this data,
+so ΔAge's target is unvalidated… Stage 2's premise is void as stated. Do not proceed to Phase 2/3."*
+
+### The corrected gate
+
+Narrowed to the two halves that are actually closeable, neither needing new data:
+
+* **G-a** — `_control_baseline` (`aging.py:81-90`) must record baseline **count and composition**.
+  Stage 1.5 made `n=0` visible; **`n=1` is still silent**, and M-2b's RNA-side contrast inherits
+  whatever that baseline does, so which donors rest on `n=1` must be visible in the output.
+* **G-b** — donor chronological age parsed in `src/` (GEO declares N2/N3=0, Y1=29, Y2=35, O1/O2=53).
+  *Unwired*, not unknown: `REV FINAL` §2 already **used** these values as its guard at MAE 4.0/4.4 yr.
+
+**Explicitly recorded as NOT gates:** D2's scientific question (unresolvable at n=6 — carried as a
+stated limitation), D1 (answered), and D3's scientific question (answered — M1 FAIL; only the wiring
+remains).
+
+**The relationship also runs the other way, and the earlier framing had it backwards.** M1's failure
+is precisely what a methylation anchor resolves, so **1.5.2 is the response to that ESCALATE, not
+something queued behind it.**
+
+### Also corrected
+
+`STAGE_1_5_1_REV_FINAL.md` §6's box (added earlier today) listed D2 and D3 as flatly "🔴 OPEN" and
+repeated the "gated behind D2 and D3" framing. Both rows now carry the measured results and the
+open/closed split, and the sequencing note states why D2's scientific half must never be written as
+a gate.
+
+**Header and `Depends on` lines in 1.5.2 updated to match.** Grep confirms no stale "gated behind
+D2 and D3" wording survives outside the two self-corrections that quote it.
+
+---
+
+
 ## 2026-07-30 — Adversarial audit of REV FINAL and STAGE 2 before external review; 5 defects fixed
 
 **Status:** ✅ Executed and verified. **1 new artefact script + 2 annotated plan files.**
