@@ -692,3 +692,84 @@ alongside, because agreement driven by shared probes would be partly trivial.
 | **FAIL** | either | **M-2a's negative verdict is WITHDRAWN.** The anchor cannot arbitrate the RNA clock if it cannot arbitrate itself |
 | PASS | both pass | **M-2a's negative verdict is ACCEPTED.** §11's falsification condition is not met |
 | PASS | either fails | **ACCEPTED WITH CAVEAT** — the well-powered check supports the anchor, the under-powered ones do not, and the tension is recorded rather than resolved by picking the convenient one |
+
+---
+
+## 12-R. ✅ EXECUTED 2026-07-31 — **the anchor holds. M-2a's verdict is ACCEPTED.**
+
+`python experiments/diag_r1_anchor_reliability.py --run "D:\GSE165179" "D:\GSE165177"` →
+`diag_r1_anchor_reliability_results.json`. **`src/` untouched.**
+
+| check | Horvath skin & blood 2018 | Horvath multi-tissue 2013 | bar | |
+|---|---|---|---|---|
+| **R4** CpG coverage | **100.0%** (391) | **94.6%** (353) | ≥ 90% | ✅ both OK |
+| **R1a** LODO age MAE | **6.03 yr** | **6.63 yr** | ≤ 7.17 | ✅ pass |
+| **R1b** intercept-free 15-yr gap | **+10.39** (\|err\| 4.61) | **+6.48** (\|err\| 8.52) | \|err\| ≤ 9.08 | ✅ pass |
+| **R1d** inter-clock ρ_partial | *(one number for the pair)* | **+0.568** | ≥ 0.50 | ✅ pass |
+
+**⇒ §11's falsification condition is NOT met. M-2a's SPLIT ⇒ NOT CALIBRATABLE is ACCEPTED.**
+
+Note both R1a and R1b clear only the **loosened** bars — at the originally proposed 5.0 yr, R1a
+would have failed on both clocks. That loosening was frozen and committed *before* the run (§12
+above), but it is a weaker test than proposed and is reported as such.
+
+### R1c — the negative control is inert in absolute terms too
+
+Drift of the treated non-responders against **their own day-0 fibroblast** (within-donor, so
+intercept-free): **−0.76 / −0.24 yr** (skin & blood), **+2.96 / −2.56 yr** (multi-tissue). All four
+are inside the clock's own error. §9-R1's worry — that non-responders had silently drifted — is
+measured and does not hold here. This corroborates `REV FINAL`'s +0.5 / −2.4 yr from a different
+direction: that was a *contrast against the negative-control arm*, this is an *absolute* comparison
+to the donor's own starting point.
+
+### 🔴 The finding that was not pre-registered, and that qualifies what the verdict means
+
+R1d was included to prove the anchor could arbitrate. It does — but its **value** is the more
+interesting number:
+
+| pairing | ρ_partial | as a fraction of the meth↔meth ceiling |
+|---|---|---|
+| **methylation ↔ methylation** (the ceiling) | **+0.568** | — |
+| RNA ↔ Horvath multi-tissue | +0.516 | **91.0%** |
+| RNA ↔ Horvath skin & blood | +0.267 | 47.1% |
+
+**Two independent methylation clocks, reading the same DNA from the same samples and sharing only
+60 CpGs (17% of the smaller panel), agree with each other at ρ_partial = 0.568.** The bar was 0.50.
+The ceiling clears it by 0.068.
+
+**M-2a's bars were simulated against a null with ρ_true = 0.70. Nothing on this data reaches 0.70 —
+including methylation against methylation.**
+
+Two readings, and both are defensible:
+
+* **Supporting the recorded verdict:** RNA ↔ skin & blood reaches 47% of the ceiling. Against that
+  reference the RNA clock genuinely fails.
+* **Qualifying it:** RNA ↔ multi-tissue reaches **91%** of the ceiling. Against *that* reference the
+  RNA clock does nearly as well as a second methylation clock does. So the SPLIT is partly a
+  property of **disagreement between the two methylation references**, not of the RNA clock alone.
+
+**What both readings agree on, and what actually matters:** a monotone calibration fitted here would
+be fitted against a reference that is only ~0.57 self-consistent after the reprogramming axis is
+removed. **M-2c would have been meaningless even if M-2a had passed** — which independently
+vindicates §6's decision to gate it, on a ground §6 never anticipated.
+
+### Why the ceiling is low — visible in R1a's folds
+
+| held out | true age | predicted |
+|---|---|---|
+| O1 | 53 | **44.0** |
+| O2 | 53 | **58.5** |
+| O3 | 38 | 41.6 |
+
+**Two donors of identical chronological age read 44.0 and 58.5** — a 14.5 yr spread on skin & blood
+(43.7 vs 52.3 on multi-tissue). Donor-level methylation-clock error on this data is roughly ±7 yr,
+which is the same order as the 15-yr age contrast the series contains. That is the direct cause of
+the low ceiling, and it is a property of **3 donors**, not of either instrument.
+
+### What this changes, and what it does not
+
+| ✅ | ❌ |
+|---|---|
+| M-2a's verdict is now **accepted**, not merely recorded — §11's precondition is satisfied | It does **not** upgrade the verdict: NOT CALIBRATABLE still means Phase 2 does not run |
+| The methylation anchor is corroborated for **contrasts** (R1c; `REV FINAL` §3 stands unchanged) | It does **not** license absolute methylation ages at n=3 donors — ±7 yr donor error |
+| §6's gate on M-2c is vindicated for a second, independent reason | It does **not** rescue any RNA-derived ΔAge claim |

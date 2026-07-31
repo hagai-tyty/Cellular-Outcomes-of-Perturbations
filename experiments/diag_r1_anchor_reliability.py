@@ -304,8 +304,13 @@ def measure(pre: dict, meth_dir: Path, rna_dir: Path) -> dict:
         # ---- R1a: LODO on the day-0 fibroblasts -------------------------------------- #
         d0_lp = {d: float(np.mean(v)) for (ct, d), v in by_arm_donor.items() if ct == FIB}
         lodo = lodo_age_errors(d0_lp, {d: age_of[d] for d in d0_lp}, dma.trafo, dma.anti_trafo)
-        r1a = {"verdict": "PASS" if lodo["mae_years"] <= R1A_MAE_BAR else "FAIL",
-               "detail": f"MAE {lodo['mae_years']:.2f} yr vs bar {R1A_MAE_BAR:.1f}", **lodo}
+        # Grade against the bar FROZEN IN PHASE 1 (7.17 after the §5b move), not the proposed 5.0.
+        bar_a = float(pre["checks"][f"R1a LODO age MAE <= {R1A_MAE_BAR:.1f} yr (3 donors)"]
+                      ["bar_used"])
+        r1a = {"verdict": "PASS" if lodo["mae_years"] <= bar_a else "FAIL", "bar": bar_a,
+               "bar_proposed": R1A_MAE_BAR,
+               "detail": f"MAE {lodo['mae_years']:.2f} yr vs bar {bar_a:.2f} "
+                         f"(proposed {R1A_MAE_BAR:.1f}, moved by §5b before the run)", **lodo}
 
         # ---- R1b: intercept-free gap on the UNTREATED negative-control arm ------------ #
         nc = {d: v for (ct, d), v in by_arm_donor.items() if ct == NC}
@@ -343,7 +348,7 @@ def measure(pre: dict, meth_dir: Path, rna_dir: Path) -> dict:
         print(f"  === {cname} ===  {len(W)} CpGs, coverage {cov_frac:.1%} "
               f"[{'OK' if cov_ok else 'DEGRADED'}]")
         print(f"     R1a  LODO age recovery   MAE {lodo['mae_years']:.2f} yr "
-              f"(bar <= {R1A_MAE_BAR:.1f})  -> {r1a['verdict']}")
+              f"(bar <= {bar_a:.2f}, proposed {R1A_MAE_BAR:.1f})  -> {r1a['verdict']}")
         for f in lodo["folds"]:
             print(f"            hold out {f['held_out']}: true {f['true_age']:.0f}  "
                   f"pred {f['pred_age']:.1f}  err {f['pred_age']-f['true_age']:+.1f}")
@@ -387,6 +392,30 @@ def measure(pre: dict, meth_dir: Path, rna_dir: Path) -> dict:
     print(f"     rho_all      {rho_all:+.3f}   [descriptive]")
     print(f"     rho_partial  {rho_par:+.3f}   [same bar M-2a used, >= {bar_d:.2f}]  "
           f"-> {r1d['verdict']}")
+
+    # ---- The empirical CEILING. Descriptive, UNREGISTERED, and reported anyway. -------- #
+    # M-2a's bars were simulated against a null with rho_true = 0.70. R1d measures what two clocks
+    # of the SAME modality actually achieve on these samples under the same partialling. If that
+    # ceiling sits near the bar, then M-2a's criterion was near the limit of what ANY instrument
+    # could reach here, and the SPLIT verdict says less about RNA than it appears to. This does NOT
+    # change the pre-committed decision -- it qualifies what the decision means.
+    m2a_path = ROOT / "diag_m2a_calibratability_results.json"
+    ceiling = {"note": "descriptive, not pre-registered; does not alter any verdict"}
+    if m2a_path.exists():
+        prev = json.loads(m2a_path.read_text(encoding="utf-8"))
+        ceiling["meth_vs_meth_rho_partial"] = rho_par
+        ceiling["rna_vs_meth_rho_partial"] = {
+            k: v["rho_partial"] for k, v in prev.get("clocks", {}).items()}
+        ceiling["frac_of_ceiling"] = {
+            k: (v / rho_par if rho_par else float("nan"))
+            for k, v in ceiling["rna_vs_meth_rho_partial"].items()}
+        print("\n  --- empirical ceiling (descriptive, NOT a registered criterion) ---")
+        print(f"     two methylation clocks agree with each other at rho_partial {rho_par:+.3f}")
+        for k, v in ceiling["rna_vs_meth_rho_partial"].items():
+            print(f"     RNA vs {k:<28} {v:+.3f}   = {v/rho_par:5.1%} of that ceiling")
+        print("     M-2a's bars were simulated against a null with rho_true = 0.70; nothing on")
+        print("     this data reaches 0.70, including methylation against methylation.")
+    results["ceiling"] = ceiling
 
     dec = overall_decision(results["clocks"], r1d)
     results["overall"] = dec["action"]
