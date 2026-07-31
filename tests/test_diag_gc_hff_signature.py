@@ -132,7 +132,7 @@ def test_slope_alone_also_routes_to_the_retrain():
     assert v["action"] == "RUN_STEP_2"
 
 
-def test_a_slope_too_STEEP_also_leaves_the_band():
+def test_a_slope_too_steep_also_leaves_the_band():
     """The band is two-sided: 10x methylation's slope is as unlike the signature as 0.1x."""
     assert G.gc_verdict(_stats(-0.95, -30.0), -0.50, *BAND)["action"] == "RUN_STEP_2"
 

@@ -16,8 +16,12 @@
 > | **G-a / G-b** | **closed** — the only `src/` changes in this stage, both record-only, ΔAge bit-identical (§13) |
 > | **G-c step 1** | run — **RUN_STEP_2**, and it **refuted §0's own evidence** (§15) |
 > | **What is still open** | exactly one thing: **G-c step 2**, which needs a retrain and belongs to whatever stage next rebuilds (§16) |
+> | **Re-audit** | **§17** — every number re-verified against its JSON; **§11's per-arm *reading* is corrected** (the verdict is not) |
 >
 > **Read §16 first** — it is the one-page answer to every question this document asked.
+> **Then §17**, which corrects how §11's per-arm table may be read and reports the strongest single
+> result in the stage: in the arm where the two methylation clocks agree at **+0.936 — the sharpest
+> reference of any arm — the RNA clock is negatively correlated.**
 
 **Original status line, left as written:**
 🔵 **PRE-REGISTERED — NOT YET EXECUTED, AND GATED.** Bars are fixed in §6 *before*
@@ -1083,3 +1087,116 @@ to be separable and separately gated:
 | | `diag_gc_hff_signature.py` | G-c step 1, added to this plan after §10 was written |
 
 Each has a matching `tests/test_*.py` and a `*_results.json`.
+
+---
+
+# 17. 🔍 RE-AUDIT 2026-07-31 — **§11's per-arm reading was wrong, and the real finding is stronger**
+
+> *Additive. Nothing above is modified. Every load-bearing number in §11–§16 was re-checked against
+> its JSON artefact and all reproduce exactly; this section reports the one thing that did not
+> survive re-reading. The verdict does not move — §7 was decided on ρ_partial, not on this table.*
+
+## 17.1 The defect
+
+§11 reported RNA↔methylation **per arm** and read it as:
+
+> *"The RNA clock tracks methylation age in cells that are NOT reprogramming, and stops tracking —
+> or inverts — in exactly the cells that are. That is the same in-domain/out-of-domain boundary
+> `REV FINAL` §1 established, now visible in the calibration itself."*
+
+**That table has a numerator and no denominator.** A low RNA↔methylation correlation inside an arm
+means one of two completely different things, and §11 did not distinguish them:
+
+* the methylation reference is **sharp** there and the RNA clock disagrees with it → the RNA clock
+  is failing, and that is the strongest evidence this stage can produce;
+* the methylation reference is **blunt** there — the two Horvath clocks do not even agree with each
+  other → **nothing** can be concluded about the RNA clock in that arm, in either direction.
+
+§12-R measured the ceiling **pooled** (ρ_partial +0.568 over all 68 conditions) and §11 measured the
+numerator **per arm**. Neither was wrong; putting them side by side was never done.
+
+`python experiments/diag_m2a_per_arm_ceiling.py` → `diag_m2a_per_arm_ceiling_results.json`.
+Re-cut of the numbers M-2a already wrote — nothing re-measured, no raw data reopened.
+
+## 17.2 The denominator, per arm
+
+| arm | n | **meth↔meth** *(the ceiling)* | RNA (mean of both clocks) | % of ceiling | reprogramming? |
+|---|---:|---:|---:|---:|:--|
+| **`transient_reprogramming_intermediate`** | 11 | **+0.936** | **−0.164** | −17% | **YES** |
+| `negative_control` | 12 | +0.860 | +0.399 | 46% | no |
+| `failing_to_transiently_reprogram_intermediate` | 12 | +0.762 | +0.112 | 15% | no |
+| `negative_control_intermediate` | 12 | +0.671 | +0.231 | 34% | no ⚠️ *too blunt* |
+| `failed_to_transiently_reprogram` | 12 | +0.566 | +0.430 | 76% | no ⚠️ *too blunt* |
+| **`transiently_reprogrammed`** | 9 | **+0.233** | +0.150 | 64% | **YES** ⚠️ *too blunt* |
+
+*"Too blunt" = meth↔meth below 0.70, the level M-2a's own null assumed a real agreement looks like.*
+*Unpartialled within-arm Spearman; not numerically comparable to §12-R's pooled partialled +0.568.
+Conditioning on arm already removes most of the between-arm axis the partialling existed to handle.*
+
+**Only 3 of 6 arms have a reference sharp enough to arbitrate anything.**
+
+## 17.3 What actually follows — three corrections to §11
+
+**① §11's headline sentence is too clean, and is withdrawn as stated.**
+`failing_to_transiently_reprogram_intermediate` is a **non-reprogramming** arm with a **sharp**
+reference (+0.762), and the RNA clock reads **+0.112** there — **15% of the ceiling.** It does not
+"track" in that arm. So the failure is *not* confined to reprogramming cells, and the clean
+in-domain/out-of-domain boundary §11 claimed to see is not in this table.
+
+**② §11 counted an uninterpretable arm as evidence.** `transiently_reprogrammed` was listed with
++0.267 / +0.033 and read as the clock "stopping". Its meth↔methylation ceiling is **+0.233** — the
+*lowest of all six arms*. The two references barely agree with each other there, so **that row
+supports nothing** and should never have been read.
+
+**③ The one row that does hold is far stronger than §11 made it look — and §11 buried it.**
+In `transient_reprogramming_intermediate` the two methylation clocks agree at **+0.936, the sharpest
+reference of any arm in the study**, and the RNA clock is **negatively correlated (−0.164)**.
+
+> **Where the ground truth is at its most reliable, the transcriptomic clock runs backwards.**
+
+That is not a power problem, not a blunt-reference artefact, and not the pooled ρ_partial that
+§12-R's ceiling finding qualified. It is the single most damning result in the stage, and §11
+presented it as one cell in a six-row table of equals.
+
+## 17.4 Why this changes no verdict
+
+| | |
+|---|---|
+| **§7 was decided on ρ_partial at n=68**, which is unaffected — this is a different cut of the same rows | ✅ **NOT CALIBRATABLE stands** |
+| every arm's n is **9–12**, which the §6 freeze established is **UNRESOLVABLE** for a ρ bar | ✅ nothing here is a criterion, by construction |
+| §11 already labelled the per-arm table "descriptive" and "no single number here is reliable" | ✅ the correction is to the **reading**, not to a result |
+
+**But "descriptive" was doing a lot of work.** §11 labelled the table descriptive and then drew a
+structural conclusion from it in the next sentence. That is the defect worth naming: *a caveat does
+not license a claim.*
+
+## 17.5 It also sharpens §12-R's ceiling finding
+
+§12-R reported one pooled ceiling, ρ_partial **+0.568**, and concluded that no instrument on this
+data reaches the ρ_true = 0.70 the bars assumed. **The per-arm cut shows that pooled number is an
+average over a 4× range — +0.233 to +0.936.**
+
+So the correct statement is not *"methylation is uniformly mediocre here"* but:
+
+> **The methylation reference is excellent in some cell states and near-useless in others, and the
+> pooled figure hides which.** A calibration fitted across all conditions — which is exactly what
+> M-2c would have been — would have been fitted against a reference whose reliability varies 4× with
+> the very variable being calibrated.
+
+That is a **third** independent reason M-2c would have been meaningless, and a stronger one than
+§12-R's: not merely that the reference is imprecise, but that its precision is **confounded with the
+axis under study.**
+
+## 17.6 Everything else in §11–§16 re-verified
+
+Checked against the JSON artefacts, not against the prose:
+
+| | |
+|---|---|
+| §6 geometry and all 7 bar verdicts | ✅ exact |
+| §11 M-2a: ρ_all +0.444/+0.690, ρ_partial +0.267/+0.516, SPLIT, 18 pluripotency genes | ✅ exact |
+| §12-R: coverage 1.000/0.946, LODO 6.03/6.63, gap +10.39/+6.48, R1d +0.568 on 60 shared CpGs (17.0%), ceiling 47.1%/91.0% | ✅ exact |
+| §14 M-2b: 22/22 join, 7/11 both clocks, per-day 0/3, 3/4, 4/4 | ✅ exact |
+| §15 G-c: ρ −0.905, slope −1.526, 8 timepoints, 37 693 cells, LOO ranges | ✅ exact |
+| §16.5's test count | ⚠️ **537 at close; 555 now** — REV FINAL §11's donor-identity work added 18 after this stage closed. Not a discrepancy, but the figure is a snapshot |
+| §16.5's "12 pre-existing lint errors" | ✅ still 12, in the same four files, none introduced here |
