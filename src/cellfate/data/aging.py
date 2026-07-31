@@ -78,16 +78,81 @@ class LinearClock(AgingClock):
         Path(path).write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
-def _control_baseline(values: np.ndarray, lines: np.ndarray, is_ctrl: np.ndarray) -> np.ndarray:
+def _control_baseline(values: np.ndarray, lines: np.ndarray, is_ctrl: np.ndarray,
+                      census: dict | None = None,
+                      composition: dict[str, np.ndarray] | None = None) -> np.ndarray:
     """Per-line mean over vehicle controls. Falls back to the line's own mean when
-    a line has no controls in this chunk (values then centred within the line)."""
+    a line has no controls in this chunk (values then centred within the line).
+
+    When ``census`` is supplied it is filled in with, per line, how many controls the
+    baseline actually rests on and what they were made of. **This is recording only --
+    the arithmetic above is untouched and ΔAge is bit-identical with and without it**
+    (``tests/test_baseline_census.py`` asserts that rather than assuming it).
+
+    Why it exists (Stage 1.5.2 §0, gate G-a). Stage 1.5 made the ``n = 0`` case visible;
+    ``n = 1`` was still silent. A zero-point built from one unreplicated sample has no error
+    bar, and nothing in the pipeline said so -- while the per-donor offset Stage 2 exists to
+    correct is ±12.7 yr, the same magnitude as ONE clock measurement's error. You cannot
+    audit what is not recorded.
+
+    ``composition`` maps a label (e.g. ``"batch"``) to a per-cell array; the distinct values
+    among each line's controls are recorded. That is what makes finding D1 -- every baseline
+    drawn from ``Exp2`` while ~50% of treated samples are ``Exp1`` -- visible in the output
+    instead of reconstructible only by hand.
+    """
     baseline = np.empty_like(values, dtype=np.float64)
     for line in np.unique(lines):
         in_line = lines == line
         ctrl = in_line & is_ctrl
         ref = values[ctrl] if ctrl.any() else values[in_line]
         baseline[in_line] = ref.mean()
+        if census is not None:
+            used = ctrl if ctrl.any() else in_line
+            rec = {"n_control": int(ctrl.sum()), "n_cells": int(in_line.sum()),
+                   "source": "controls" if ctrl.any() else "self_fallback",
+                   "unreplicated": bool(ctrl.sum() == 1)}
+            for name, arr in (composition or {}).items():
+                a = np.asarray(arr)
+                # Both are needed to say anything useful. The baseline's values alone cannot
+                # distinguish "the controls are all Exp2 while the line spans Exp1 and Exp2"
+                # (finding D1, a real defect) from "this column is constant within a line"
+                # (donor_age, where a single value is the only possible answer).
+                rec[name] = sorted({str(v) for v in a[used]})
+                rec[f"{name}_in_line"] = sorted({str(v) for v in a[in_line]})
+            census[str(line)] = rec
     return baseline
+
+
+def census_warnings(census: dict, min_controls: int = 2) -> list[str]:
+    """Human-readable problems in a baseline census. Pure, so it is testable on its own.
+
+    Three things are worth saying out loud, in descending severity:
+      * no controls at all -- the ``aging.py`` self-centring fallback fired (Stage 1.5's gate);
+      * a single unreplicated control -- a zero-point with no error bar (G-a's reason to exist);
+      * a baseline drawn from strictly fewer batches than the line spans -- finding D1's
+        cross-batch structure, which sits *inside* the definition of ``y_age``.
+
+    The third check compares the baseline's values against the **whole line's**, so it fires
+    only on a genuine mismatch. A column that is constant within a line by construction
+    (``donor_age``) can never trigger it -- an earlier version warned on every donor, which is
+    noise that would have trained the reader to ignore the warnings that matter.
+    """
+    out = []
+    for line, rec in sorted(census.items()):
+        if rec["source"] == "self_fallback":
+            out.append(f"{line}: NO controls in this chunk; ΔAge centred within the line "
+                       f"({rec['n_cells']} cells)")
+        elif rec["n_control"] < min_controls:
+            out.append(f"{line}: baseline rests on n={rec['n_control']} control cell(s) -- "
+                       f"an unreplicated zero-point, no error bar")
+        for name, vals in rec.items():
+            in_line = rec.get(f"{name}_in_line")
+            if not isinstance(vals, list) or in_line is None:
+                continue
+            if len(vals) == 1 and len(in_line) > 1:
+                out.append(f"{line}: every baseline cell has {name}={vals[0]}, but the line "
+                           f"spans {in_line} -- ΔAge is a cross-{name} difference for the rest")
+    return out
 
 
 def recenter_on_control_arrays(
@@ -122,6 +187,8 @@ def delta_age(
     genes: list[str],
     obs: pd.DataFrame,
     source: str,
+    census: dict | None = None,
+    composition_cols: tuple[str, ...] = ("batch", "donor_age"),
 ) -> tuple[np.ndarray, np.ndarray]:
     """Compute (ΔAge, age_mask) from the **full normalised profile**.
 
@@ -137,10 +204,17 @@ def delta_age(
     Note: if the caller subsequently deconfounds ΔAge for cell cycle, it must
     re-anchor with ``recenter_on_controls`` to preserve the control-relative
     zero-point (deconfounding otherwise re-centres the whole population).
+
+    Pass ``census`` (a dict) to have the per-line baseline count and composition
+    recorded into it -- Stage 1.5.2's gate G-a. Purely additive: the returned ΔAge
+    does not depend on whether ``census`` was supplied. ``composition_cols`` names
+    the ``obs`` columns to summarise; missing ones are skipped, so a source that
+    does not stamp them is not an error.
     """
     age = clock.predict_age(expr, genes)
     lines = obs["cell_line"].to_numpy()
     is_ctrl = obs["is_control"].to_numpy().astype(bool)
-    d = age - _control_baseline(age, lines, is_ctrl)
+    comp = {c: obs[c].to_numpy() for c in composition_cols if c in obs.columns} or None
+    d = age - _control_baseline(age, lines, is_ctrl, census=census, composition=comp)
     age_mask = np.full(age.shape[0], source not in C.CANCER_SOURCES, dtype=bool)
     return d, age_mask

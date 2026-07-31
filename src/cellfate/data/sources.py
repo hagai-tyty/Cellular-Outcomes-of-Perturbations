@@ -13,6 +13,7 @@ lazy-import their dependencies and are documented but not exercised here.
 
 from __future__ import annotations
 
+import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
@@ -43,6 +44,19 @@ def _open_text(path, mode: str = "rt"):
     import gzip
     opener = gzip.open if str(path).endswith(".gz") else open
     return opener(path, mode, **_TEXT_KW)
+
+
+def _maybe_float(v) -> float | None:
+    """Parse a GEO characteristic value to float, or ``None`` if it is not numeric.
+
+    Returns ``None`` rather than raising or defaulting to 0.0: a missing donor age must be
+    visibly absent, because 0.0 is a REAL age in this dataset (N2/N3 are neonatal) and a
+    silent default would be indistinguishable from it.
+    """
+    try:
+        return float(str(v).strip())
+    except (TypeError, ValueError):
+        return None
 
 
 @dataclass
@@ -319,15 +333,23 @@ class ReprogrammingSource(DataSource):
         factor_as_token: bool = True,
         source: str = "reprogramming",
         dataset_id: str = "reprogramming",
+        extra: dict[str, list] | None = None,
     ) -> RawChunk:
         """Assemble a valid RawChunk from per-cell reprogramming metadata.
 
         ``pert_ids[i]`` is the factor set (e.g. ``"OSKM"``) or ``control_value`` for
         unreprogrammed cells. Encodes the TF cocktail per the class docstring.
+
+        ``extra`` adds per-cell metadata columns to ``obs`` (each a length-``n`` list).
+        Used to carry ``donor_age`` and ``batch`` -- read at parse time, never consumed
+        as a model feature. See :meth:`GillReprogrammingSource._parse_series`.
         """
         n = counts.shape[0]
         if not (len(pert_ids) == len(time_h) == n):
             raise DataSourceError(f"{chunk_id}: pert_ids/time_h must match {n} cells")
+        for k, v in (extra or {}).items():
+            if len(v) != n:
+                raise DataSourceError(f"{chunk_id}: extra column '{k}' has {len(v)} values, not {n}")
         doses = doses if doses is not None else [1.0] * n
         recs: list[dict] = []
         for i in range(n):
@@ -346,6 +368,7 @@ class ReprogrammingSource(DataSource):
                 "time_h": float(time_h[i]),
                 "is_control": is_ctrl,
                 "dataset_id": dataset_id,
+                **{k: v[i] for k, v in (extra or {}).items()},
             })
         return RawChunk(chunk_id=chunk_id, source=source,
                         counts=np.asarray(counts), genes=list(genes),
@@ -408,6 +431,11 @@ class GillReprogrammingSource(ReprogrammingSource):
         self._rpm = None            # linear RPM, genes x samples (DataFrame)
         self._meta: dict | None = None
 
+    # GEO spells the chronological-age characteristic two ways across the four SubSeries of
+    # GSE165180: "donor age" (GSE165176 / GSE165178) and "donor age (years)" (GSE165177 /
+    # GSE165179). Both are accepted so the same parser reads any of them.
+    _AGE_KEYS = ("char::donor age", "char::donor age (years)")
+
     def _parse_series(self) -> dict:
         rows: dict[str, list[str]] = {}
         with _open_text(self.series_matrix) as f:
@@ -424,7 +452,22 @@ class GillReprogrammingSource(ReprogrammingSource):
         days = [field(x) for x in rows.get("char::days of reprogramming", ["0"] * len(titles))]
         ctype = [field(x) for x in rows.get("char::cell type", [""] * len(titles))]
         donor = [t.split("_")[0] for t in titles]
-        return {t: {"donor": donor[i], "day": float(days[i]), "ctype": ctype[i]}
+        # Stage 1.5.2 gate G-b: donor chronological age is DECLARED by GEO (N2/N3 = 0, Y1 = 29,
+        # Y2 = 35, O1/O2 = 53) and was discarded at read time -- `grep -rn "donor age" src/`
+        # returned nothing. It is the only external ground truth available for the clock, and
+        # STAGE_1_5_1_REV_FINAL §2 already USED these values as a guard (MAE 4.0 / 4.4 yr) by
+        # hand. Wiring it here is what makes that reproducible from the pipeline.
+        # It is a per-donor CONSTANT, so it can anchor ABSOLUTE calibration only -- it cannot
+        # measure rejuvenation *within* a donor, and must never be sold as if it could.
+        raw_age = next((rows[k] for k in self._AGE_KEYS if k in rows), None)
+        age = [_maybe_float(field(x)) for x in raw_age] if raw_age else [None] * len(titles)
+        # Batch is in the title suffix (`..._Sendai_Exp1`), never in a characteristic. Finding D1
+        # is that ALL six baselines are Exp2 while ~50% of treated samples are Exp1, so ΔAge is a
+        # cross-batch difference for half the data -- and nothing recorded which batch a baseline
+        # came from. This is that record.
+        batch = [t.rsplit("_", 1)[-1] if re.search(r"_Exp\d+$", t) else "" for t in titles]
+        return {t: {"donor": donor[i], "day": float(days[i]), "ctype": ctype[i],
+                    "age": age[i], "batch": batch[i]}
                 for i, t in enumerate(titles)}
 
     def _load(self) -> None:
@@ -465,14 +508,20 @@ class GillReprogrammingSource(ReprogrammingSource):
         if not cols:
             raise DataSourceError(f"no samples for donor {donor}")
         counts = self._rpm[cols].to_numpy(dtype=np.float32).T          # samples x genes
-        pert, time_h = [], []
+        pert, time_h, donor_age, batch = [], [], [], []
         for c in cols:
             m = self._meta[c]
             is_ctrl = m["day"] == 0.0 or m["ctype"] == "Dermal fibroblast"
             pert.append("control" if is_ctrl else "OSKM")
             time_h.append(m["day"] * 24.0)
+            donor_age.append(m.get("age"))
+            batch.append(m.get("batch", ""))
+        # donor_age and batch ride in `obs` as metadata only: they are never handed to the model
+        # (the request schema in inference/schema.py forbids extra fields), and exist so the
+        # baseline census in aging.py can report what each zero-point was actually made of.
         return self.build_chunk(chunk["id"], counts, list(self._genes), donor,
-                                pert, time_h, factor_as_token=True, dataset_id="gill_bulk")
+                                pert, time_h, factor_as_token=True, dataset_id="gill_bulk",
+                                extra={"donor_age": donor_age, "batch": batch})
 
 
 class GSE242423SingleCellSource(ReprogrammingSource):

@@ -1,0 +1,89 @@
+{
+  "script": "diag_m2b_contrast_agreement",
+  "utc": "2026-07-31T13:40:10+00:00",
+  "join": {
+    "n_meth_samples": 22,
+    "n_meth_keyed": 22,
+    "n_rna_samples": 124,
+    "n_rna_keyed": 106,
+    "n_matched": 22,
+    "expected": 22,
+    "matched_keys": [
+      "O1_d11_CD13",
+      "O1_d11_SSEA4",
+      "O1_d15_CD13",
+      "O1_d15_SSEA4",
+      "O2_d11_CD13",
+      "O2_d11_SSEA4",
+      "O2_d15_CD13",
+      "O2_d15_SSEA4",
+      "O2_d9_CD13",
+      "O2_d9_SSEA4",
+      "Y1_d11_CD13",
+      "Y1_d11_SSEA4",
+      "Y1_d15_CD13",
+      "Y1_d15_SSEA4",
+      "Y1_d9_CD13",
+      "Y1_d9_SSEA4",
+      "Y2_d11_CD13",
+      "Y2_d11_SSEA4",
+      "Y2_d15_CD13",
+      "Y2_d15_SSEA4",
+      "Y2_d9_CD13",
+      "Y2_d9_SSEA4"
+    ],
+    "unmatched_meth": [],
+    "donors": [
+      "O1",
+      "O2",
+      "Y1",
+      "Y2"
+    ],
+    "days": [
+      9,
+      11,
+      15
+    ],
+    "arm_counts": {
+      "CD13": 11,
+      "SSEA4": 11
+    },
+    "rna_replicates_per_key": {
+      "O1_d11_CD13": 2,
+      "O1_d11_SSEA4": 2,
+      "O1_d15_CD13": 1,
+      "O1_d15_SSEA4": 1,
+      "O2_d11_CD13": 2,
+      "O2_d11_SSEA4": 2,
+      "O2_d15_CD13": 1,
+      "O2_d15_SSEA4": 1,
+      "O2_d9_CD13": 1,
+      "O2_d9_SSEA4": 1,
+      "Y1_d11_CD13": 2,
+      "Y1_d11_SSEA4": 2,
+      "Y1_d15_CD13": 1,
+      "Y1_d15_SSEA4": 1,
+      "Y1_d9_CD13": 1,
+      "Y1_d9_SSEA4": 1,
+      "Y2_d11_CD13": 2,
+      "Y2_d11_SSEA4": 2,
+      "Y2_d15_CD13": 1,
+      "Y2_d15_SSEA4": 1,
+      "Y2_d9_CD13": 1,
+      "Y2_d9_SSEA4": 1
+    },
+    "verdict": "OK"
+  },
+  "methylation_coverage": {
+    "Horvath skin & blood 2018": {
+      "n_cpg": 391,
+      "coverage_frac": 1.0,
+      "coverage_verdict": "OK"
+    },
+    "Horvath multi-tissue 2013": {
+      "n_cpg": 353,
+      "coverage_frac": 0.9461756373937678,
+      "coverage_verdict": "OK"
+    }
+  }
+}

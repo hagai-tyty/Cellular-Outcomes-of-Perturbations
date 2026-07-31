@@ -33,6 +33,7 @@ from cellfate.common.schemas import ManifestRow
 from .aging import (
     AgingClock,
     LinearClock,
+    census_warnings,
     delta_age,
     recenter_on_control_arrays,
 )
@@ -99,7 +100,8 @@ class DataConfig:
 # --------------------------------------------------------------------------- #
 # Per-chunk pipeline                                                          #
 # --------------------------------------------------------------------------- #
-def process_chunk(src, chunk, panel, clock: AgingClock, cfg: DataConfig, harmonizer=None):
+def process_chunk(src, chunk, panel, clock: AgingClock, cfg: DataConfig, harmonizer=None,
+                  census: dict | None = None):
     """Run the full transform for one chunk.
 
     Returns ``(samples, aux)`` where ``samples`` carry the *raw* control-relative
@@ -108,6 +110,10 @@ def process_chunk(src, chunk, panel, clock: AgingClock, cfg: DataConfig, harmoni
     when deconfounding is off or the chunk has no age-valid cells. Fitting the
     deconfounder on train cells only requires the split assignment, which does
     not exist until every chunk has been read -- hence the deferred two-pass.
+
+    ``census`` (optional dict) is filled with the per-line baseline count and
+    composition -- Stage 1.5.2's gate G-a. Recording only: ΔAge is bit-identical
+    whether or not it is supplied.
     """
     raw = apply_qc(src.fetch(chunk), cfg.qc)
     if len(raw.obs) == 0:
@@ -128,7 +134,7 @@ def process_chunk(src, chunk, panel, clock: AgingClock, cfg: DataConfig, harmoni
         y_cls = fate_labels(x_scaled, hgenes, raw.obs, cfg.label_tau)
         x_panel = to_panel_matrix(x_scaled, hgenes, panel)
         cc = cell_cycle_score(norm, raw.genes)     # cell cycle stays on raw norm
-        d_age, age_mask = delta_age(clock, x_clock, hgenes, raw.obs, raw.source)
+        d_age, age_mask = delta_age(clock, x_clock, hgenes, raw.obs, raw.source, census=census)
     else:
         y_cls = fate_labels(norm, raw.genes, raw.obs, cfg.label_tau)
         cc = cell_cycle_score(norm, raw.genes)
@@ -136,7 +142,7 @@ def process_chunk(src, chunk, panel, clock: AgingClock, cfg: DataConfig, harmoni
         # the clock consumes the FULL profile (its own gene panel), NOT the 2000-HVG
         # model input x_panel -- so aging genes filtered out of the HVG panel still
         # reach the clock. The model still trains on x_panel below.
-        d_age, age_mask = delta_age(clock, norm, raw.genes, raw.obs, raw.source)
+        d_age, age_mask = delta_age(clock, norm, raw.genes, raw.obs, raw.source, census=census)
     cell_ids = raw.obs["cell_id"].tolist()
     aux: ChunkAux | None = None
     if cfg.deconfound and age_mask.any():
@@ -296,6 +302,7 @@ def run(cfg: DataConfig, sources: list[DataSource] | None = None,
 
     label_counts: Counter[str] = Counter()
     n_age_labeled = 0
+    baseline_census: dict = {}      # gate G-a: what each ΔAge zero-point actually rests on
 
     for src, chunk in work:
         cid = chunk["id"]
@@ -303,7 +310,10 @@ def run(cfg: DataConfig, sources: list[DataSource] | None = None,
             continue
         sid = io.sanitize_id(cid)
         try:
-            samples, aux = process_chunk(src, chunk, panel, clock, cfg, harmonizer)
+            chunk_census: dict = {}
+            samples, aux = process_chunk(src, chunk, panel, clock, cfg, harmonizer,
+                                         census=chunk_census)
+            baseline_census.update(chunk_census)
             if not samples:
                 tracker.mark_done(cid, 0)
                 continue
@@ -319,7 +329,7 @@ def run(cfg: DataConfig, sources: list[DataSource] | None = None,
                 label_counts[C.IDX_TO_CLASS[int(np.argmax(s.y_cls))]] += 1
                 n_age_labeled += int(s.age_mask)
             tracker.mark_done(cid, len(samples))
-            log_event(log, "chunk.done", chunk=cid, n=len(samples))
+            log_event(log, "chunk.done", chunk=cid, n=len(samples), baseline=chunk_census)
         except Exception as exc:  # noqa: BLE001 - recorded for resume
             tracker.mark_failed(cid, repr(exc))
             log_event(log, "chunk.failed", chunk=cid, err=repr(exc))
@@ -347,6 +357,11 @@ def run(cfg: DataConfig, sources: list[DataSource] | None = None,
         "n_samples": len(rows),
         "n_shards": tracker.n_done,
         "n_age_labeled": n_age_labeled,
+        # Gate G-a: what every ΔAge zero-point rests on, and what is wrong with it. Persisted so
+        # a run can be audited without re-reading the raw data -- Stage 1.5 made `n=0` visible;
+        # this makes `n=1` and cross-batch baselines visible too.
+        "baseline_census": baseline_census,
+        "baseline_warnings": census_warnings(baseline_census),
         "gene_panel_hash": panel.hash(),
         "panel_size": len(panel),
         "label_distribution": dict(label_counts),

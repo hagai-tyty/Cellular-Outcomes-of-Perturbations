@@ -10,7 +10,7 @@ without them.
 
 from __future__ import annotations
 
-from .aging import AgingClock, LinearClock, delta_age, recenter_on_controls
+from .aging import AgingClock, LinearClock, census_warnings, delta_age, recenter_on_controls
 from .assemble import assemble_samples
 from .build_dataset import DataConfig, process_chunk, run
 from .chunking import CellChunk, ProgressTracker, plan_all
@@ -55,7 +55,7 @@ __all__ = [
     "encode_fingerprints", "encode_dose_time", "resolve_scaffolds",
     # labels / signatures / aging / proliferation
     "score_one", "signature_scores", "soft_labels",
-    "AgingClock", "LinearClock", "delta_age", "recenter_on_controls",
+    "AgingClock", "LinearClock", "census_warnings", "delta_age", "recenter_on_controls",
     "cell_cycle_score", "fit_deconfounder", "deconfound_age",
     # splits / assemble
     "scaffold_split", "cell_line_split", "make_splits", "assemble_samples",
