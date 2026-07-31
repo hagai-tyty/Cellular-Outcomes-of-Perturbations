@@ -773,3 +773,104 @@ the low ceiling, and it is a property of **3 donors**, not of either instrument.
 | M-2a's verdict is now **accepted**, not merely recorded — §11's precondition is satisfied | It does **not** upgrade the verdict: NOT CALIBRATABLE still means Phase 2 does not run |
 | The methylation anchor is corroborated for **contrasts** (R1c; `REV FINAL` §3 stands unchanged) | It does **not** license absolute methylation ages at n=3 donors — ±7 yr donor error |
 | §6's gate on M-2c is vindicated for a second, independent reason | It does **not** rescue any RNA-derived ΔAge claim |
+
+---
+
+# 13. ✅ G-a and G-b CLOSED 2026-07-31 — §0's gate condition is met
+
+Both were "small code changes" in §0 and are now implemented, tested and recorded. **These are the
+only `src/` changes in this stage**; every measurement above ran with `src/` untouched.
+
+| gate | what shipped | where |
+|---|---|---|
+| **G-a** | `_control_baseline` records per line: `n_control`, `n_cells`, `source` (`controls` / `self_fallback`), `unreplicated`, and the composition of the baseline **vs the whole line**. Persisted to `dataset_summary.json`; `verify_stage1_5.py` gains an unreplicated / cross-batch column | `data/aging.py`, `data/build_dataset.py`, `verify_stage1_5.py` |
+| **G-b** | donor chronological age parsed (**both** GEO spellings: `donor age` and `donor age (years)`), plus `batch` derived from the title suffix — the thing D1 says nothing recorded. Both ride in `obs` as metadata | `data/sources.py` |
+
+### The hard guard held
+
+*"ΔAge values must come out **bit-identical** before/after. It records, it does not compute."*
+Asserted in a unit test **and** re-checked on all six real Gill donors: `np.array_equal`, not
+`allclose`.
+
+### What G-a printed the first time it ran — D1 and D2, visible at last
+
+```
+N2..Y2:  n_control=1 / 19–21 cells   baseline batch=['Exp2'], line spans ['Exp1','Exp2']
+```
+
+**All six donors rest on an unreplicated baseline, and all six baselines are `Exp2` while every
+donor spans both batches.** That is exactly D1 and D2 — previously reconstructible only by hand,
+now emitted by the pipeline itself. G-a's purpose was never to fix them; it was to stop them being
+silent, and it does.
+
+### Two decisions worth stating
+
+* **The new flags are reported BESIDE the Stage 1.5 verdict, never folded into it.** That PASS
+  means one specific thing — the no-control fallback did not fire — and four runs are recorded
+  against it. Redefining it retroactively would invalidate that record.
+* **`donor_age` is metadata, never a model input.** It is a per-donor constant; it anchors
+  *absolute* calibration only and cannot measure rejuvenation within a donor. The deployed request
+  schema forbids extra fields, and a test pins that it stays that way.
+
+### ⚠️ One correction to §0's own reasoning
+
+§0 justifies gating M-2b on G-a with *"M-2b's RNA-side contrast inherits that baseline."*
+**It does not.** M-2b as specified in §5 is `Δ = mean(SSEA4) − mean(CD13)` — a direct difference
+between two treated arms, with no vehicle-control baseline anywhere in it. The gate's stated
+rationale is wrong. G-a was implemented anyway (it is a §0 gate condition for the stage, and it is
+worth having on its own merits), and M-2b ran after it, so nothing was skipped — but the reason
+recorded in §0 should not be relied on by a future reader. *Per the standing rule, §0 is left as
+written; this is the correction beside it.*
+
+---
+
+# 14. ✅ M-2b EXECUTED 2026-07-31 — **AGREE_FRAGILE, and the agreement is an artefact of the day axis**
+
+`python experiments/diag_m2b_contrast_agreement.py --run "D:\GSE165178" "D:\Gill"` →
+`diag_m2b_contrast_agreement_results.json`. `src/` untouched by this measurement.
+
+**§10 step 1 passed first, on the actual matrices rather than titles:** join **22/22**, donors
+O1/O2/Y1/Y2, days 9/11/15, 11 CD13 + 11 SSEA4, coverage **100.0% / 94.6%**. §9-R5's abort was armed
+and did not fire.
+
+| clock | sign agreement (bar ≥ 7/11) | ρ(Δ_rna, Δ_meth) | mean Δ RNA | mean Δ METH |
+|---|---|---|---|---|
+| Horvath skin & blood | **7/11** | +0.645 | −22.19 yr | −26.85 yr |
+| Horvath multi-tissue | **7/11** | +0.491 | −22.19 yr | −26.59 yr |
+
+⚠️ **Both land EXACTLY on the bar**, and the bar itself was already loosened from 8/11 to 7/11 by
+the §6 freeze. One pair flipping fails it. Reported as `AGREE_FRAGILE`, not `AGREE`.
+
+### 🔴 The pooled number hides the whole story. Split by day:
+
+| day | agreement | mean Δ RNA | mean Δ METH (s&b) |
+|---|---|---|---|
+| **9** | **0 / 3** | **+38.82 yr** | **−2.97 yr** |
+| 11 | 3 / 4 | −38.37 yr | −3.55 yr |
+| **15** | **4 / 4** | −51.76 yr | **−68.06 yr** |
+
+**Perfectly graded, and it inverts the headline.** At **day 15**, where methylation reports a huge
+real effect (−68 yr), the two agree 4/4 — but at that magnitude *any* instrument that responds to
+reprogramming at all gets the sign right. At **day 9**, the one timepoint that discriminates —
+methylation says **nothing has happened yet** (−2.97 yr) — the RNA clock reports **+38.82 years of
+ageing**, and agrees **0 of 3**.
+
+**+38.82 yr against `REV FINAL` §1's +36.5 yr.** That is the identity artefact, reproduced to
+within 2.3 years, on **the very samples the model trains on**, against paired ground truth from the
+same cells. §4's confound warning applies to M-2b exactly as it does to M-2a: agreement
+concentrated where both effects are large is agreement about the **day axis**, not about age.
+
+### What M-2b changes: nothing about the verdict, something about the evidence
+
+§7 row 4 was pre-committed: **M-2a fail ⇒ NOT CALIBRATABLE, whatever M-2b says.** That holds.
+
+But M-2b was expected to *disagree* — §5: *"Disagreement is the live hypothesis."* It technically
+agreed, at the bar, and **the pre-registered expectation was wrong as stated.** The finer reading is
+that the pre-registered expectation was right about the *mechanism* and wrong about the *statistic*:
+the modalities disagree precisely where it matters and agree where nothing could distinguish them,
+so a pooled sign test was the wrong instrument for the question. That is recorded as a miss, not
+reframed as a hit.
+
+**M-2c remains NOT RUN** — gated on M-2a, which failed. §12-R added a second, independent reason:
+the methylation reference is only ~0.57 self-consistent here, so a calibration fitted to it would
+have no meaning either.

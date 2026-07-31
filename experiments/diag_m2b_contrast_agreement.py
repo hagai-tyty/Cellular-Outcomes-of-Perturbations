@@ -145,13 +145,40 @@ def sign_agreement(d_rna: list[float], d_meth: list[float]) -> dict:
             "frac": agree / len(pairs) if pairs else float("nan")}
 
 
+def agreement_by_day(rows: list[dict]) -> dict:
+    """Sign agreement split by reprogramming day. Pure. DESCRIPTIVE — never a criterion.
+
+    Added after seeing the first M-2b output, and labelled as such. It is here because the
+    headline 7/11 is not distributed evenly across the grid, and a single pooled number hides
+    which timepoints carry it. §4's confound applies to M-2b exactly as it does to M-2a: both
+    modalities move with reprogramming progress, so agreement concentrated at the timepoints
+    where BOTH effects are large is agreement about the day axis, not about age.
+    """
+    by_day: dict[int, dict] = {}
+    for r in rows:
+        d = by_day.setdefault(r["day"], {"n": 0, "agree": 0, "rna": [], "meth": []})
+        d["n"] += 1
+        d["agree"] += int(r["same_sign"])
+        d["rna"].append(r["delta_rna_years"])
+        d["meth"].append(r["delta_meth_years"])
+    return {str(k): {"n": v["n"], "n_agree": v["agree"],
+                     "mean_rna": float(np.mean(v["rna"])),
+                     "mean_meth": float(np.mean(v["meth"]))}
+            for k, v in sorted(by_day.items())}
+
+
 def m2b_verdict(sign: dict, rho: float, bar: int = SIGN_BAR) -> dict:
     """What M-2b licenses. Pure. §7 reads this together with M-2a, never alone (§9-R1)."""
     if sign["n_pairs"] < 2:
         return {"status": "CANNOT_VERIFY", "reason": f"{sign['n_pairs']} usable pairs"}
     ok = sign["n_agree"] >= bar
+    # Sitting exactly ON the bar is a FRAGILE pass: one pair flipping fails it. This project has
+    # been burned three times by hairline margins (E1b by 0.009, D2 by 0.014, M-2a by 0.016), so
+    # it is named in the status rather than left for the reader to notice.
+    fragile = ok and sign["n_agree"] == bar
     return {
-        "status": "AGREE" if ok else "DISAGREE",
+        "status": ("AGREE_FRAGILE" if fragile else "AGREE") if ok else "DISAGREE",
+        "fragile": fragile,
         "n_agree": sign["n_agree"], "n_pairs": sign["n_pairs"], "bar": bar, "rho": rho,
         "reason": (f"{sign['n_agree']}/{sign['n_pairs']} pairs agree in sign against a bar of "
                    f"{bar}/{sign['n_pairs']} -> "
@@ -159,8 +186,12 @@ def m2b_verdict(sign: dict, rho: float, bar: int = SIGN_BAR) -> dict:
                       if ok else
                       "the two modalities DISAGREE on the direction of the contrast, which §5 "
                       "pre-committed as the live hypothesis and a decisive result")),
-        "caveat": ("bar moved 8/11 -> 7/11 by the §6 freeze because 8/11 was UNRESOLVABLE "
-                   "(93.0%). This is a WEAKER test than registered." if ok else ""),
+        "caveat": " ".join(x for x in [
+            ("bar moved 8/11 -> 7/11 by the §6 freeze because 8/11 was UNRESOLVABLE (93.0%). "
+             "This is a WEAKER test than registered." if ok else ""),
+            ("It also lands EXACTLY on the moved bar -- one pair flipping would fail it."
+             if fragile else ""),
+        ] if x),
     }
 
 
@@ -309,6 +340,7 @@ def main() -> int:
         v["pairs"] = rows
         v["mean_delta_rna_years"] = float(np.mean(dr)) if dr else float("nan")
         v["mean_delta_meth_years"] = float(np.mean(dm)) if dm else float("nan")
+        v["by_day"] = agreement_by_day(rows)
         out["clocks"][cname] = v
         print(f"  === {cname} ===   {len(rows)} matched (donor, day) pairs")
         print(f"     mean delta  RNA {v['mean_delta_rna_years']:+7.2f} yr   "
@@ -319,6 +351,10 @@ def main() -> int:
                   f"{'agree' if r['same_sign'] else 'DISAGREE'}")
         print(f"     sign agreement {sign['n_agree']}/{sign['n_pairs']} (bar >= {SIGN_BAR})   "
               f"rho {rho:+.3f}   -> {v['status']}")
+        print("     BY DAY (descriptive — §4's confound applies to M-2b too):")
+        for d, b in v["by_day"].items():
+            print(f"        day {d:>2}:  {b['n_agree']}/{b['n']} agree   "
+                  f"mean RNA {b['mean_rna']:+7.2f}   mean METH {b['mean_meth']:+7.2f}")
         if v.get("caveat"):
             print(f"     [!] {v['caveat']}")
         print()
