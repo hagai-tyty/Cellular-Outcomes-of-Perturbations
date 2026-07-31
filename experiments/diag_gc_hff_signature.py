@@ -121,6 +121,31 @@ def trajectory_stats(days: np.ndarray, y_age: np.ndarray, exclude_day: float = I
     }
 
 
+def leave_one_timepoint_out(days: list[float], means: list[float]) -> dict:
+    """Recompute rho and slope with each timepoint dropped in turn. Pure. DESCRIPTIVE.
+
+    Added after the first run. Day 14 is the last point before the iPSC endpoint that the
+    standing rule already excludes as a cell-type change, so a trend that lives entirely in
+    day 14 would be the identity confound arriving one timepoint early. This asks that
+    directly instead of arguing about it.
+    """
+    from scipy.stats import spearmanr
+    d, m = np.asarray(days, float), np.asarray(means, float)
+    out = {}
+    for i in range(d.size):
+        k = np.ones(d.size, bool)
+        k[i] = False
+        if k.sum() >= 3 and np.ptp(d[k]) > 0:
+            out[f"drop_day_{d[i]:g}"] = {
+                "rho": float(spearmanr(d[k], m[k]).correlation),
+                "slope": float(np.polyfit(d[k], m[k], 1)[0])}
+    rhos = [v["rho"] for v in out.values()]
+    slopes = [v["slope"] for v in out.values()]
+    return {"folds": out,
+            "rho_range": [float(min(rhos)), float(max(rhos))],
+            "slope_range": [float(min(slopes)), float(max(slopes))]}
+
+
 def gc_verdict(stats: dict, rho_bar: float, slope_lo: float, slope_hi: float) -> dict:
     """G-c step 1's pre-registered three-way decision. Pure.
 
@@ -252,6 +277,14 @@ def main() -> int:
           f"(monotone rejuvenation would be {st['n_steps']}/{st['n_steps']})")
     print(f"  [descriptive] per-cell rho {st['rho_percell']:+.3f}, slope "
           f"{st['slope_percell']:+.3f} yr/day over {st['n_cells']} cells")
+
+    loo = leave_one_timepoint_out(st["days"], st["mean_dage"])
+    out["leave_one_timepoint_out"] = loo
+    print("\n  [descriptive] leave-one-timepoint-out — is the trend carried by one point?")
+    for k, v in loo["folds"].items():
+        print(f"     {k:<16} rho {v['rho']:+.3f}   slope {v['slope']:+.3f}")
+    print(f"     rho spans [{loo['rho_range'][0]:+.3f}, {loo['rho_range'][1]:+.3f}]; "
+          f"slope spans [{loo['slope_range'][0]:+.3f}, {loo['slope_range'][1]:+.3f}]")
 
     dec = gc_verdict(st, rho_bar, SLOPE_LO, SLOPE_HI)
     out["verdict"] = dec

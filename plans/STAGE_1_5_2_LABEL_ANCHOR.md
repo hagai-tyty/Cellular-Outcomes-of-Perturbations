@@ -874,3 +874,100 @@ reframed as a hit.
 **M-2c remains NOT RUN** — gated on M-2a, which failed. §12-R added a second, independent reason:
 the methylation reference is only ~0.57 self-consistent here, so a calibration fitted to it would
 have no meaning either.
+
+---
+
+# 15. ✅ G-c STEP 1 EXECUTED 2026-07-31 — **RUN_STEP_2, and §0's evidence for G-c was wrong**
+
+`python experiments/diag_gc_hff_signature.py --run runs/cellfate_loocv_O1` →
+`diag_gc_hff_signature_results.json`. Bars frozen and committed **before** any label was read
+(`d57fcd7`); resolvability **98.9% RESOLVABLE**, so no §5b move was needed. `src/` untouched.
+
+### 🔴 §0's G-c evidence table does not survive measurement
+
+§0 justified G-c with this row, and predicted the answer would be "no signature":
+
+| | dose-response | monotone? | source |
+|---|---|---|---|
+| **§0's claim: HFF RNA labels** | **−0.36 yr/day**, ρ **−0.214** | **no** | `diag_d2_replication_results.json` |
+| **measured on the actual labels** | **−1.526 yr/day**, ρ **−0.905** | **ρ says yes** | this run |
+
+**ρ = −0.905 is stronger than methylation's own −0.885 / −0.842.** §0's ρ = −0.214 is off by a
+factor of four, and its "≈9× weaker and non-monotone" verdict does not hold.
+
+**Why the two disagree, and why this run is the right one for G-c's question.**
+`diag_d2_replication` measured a **pseudobulk of 2000 sampled cells per timepoint** on **absolute
+predicted age**. G-c asks about the ΔAge *labels the model trains on*: per-cell `y_age`,
+**control-relative**, **after cell-cycle deconfounding**. Those are different quantities, and the
+difference is not small. §0 cited the wrong one.
+
+To §0's credit, it flagged its own evidence as *"⚠️ Not decisive on its own … which is exactly why
+this is a gate with a test, not a conclusion."* **The test was the right call and it changed the
+answer.** *Per the standing rule §0 is left as written; this is the correction beside it.*
+
+### The measurement
+
+| day | n cells | mean ΔAge | SEM |
+|---:|---:|---:|---:|
+| 0 | 4 983 | 0.000 | 0.183 |
+| 2 | 3 947 | **+3.854** | 0.224 |
+| 4 | 4 760 | **+3.538** | 0.214 |
+| 6 | 4 681 | −5.798 | 0.244 |
+| 8 | 4 732 | −3.978 | 0.226 |
+| 10 | 4 919 | −6.311 | 0.193 |
+| 12 | 4 872 | −8.227 | 0.285 |
+| 14 | 4 799 | **−24.023** | 0.268 |
+
+| criterion | measured | bar | |
+|---|---|---|---|
+| ρ_timepoint (monotonicity) | **−0.905** | ≤ −0.50 | ✅ **PASS** |
+| slope (within ~2× of methylation) | **−1.526** yr/day | [−6.45, −1.61] | ❌ **FAIL by 0.084** |
+
+**⇒ G-c step 1: `RUN_STEP_2`** — one criterion holds, one does not. That is the pre-registered
+"ambiguous" row, and it routes to the `age_mask=True` vs `age_mask=False` retrain comparison.
+
+⚠️ **A fourth hairline margin.** The slope misses the band edge by **0.084 yr/day**. Had the band
+been "within 2×" of the *shallower* methylation figure (−3.15/2 = −1.575) instead of the mean, it
+would have missed by 0.049. The verdict is right on the boundary and is reported as such.
+
+### Robustness — descriptive, added after the first run
+
+Leave-one-timepoint-out:
+
+* **ρ is robust**: spans **[−0.964, −0.857]** across all eight folds. The monotone trend is not
+  carried by any single point.
+* **the slope is not**: spans **[−1.923, −0.938]**, and dropping **day 14 alone halves it** to
+  −0.938 — comfortably outside the band in the *weaker* direction.
+
+Day 14 is the last timepoint before the iPSC endpoint the standing rule already excludes as a
+cell-type change. **So the magnitude of HFF's apparent rejuvenation depends chiefly on the point
+closest to that identity change**, while its monotonicity does not. That is precisely the ambiguity
+step 2 exists to resolve, and it is now a concrete reason rather than a shrug.
+
+### The early rise, and its agreement with M-2b
+
+Days 2–4 read **+3.9 / +3.5 yr** — the labels say the cells get *older* first. §14 found the same
+sign at the discriminating early timepoint in the Gill data (day 9: RNA **+38.8 yr** while
+methylation said −3.0). Two independent datasets, two different cell systems, same direction:
+**the RNA clock reports early reprogramming as ageing.** The magnitudes differ by an order of
+magnitude, so this is a shared direction, not a shared effect size — but it is the same failure
+mode appearing twice.
+
+### Label volume, measured
+
+| | cells | share |
+|---|---:|---|
+| HFF | **42 481** | **99.71%** |
+| non-HFF (Gill, all 6 donors) | 124 | 0.29% |
+
+Consistent with §2's "≈75 of 33,688" once the train-split restriction is applied — §2 counts the
+**training split**, this counts **all** cells in the built run. The ratio is the same either way,
+and it is the ratio that matters: **masking HFF leaves the age head with of order 10² labels.**
+
+### What this changes
+
+| ✅ | ❌ |
+|---|---|
+| G-c step 1 is **executed**, and its answer is **not** the one §0 predicted | It does **not** show the HFF labels are good — one of two criteria failed |
+| G-c step 2 (the retrain comparison) is **licensed and now necessary**, with a specific hypothesis: does the trend survive without day 14's magnitude? | It does **not** license keeping the labels by default, nor masking them by default |
+| §0's cited evidence is **corrected by measurement** | It does **not** touch §7 or the M-2a verdict — G-c gates Phase 2 only, and Phase 2 does not run |
