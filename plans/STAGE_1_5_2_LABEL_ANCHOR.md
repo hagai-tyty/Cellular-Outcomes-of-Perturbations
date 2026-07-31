@@ -1048,6 +1048,15 @@ methylation against methylation.**
 
 ## 16.4 The one open item — G-c step 2
 
+> ### 🆕 2026-07-31 — **`STAGE_1_5_3_EXECUTE.md` now owns the code side of this.**
+>
+> *Additive; nothing in §16.4 is modified.* Writing that stage surfaced something §16.4 did not
+> know: **G-c step 2 cannot be run today.** `age_mask` is a function of `source` alone
+> (`aging.py:219`), and Gill and HFF both report `source = "reprogramming"` — so there is no
+> expressible policy that masks HFF and keeps Gill. 1.5.3 C-1 is that blocking change, and it also
+> itemises five others 1.5.2 implies, including the finding that **RES is multiplied by a
+> ΔAge-derived term with no way to report that the term is unvalidated** (`res.py:38-41`).
+
 **Not run here, and deliberately.** It needs a rebuild + retrain, and this stage's entire Phase 1
 guarantee is `git diff --stat src/` staying empty for the measurements. Handing a retrain to a
 measurement-only phase is how scope creep starts.

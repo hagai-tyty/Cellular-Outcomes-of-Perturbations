@@ -19,6 +19,9 @@ to run, what to send back, and what decision follows**.
 | **`STAGE_4_VALIDATION.md`** | **DO** | when validating |
 | **`STAGE_5_PUBLICATION.md`** | **DO** | before writing the manuscript |
 | **`STAGE_6_NEW_DATA.md`** | **DO** | acquiring/integrating data — runs in PARALLEL, not after |
+| **`STAGE_1_5_1_REV_FINAL.md`** | *closed* | 🆕 the ΔAge methylation anchor. **Read §11** — every open item now has an owner |
+| **`STAGE_1_5_2_LABEL_ANCHOR.md`** | *closed* | 🆕 **is the RNA clock calibratable? Answer: NO.** Read §16 (the one-page answer), then §17 (the re-audit) |
+| **`STAGE_1_5_3_EXECUTE.md`** | **DO** | 🆕 **the `src/` changes 1.5.2 forces.** Read before touching `aging.py`, `res.py` or any ΔAge label |
 | `REF_ARCHITECTURE.md` | *reference* | when you want to know **why** the stages are ordered this way, or what each one buys |
 | `REF_GROUND_RULES.md` | *reference* | the rules that apply to **every** stage — read once, then consult |
 | `REF_DATA_STRATEGY.md` | *reference* | **why** more data is needed (the *doing* is Stage 6) |
