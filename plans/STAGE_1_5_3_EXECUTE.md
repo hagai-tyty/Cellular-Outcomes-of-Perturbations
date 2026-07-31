@@ -6,8 +6,17 @@
 **Not blocking for:** the fate/safety head, which consumes no ΔAge and is untouched throughout.
 
 **Scope:** 6 `src/` changes (**PART A**) and 7 downstream plan annotations (**PART B**, with the
-paste-ready text in **B.2**). One of the six is blocking, one is a decision only the project owner
-can make, four are mechanical.
+paste-ready text in **B.2**). One of the six is blocking, four are mechanical, and the one product
+decision — **C-4 — was taken on 2026-07-31: option (a)**.
+
+**Decisions still outstanding, and neither blocks starting:**
+
+| | decision | needed by |
+|---|---|---|
+| **C-5** | which of three fixes for the age head's label starvation | **step 5** — the only one on the critical path to the retrain |
+| **C-2** | whether to enable the clock-range check (masks the two neonatal donors) | a **separate experiment after step 6**; the code ships at step 3 with the flag off and needs no decision to do so |
+
+**Steps 1–4 need no decision at all.**
 
 | where to look | |
 |---|---|
@@ -83,7 +92,7 @@ Every row was checked directly. Nothing here is inherited from a previous docume
 | **C-1** | `age_mask` must be able to address **HFF specifically** | 🔴 **BLOCKING** | G-c step 2 is unrunnable without it |
 | **C-2** | read the clock's declared `age_range` instead of discarding it | 🟠 substantive | E4/E5/E13 — the range exists, is ignored, and would change which labels are valid |
 | **C-3** | stamp `donor_age` / `batch` on HFF too | 🟡 mechanical | G-b reached Gill and not HFF (E6); C-2 cannot fire for HFF without it |
-| **C-4** | give the deployed response a way to say **"ΔAge is not validated here"** | 🔴 **DECISION REQUIRED** | E7–E10 — the product's score is multiplied by an unvalidated term and cannot report that |
+| **C-4** | give the deployed response a way to say **"ΔAge is not validated here"** | ✅ **DECIDED 2026-07-31 — option (a)** | E7–E10 — the product's score is multiplied by an unvalidated term and cannot report that |
 | **C-5** | make the age head **and the cell-cycle deconfounder** survive a 450×-smaller label set | 🟠 substantive | E11/E14/E15 + `build_dataset.py:445-451` — arithmetic below |
 | **C-6** | record **why** a label was masked, not just that it was | 🟡 mechanical | three distinct reasons will exist after C-1/C-2; a bool cannot carry them |
 
@@ -475,7 +484,26 @@ def test_hff_age_is_outside_the_shipped_clocks_fitted_range():
 
 ---
 
-## C-4 🔴 DECISION REQUIRED — the product multiplies by a term it cannot vouch for
+## C-4 ✅ DECIDED — the product multiplies by a term it cannot vouch for
+
+> ### ✅ DECISION TAKEN 2026-07-31 — **option (a), declare it.**
+>
+> Recorded here rather than left as three costed options. The three-way comparison below is kept
+> intact, because a decision without the alternatives it was chosen over is not auditable.
+>
+> **Two consequences follow immediately, and the second is the useful one:**
+>
+> 1. **C-4 moves from step 7 to step 4** in §5's order of operations. It was scheduled last *only*
+>    because the choice between (a)/(b)/(c) depended on how G-c step 2 came out. **Once the choice
+>    is (a), that dependency disappears** — (a) changes no arithmetic, adds only defaulted fields,
+>    and its default is the conservative answer. Nothing about it needs the retrain's result.
+> 2. **It ships with the other no-decision changes**, so the deployed contract tells the truth about
+>    ΔAge *before* any retrain runs rather than after.
+>
+> ⚠️ **What (a) does not do, stated so the record is accurate.** RES is still computed and returned
+> unchanged; a caller who ignores `age_validated` gets exactly the number they got before. **(a)
+> makes the documentation honest, not the output.** Closing that gap is option (c), and it remains
+> **Stage 3's** question (`STAGE_3_TOOL.md:24-26`) — this decision does not pre-empt it either way.
 
 ### The defect, in three lines of shipped code
 
@@ -602,8 +630,9 @@ Stage 3 for one reason: **Stage 3 already owns this question** (`STAGE_3_TOOL.md
 should **decline to report ΔAge** when it cannot"), and solving it twice in two places would leave
 two conventions.
 
-**This is the one item in this stage that is a product decision, not an engineering one. It is
-costed, not decided.**
+**This was the one item in this stage that is a product decision rather than an engineering one.
+It was costed, then decided: option (a), 2026-07-31.** The alternatives are left above so the choice
+can be re-examined rather than merely trusted.
 
 ---
 
@@ -1097,7 +1126,9 @@ python -m ruff check src/ tests/ scripts/
 # the bit-identity guard on real data (steps 1-3 must all pass this)
 python experiments/verify_age_mask_identical.py "D:\Gill" "D:\GSE242423"
 
-# STEP 4: plan annotations -- additive only
+# STEP 4: C-4 option (a) + plan annotations -- both additive only
+python -m pytest tests/test_inference.py -q   # the two new Response fields are DEFAULTED,
+                                              # so every existing construction site still works
 git diff --stat plans/          # every file must show insertions and ZERO deletions
 
 # STEP 5: register C-5's bar BEFORE any retrain
@@ -1154,7 +1185,9 @@ Stated including the ones that came back clean, because a check that found nothi
 
 * **It does not run G-c step 2.** C-1 makes it *possible*; running it is a pre-registered experiment
   with its own bar, and it needs a rebuild + retrain.
-* **It does not decide C-4.** That is a product decision and is presented as three costed options.
+* **It does not implement C-4 option (c).** Option (a) is decided and ships at step 4; making the
+  *output* honest rather than the documentation is Stage 3's question, and this stage does not
+  pre-empt it.
 * **It does not touch the fate/safety head, the model architecture, or Stage 1's calibration.**
 * **It does not change any label on the default configuration.** Every label-moving change ships
   behind a flag that is off.
@@ -1174,10 +1207,15 @@ did not**.
 | **1** | C-6 (`age_mask_reason`), C-3 (HFF metadata) | full suite green; bit-identity asserted | ❌ no | ⚠️ **yes — shard schema gains a column** |
 | **2** | C-1 (`AGE_MASKED_DATASETS`, empty) | **ΔAge and `age_mask` bit-identical**; `tests/test_data_units.py:246` assertions unmodified | ❌ no | rides step 1's |
 | **3** | C-2 (`age_range`, flag off) | same bit-identity guard, flag off | ❌ no | rides step 1's |
-| **4** | PART B annotations (text in **B.2**) | additive only; `git diff --stat plans/` shows **zero deletions** | ❌ no | ❌ no |
+| **4** | **C-4 option (a)** + PART B annotations (text in **B.2**) | `Response` gains two **defaulted** fields; annotations additive, `git diff --stat plans/` shows **zero deletions** | ❌ no | ❌ no |
 | **5** | C-5 design + its bar through `audit_metrics.bar_verdict` | bar **RESOLVABLE** before any retrain; row added to `tests/test_bars_resolvable.py` | ❌ no | ❌ no |
 | **6** | **G-c step 2** (PART C) | snapshot first; **rollback exercised, not assumed** | ✅ **yes** | ✅ yes, ×2 arms |
-| **7** | C-4 | after step 6, because the answer changes which option is right | ❌ no | ❌ no |
+
+> **C-4 moved from step 7 to step 4 on 2026-07-31**, when option (a) was chosen. It sat last only
+> because the choice between the three options depended on G-c step 2's result; **(a) has no such
+> dependency** — it changes no arithmetic, adds only defaulted fields, and defaults to the
+> conservative answer. Shipping it at step 4 means the deployed contract stops overstating ΔAge
+> **before** the retrain rather than after it.
 
 **Steps 1–5 cannot move a number.** ⚠️ **But step 1 is not free**: C-6 adds a column to
 `_SHARD_SCHEMA`, so existing shards must be regenerated even though no *label* changes. That
@@ -1203,7 +1241,7 @@ Commands for every step are in **PART E**; per-change rollback is in **PART F**.
 | lint | `ruff check src/ tests/ scripts/` clean. *(12 pre-existing errors in four older `experiments/`+`tests/` files are not introduced here and are not in scope)* |
 | the record | `CHANGES.md` + `experiments/DELTAAGE_LAB_NOTEBOOK.md`, prediction before result |
 
-**Rollback.** Steps 1–4 are revertible by `git revert` with no data consequence. Step 6 changes
+**Rollback.** Steps 1–5 are revertible by `git revert` with no data consequence. Step 6 changes
 `y_age` and therefore every guard: it requires a full snapshot **and an exercised rollback**, per
 `STAGE_1_5_2_LABEL_ANCHOR.md` §8.2. The guard record restarts, and that is stated in advance rather
 than absorbed.
