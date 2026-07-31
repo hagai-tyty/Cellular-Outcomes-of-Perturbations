@@ -2214,3 +2214,117 @@ Read `scorecard.py` and `test18_forward_gate.py` output (user-supplied, `experim
 
 **Not fixed in the source plan documents** — flagged for a decision, since the first would
 otherwise reach the manuscript.
+
+---
+
+## 2026-07-31 — Stage 1.5.2 executed and closed. Answer: **the clock is NOT calibratable.**
+
+Plan: `plans/STAGE_1_5_2_LABEL_ANCHOR.md` (§11–§16 are the results; §0–§10 are the
+pre-registration, unchanged). Downloads used: GSE165177, GSE165178 (+ the held GSE165179,
+GSE165176).
+
+### The verdict
+
+**M-2a: SPLIT ⇒ NOT CALIBRATABLE ⇒ Phase 2 does not run.** ρ_partial **+0.267** (skin & blood)
+and **+0.516** (multi-tissue) against a pre-frozen bar of 0.50. §6: a criterion met on one clock
+and not the other is a failure, not a pass.
+
+**This closes the RNA-clock route.** Five repair attempts have now failed: refit, precision,
+control-swap, statistical fixes, and calibration.
+
+### §11's falsification check was missing, and is now run
+
+§11 requires "the clocks are checked against donor chronological age before any negative verdict
+is accepted." That had not been done when M-2a was recorded — so the verdict was recorded but not
+accepted. Four checks, bars frozen and committed first (`5e61147`):
+
+| | | bar | |
+|---|---|---|---|
+| R4 CpG coverage | 100.0% / 94.6% | ≥ 90% | ✅ |
+| R1a LODO age MAE | 6.03 / 6.63 yr | ≤ 7.17 | ✅ |
+| R1b intercept-free 15-yr gap | +10.39 / +6.48 | \|err\| ≤ 9.08 | ✅ |
+| R1d meth↔meth ρ_partial | **+0.568** | ≥ 0.50 | ✅ |
+
+**The verdict is accepted.** R1c also settles §9-R1 directly: non-responders drift −0.76 / −0.24 /
++2.96 / −2.56 yr against **their own day-0**, inside clock error.
+
+### The finding that qualifies all of it
+
+**Two methylation clocks sharing only 60 CpGs (17%) agree with each other at ρ_partial +0.568** —
+clearing the same 0.50 bar by 0.068. RNA vs multi-tissue reaches **91%** of that ceiling; RNA vs
+skin & blood reaches 47%. **M-2a's bars assumed ρ_true = 0.70 and nothing here reaches it,
+methylation included.** So M-2c would have been meaningless even had M-2a passed — §6's gate on it
+is vindicated on a ground §6 never anticipated. R1a's folds show why: two donors of identical age
+53 read **44.0** and **58.5**.
+
+### M-2b: the pooled number inverts once split by day
+
+7/11 on both clocks — **exactly** on a bar already loosened from 8/11. Recorded as AGREE_FRAGILE.
+
+```
+day  9:  0/3 agree   RNA +38.82   METH  -2.97
+day 11:  3/4 agree   RNA -38.37   METH  -3.55
+day 15:  4/4 agree   RNA -51.76   METH -68.06
+```
+
+At day 15 methylation reports −68 yr and any instrument responding to reprogramming gets the sign
+right. At **day 9**, the one timepoint that discriminates — methylation says nothing has happened —
+the RNA clock reports **+38.82 years of ageing** and agrees **0 of 3**. Against `REV FINAL` §1's
+**+36.5 yr**: the identity artefact reproduced to within 2.3 years, on the very samples the model
+trains on, against paired ground truth from the same cells.
+
+§5 pre-committed that disagreement was the live hypothesis. It technically agreed, so **the
+pre-registered expectation was wrong as stated** — recorded as a miss.
+
+### `src/` changes — gates G-a and G-b, the only ones in this stage
+
+* **G-a** — `_control_baseline` now records per line: `n_control`, `n_cells`, `source`
+  (`controls` / `self_fallback`), `unreplicated`, and the composition of the baseline **vs the
+  whole line**. Persisted to `dataset_summary.json`; `verify_stage1_5.py` gains an
+  unreplicated / cross-batch column.
+* **G-b** — donor chronological age parsed (**both** GEO spellings), plus `batch` from the title
+  suffix — the thing D1 says nothing recorded.
+
+**On the real data these immediately print what was previously invisible:** all six Gill donors
+rest on **n=1** baselines, and all six baselines are **Exp2** while every donor spans **both**
+batches. That is D1 and D2, emitted by the pipeline instead of reconstructed by hand.
+
+**Hard guard held:** ΔAge is **bit-identical** with and without the census — `np.array_equal`, in a
+unit test *and* re-checked on all six real donors. The new flags are reported **beside** the Stage
+1.5 verdict, never folded into it: that PASS means one specific thing and four runs are recorded
+against it.
+
+### G-c step 1 — and it refutes §0's own evidence for G-c
+
+§0 predicted "no signature" from `diag_d2_replication`'s −0.36 yr/day, ρ −0.214. Measured on the
+**actual per-cell `y_age` labels**: slope **−1.526** yr/day, ρ_timepoint **−0.905** — *stronger*
+than methylation's own −0.885 / −0.842, and off from §0's figure by 4×. The two disagree because
+§0 cited a **pseudobulk of absolute predicted age**, not the control-relative post-deconfounding
+labels the model trains on.
+
+**Verdict: RUN_STEP_2** (the pre-registered "ambiguous" row) — ρ passes, slope misses the band edge
+by **0.084**. Leave-one-timepoint-out gives step 2 a concrete hypothesis: ρ is robust
+([−0.964, −0.857]) but **dropping day 14 alone halves the slope** to −0.938, and day 14 is the last
+point before the iPSC endpoint already excluded as a cell-type change.
+
+### Four hairline margins now on record
+
+E1b **0.009**, D2 **0.014**, M-2a **0.016**, G-c **0.084**. Not bad luck — what happens when bars
+sit near the resolution of the instrument, which the ρ = 0.568 ceiling explains.
+
+### Still open — exactly one thing
+
+**G-c step 2**: `age_mask=True` vs `False` for HFF in one retrain, on the existing scorecard, metric
+pre-registered through `audit_metrics.bar_verdict` before the run. Not done here because it needs a
+rebuild and this stage's Phase 1 guarantee is `src/` untouched for every measurement. Masking leaves
+the age head of order 10² labels — too few is a finding, not a failure.
+
+### To verify
+
+```powershell
+python -m pytest tests/ -q                                  # 537 passing (was 455)
+python experiments/diag_r1_anchor_reliability.py --run "D:\GSE165179" "D:\GSE165177"
+python experiments/diag_m2b_contrast_agreement.py --run "D:\GSE165178" "D:\Gill"
+python experiments/diag_gc_hff_signature.py --run runs/cellfate_loocv_O1
+python verify_stage1_5.py "D:\GSE242423" "D:\Gill"          # now shows the G-a baseline column
+```

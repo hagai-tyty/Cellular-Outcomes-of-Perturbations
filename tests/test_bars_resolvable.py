@@ -240,3 +240,55 @@ def test_s152_lodo_survives_the_reduced_donor_count():
     """Registered assumed 4 folds; the real set has 3 donors. Still resolvable."""
     c = _s152()["M-2c LODO MAE (ACTUAL donors)"]
     assert c["verdict"] == "RESOLVABLE" and c["geometry"] == "3 folds"
+
+
+# ===================================================================== #
+# STAGE 1.5.2 §12 (R1/R4 anchor reliability) and G-c step 1.            #
+# Same rule: every bar these stages were graded on carries an entry, or #
+# it is not pre-registered.                                             #
+# ===================================================================== #
+_R1 = _Path(__file__).resolve().parents[1] / "diag_r1_anchor_reliability_results.json"
+_GC = _Path(__file__).resolve().parents[1] / "diag_gc_hff_signature_results.json"
+
+
+def _load_json(p):
+    if not p.exists():
+        import pytest as _pytest
+        _pytest.skip(f"{p.name} not present")
+    return _json.loads(p.read_text(encoding="utf-8"))
+
+
+def test_s152_r1_chronological_age_bars_are_both_underpowered():
+    """Pins the honest weakness: 3 donors carrying 2 distinct ages cannot resolve either
+    proposed bar, so both had to be loosened -- which makes M-2a's negative verdict HARDER
+    to falsify, a bias in favour of the result already recorded."""
+    ch = _load_json(_R1)["preregistration"]["checks"]
+    for k in ch:
+        if k.startswith(("R1a", "R1b")):
+            assert ch[k]["verdict"] == "UNRESOLVABLE"
+            assert ch[k]["bar_used"] == ch[k]["usable_bar"]      # moved, per §5b
+
+
+def test_s152_r1d_reuses_m2a_bar_rather_than_deriving_a_new_one():
+    """R1d's entire value is that meth<->meth and RNA<->meth are scored by the SAME
+    criterion. A separately-derived bar would destroy the comparison."""
+    ch = _load_json(_R1)["preregistration"]["checks"]
+    k = next(k for k in ch if k.startswith("R1d"))
+    assert ch[k]["bar"] == ch[k]["bar_used"] == 0.50
+    assert ch[k]["verdict"] == "RESOLVABLE"
+    assert "reused verbatim" in ch[k]["source"]
+
+
+def test_s152_gc_signature_bar_is_resolvable_without_being_moved():
+    """G-c is the one bar in this stage that did NOT need loosening."""
+    pre = _load_json(_GC)["preregistration"]
+    assert pre["verdict"] == "RESOLVABLE" and pre["pass_rate"] >= 0.95
+    assert pre["rho_bar_used"] == pre["rho_bar_proposed"] == -0.50
+
+
+def test_s152_gc_slope_band_is_two_sided():
+    """'Within ~2x of methylation's' must exclude a slope 10x too steep as well as one
+    10x too shallow, or it is not a similarity criterion at all."""
+    lo, hi = _load_json(_GC)["preregistration"]["slope_band"]
+    assert lo < hi < 0
+    assert hi / lo == pytest.approx(0.25, abs=1e-9)      # 2x each way around the mean

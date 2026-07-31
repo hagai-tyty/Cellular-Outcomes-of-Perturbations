@@ -1,6 +1,26 @@
 # STAGE 1.5.2 — Is the transcriptomic clock CALIBRATABLE? (paired RNA ↔ methylation)
 
-**Status:** 🔵 **PRE-REGISTERED — NOT YET EXECUTED, AND GATED.** Bars are fixed in §6 *before*
+> ## ✅ **STATUS 2026-07-31: EXECUTED AND CLOSED. Answer — NO.**
+>
+> *§10 says "the status line at the top changes only when it has [run]". It has. **Everything below
+> the original status line is the pre-registration exactly as written before the runs**; the results
+> are §11–§16, appended, with nothing rewritten.*
+>
+> | | |
+> |---|---|
+> | **Verdict** | **NOT CALIBRATABLE** (§7 row 4). **Phase 2 does not run.** |
+> | **M-2a** | SPLIT — ρ_partial **+0.267** / **+0.516** against a bar of 0.50 (§11) |
+> | **§11's falsification check** | run, and **passed** — the anchor is sound, so the verdict is **accepted** (§12-R) |
+> | **M-2b** | AGREE_FRAGILE at exactly 7/11 — but **0/3 at the one discriminating timepoint** (§14) |
+> | **M-2c** | **not run**, gated on M-2a — and §12-R found a second, independent reason it would have been meaningless |
+> | **G-a / G-b** | **closed** — the only `src/` changes in this stage, both record-only, ΔAge bit-identical (§13) |
+> | **G-c step 1** | run — **RUN_STEP_2**, and it **refuted §0's own evidence** (§15) |
+> | **What is still open** | exactly one thing: **G-c step 2**, which needs a retrain and belongs to whatever stage next rebuilds (§16) |
+>
+> **Read §16 first** — it is the one-page answer to every question this document asked.
+
+**Original status line, left as written:**
+🔵 **PRE-REGISTERED — NOT YET EXECUTED, AND GATED.** Bars are fixed in §6 *before*
 GSE165178 is opened. Nothing in this document reports a result.
 **🔒 Does not start until the two prerequisites in §0 are met** — baseline-count visibility and
 donor age wired into `src/`. Both are small; neither needs new data.
@@ -971,3 +991,95 @@ and it is the ratio that matters: **masking HFF leaves the age head with of orde
 | G-c step 1 is **executed**, and its answer is **not** the one §0 predicted | It does **not** show the HFF labels are good — one of two criteria failed |
 | G-c step 2 (the retrain comparison) is **licensed and now necessary**, with a specific hypothesis: does the trend survive without day 14's magnitude? | It does **not** license keeping the labels by default, nor masking them by default |
 | §0's cited evidence is **corrected by measurement** | It does **not** touch §7 or the M-2a verdict — G-c gates Phase 2 only, and Phase 2 does not run |
+
+---
+
+# 16. ✅ STAGE CLOSED 2026-07-31 — every question this document asked, answered
+
+## 16.1 The questions, and where each is answered
+
+| # | the question | answer | where |
+|---|---|---|---|
+| **M-2a** | does the RNA clock track methylation age? | ❌ **SPLIT** — ρ_partial +0.267 / +0.516 vs bar 0.50 | §11 |
+| **M-2b** | do the modalities agree on the ΔAge-shaped contrast? | ⚠️ **AGREE_FRAGILE** at exactly 7/11 — and **0/3** where it counts | §14 |
+| **M-2c** | can a correction be learned? | 🚫 **NOT RUN** — gated on M-2a. Two independent reasons | §11, §12-R |
+| **§11 falsification** | is a negative verdict safe to accept? | ✅ **yes** — the anchor passes all four checks | §12-R |
+| **§9-R1** | are the non-responders inert, or drifting? | ✅ **inert**: −0.76 / −0.24 / +2.96 / −2.56 yr vs their own day-0 | §12-R |
+| **§9-R4** | is CpG coverage adequate? | ✅ **100.0% / 94.6%** on both series | §12-R, §14 |
+| **§9-R5** | is the join real, or a title artefact? | ✅ **22/22** on the actual matrices; abort armed, did not fire | §14 |
+| **§10 step 1** | shape before statistic | ✅ done on both pairings | §6, §14 |
+| **G-a** | is the baseline visible? | ✅ **closed** — and it printed D1 + D2 on first run | §13 |
+| **G-b** | is donor age wired? | ✅ **closed** — both GEO spellings, plus `batch` | §13 |
+| **G-c step 1** | do HFF's labels carry the signature? | ⚠️ **RUN_STEP_2** — ρ passes, slope fails by 0.084 | §15 |
+| **G-c step 2** | `age_mask` True vs False on the scorecard | ⏳ **THE ONE OPEN ITEM** | §16.4 |
+
+## 16.2 What this stage licenses, and what it does not
+
+| ✅ licensed | ❌ not licensed |
+|---|---|
+| **Closing the RNA-clock route.** Five attempts have now failed: refit, precision, control-swap, statistical fixes, calibration | **Phase 2.** It does not run |
+| ΔAge from **methylation contrasts** where they exist (`REV FINAL` §3, corroborated absolutely by §12-R's R1c) | Any **RNA-derived** ΔAge claim, including the labels currently in the training set |
+| Stating that Stage 2's premise **remains void** — the labels were never corrected, because they could not be | Treating the current labels as "merely noisy" |
+| G-c step 2 as a **necessary** experiment with a specific hypothesis | Deciding `age_mask` without it, in either direction |
+
+## 16.3 What went wrong in this document, recorded rather than quietly fixed
+
+Four of this stage's own claims did not survive its own tests. Each is annotated in place; none is
+rewritten.
+
+| where | the claim | what measurement said |
+|---|---|---|
+| **§6** | the pre-committed fallback (ρ_partial at n=22) would rescue an unresolvable ρ_within | **it was itself UNRESOLVABLE at 92.3%.** Only GSE165177's n=68 made a valid verdict possible |
+| **§5** | "disagreement is the live hypothesis" for M-2b | it **agreed**, at the bar. The mechanism was right, the pooled sign statistic was the wrong instrument |
+| **§0** | G-c's evidence: HFF ρ **−0.214**, non-monotone | measured **ρ −0.905** — §0 cited a pseudobulk of absolute ages, not the labels |
+| **§0** | M-2b is gated on G-a because it "inherits that baseline" | **it does not** — M-2b is a difference of two treated arms, with no vehicle baseline in it |
+
+**And one in the execution, not the plan:** the first pass of §12's script graded R1a against the
+*proposed* 5.0 yr rather than the *committed* 7.17. Both numbers are reported in §12-R.
+
+**Four hairline margins** now sit in this project's record: E1b 0.009, D2 0.014, M-2a **0.016**,
+G-c **0.084**. That is not bad luck — it is what happens when bars are set near the resolution of
+the instrument. §12-R's ceiling finding says why: **nothing on this data reaches ρ = 0.70, including
+methylation against methylation.**
+
+## 16.4 The one open item — G-c step 2
+
+**Not run here, and deliberately.** It needs a rebuild + retrain, and this stage's entire Phase 1
+guarantee is `git diff --stat src/` staying empty for the measurements. Handing a retrain to a
+measurement-only phase is how scope creep starts.
+
+What the next stage that rebuilds must do, pre-specified so it cannot be chosen after the fact:
+
+1. Compare `age_mask=True` vs `age_mask=False` for HFF in **one** retrain, on the existing scorecard.
+2. **Pre-register the metric before the run** (§0's G-c wording), through `audit_metrics.bar_verdict`.
+3. Carry §15's specific hypothesis: HFF's ρ is robust (spans [−0.964, −0.857] under
+   leave-one-timepoint-out) but its **slope halves without day 14**, the point nearest the excluded
+   iPSC identity change. If masking helps, that is why.
+4. State the consequence either way: **masking leaves the age head of order 10² labels.** Too few is
+   a finding, not a failure.
+
+## 16.5 Verification of the stage itself (§10's own checklist)
+
+| requirement | status |
+|---|---|
+| `git diff --stat src/` empty for Phase 1 | ✅ every measurement ran with `src/` untouched; the only `src/` changes are G-a and G-b (§13), which are the §0 **gate**, not Phase 1 |
+| full suite green | ✅ **537 passing**, 0 failing (was 455 at the start of this stage — **+82**) |
+| every pure function unit-tested with no repo data present | ✅ 4 new test files, plus 4 new bar rows in `tests/test_bars_resolvable.py` |
+| `pair_by_donor_day` reused verbatim, keeping its regression test | ✅ §12-R reuses `diag_methylation_anchor.py` unmodified |
+| every bar carries an entry in `tests/test_bars_resolvable.py` | ✅ added for §12 and G-c; a bar without one is not pre-registered |
+| ruff clean | ✅ on `src/`, `scripts/` and every file this stage touched. *(12 pre-existing errors remain in three older `experiments/` files and one older test — untouched, not introduced here.)* |
+| recorded in `CHANGES.md` + the lab notebook | ✅ |
+
+**Deviation from §10's named artefacts, recorded.** §10 anticipated one script,
+`experiments/diag_label_anchor.py`. The stage shipped **five**, because the measurements turned out
+to be separable and separately gated:
+
+| planned | actual | why |
+|---|---|---|
+| `diag_label_anchor.py` | `stage_1_5_2_resolvability.py` | §6's bar freeze, run first and alone so no measurement could leak into it |
+| | `diag_m2a_calibratability.py` | M-2a, on GSE165177 × GSE165179 |
+| | `diag_r1_anchor_reliability.py` | §11/§9-R1/§9-R4, which §10 never allocated a script to |
+| | `diag_m2b_contrast_agreement.py` | §10 step 1 + M-2b, on GSE165178 × GSE165176 |
+| | `diag_gc_hff_signature.py` | G-c step 1, added to this plan after §10 was written |
+
+Each has a matching `tests/test_*.py` and a `*_results.json`.

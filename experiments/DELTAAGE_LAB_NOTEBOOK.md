@@ -3513,3 +3513,75 @@ The missing intercept row now matters only for *absolute* ages, which the docume
 
 | | A: transient-reprog intermediates | A-control: **failing** intermediates | paired A − A-control |
 |
+---
+
+## STAGE 1.5.2 — EXECUTED AND CLOSED (2026-07-31)
+
+**Status:** ✅ Closed. **The transcriptomic clock is NOT calibratable against methylation.**
+Plan: `plans/STAGE_1_5_2_LABEL_ANCHOR.md` §11–§16. 537 tests pass. `src/` untouched for every
+measurement; the only `src/` changes are gates G-a and G-b, both record-only with ΔAge bit-identical.
+
+### Pre-registration discipline, as actually executed
+
+Every bar was frozen and **committed** before the data behind it was opened. The commit order is the
+evidence, and it is checkable:
+
+| commit | what it froze | what ran after it |
+|---|---|---|
+| `2e2ed37` | §6's bars, from **titles only** | M-2a |
+| `5e61147` | §12's R1/R4 bars and the decision rule | the anchor-reliability measurement |
+| `d57fcd7` | G-c's ρ bar and slope band | the HFF label read |
+
+Three of the four bar sets came back **UNRESOLVABLE** at their proposed values and were moved to
+`usable_bar` *before* the run, per ground rule §5b. Only G-c's did not need moving (98.9%).
+
+### The results, in the order they were produced
+
+**1. §6's bar freeze found that the pre-committed fallback would also have failed.** §6 anticipated
+ρ_within might be unresolvable at n=11 and fixed ρ_partial at n=22 as the fallback. Measured, **that
+fallback is itself UNRESOLVABLE at 92.3%**. On the GSE165178-only geometry the stage would have had
+no valid decisive criterion at all. GSE165177's n=68 (99.4%) is what rescued it — a measured
+vindication of adding that series, not an argument for it.
+
+**2. M-2a: SPLIT.** ρ_partial **+0.267** / **+0.516** vs bar 0.50. The confound control did real
+work: ρ_all → ρ_partial drops 40% / 25%, so a quarter to a half of the raw agreement was the shared
+reprogramming axis. Without §4's pre-commitment, ρ_all = +0.69 would have been reported as a
+comfortable pass.
+
+**3. §11's falsification check — which had not been run when M-2a was recorded.** All four checks
+pass (coverage 100.0%/94.6%; LODO MAE 6.03/6.63 ≤ 7.17; gap error 4.61/8.52 ≤ 9.08; inter-clock
+ρ_partial +0.568 ≥ 0.50). **The verdict is accepted.**
+
+**4. The ceiling.** Two methylation clocks sharing 60 CpGs (17%) agree with *each other* at only
+**ρ_partial +0.568**. RNA vs multi-tissue reaches **91%** of that. M-2a's bars assumed ρ_true = 0.70
+and **nothing here reaches it, methylation included**. R1a shows the cause directly: **two donors of
+identical age 53 read 44.0 and 58.5** — ±7 yr donor-level clock error against a 15 yr contrast.
+
+**5. M-2b: AGREE_FRAGILE, and the pooled number lies.** 7/11 exactly on an already-loosened bar. By
+day: **0/3** at day 9, 3/4 at day 11, **4/4** at day 15. Where methylation says nothing has happened,
+the RNA clock reports **+38.82 yr** — against `REV FINAL` §1's +36.5. The artefact reproduced to
+within 2.3 years on the training samples themselves.
+
+**6. G-c step 1 refuted §0's evidence.** §0 said HFF's labels showed ρ −0.214 and no monotonicity.
+Measured on the actual labels: **ρ −0.905**, slope −1.526 yr/day. §0 had cited a pseudobulk of
+absolute ages rather than the control-relative labels. Verdict **RUN_STEP_2**.
+
+### What I got wrong, and it is worth writing down
+
+| | |
+|---|---|
+| §5's pre-committed expectation for M-2b | predicted **disagreement**; it agreed, at the bar. The *mechanism* was right and the *statistic* was wrong — a pooled sign test cannot see a failure living at one end of the day grid |
+| §0's G-c evidence | ρ −0.214 vs a measured −0.905. Wrong quantity cited |
+| §0's reason for gating M-2b on G-a | "M-2b's RNA-side contrast inherits that baseline" — it does not; M-2b is a difference of two treated arms |
+| my first pass at §12's script | graded R1a against the *proposed* 5.0 rather than the *committed* 7.17 |
+| my first `census_warnings` | warned "cross-donor_age" on every donor — structurally impossible, since donor age is a per-donor constant. Noise that trains the reader to ignore real warnings |
+
+### What settles for the project
+
+- ❌ **The RNA-clock route is closed.** Five attempts: refit, precision, control-swap, statistical
+  fixes, calibration.
+- ✅ **The methylation anchor holds for contrasts** — corroborated absolutely by R1c, not only as a
+  contrast against the negative-control arm.
+- ⚠️ **The anchor does NOT hold for absolute ages at n=3 donors** (±7 yr donor error).
+- 🔴 **D1 and D2 are now visible in the pipeline's own output**, not reconstructible by hand.
+- ⏳ **One item open: G-c step 2**, which needs a retrain and belongs to whatever stage next rebuilds.
