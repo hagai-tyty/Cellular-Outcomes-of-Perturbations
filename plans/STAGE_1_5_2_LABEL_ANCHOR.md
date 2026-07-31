@@ -392,6 +392,51 @@ the run, via `audit_metrics.bar_verdict(sim_null, bar, lower_is_better)` against
 **Both clocks must agree for a pass.** A criterion met on one clock and not the other is recorded as
 **SPLIT**, which is a failure for the purpose of §7, not a pass.
 
+> ## 🔒 EXECUTED 2026-07-31 — bars frozen at the ACTUAL geometry, before any statistic
+>
+> *§6's procedure, run by `experiments/stage_1_5_2_resolvability.py` →
+> `stage_1_5_2_resolvability_results.json`. **Titles only** — no expression or beta value was read,
+> so no bar could be tuned to the answer. `src/` untouched.*
+>
+> **Actual geometry** (GSE165177 × GSE165179, verified on download): 90 joined pairs → **68 unique
+> (donor, arm, day) conditions**; donors **O1, O2, O3** (**3**, not the 4 the LODO bar assumed);
+> days 10/13/15/17; smallest arm **9** conditions (`transiently_reprogrammed`).
+>
+> | bar | geometry | pass rate | verdict |
+> |---|---|---|---|
+> | M-2a ρ_within | registered n=11 | 78.1% | ❌ UNRESOLVABLE (usable 0.236) |
+> | M-2a ρ_within | actual n=9 | 75.8% | ❌ UNRESOLVABLE (usable 0.167) |
+> | **M-2a ρ_partial** | **registered n=22** | **92.3%** | ❌ **UNRESOLVABLE (usable 0.457)** |
+> | **M-2a ρ_partial** | **actual n=68** | **99.4%** | ✅ **RESOLVABLE** |
+> | M-2b sign agreement ≥8/11 | 11 pairs | 93.0% | ❌ UNRESOLVABLE (usable **7**/11) |
+> | M-2c LODO MAE ≤8.0 | 4 folds (registered) | 100% | ✅ RESOLVABLE |
+> | M-2c LODO MAE ≤8.0 | **3 folds (actual)** | 100% | ✅ RESOLVABLE |
+>
+> ### 🔴 The finding that matters: the pre-committed fallback would also have failed
+>
+> §6 anticipated ρ_within might be UNRESOLVABLE and fixed a fallback — *"the decisive criterion
+> becomes ρ_partial at n=22."* **Measured, that fallback is itself UNRESOLVABLE at 92.3%.** On the
+> GSE165178-only geometry the stage would have had **no valid decisive criterion at all**, and would
+> have produced a verdict that ground rule §5b forbids relying on.
+>
+> **GSE165177 is what rescues it:** at the actual n=68, ρ_partial passes at **99.4%**. This is a
+> measured vindication of adding that series, not an argument for it.
+>
+> ### Bars as frozen (these govern §7 from here)
+>
+> | criterion | status |
+> |---|---|
+> | **M-2a ρ_partial ≥ 0.50 at n=68** | ✅ **DECISIVE** — the criterion §7 is graded on |
+> | M-2a ρ_within | **demoted to descriptive** — the §6 fallback fires as written. Reported, never gated on |
+> | **M-2b sign agreement** | bar **moves ≥8/11 → ≥7/11** (its `usable_bar`), per §5b: move it now, not after |
+> | **M-2c LODO MAE ≤ 8.0 yr** | ✅ frozen, **3 folds** — the reduced donor count does not weaken it |
+>
+> **Unchanged:** both clocks must agree or it is SPLIT; M-2c stays gated on M-2a.
+>
+> ⚠️ **Honest note on M-2b:** moving a bar to its `usable_bar` makes it easier to pass. It is done
+> here because §5b requires an unresolvable bar to be moved *before* the run — but it is a **weaker**
+> test than registered, and any M-2b pass must be reported with that caveat attached.
+
 ---
 
 ## 7. What each outcome licenses — decided before the run

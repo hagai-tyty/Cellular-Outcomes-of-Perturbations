@@ -188,3 +188,55 @@ def test_higher_is_better_direction():
     assert r["pass_rate"] == pytest.approx(0.96, abs=0.01)
     # ...but a bar at 0.10 leaves only ~90% above it, below MIN_PASS_RATE -> UNRESOLVABLE
     assert bar_verdict(null, 0.10, lower_is_better=False)["verdict"] == "UNRESOLVABLE"
+
+
+# ===================================================================== #
+# STAGE 1.5.2 bars, frozen 2026-07-31 at the ACTUAL GSE165177xGSE165179  #
+# geometry (68 conditions, 3 donors). §6 requires every registered bar   #
+# to carry a resolvability test; a bar without one is not pre-registered.#
+# Recomputed from stage_1_5_2_resolvability_results.json.                #
+# ===================================================================== #
+import json as _json  # noqa: E402
+from pathlib import Path as _Path  # noqa: E402
+
+_S152 = _Path(__file__).resolve().parents[1] / "stage_1_5_2_resolvability_results.json"
+
+
+def _s152():
+    if not _S152.exists():
+        import pytest as _pytest
+        _pytest.skip("stage_1_5_2_resolvability_results.json not present")
+    return _json.loads(_S152.read_text(encoding="utf-8"))["checks"]
+
+
+def test_s152_rho_partial_is_resolvable_at_the_actual_geometry():
+    """The DECISIVE criterion. Resolvable only because n=68, not the registered n=22."""
+    c = _s152()["M-2a rho_partial (ACTUAL)"]
+    assert c["verdict"] == "RESOLVABLE" and c["pass_rate"] >= 0.95
+
+
+def test_s152_the_registered_fallback_would_have_failed():
+    """Pins the finding: rho_partial at the registered n=22 is UNRESOLVABLE (92.3%).
+    On the GSE165178-only geometry the stage had no valid decisive criterion."""
+    c = _s152()["M-2a rho_partial (registered n=22)"]
+    assert c["verdict"] == "UNRESOLVABLE" and c["pass_rate"] < 0.95
+
+
+def test_s152_rho_within_is_demoted_not_gated():
+    """rho_within is UNRESOLVABLE at both the registered and actual n -> descriptive only."""
+    ch = _s152()
+    for k in ("M-2a rho_within (registered n=11/arm)", "M-2a rho_within (ACTUAL smallest arm)"):
+        assert ch[k]["verdict"] == "UNRESOLVABLE"
+
+
+def test_s152_sign_agreement_bar_moved_to_its_usable_bar():
+    """Registered >=8/11 is UNRESOLVABLE; §5b requires moving it before the run, to 7."""
+    c = _s152()["M-2b sign agreement (registered 8/11)"]
+    assert c["verdict"] == "UNRESOLVABLE"
+    assert abs(c["usable_bar"] - 7.0) < 1e-9
+
+
+def test_s152_lodo_survives_the_reduced_donor_count():
+    """Registered assumed 4 folds; the real set has 3 donors. Still resolvable."""
+    c = _s152()["M-2c LODO MAE (ACTUAL donors)"]
+    assert c["verdict"] == "RESOLVABLE" and c["geometry"] == "3 folds"
