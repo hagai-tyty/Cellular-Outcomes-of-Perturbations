@@ -3065,3 +3065,66 @@ is void.
 
 18 unit tests in `tests/test_c5_deeper_tests.py`, graded against closed forms and constructions with
 known answers — including the bootstrap spread checked against a direct 3 000-run simulation.
+
+---
+
+## 2026-08-02 — 🛑 Readiness audit for step 6: **NOT ready.** Two problems, both found by checking
+
+Asked whether we were ready to run G-c step 2, I audited instead of answering. We are not. Neither
+problem is in the code that shipped at steps 1–5b — both are in what step 6 would have done next.
+
+### Problem 1 — no step actually implements C-5
+
+The step table ran 1, 2, 3, 4, 5, 5b, 6. Step 5 is *"C-5 **design** + its bar"*; 5b chose the option.
+**PART D's manifest lists `training/train.py` as a file this stage changes, but no step scheduled
+that change.** `src/cellfate/training/train.py:117` is still
+`train_dl = loader(train_ds, cfg.batch_size, shuffle=True)` — plain shuffling, exactly as E26
+recorded it. C-5 is graded and unbuilt.
+
+Not bookkeeping: **step 6's arm B *is* the starved regime C-5 exists to fix** — 75 labels, 1.14 per
+batch, 32 % of updates a hard zero. Running step 6 as it stands would measure "do HFF's labels help?"
+**confounded with** "is the age head trainable at 75 labels with the current loader?", and the
+pre-registered reading *"A better ⇒ HFF's labels help, keep them"* would be wrong for a reason the
+outcome table cannot express.
+
+### Problem 2 — 🔴 a fixed W = 8 biases step 6 toward its own treatment
+
+This one I got wrong in 5b, and it is the more serious. I pinned W = 8 by asking what the **masked**
+regime needs. Step 6 runs **two** arms, and arm A is not masked:
+
+| | age-valid cells | age cells/batch | age updates/epoch at fixed W = 8 | vs today |
+|---|---:|---:|---:|---|
+| **arm A** (control) | **33 688 of 33 688** | ~512 | 8 | **65 → 8, an 8× cut for no reason** |
+| **arm B** (treatment) | 75 of 33 688 | 1.14 | 8 | 44 → 8, but each is usable |
+
+Arm A has **no occupancy problem** — every batch is full. Fixed W = 8 buys it nothing and costs it 8×
+its age optimisation. **The mechanism would handicap the control and help the treatment**, pushing
+`dage_mae_model` toward *"B better, CI excludes 0"* — one of the three pre-registered outcomes, and
+the one concluding *"99.7 % of the labels were net-negative."* A mechanism that tilts the result
+toward the treatment conclusion is a validity threat, not a detail.
+
+### The fix — one rule, not one constant
+
+Trigger on the **accumulated age-cell count**, not a batch count: *step the age term once the window
+holds ≥ k age cells, or after W_max batches, whichever comes first.*
+
+* **arm A** — the first batch already holds ~512 ≥ k, so W = 1: **identical to today**, the control is
+  left alone and `scorecard/baseline.json` stays meaningful.
+* **arm B** — ~7–8 batches to reach k, so W ≈ 8: exactly the regime 5b validated.
+
+One policy applied identically to both arms; it only *behaves* differently because the data differ,
+which is what a controlled comparison is. It also satisfies B2 **by construction** rather than at
+98.1 % probability, and `W_max = 8` from 5b's sensitivity table becomes the cap.
+
+**5b's W = 8 analysis is not withdrawn** — it still fixes `W_max`, and the n_age ≥ 65 boundary still
+holds. W = 8 becomes a **ceiling**, not a constant.
+
+### New step 5c, blocking step 6
+
+Added to the step table: implement C-5 Option 2 in `training/train.py`. Gates — `k` registered via
+`bar_verdict`; **arm-A behaviour bit-identical to today**; the window loss is `Σloss/Σcells`, not a
+mean of means; the fate term still steps every batch; the data-dependent stop asserted deterministic
+under a fixed shuffle seed; and a test that every label is still used exactly once per epoch, so the
+rule selects *windows*, not *labels*.
+
+No `src/` file touched by this entry — it is a plan correction. Step 6 stays blocked until 5c ships.

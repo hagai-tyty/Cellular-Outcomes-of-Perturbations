@@ -994,6 +994,68 @@ other's training distribution.
 >
 > A test asserting the mean-of-means error is *not* present belongs with that change.
 
+> ### 🛑 READINESS AUDIT 2026-08-02 — step 6 is **NOT** ready. Two problems, both found by asking.
+>
+> Asked "are we ready for step 6", I checked rather than answered, and the answer is no.
+>
+> #### Problem 1 — no step actually implements C-5
+>
+> The step table runs 1, 2, 3, 4, 5, 5b, 6. Step 5 is *"C-5 **design** + its bar"* and 5b chose the
+> option. **PART D's manifest lists `training/train.py` as a file this stage changes, but no step
+> schedules that change.** `train.py:117` is still `train_dl = loader(train_ds, cfg.batch_size,
+> shuffle=True)` — plain shuffling, exactly as E26 recorded it. C-5 is graded and unbuilt.
+>
+> This is not a bookkeeping gap. **Step 6's arm B *is* the starved regime C-5 exists to fix** — 75
+> labels, 1.14 per batch, 32 % of updates a hard zero. Running step 6 as it stands measures
+> "do HFF's labels help?" **confounded with** "is the age head trainable at 75 labels with the
+> current loader?" — and the pre-registered reading *"A better ⇒ HFF's labels help, keep them"*
+> would then be wrong for a reason the outcome table cannot express.
+>
+> **A new step 5c is required: implement C-5 Option 2, in both arms, before step 6 runs.**
+>
+> #### Problem 2 — 🔴 a fixed W = 8 biases step 6 **toward its own treatment**
+>
+> This one I got wrong in 5b and it is the more serious of the two. I pinned W = 8 by asking what
+> the **masked** regime needs. Step 6 runs **two** arms, and arm A is not masked:
+>
+> | | age-valid cells | age cells per batch | age updates/epoch at fixed W = 8 | vs today |
+> |---|---:|---:|---:|---|
+> | **arm A** (control) | **33 688 of 33 688** | ~512 | 8 | **65 → 8, an 8× cut for no reason** |
+> | **arm B** (treatment) | 75 of 33 688 | 1.14 | 8 | 44 → 8, but each is usable |
+>
+> Arm A has **no occupancy problem** — every batch is full. Fixed W = 8 buys it nothing and costs it
+> 8× its age optimisation. **So the mechanism handicaps the control and helps the treatment**, which
+> pushes `dage_mae_model` toward *"B better, CI excludes 0"* — one of the three pre-registered
+> outcomes, and the one that would conclude *"99.7 % of the labels were net-negative."* A mechanism
+> that tilts the result toward the treatment conclusion is a validity threat, not a detail.
+>
+> #### The fix — one rule, not one constant
+>
+> Make the trigger the **accumulated age-cell count**, not a batch count: *step the age term once the
+> window holds ≥ k age cells, or after W_max batches, whichever comes first.*
+>
+> | | behaviour | effect |
+> |---|---|---|
+> | **arm A** | first batch already holds ~512 ≥ k ⇒ W = 1 | **identical to today** — the control is left alone, and `scorecard/baseline.json` stays meaningful |
+> | **arm B** | ~7–8 batches to reach k ⇒ W ≈ 8 | exactly the regime 5b validated |
+>
+> It is **one policy applied identically to both arms**; it only *behaves* differently because the
+> data differ, which is the definition of a controlled comparison rather than a confound. It also
+> satisfies B2 **by construction** rather than at 98.1 % probability, and `W_max = 8` from 5b's
+> sensitivity table becomes the cap for when even 8 batches cannot reach `k`.
+>
+> **5b's W = 8 analysis is not withdrawn** — it is still what fixes `W_max`, and the n_age ≥ 65
+> boundary still holds. What changes is that W = 8 is a **ceiling**, not a constant.
+>
+> #### Consequences to carry into 5c
+>
+> * `k` needs registering through `bar_verdict` like every other bar. `k = 4` is B2's existing
+>   threshold and the natural default; a larger `k` trades updates for per-update SNR.
+> * The **data-dependent stop is deterministic** given the shuffle seed, so reproducibility holds —
+>   but it must be asserted, not assumed.
+> * Every label is still used **exactly once per epoch**, so the stopping rule selects *windows*,
+>   not *labels*, and introduces no selection bias. This also needs a test.
+
 ### 🔴 The second consequence, which is easy to miss: the cell-cycle deconfounder moves too
 
 `build_dataset.py:449-457` fits the deconfounder on **age-valid TRAIN cells only**:
@@ -1486,7 +1548,8 @@ did not**.
 | **4** | **C-4 option (a)** + PART B annotations (text in **B.2**) | `Response` gains two **defaulted** fields; annotations additive, `git diff --stat plans/` shows **zero deletions** | ❌ no | ❌ no |
 | **5** ✅ | C-5 design + its bar — **DONE 2026-08-02, and it chose Option 2 over Option 1** | bar RESOLVABLE on the dense regime, DISCRIMINATES between options, 6 rows in `tests/test_bars_resolvable.py` | ❌ no | ❌ no |
 | **5b** ✅ | deeper tests D1–D7 before committing — **DONE 2026-08-02: Option 2 CONFIRMED, W = 8 pinned** | ranking stable on 7 axes, not 1; W chosen for margin against a shrinking label set, not for the minimum | ❌ no | ❌ no |
-| **6** | **G-c step 2** (PART C) | snapshot first; **rollback exercised, not assumed** | ✅ **yes** | ✅ yes, ×2 arms |
+| **5c** 🛑 **NEW, BLOCKS 6** | **implement C-5 Option 2** — `training/train.py`, threshold on accumulated age cells with `W_max = 8`. Added 2026-08-02: no step previously scheduled it, and a fixed W biases arm A. See the readiness audit in C-5 | `k` registered via `bar_verdict`; **arm-A behaviour bit-identical to today**; window loss is `Σloss/Σcells` not a mean of means; fate term still steps every batch; determinism asserted | ❌ no | ❌ no |
+| **6** | **G-c step 2** (PART C) | snapshot first; **rollback exercised, not assumed**; **5c must have shipped** | ✅ **yes** | ✅ yes, ×2 arms |
 
 > **C-4 moved from step 7 to step 4 on 2026-07-31**, when option (a) was chosen. It sat last only
 > because the choice between the three options depended on G-c step 2's result; **(a) has no such
