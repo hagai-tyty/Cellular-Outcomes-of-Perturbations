@@ -53,6 +53,13 @@ class Sample(BaseModel):
     y_cls: list[float]                  # soft label over CLASSES, sums to 1
     y_age: float | None                 # dAge in years; None when masked
     age_mask: bool                      # True iff y_age is a valid label
+    # Stage 1.5.3 C-6. `age_mask` records THAT a label was withheld; after C-1/C-2 there are
+    # three distinct reasons (cancer_source | dataset_policy | donor_out_of_clock_range) and a
+    # bool cannot carry them. Downstream consumers need the distinction: a reader that only
+    # needs RANK order can honour `donor_out_of_clock_range` differently from `cancer_source`,
+    # and STAGE_5's claims audit has to state which cells were excluded and why.
+    # None exactly when `age_mask` is True -- enforced in `_age_label_consistent` below.
+    age_mask_reason: str | None = None
     sig_scores: list[float]             # raw Safe/Loss/Death signature scores
     cell_line: str
     pert_id: str
@@ -126,6 +133,11 @@ class Sample(BaseModel):
         if self.age_mask:
             if self.y_age is None or not math.isfinite(self.y_age):
                 raise ValueError("age_mask=True requires a finite y_age")
+            # C-6's invariant, enforced rather than documented: a usable label has no reason
+            # for being unusable. Everything downstream may rely on `reason is None <=> mask`.
+            if self.age_mask_reason is not None:
+                raise ValueError("age_mask=True requires age_mask_reason to be None, got "
+                                 f"{self.age_mask_reason!r}")
         elif self.y_age is not None and math.isfinite(self.y_age):
             raise ValueError("age_mask=False requires y_age to be None or NaN")
         # scaffold present for chem (used by the leave-drug-out split)
@@ -146,6 +158,7 @@ class ManifestRow(BaseModel):
     scaffold_id: str | None
     source: str
     age_mask: bool
+    age_mask_reason: str | None = None   # C-6; see Sample.age_mask_reason
     shard_id: str        # sanitised file stem of the shard holding this sample
     row_idx: int         # row position within that shard
 
@@ -154,7 +167,7 @@ class ManifestRow(BaseModel):
         return cls(
             cell_id=s.cell_id, cell_line=s.cell_line, pert_id=s.pert_id,
             scaffold_id=s.scaffold_id, source=s.source, age_mask=s.age_mask,
-            shard_id=shard_id, row_idx=row_idx,
+            age_mask_reason=s.age_mask_reason, shard_id=shard_id, row_idx=row_idx,
         )
 
 

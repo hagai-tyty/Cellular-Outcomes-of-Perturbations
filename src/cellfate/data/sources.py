@@ -548,6 +548,15 @@ class GSE242423SingleCellSource(ReprogrammingSource):
 
     name = "reprogramming"
 
+    # Stage 1.5.3 C-3. HFF is a neonatal human foreskin fibroblast LINE. GSE242423 declares no
+    # per-sample donor age because there is no per-sample donor, so this is ASSERTED from the
+    # line's identity rather than parsed -- and it is asserted HERE, visibly, because it is the
+    # value that puts every HFF cell outside the clock's fitted range of [1, 96]
+    # (configs/clocks/fleischer_clock.json -> meta.age_range). A silent default would hide the
+    # single most consequential fact about 99.7% of the age labels.
+    DONOR_AGE_YEARS: float = 0.0
+    DONOR_AGE_PROVENANCE: str = "asserted from cell-line identity (neonatal foreskin); not in GEO"
+
     def __init__(
         self,
         samples: list[dict],
@@ -712,8 +721,15 @@ class GSE242423SingleCellSource(ReprogrammingSource):
         counts, genes, pert, time_h = self._prepare()
         idx = self._batch_idx.get(chunk["id"], np.arange(counts.shape[0]))
         dense = counts[idx].toarray().astype(np.float32)         # ONLY this batch densified
+        n = len(idx)
+        # `batch` is "" -- NOT a fabricated value -- because GSE242423 has no batch structure to
+        # record. `census_warnings` treats a single-valued column as uninformative rather than as
+        # a cross-batch finding, so an empty batch cannot produce a spurious D1-style warning.
         return self.build_chunk(chunk["id"], dense, genes, self.cell_line,
-                                list(pert[idx]), list(time_h[idx]), factor_as_token=True, dataset_id="hff_sc")
+                                list(pert[idx]), list(time_h[idx]), factor_as_token=True,
+                                dataset_id="hff_sc",
+                                extra={"donor_age": [self.DONOR_AGE_YEARS] * n,
+                                       "batch": [""] * n})
 
 
 # Registry used by the orchestrator to build sources from config.

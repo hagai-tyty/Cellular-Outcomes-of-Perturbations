@@ -132,6 +132,7 @@ SHARD_SCHEMA = pa.schema([
     ("y_cls", _F32),
     ("y_age", pa.float32()),
     ("age_mask", pa.bool_()),
+    ("age_mask_reason", pa.string()),    # C-6; nullable, None iff age_mask
     ("sig_scores", _F32),
     ("cell_line", pa.string()),
     ("pert_id", pa.string()),
@@ -156,6 +157,7 @@ def write_shard(path: str | Path, samples: list[Sample]) -> None:
         cols["y_cls"].append(s.y_cls)
         cols["y_age"].append(s.y_age)
         cols["age_mask"].append(s.age_mask)
+        cols["age_mask_reason"].append(s.age_mask_reason)
         cols["sig_scores"].append(s.sig_scores)
         cols["cell_line"].append(s.cell_line)
         cols["pert_id"].append(s.pert_id)
@@ -218,6 +220,18 @@ def shard_to_numpy(table: pa.Table) -> dict[str, object]:
         "sig_scores": stack("sig_scores"),
         "y_age": y_age,
         "age_mask": np.asarray(d["age_mask"], dtype=bool),
+        # C-6, read TOLERANTLY on purpose. `STAGE_1_5_3_EXECUTE.md` C-6 chose the strict option
+        # ("require it, and rebuild") on the reasoning that C-1/C-2 move labels and force a
+        # rebuild anyway. **That reasoning does not hold for steps 1-4**, where both policies
+        # ship with their flags OFF: no label moves, so no rebuild happens, and requiring the
+        # column would break every committed shard in runs/ -- read by training/dataset.py,
+        # evaluation/data.py, inference/service.py and three local_runners -- for no benefit.
+        # The plan's own caveat says exactly this: it "must not ship in a release that does not
+        # already rebuild". So the tolerant form is correct HERE, and step 6's rebuild is where
+        # it may be tightened. A shard predating C-6 reads as all-None, which is accurate while
+        # the policies are off, since `cancer_source` is the only reason that could apply and
+        # it stays derivable from `source`.
+        "age_mask_reason": list(d.get("age_mask_reason") or [None] * n),
         "u_chem_fp": chem,
         "u_tf_emb": tf_emb,
         "u_modality": d["u_modality"],
@@ -234,6 +248,7 @@ def shard_to_numpy(table: pa.Table) -> dict[str, object]:
 _MANIFEST_SCHEMA = pa.schema([
     ("cell_id", pa.string()), ("cell_line", pa.string()), ("pert_id", pa.string()),
     ("scaffold_id", pa.string()), ("source", pa.string()), ("age_mask", pa.bool_()),
+    ("age_mask_reason", pa.string()),
     ("shard_id", pa.string()), ("row_idx", pa.int64()),
 ])
 

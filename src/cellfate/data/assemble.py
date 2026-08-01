@@ -17,6 +17,7 @@ def assemble_samples(
     y_cls: np.ndarray,          # (N, 3) sums to 1
     y_age: np.ndarray,          # (N,) ΔAge (used only where age_mask)
     age_mask: np.ndarray,       # (N,) bool
+    age_mask_reason: list[str | None] | None = None,   # (N,) C-6; None iff age_mask
     sig_scores: np.ndarray,     # (N, 3)
     cell_line: list[str],
     pert_id: list[str],
@@ -27,6 +28,11 @@ def assemble_samples(
 ) -> list[Sample]:
     """Build one validated Sample per cell. Raises if any row violates the schema."""
     n = len(cell_ids)
+    # A caller that does not supply reasons gets all-None, which `Sample` requires wherever
+    # `age_mask` is True. Passing reasons is how C-1 populates them; until then they are None.
+    reasons = list(age_mask_reason) if age_mask_reason is not None else [None] * n
+    if len(reasons) != n:
+        raise ValueError(f"age_mask_reason has {len(reasons)} entries, expected {n}")
     samples: list[Sample] = []
     for i in range(n):
         masked = bool(age_mask[i])
@@ -42,6 +48,8 @@ def assemble_samples(
                 y_cls=y_cls[i].astype(float).tolist(),
                 y_age=(float(y_age[i]) if masked else None),
                 age_mask=masked,
+                # `Sample` rejects a reason on an unmasked row, so this mirrors y_age exactly.
+                age_mask_reason=(None if masked else reasons[i]),
                 sig_scores=sig_scores[i].astype(float).tolist(),
                 cell_line=cell_line[i],
                 pert_id=pert_id[i],

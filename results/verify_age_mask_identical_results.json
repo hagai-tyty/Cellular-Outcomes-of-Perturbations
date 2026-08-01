@@ -1,0 +1,88 @@
+{
+  "script": "verify_age_mask_identical",
+  "utc": "2026-08-01T13:13:32+00:00",
+  "self_test": {
+    "checks": {
+      "one_ulp": true,
+      "mask_flip": true,
+      "reason_appeared": true,
+      "unchanged_passes": true
+    },
+    "all_pass": true
+  },
+  "verdict": "IDENTICAL",
+  "max_abs_delta": 0.0,
+  "n_chunks": 7,
+  "rows": [
+    {
+      "chunk": "reprogramming:HFF",
+      "n": 1800,
+      "max_abs_delta": 0.0,
+      "d_age_identical": true,
+      "age_mask_identical": true,
+      "sha256_identical": true,
+      "reasons_not_none": 0,
+      "status": "OK"
+    },
+    {
+      "chunk": "reprogramming:N2",
+      "n": 21,
+      "max_abs_delta": 0.0,
+      "d_age_identical": true,
+      "age_mask_identical": true,
+      "sha256_identical": true,
+      "reasons_not_none": 0,
+      "status": "OK"
+    },
+    {
+      "chunk": "reprogramming:N3",
+      "n": 21,
+      "max_abs_delta": 0.0,
+      "d_age_identical": true,
+      "age_mask_identical": true,
+      "sha256_identical": true,
+      "reasons_not_none": 0,
+      "status": "OK"
+    },
+    {
+      "chunk": "reprogramming:O1",
+      "n": 21,
+      "max_abs_delta": 0.0,
+      "d_age_identical": true,
+      "age_mask_identical": true,
+      "sha256_identical": true,
+      "reasons_not_none": 0,
+      "status": "OK"
+    },
+    {
+      "chunk": "reprogramming:O2",
+      "n": 21,
+      "max_abs_delta": 0.0,
+      "d_age_identical": true,
+      "age_mask_identical": true,
+      "sha256_identical": true,
+      "reasons_not_none": 0,
+      "status": "OK"
+    },
+    {
+      "chunk": "reprogramming:Y1",
+      "n": 19,
+      "max_abs_delta": 0.0,
+      "d_age_identical": true,
+      "age_mask_identical": true,
+      "sha256_identical": true,
+      "reasons_not_none": 0,
+      "status": "OK"
+    },
+    {
+      "chunk": "reprogramming:Y2",
+      "n": 21,
+      "max_abs_delta": 0.0,
+      "d_age_identical": true,
+      "age_mask_identical": true,
+      "sha256_identical": true,
+      "reasons_not_none": 0,
+      "status": "OK"
+    }
+  ]
+}

@@ -243,3 +243,97 @@ def test_render_handles_an_errored_chunk_without_crashing():
     stats = [ChunkControlStat("c0", "A", 0, 0, error="RuntimeError('boom')"),
              ChunkControlStat("c1", "B", 10, 2)]
     _render(stats, decide_verdict(stats))
+
+
+# ============================================================================ #
+# STAGE 1.5.3 STEP 1 — C-6 (`age_mask_reason`) and C-3 (HFF donor metadata)    #
+# ============================================================================ #
+def test_sample_rejects_a_reason_on_an_unmasked_row():
+    """C-6's invariant: `reason is None` exactly when `age_mask` is True. Everything
+    downstream is allowed to rely on it, so it is enforced, not documented."""
+    from pydantic import ValidationError
+
+    from cellfate.common.schemas import Sample
+    kw = dict(cell_id="c", X=[1.0], u_modality="tf", u_tf_emb=[0.0], dose_time=[0.0, 0.0],
+              y_cls=[1.0, 0.0, 0.0], sig_scores=[0.0, 0.0, 0.0], cell_line="A",
+              pert_id="p", scaffold_id="s", source="synth")
+    with pytest.raises(ValidationError, match="age_mask_reason to be None"):
+        Sample(y_age=1.0, age_mask=True, age_mask_reason="cancer_source", **kw)
+    # the two legal shapes
+    assert Sample(y_age=1.0, age_mask=True, **kw).age_mask_reason is None
+    assert Sample(y_age=None, age_mask=False, age_mask_reason="cancer_source",
+                  **kw).age_mask_reason == "cancer_source"
+
+
+def test_assemble_defaults_reasons_to_none_and_mirrors_the_mask():
+    from cellfate.common.constants import Modality
+    from cellfate.data.assemble import assemble_samples
+    n = 3
+    common = dict(cell_ids=[f"c{i}" for i in range(n)], x_panel=np.zeros((n, 2)),
+                  fingerprints=np.zeros((n, 0), dtype=np.uint8), dose_time=np.zeros((n, 2)),
+                  y_cls=np.tile([1.0, 0.0, 0.0], (n, 1)), y_age=np.arange(n, dtype=float),
+                  sig_scores=np.zeros((n, 3)), cell_line=["A"] * n, pert_id=["p"] * n,
+                  scaffold_id=["s"] * n, source="synth", modality=Modality.TF,
+                  tf_emb=np.zeros((n, 8)))
+    # no reasons supplied -> all None, and masked rows still validate
+    s = assemble_samples(age_mask=np.array([True, True, True]), **common)
+    assert [x.age_mask_reason for x in s] == [None] * n
+    # reasons supplied -> kept only where the mask is False
+    s = assemble_samples(age_mask=np.array([True, False, False]),
+                         age_mask_reason=[None, "dataset_policy", "cancer_source"], **common)
+    assert [x.age_mask_reason for x in s] == [None, "dataset_policy", "cancer_source"]
+    assert [x.y_age for x in s] == [0.0, None, None]
+
+
+def test_assemble_rejects_a_mis_sized_reason_list():
+    """Silently truncating would attach the wrong reason to the wrong cell."""
+    from cellfate.common.constants import Modality
+    from cellfate.data.assemble import assemble_samples
+    with pytest.raises(ValueError, match="age_mask_reason has"):
+        assemble_samples(cell_ids=["a", "b"], x_panel=np.zeros((2, 2)),
+                         fingerprints=np.zeros((2, 0), dtype=np.uint8),
+                         dose_time=np.zeros((2, 2)), y_cls=np.tile([1.0, 0.0, 0.0], (2, 1)),
+                         y_age=np.zeros(2), age_mask=np.array([False, False]),
+                         age_mask_reason=["only_one"], sig_scores=np.zeros((2, 3)),
+                         cell_line=["A"] * 2, pert_id=["p"] * 2, scaffold_id=["s"] * 2,
+                         source="synth", modality=Modality.TF, tf_emb=np.zeros((2, 8)))
+
+
+def test_shard_reader_tolerates_a_shard_written_before_c6():
+    """The committed shards in runs/ predate the column. Requiring it would break
+    training/dataset.py, evaluation/data.py, inference/service.py and three runners for no
+    benefit while the masking policies are off -- see the comment at io.shard_to_numpy."""
+    import pyarrow as pa
+
+    from cellfate.common import io
+    # one real row, minus the new column -- an EMPTY table would exercise numpy reshape edge
+    # cases rather than the tolerance this test is about
+    row = {"cell_id": ["c"], "X": [[0.0, 0.0]], "u_modality": ["tf"], "u_chem_fp": [None],
+           "u_gene_emb": [None], "u_tf_emb": [[0.0]], "dose_time": [[0.0, 0.0]],
+           "y_cls": [[1.0, 0.0, 0.0]], "y_age": [1.0], "age_mask": [True],
+           "sig_scores": [[0.0, 0.0, 0.0]], "cell_line": ["A"], "pert_id": ["p"],
+           "scaffold_id": ["s"], "source": ["synth"]}
+    old_schema = pa.schema([f for f in io.SHARD_SCHEMA if f.name != "age_mask_reason"])
+    out = io.shard_to_numpy(pa.table(row, schema=old_schema))
+    assert out["age_mask_reason"] == [None]          # tolerated, not a KeyError
+    assert out["age_mask"].tolist() == [True]        # and the rest still reads
+
+
+def test_hff_asserts_a_neonatal_donor_age_with_its_provenance_recorded():
+    """C-3. The value is asserted, not parsed, so it must be visible and explained."""
+    from cellfate.data.sources import GSE242423SingleCellSource as S
+    assert S.DONOR_AGE_YEARS == 0.0
+    assert "asserted" in S.DONOR_AGE_PROVENANCE and "not in GEO" in S.DONOR_AGE_PROVENANCE
+
+
+def test_hff_donor_age_sits_outside_the_shipped_clocks_fitted_range():
+    """The whole point of C-3: without it, C-2's range rule cannot fire for 99.7% of the data."""
+    import json
+    from pathlib import Path
+
+    from cellfate.data.sources import GSE242423SingleCellSource as S
+    meta = json.loads((Path(__file__).resolve().parents[1] / "configs" / "clocks" /
+                       "fleischer_clock.json").read_text(encoding="utf-8"))["meta"]
+    lo, hi = meta["age_range"]
+    assert S.DONOR_AGE_YEARS < lo, f"{S.DONOR_AGE_YEARS} should be below the clock's {lo}"
+    assert lo == 1.0 and hi == 96.0
