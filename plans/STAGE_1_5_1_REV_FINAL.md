@@ -820,6 +820,32 @@ captured. The suite has since been run ~15 times across Stage 1.5.2 at 455 → 5
 failures, including six full runs on 2026-07-31. It is not reproducing, and it is closed as a
 transient rather than left as an open worry. *(The record of it stays here, per the standing rule.)*
 
+> ### 🔴 REOPENED 2026-08-01 — **it reproduced, and the name is now captured.**
+>
+> *Additive; the closure above is left as written, because closing it was the mistake and deleting
+> the mistake would hide it.* **Closing a flake on "it stopped happening" was premature** — that is
+> absence of evidence, and this document says elsewhere not to act on it.
+>
+> **The test is `tests/test_evaluation.py::test_cell_line_regime_is_multiclass_with_finite_metrics`.**
+> It failed once in five full-suite runs on 2026-08-01, then passed 3/3 on immediate re-runs.
+> `FileNotFoundError: reports/cell_line.json`.
+>
+> **Two distinct problems, and only one of them is a flake:**
+>
+> | | |
+> |---|---|
+> | **A — deterministic, order-dependent.** `test_evaluate_writes_reports_and_wellformed_gates` (`test_evaluation.py:350`) *writes* `reports/cell_line.json`; this test *reads* it at `:383`. **Run alone it fails 100% of the time** (3/3 verified). Anyone debugging that single test in isolation will be misled | a real test-design defect, cheap to fix: the reader should depend on a fixture that generates the report, not on another test having run first |
+> | **B — intermittent, in the full suite.** ~1 run in 5. `eval_bundle` is a **module-scoped** fixture over `tmp_path_factory`; the leading hypothesis is Windows temp-directory handling, which this repository has hit before | **not established.** Recorded as an open question, not as a diagnosis |
+>
+> **Scope, checked before it is dismissed:** the failure is in the evaluation **reporting** path. It
+> touches no ΔAge value, no label, no `age_mask`, and nothing Stage 1.5.3 changes. It predates all
+> of this work (§10.7's sighting is 2026-07-26) and **CI is green on Linux**, which is consistent
+> with B being platform-specific.
+>
+> **Owner: whoever next touches `evaluation/`.** Fixing A is a few lines and would also remove the
+> most likely amplifier of B. It does **not** block Stage 1.5.3 steps 1–4, and saying so is a
+> judgement about scope, not a dismissal.
+
 ## 11.6 What is genuinely still open, in one place
 
 | item | owner | what it needs |
@@ -827,6 +853,7 @@ transient rather than left as an open worry. *(The record of it stays here, per 
 | **§5 retention** (−6 to −9 yr, at the resolution boundary) | **Stage 6** | ≈16 transient-arm pairs ⇒ **more donors**. Size for the ±7 yr between-donor instrument error, not just for n |
 | **HFF's age labels** | **Stage 6** | methylation for HFF. No public series has it |
 | **`age_mask` for HFF** | **Stage 1.5.2 G-c step 2** | one retrain, metric pre-registered first. Does not need new data |
+| 🆕 **the `test_evaluation` flake** *(reopened 2026-08-01)* | **whoever next touches `evaluation/`** | fix the order dependence (problem A above); it blocks nothing, and it is listed so it stops being rediscovered |
 
 **Everything else in this document is answered.** Two of the three are acquisition items that no
 amount of further analysis can close, and saying so is the point of this section.
