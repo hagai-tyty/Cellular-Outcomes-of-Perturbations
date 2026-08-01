@@ -41,3 +41,9 @@ wandb/
 .idea/
 .DS_Store
 Thumbs.db
+
+# --- Generated caches (re-downloaded on demand; see experiments/test_suite.py) ---
+gene2vec_cache.txt
+
+# --- Never commit archives of directories that are themselves committed ---
+*.zip

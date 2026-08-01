@@ -154,7 +154,7 @@ def test_a_perfect_panel_loses_correlation_as_the_sample_count_drops():
 # ------------------------------------------------------------------ the recorded run ---- #
 def test_the_recorded_result_is_what_the_rules_produce():
     import json
-    p = ROOT / "diag_donor_identity_results.json"
+    p = ROOT / "results" / "diag_donor_identity_results.json"
     if not p.exists():
         pytest.skip("results file not present")
     r = json.loads(p.read_text(encoding="utf-8"))
@@ -169,7 +169,7 @@ def test_the_stability_gate_actually_fired_and_is_recorded():
     """The panel failing its own gate on reprogrammed cells is a result, not a mishap —
     it is why the test is restricted to non-reprogramming cells. Pin it."""
     import json
-    p = ROOT / "diag_donor_identity_results.json"
+    p = ROOT / "results" / "diag_donor_identity_results.json"
     if not p.exists():
         pytest.skip("results file not present")
     r = json.loads(p.read_text(encoding="utf-8"))

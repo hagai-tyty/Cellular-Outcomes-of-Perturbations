@@ -45,6 +45,10 @@ from pathlib import Path
 
 import numpy as np
 
+_RESULTS = Path(__file__).resolve().parents[1] / "results"
+_RESULTS.mkdir(exist_ok=True)
+
+
 # --------------------------------------------------------------------------- #
 # Pure logic — data-free, unit-tested                                          #
 # --------------------------------------------------------------------------- #
@@ -429,7 +433,7 @@ def main() -> int:
            "utc": datetime.now(UTC).isoformat(timespec="seconds"),
            "data_dir": str(ddir), "n_samples": len(meta),
            "clocks": blocks, "intercept_sweep": sweeps}
-    Path("diag_methylation_anchor_results.json").write_text(
+    _RESULTS / "diag_methylation_anchor_results.json".write_text(
         json.dumps(out, indent=2, default=str), encoding="utf-8")
     print("\n  wrote diag_methylation_anchor_results.json")
     return 0

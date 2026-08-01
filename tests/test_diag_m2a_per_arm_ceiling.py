@@ -100,7 +100,7 @@ def test_the_sharpest_and_bluntest_arms_are_both_named():
 # ------------------------------------------------------------------ the recorded run ---- #
 def test_the_recorded_result_is_what_the_rules_produce():
     import json
-    p = ROOT / "diag_m2a_per_arm_ceiling_results.json"
+    p = ROOT / "results" / "diag_m2a_per_arm_ceiling_results.json"
     if not p.exists():
         pytest.skip("results file not present")
     r = json.loads(p.read_text(encoding="utf-8"))
@@ -112,7 +112,7 @@ def test_the_finding_that_corrects_section_11():
     facts that make that reading wrong: the SHARPEST reference is in a REPROGRAMMING arm, and
     at least one NON-reprogramming arm with a sharp reference also fails."""
     import json
-    p = ROOT / "diag_m2a_per_arm_ceiling_results.json"
+    p = ROOT / "results" / "diag_m2a_per_arm_ceiling_results.json"
     if not p.exists():
         pytest.skip("results file not present")
     arms = json.loads(p.read_text(encoding="utf-8"))["arms"]

@@ -142,7 +142,7 @@ def test_by_day_splits_a_pooled_number_that_would_otherwise_hide_the_structure()
 def test_the_recorded_result_still_matches_the_rules():
     """Replay 2026-07-31's measured pairs through the pure functions."""
     import json
-    p = ROOT / "diag_m2b_contrast_agreement_results.json"
+    p = ROOT / "results" / "diag_m2b_contrast_agreement_results.json"
     if not p.exists():
         pytest.skip("results file not present")
     res = json.loads(p.read_text(encoding="utf-8"))

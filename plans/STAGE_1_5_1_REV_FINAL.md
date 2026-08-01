@@ -23,6 +23,11 @@ in §4.4, §4.3 and §5 respectively — not merely disclosed.
 identity-matched contrasts measured. **`src/` untouched throughout** — no model, training,
 calibration or inference code was changed.
 
+> **📁 MOVED 2026-08-01 — the five earlier drafts now live in [`plans/archive/`](archive/README.md).**
+> Bytes unchanged (all five SHA-256 hashes verified identical across the move) and `git mv` was used,
+> so §10.7's "byte-unmodified" check still holds and history still follows each file. They were
+> **archived, not deleted**: they are the audit trail, and nine other documents cite them.
+>
 > **Earlier drafts** (`STAGE_1_5_1_CLOCK_PRECISION.md` V1, `STAGE_1_5_1_NEW_CHANGES.md`,
 > `STAGE_1_5_1_NEW_V2.md`, `STAGE_1_5_1_REVISED.md`, `STAGE_1_5_1_REVISED_REVIEW.md`) are left
 > byte-unmodified as the audit trail. An earlier revision of *this* file carried a long list of its

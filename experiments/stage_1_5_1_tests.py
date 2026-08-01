@@ -35,6 +35,10 @@ from pathlib import Path
 
 import numpy as np
 
+_RESULTS = Path(__file__).resolve().parents[1] / "results"
+_RESULTS.mkdir(exist_ok=True)
+
+
 ROOT = Path(__file__).resolve().parents[1]
 for _p in (ROOT, ROOT / "local_runners", ROOT / "src"):
     if str(_p) not in sys.path:
@@ -598,7 +602,7 @@ def main() -> int:
 
     out = {"script": "stage_1_5_1_tests", "utc": datetime.now(UTC).isoformat(timespec="seconds"),
            "gse113957_dir": known, "gill_dir": gill, "tests": RESULTS}
-    Path("stage_1_5_1_tests_results.json").write_text(json.dumps(out, indent=2, default=str),
+    _RESULTS / "stage_1_5_1_tests_results.json".write_text(json.dumps(out, indent=2, default=str),
                                                       encoding="utf-8")
     print("\n  wrote stage_1_5_1_tests_results.json")
     return 0

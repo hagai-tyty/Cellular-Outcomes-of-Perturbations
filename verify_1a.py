@@ -51,6 +51,10 @@ from cellfate.training.dataset import (
 )
 from cellfate.training.xdonor_calib import MIN_INNER_TRAIN_FRAC
 
+_RESULTS = Path(__file__).resolve().parent / "results"
+_RESULTS.mkdir(exist_ok=True)
+
+
 DONORS = ["N2", "N3", "O1", "O2", "Y1", "Y2"]
 REGIME = "holdout"
 SPLITS = ["train", "val", "calib", "test"]
@@ -272,7 +276,7 @@ def main() -> None:
         "raw_shard_peek": peek,
         "folds": results,
     }
-    out_path = Path("verify_1a_results.json")
+    out_path = _RESULTS / "verify_1a_results.json"
     out_path.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
     print(f"\n  saved -> {out_path}   |   VERDICT: {status} - {reason}")
 

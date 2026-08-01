@@ -1,0 +1,988 @@
+{
+  "script": "diag_methylation_anchor",
+  "utc": "2026-07-31T12:24:49+00:00",
+  "data_dir": "D:\\GSE165179",
+  "n_samples": 96,
+  "clocks": {
+    "horvath_skin_blood_2018": {
+      "clock": "Horvath skin & blood 2018",
+      "n_cpg": 391,
+      "mean_coverage": 391.0,
+      "coverage_frac": 1.0,
+      "G2": {
+        "status": "REPRODUCES",
+        "mae_years": 4.021743869762726,
+        "n": 3,
+        "predicted": [
+          46.96738419535591,
+          56.64305738021539,
+          40.3895584244287
+        ],
+        "true": [
+          53.0,
+          53.0,
+          38.0
+        ],
+        "reason": "MAE 4.0 yr on 3 known-age samples (tolerance 5.0) -> the clock reads age here; it is a usable anchor",
+        "implied_intercept": {
+          "status": "OK",
+          "n": 3,
+          "mean": -0.11168686554828251,
+          "sd": 0.25056469101397144,
+          "spread_years": 5.261858511293401,
+          "per_sample": [
+            0.17558055372048353,
+            -0.28516578841568196,
+            -0.22547536194964912
+          ]
+        },
+        "intercept_used": -0.11168686554828251
+      },
+      "contrasts": {
+        "Transiently reprogrammed fibroblast": {
+          "status": "NO_EFFECT",
+          "mean_years": -5.80924547903072,
+          "ci95": [
+            -19.502730663569558,
+            7.884239705508117
+          ],
+          "n_pairs": 9,
+          "n_negative": 5,
+          "reason": "transiently reprogrammed fibroblasts (Gill's MPTR claim): CI includes 0 (mean -5.8 yr, 95% CI [-19.5, +7.9], 5/9 pairs negative)",
+          "pairs": [
+            {
+              "donor": "O1",
+              "day": 10.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 55.358559016555446,
+              "control_age": 43.5300216810452,
+              "diff_years": 11.828537335510248
+            },
+            {
+              "donor": "O1",
+              "day": 17.0,
+              "n_treated": 1,
+              "n_control": 2,
+              "treated_age": 12.608219863138599,
+              "control_age": 49.51930420218282,
+              "diff_years": -36.91108433904422
+            },
+            {
+              "donor": "O2",
+              "day": 10.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 34.11223788403362,
+              "control_age": 55.65616062923438,
+              "diff_years": -21.54392274520076
+            },
+            {
+              "donor": "O2",
+              "day": 13.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 32.78398989159686,
+              "control_age": 54.20830659805096,
+              "diff_years": -21.4243167064541
+            },
+            {
+              "donor": "O2",
+              "day": 17.0,
+              "n_treated": 1,
+              "n_control": 2,
+              "treated_age": 56.32090252179086,
+              "control_age": 53.859475585049154,
+              "diff_years": 2.4614269367417094
+            },
+            {
+              "donor": "O3",
+              "day": 10.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 42.6957528521385,
+              "control_age": 40.99674871837004,
+              "diff_years": 1.6990041337684545
+            },
+            {
+              "donor": "O3",
+              "day": 13.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 33.62431455994745,
+              "control_age": 40.46706127071753,
+              "diff_years": -6.842746710770079
+            },
+            {
+              "donor": "O3",
+              "day": 15.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 37.05151117095643,
+              "control_age": 37.602867899199005,
+              "diff_years": -0.551356728242574
+            },
+            {
+              "donor": "O3",
+              "day": 17.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 59.36651265444269,
+              "control_age": 40.36526314202784,
+              "diff_years": 19.001249512414844
+            }
+          ],
+          "by_day": {
+            "10": -2.672127091974019,
+            "13": -14.13353170861209,
+            "15": -0.551356728242574,
+            "17": -5.149469296629223
+          }
+        },
+        "Transient reprogramming intermediate": {
+          "status": "REJUVENATION",
+          "mean_years": -24.050361117212205,
+          "ci95": [
+            -31.118931201347785,
+            -16.981791033076625
+          ],
+          "n_pairs": 12,
+          "n_negative": 12,
+          "reason": "transient-reprogramming intermediates read YOUNGER than their matched untreated control (mean -24.1 yr, 95% CI [-31.1, -17.0], 12/12 pairs negative)",
+          "pairs": [
+            {
+              "donor": "O1",
+              "day": 10.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 34.497424898564915,
+              "control_age": 47.04683780666572,
+              "diff_years": -12.549412908100805
+            },
+            {
+              "donor": "O1",
+              "day": 13.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 29.598866297150202,
+              "control_age": 46.45478842286357,
+              "diff_years": -16.85592212571337
+            },
+            {
+              "donor": "O1",
+              "day": 15.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 21.79900591387416,
+              "control_age": 47.19584544643905,
+              "diff_years": -25.39683953256489
+            },
+            {
+              "donor": "O1",
+              "day": 17.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 15.99271363651517,
+              "control_age": 48.192175387806806,
+              "diff_years": -32.199461751291636
+            },
+            {
+              "donor": "O2",
+              "day": 10.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 41.54938637896294,
+              "control_age": 57.033895696925995,
+              "diff_years": -15.484509317963052
+            },
+            {
+              "donor": "O2",
+              "day": 13.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 33.049160422700545,
+              "control_age": 55.353125344420306,
+              "diff_years": -22.30396492171976
+            },
+            {
+              "donor": "O2",
+              "day": 15.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 20.567584482869076,
+              "control_age": 57.16197732364292,
+              "diff_years": -36.59439284077385
+            },
+            {
+              "donor": "O2",
+              "day": 17.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 9.151812958215436,
+              "control_age": 60.15934634873725,
+              "diff_years": -51.007533390521814
+            },
+            {
+              "donor": "O3",
+              "day": 10.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 27.41424433769477,
+              "control_age": 41.58616016821449,
+              "diff_years": -14.171915830519719
+            },
+            {
+              "donor": "O3",
+              "day": 13.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 23.601261680135696,
+              "control_age": 42.093518520507445,
+              "diff_years": -18.49225684037175
+            },
+            {
+              "donor": "O3",
+              "day": 15.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 22.19933124068775,
+              "control_age": 41.75103511737947,
+              "diff_years": -19.55170387669172
+            },
+            {
+              "donor": "O3",
+              "day": 17.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 18.58454273504175,
+              "control_age": 42.58096280535587,
+              "diff_years": -23.996420070314116
+            }
+          ],
+          "by_day": {
+            "10": -14.068612685527858,
+            "13": -19.21738129593496,
+            "15": -27.180978750010155,
+            "17": -35.734471737375856
+          }
+        },
+        "Failed to transiently reprogram fibroblast": {
+          "status": "NO_EFFECT",
+          "mean_years": 0.4641015999138786,
+          "ci95": [
+            -2.270928301648623,
+            3.19913150147638
+          ],
+          "n_pairs": 12,
+          "n_negative": 6,
+          "reason": "failed-to-reprogram fibroblasts (NEGATIVE CONTROL): CI includes 0 (mean +0.5 yr, 95% CI [-2.3, +3.2], 6/12 pairs negative)",
+          "pairs": [
+            {
+              "donor": "O1",
+              "day": 10.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 43.49570245979109,
+              "control_age": 43.5300216810452,
+              "diff_years": -0.034319221254108356
+            },
+            {
+              "donor": "O1",
+              "day": 13.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 45.84203792152937,
+              "control_age": 44.23734110124436,
+              "diff_years": 1.6046968202850067
+            },
+            {
+              "donor": "O1",
+              "day": 15.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 47.861669263731585,
+              "control_age": 46.109461985994066,
+              "diff_years": 1.7522072777375186
+            },
+            {
+              "donor": "O1",
+              "day": 17.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 47.12320264368448,
+              "control_age": 49.51930420218282,
+              "diff_years": -2.3961015584983443
+            },
+            {
+              "donor": "O2",
+              "day": 10.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 53.7359274232882,
+              "control_age": 55.65616062923438,
+              "diff_years": -1.9202332059461753
+            },
+            {
+              "donor": "O2",
+              "day": 13.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 61.52431457104678,
+              "control_age": 54.20830659805096,
+              "diff_years": 7.31600797299582
+            },
+            {
+              "donor": "O2",
+              "day": 15.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 61.984706920169906,
+              "control_age": 53.09632766110081,
+              "diff_years": 8.888379259069097
+            },
+            {
+              "donor": "O2",
+              "day": 17.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 53.715290038438994,
+              "control_age": 53.859475585049154,
+              "diff_years": -0.14418554661016003
+            },
+            {
+              "donor": "O3",
+              "day": 10.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 41.210588565652806,
+              "control_age": 40.99674871837004,
+              "diff_years": 0.21383984728276317
+            },
+            {
+              "donor": "O3",
+              "day": 13.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 41.487936920366664,
+              "control_age": 40.46706127071753,
+              "diff_years": 1.0208756496491347
+            },
+            {
+              "donor": "O3",
+              "day": 15.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 32.47307925517001,
+              "control_age": 37.602867899199005,
+              "diff_years": -5.1297886440289915
+            },
+            {
+              "donor": "O3",
+              "day": 17.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 34.763103690312825,
+              "control_age": 40.36526314202784,
+              "diff_years": -5.602159451715018
+            }
+          ],
+          "by_day": {
+            "10": -0.5802375266391735,
+            "13": 3.3138601476433203,
+            "15": 1.8369326309258749,
+            "17": -2.714148852274507
+          }
+        }
+      }
+    },
+    "horvath_multitissue_2013": {
+      "clock": "Horvath multi-tissue 2013",
+      "n_cpg": 353,
+      "mean_coverage": 334.0,
+      "coverage_frac": 0.9461756373937678,
+      "G2": {
+        "status": "REPRODUCES",
+        "mae_years": 4.418269299664142,
+        "n": 3,
+        "predicted": [
+          46.82061616556183,
+          52.55197988494196,
+          44.62740394949621
+        ],
+        "true": [
+          53.0,
+          53.0,
+          38.0
+        ],
+        "reason": "MAE 4.4 yr on 3 known-age samples (tolerance 5.0) -> the clock reads age here; it is a usable anchor",
+        "implied_intercept": {
+          "status": "OK",
+          "n": 3,
+          "mean": 0.3164034274537179,
+          "sd": 0.305482759285441,
+          "spread_years": 6.415137944994261,
+          "per_sample": [
+            0.6106598005222021,
+            0.3377377186469581,
+            0.0008127631919935263
+          ]
+        },
+        "intercept_used": 0.3164034274537179
+      },
+      "contrasts": {
+        "Transiently reprogrammed fibroblast": {
+          "status": "REJUVENATION_FRAGILE",
+          "mean_years": -9.374480491765715,
+          "ci95": [
+            -18.2693338274866,
+            -0.47962715604482753
+          ],
+          "n_pairs": 9,
+          "n_negative": 8,
+          "reason": "transiently reprogrammed fibroblasts (Gill's MPTR claim) read YOUNGER than their matched untreated control (mean -9.4 yr, 95% CI [-18.3, -0.5], 8/9 pairs negative)  [FRAGILE: a CI bound is within 0.5 yr of zero]",
+          "pairs": [
+            {
+              "donor": "O1",
+              "day": 10.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 42.69081749174462,
+              "control_age": 48.527792541897256,
+              "diff_years": -5.836975050152638
+            },
+            {
+              "donor": "O1",
+              "day": 17.0,
+              "n_treated": 1,
+              "n_control": 2,
+              "treated_age": 48.42853115185376,
+              "control_age": 53.425632762834674,
+              "diff_years": -4.997101610980913
+            },
+            {
+              "donor": "O2",
+              "day": 10.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 31.576342779475617,
+              "control_age": 61.909389779689,
+              "diff_years": -30.333047000213384
+            },
+            {
+              "donor": "O2",
+              "day": 13.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 44.34194973480599,
+              "control_age": 58.51326980569155,
+              "diff_years": -14.171320070885557
+            },
+            {
+              "donor": "O2",
+              "day": 17.0,
+              "n_treated": 1,
+              "n_control": 2,
+              "treated_age": 70.29525832754487,
+              "control_age": 60.96006705832164,
+              "diff_years": 9.33519126922323
+            },
+            {
+              "donor": "O3",
+              "day": 10.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 44.967825279496765,
+              "control_age": 49.0979084435318,
+              "diff_years": -4.130083164035035
+            },
+            {
+              "donor": "O3",
+              "day": 13.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 24.8316486226269,
+              "control_age": 47.41572945417454,
+              "diff_years": -22.584080831547638
+            },
+            {
+              "donor": "O3",
+              "day": 15.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 45.4696007050862,
+              "control_age": 51.09736065969051,
+              "diff_years": -5.627759954604308
+            },
+            {
+              "donor": "O3",
+              "day": 17.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 45.075417948712825,
+              "control_age": 51.10056596140801,
+              "diff_years": -6.025148012695183
+            }
+          ],
+          "by_day": {
+            "10": -13.433368404800353,
+            "13": -18.377700451216597,
+            "15": -5.627759954604308,
+            "17": -0.5623527848176219
+          }
+        },
+        "Transient reprogramming intermediate": {
+          "status": "REJUVENATION",
+          "mean_years": -27.54629531863966,
+          "ci95": [
+            -33.69418177273534,
+            -21.39840886454398
+          ],
+          "n_pairs": 12,
+          "n_negative": 12,
+          "reason": "transient-reprogramming intermediates read YOUNGER than their matched untreated control (mean -27.5 yr, 95% CI [-33.7, -21.4], 12/12 pairs negative)",
+          "pairs": [
+            {
+              "donor": "O1",
+              "day": 10.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 28.98417598789163,
+              "control_age": 48.678352123944414,
+              "diff_years": -19.694176136052786
+            },
+            {
+              "donor": "O1",
+              "day": 13.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 24.269196304422437,
+              "control_age": 45.01352849857394,
+              "diff_years": -20.744332194151504
+            },
+            {
+              "donor": "O1",
+              "day": 15.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 24.23276647844031,
+              "control_age": 45.72652546649431,
+              "diff_years": -21.493758988053997
+            },
+            {
+              "donor": "O1",
+              "day": 17.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 15.38282862131532,
+              "control_age": 47.57144135237531,
+              "diff_years": -32.18861273105999
+            },
+            {
+              "donor": "O2",
+              "day": 10.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 32.173592164404525,
+              "control_age": 48.6859776519785,
+              "diff_years": -16.512385487573972
+            },
+            {
+              "donor": "O2",
+              "day": 13.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 27.03991795222948,
+              "control_age": 52.32052796605986,
+              "diff_years": -25.280610013830383
+            },
+            {
+              "donor": "O2",
+              "day": 15.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 16.937339941193514,
+              "control_age": 55.30846704970648,
+              "diff_years": -38.371127108512965
+            },
+            {
+              "donor": "O2",
+              "day": 17.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 8.16909176355519,
+              "control_age": 55.603751870783206,
+              "diff_years": -47.43466010722801
+            },
+            {
+              "donor": "O3",
+              "day": 10.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 24.10195686770746,
+              "control_age": 47.19414103742228,
+              "diff_years": -23.092184169714816
+            },
+            {
+              "donor": "O3",
+              "day": 13.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 23.0323859884139,
+              "control_age": 43.63979806926332,
+              "diff_years": -20.60741208084942
+            },
+            {
+              "donor": "O3",
+              "day": 15.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 23.160044299144467,
+              "control_age": 48.45697757774573,
+              "diff_years": -25.296933278601266
+            },
+            {
+              "donor": "O3",
+              "day": 17.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 10.647913926644662,
+              "control_age": 50.48726545469147,
+              "diff_years": -39.839351528046805
+            }
+          ],
+          "by_day": {
+            "10": -19.76624859778052,
+            "13": -22.21078476294377,
+            "15": -28.387273125056073,
+            "17": -39.82087478877827
+          }
+        },
+        "Failed to transiently reprogram fibroblast": {
+          "status": "NO_EFFECT",
+          "mean_years": -2.443493954114482,
+          "ci95": [
+            -5.680749221289088,
+            0.7937613130601244
+          ],
+          "n_pairs": 12,
+          "n_negative": 9,
+          "reason": "failed-to-reprogram fibroblasts (NEGATIVE CONTROL): CI includes 0 (mean -2.4 yr, 95% CI [-5.7, +0.8], 9/12 pairs negative)",
+          "pairs": [
+            {
+              "donor": "O1",
+              "day": 10.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 55.76302455370178,
+              "control_age": 48.527792541897256,
+              "diff_years": 7.235232011804527
+            },
+            {
+              "donor": "O1",
+              "day": 13.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 43.78081156697283,
+              "control_age": 52.77496039765553,
+              "diff_years": -8.994148830682704
+            },
+            {
+              "donor": "O1",
+              "day": 15.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 53.71711338539066,
+              "control_age": 53.686368787322934,
+              "diff_years": 0.030744598067727225
+            },
+            {
+              "donor": "O1",
+              "day": 17.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 45.367967948565564,
+              "control_age": 53.425632762834674,
+              "diff_years": -8.05766481426911
+            },
+            {
+              "donor": "O2",
+              "day": 10.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 60.19931045906557,
+              "control_age": 61.909389779689,
+              "diff_years": -1.7100793206234286
+            },
+            {
+              "donor": "O2",
+              "day": 13.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 51.627609634316265,
+              "control_age": 58.51326980569155,
+              "diff_years": -6.885660171375285
+            },
+            {
+              "donor": "O2",
+              "day": 15.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 58.486303995090836,
+              "control_age": 59.09947922143654,
+              "diff_years": -0.6131752263457031
+            },
+            {
+              "donor": "O2",
+              "day": 17.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 50.67767827843441,
+              "control_age": 60.96006705832164,
+              "diff_years": -10.282388779887228
+            },
+            {
+              "donor": "O3",
+              "day": 10.0,
+              "n_treated": 1,
+              "n_control": 1,
+              "treated_age": 50.40447461664848,
+              "control_age": 49.0979084435318,
+              "diff_years": 1.3065661731166784
+            },
+            {
+              "donor": "O3",
+              "day": 13.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 47.37121088325575,
+              "control_age": 47.41572945417454,
+              "diff_years": -0.044518570918789635
+            },
+            {
+              "donor": "O3",
+              "day": 15.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 50.32516010761169,
+              "control_age": 51.09736065969051,
+              "diff_years": -0.7722005520788215
+            },
+            {
+              "donor": "O3",
+              "day": 17.0,
+              "n_treated": 2,
+              "n_control": 2,
+              "treated_age": 50.565931995226364,
+              "control_age": 51.10056596140801,
+              "diff_years": -0.5346339661816444
+            }
+          ],
+          "by_day": {
+            "10": 2.2772396214325923,
+            "13": -5.308109190992259,
+            "15": -0.4515437267855991,
+            "17": -6.29156252011266
+          }
+        }
+      }
+    }
+  },
+  "intercept_sweep": {
+    "horvath_skin_blood_2018": [
+      {
+        "intercept": -0.6,
+        "g2_mae": 10.25457582348607,
+        "Transiently reprogrammed fibroblast": {
+          "mean": -5.21324331904796,
+          "status": "NO_EFFECT"
+        },
+        "Transient reprogramming intermediate": {
+          "mean": -22.496843248155827,
+          "status": "REJUVENATION"
+        },
+        "Failed to transiently reprogram fibroblast": {
+          "mean": 0.473988584756239,
+          "status": "NO_EFFECT"
+        }
+      },
+      {
+        "intercept": -0.4471,
+        "g2_mae": 7.043675823486069,
+        "Transiently reprogrammed fibroblast": {
+          "mean": -5.44892035861395,
+          "status": "NO_EFFECT"
+        },
+        "Transient reprogramming intermediate": {
+          "mean": -23.20804950644454,
+          "status": "REJUVENATION"
+        },
+        "Failed to transiently reprogram fibroblast": {
+          "mean": 0.46410232967054527,
+          "status": "NO_EFFECT"
+        }
+      },
+      {
+        "intercept": -0.2,
+        "g2_mae": 3.403551928600701,
+        "Transiently reprogrammed fibroblast": {
+          "mean": -5.730986625558199,
+          "status": "NO_EFFECT"
+        },
+        "Transient reprogramming intermediate": {
+          "mean": -23.91264188979174,
+          "status": "REJUVENATION"
+        },
+        "Failed to transiently reprogram fibroblast": {
+          "mean": 0.46410159991387595,
+          "status": "NO_EFFECT"
+        }
+      },
+      {
+        "intercept": 0.0,
+        "g2_mae": 4.8035519286007,
+        "Transiently reprogrammed fibroblast": {
+          "mean": -5.891183320792054,
+          "status": "NO_EFFECT"
+        },
+        "Transient reprogramming intermediate": {
+          "mean": -24.178139410948205,
+          "status": "REJUVENATION"
+        },
+        "Failed to transiently reprogram fibroblast": {
+          "mean": 0.464101599913878,
+          "status": "NO_EFFECT"
+        }
+      },
+      {
+        "intercept": 0.2,
+        "g2_mae": 6.545424176513933,
+        "Transiently reprogrammed fibroblast": {
+          "mean": -5.98352671905741,
+          "status": "NO_EFFECT"
+        },
+        "Transient reprogramming intermediate": {
+          "mean": -24.32717783760542,
+          "status": "REJUVENATION"
+        },
+        "Failed to transiently reprogram fibroblast": {
+          "mean": 0.4641015999138774,
+          "status": "NO_EFFECT"
+        }
+      },
+      {
+        "intercept": 0.696,
+        "g2_mae": 16.96142417651393,
+        "Transiently reprogrammed fibroblast": {
+          "mean": -6.000249568601802,
+          "status": "NO_EFFECT"
+        },
+        "Transient reprogramming intermediate": {
+          "mean": -24.459132282419137,
+          "status": "REJUVENATION"
+        },
+        "Failed to transiently reprogram fibroblast": {
+          "mean": 0.46410159991387623,
+          "status": "NO_EFFECT"
+        }
+      }
+    ],
+    "horvath_multitissue_2013": [
+      {
+        "intercept": -0.6,
+        "g2_mae": 19.244471976528075,
+        "Transiently reprogrammed fibroblast": {
+          "mean": -8.409586278007403,
+          "status": "REJUVENATION_FRAGILE"
+        },
+        "Transient reprogramming intermediate": {
+          "mean": -21.4860000261296,
+          "status": "REJUVENATION"
+        },
+        "Failed to transiently reprogram fibroblast": {
+          "mean": -2.4434939541144804,
+          "status": "NO_EFFECT"
+        }
+      },
+      {
+        "intercept": -0.4471,
+        "g2_mae": 16.03357197652808,
+        "Transiently reprogrammed fibroblast": {
+          "mean": -8.77025882829624,
+          "status": "REJUVENATION_FRAGILE"
+        },
+        "Transient reprogramming intermediate": {
+          "mean": -23.15604085364532,
+          "status": "REJUVENATION"
+        },
+        "Failed to transiently reprogram fibroblast": {
+          "mean": -2.4434939541144813,
+          "status": "NO_EFFECT"
+        }
+      },
+      {
+        "intercept": -0.2,
+        "g2_mae": 10.844471976528077,
+        "Transiently reprogrammed fibroblast": {
+          "mean": -9.110367107460972,
+          "status": "REJUVENATION_FRAGILE"
+        },
+        "Transient reprogramming intermediate": {
+          "mean": -25.302450547667046,
+          "status": "REJUVENATION"
+        },
+        "Failed to transiently reprogram fibroblast": {
+          "mean": -2.4434939541144822,
+          "status": "NO_EFFECT"
+        }
+      },
+      {
+        "intercept": 0.0,
+        "g2_mae": 6.644471976528081,
+        "Transiently reprogrammed fibroblast": {
+          "mean": -9.257727636351014,
+          "status": "REJUVENATION_FRAGILE"
+        },
+        "Transient reprogramming intermediate": {
+          "mean": -26.496236249063376,
+          "status": "REJUVENATION"
+        },
+        "Failed to transiently reprogram fibroblast": {
+          "mean": -2.443493954114482,
+          "status": "NO_EFFECT"
+        }
+      },
+      {
+        "intercept": 0.2,
+        "g2_mae": 5.233093291840167,
+        "Transiently reprogrammed fibroblast": {
+          "mean": -9.342547478055073,
+          "status": "REJUVENATION_FRAGILE"
+        },
+        "Transient reprogramming intermediate": {
+          "mean": -27.236362184816915,
+          "status": "REJUVENATION"
+        },
+        "Failed to transiently reprogram fibroblast": {
+          "mean": -2.4434939541144804,
+          "status": "NO_EFFECT"
+        }
+      },
+      {
+        "intercept": 0.696,
+        "g2_mae": 7.9715280234719215,
+        "Transiently reprogrammed fibroblast": {
+          "mean": -9.398589638920983,
+          "status": "REJUVENATION_FRAGILE"
+        },
+        "Transient reprogramming intermediate": {
+          "mean": -28.14434359591989,
+          "status": "REJUVENATION"
+        },
+        "Failed to transiently reprogram fibroblast": {
+          "mean": -2.443493954114482,
+          "status": "NO_EFFECT"
+        }
+      }
+    ]
+  }
+}

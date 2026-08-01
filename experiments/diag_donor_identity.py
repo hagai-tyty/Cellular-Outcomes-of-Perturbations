@@ -114,6 +114,10 @@ for _p in (ROOT, ROOT / "src"):
 
 from audit_metrics import bar_verdict  # noqa: E402
 
+_RESULTS = Path(__file__).resolve().parents[1] / "results"
+_RESULTS.mkdir(exist_ok=True)
+
+
 N_PROBES = 5000          # genotype-like panel size; the published rs panels are 59-65, so this is
                          # deliberately generous — a small hand-picked set could be cherry-picked
 N_SIM = 20000
@@ -415,7 +419,7 @@ def _run_assignment(m178: Path, m179: Path, pset: set[str], meta178: dict, meta1
     v = identity_verdict(a)
     out["verdict"] = v
     print(f"\n  ==> §6.3 VERDICT: {v['status']}\n      {v['reason']}")
-    Path("diag_donor_identity_results.json").write_text(
+    _RESULTS / "diag_donor_identity_results.json".write_text(
         json.dumps(out, indent=2, default=str), encoding="utf-8")
     print("\n  wrote diag_donor_identity_results.json")
     return 0
@@ -442,7 +446,7 @@ def main() -> int:
 
     if "--run" not in sys.argv:
         print("  Pre-registration only. Re-run with --run to measure.")
-        Path("diag_donor_identity_results.json").write_text(
+        _RESULTS / "diag_donor_identity_results.json".write_text(
             json.dumps(out, indent=2, default=str), encoding="utf-8")
         return 0
 
@@ -541,7 +545,7 @@ def main() -> int:
             return _run_assignment(m178, m179, pset, meta178, meta179, out,
                                    target_cols=sorted(set(nc) | set(fl)),
                                    query_filter=lambda t: t.endswith("_CD13"))
-        Path("diag_donor_identity_results.json").write_text(
+        _RESULTS / "diag_donor_identity_results.json".write_text(
             json.dumps(out, indent=2, default=str), encoding="utf-8")
         return 0
     print(f"  panel stability PASSES at the §5b bar {bar:.4f}")

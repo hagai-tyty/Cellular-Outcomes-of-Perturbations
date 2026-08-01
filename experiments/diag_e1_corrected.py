@@ -43,6 +43,10 @@ from pathlib import Path
 
 import numpy as np
 
+_RESULTS = Path(__file__).resolve().parents[1] / "results"
+_RESULTS.mkdir(exist_ok=True)
+
+
 # --------------------------------------------------------------------------- #
 # Pure logic — data-free, unit-tested; no repo-data imports below this block.  #
 # --------------------------------------------------------------------------- #
@@ -254,7 +258,7 @@ def main() -> int:
            "gill_dir": gill, "peak_window": list(PEAK_WINDOW),
            "responder_delta_by_donor": resp, "peak_verdict": peak,
            "leave_one_donor_out": loo, "windows_responders": windows, "decision": decision}
-    Path("diag_e1_corrected_results.json").write_text(json.dumps(out, indent=2, default=str),
+    _RESULTS / "diag_e1_corrected_results.json".write_text(json.dumps(out, indent=2, default=str),
                                                       encoding="utf-8")
     print("\n  wrote diag_e1_corrected_results.json")
     return 0

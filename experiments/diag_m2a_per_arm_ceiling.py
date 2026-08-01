@@ -45,6 +45,10 @@ from pathlib import Path
 
 import numpy as np
 
+_RESULTS = Path(__file__).resolve().parents[1] / "results"
+_RESULTS.mkdir(exist_ok=True)
+
+
 ROOT = Path(__file__).resolve().parents[1]
 for _p in (ROOT, ROOT / "src"):
     if str(_p) not in sys.path:
@@ -115,7 +119,7 @@ def reading_correction(arms: dict) -> dict:
 
 
 def main() -> int:
-    src = ROOT / "diag_m2a_calibratability_results.json"
+    src = ROOT / "results" / "diag_m2a_calibratability_results.json"
     if not src.exists():
         print(f"[!] {src} not found — run diag_m2a_calibratability.py first.")
         return 1
@@ -148,7 +152,7 @@ def main() -> int:
            "utc": datetime.now(UTC).isoformat(timespec="seconds"),
            "source": src.name, "sharp_ceiling": SHARP_CEILING,
            "arms": arms, "reading_correction": dec}
-    Path("diag_m2a_per_arm_ceiling_results.json").write_text(
+    _RESULTS / "diag_m2a_per_arm_ceiling_results.json".write_text(
         json.dumps(out, indent=2, default=str), encoding="utf-8")
     print("\n  wrote diag_m2a_per_arm_ceiling_results.json")
     print("  NOTE: every arm's n is 9-12, which §6 froze as UNRESOLVABLE for a rho bar.")

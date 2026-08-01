@@ -199,7 +199,7 @@ def test_higher_is_better_direction():
 import json as _json  # noqa: E402
 from pathlib import Path as _Path  # noqa: E402
 
-_S152 = _Path(__file__).resolve().parents[1] / "stage_1_5_2_resolvability_results.json"
+_S152 = _Path(__file__).resolve().parents[1] / "results" / "stage_1_5_2_resolvability_results.json"
 
 
 def _s152():
@@ -247,8 +247,8 @@ def test_s152_lodo_survives_the_reduced_donor_count():
 # Same rule: every bar these stages were graded on carries an entry, or #
 # it is not pre-registered.                                             #
 # ===================================================================== #
-_R1 = _Path(__file__).resolve().parents[1] / "diag_r1_anchor_reliability_results.json"
-_GC = _Path(__file__).resolve().parents[1] / "diag_gc_hff_signature_results.json"
+_R1 = _Path(__file__).resolve().parents[1] / "results" / "diag_r1_anchor_reliability_results.json"
+_GC = _Path(__file__).resolve().parents[1] / "results" / "diag_gc_hff_signature_results.json"
 
 
 def _load_json(p):

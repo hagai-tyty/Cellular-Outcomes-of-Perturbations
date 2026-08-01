@@ -32,6 +32,10 @@ from pathlib import Path
 
 import numpy as np
 
+_RESULTS = Path(__file__).resolve().parents[1] / "results"
+_RESULTS.mkdir(exist_ok=True)
+
+
 ROOT = Path(__file__).resolve().parents[1]
 for _p in (ROOT, ROOT / "local_runners", ROOT / "src"):
     if str(_p) not in sys.path:
@@ -179,7 +183,7 @@ def main() -> int:
         print(f"  responder-minus-control separation = {r - f:+.1f} yr "
               "(the quantity a working clock should make negative)")
 
-    Path("diag_gill_replication_results.json").write_text(json.dumps(
+    _RESULTS / "diag_gill_replication_results.json".write_text(json.dumps(
         {"script": "diag_gill_replication", "utc": datetime.now(UTC).isoformat(timespec="seconds"),
          "peak_days": PEAK_DAYS, "gill_reported": GILL_REPORTED, "results": results},
         indent=2, default=str), encoding="utf-8")

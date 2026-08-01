@@ -1,0 +1,314 @@
+{
+  "script": "diag_m2b_contrast_agreement",
+  "utc": "2026-07-31T13:53:13+00:00",
+  "join": {
+    "n_meth_samples": 22,
+    "n_meth_keyed": 22,
+    "n_rna_samples": 124,
+    "n_rna_keyed": 106,
+    "n_matched": 22,
+    "expected": 22,
+    "matched_keys": [
+      "O1_d11_CD13",
+      "O1_d11_SSEA4",
+      "O1_d15_CD13",
+      "O1_d15_SSEA4",
+      "O2_d11_CD13",
+      "O2_d11_SSEA4",
+      "O2_d15_CD13",
+      "O2_d15_SSEA4",
+      "O2_d9_CD13",
+      "O2_d9_SSEA4",
+      "Y1_d11_CD13",
+      "Y1_d11_SSEA4",
+      "Y1_d15_CD13",
+      "Y1_d15_SSEA4",
+      "Y1_d9_CD13",
+      "Y1_d9_SSEA4",
+      "Y2_d11_CD13",
+      "Y2_d11_SSEA4",
+      "Y2_d15_CD13",
+      "Y2_d15_SSEA4",
+      "Y2_d9_CD13",
+      "Y2_d9_SSEA4"
+    ],
+    "unmatched_meth": [],
+    "donors": [
+      "O1",
+      "O2",
+      "Y1",
+      "Y2"
+    ],
+    "days": [
+      9,
+      11,
+      15
+    ],
+    "arm_counts": {
+      "CD13": 11,
+      "SSEA4": 11
+    },
+    "rna_replicates_per_key": {
+      "O1_d11_CD13": 2,
+      "O1_d11_SSEA4": 2,
+      "O1_d15_CD13": 1,
+      "O1_d15_SSEA4": 1,
+      "O2_d11_CD13": 2,
+      "O2_d11_SSEA4": 2,
+      "O2_d15_CD13": 1,
+      "O2_d15_SSEA4": 1,
+      "O2_d9_CD13": 1,
+      "O2_d9_SSEA4": 1,
+      "Y1_d11_CD13": 2,
+      "Y1_d11_SSEA4": 2,
+      "Y1_d15_CD13": 1,
+      "Y1_d15_SSEA4": 1,
+      "Y1_d9_CD13": 1,
+      "Y1_d9_SSEA4": 1,
+      "Y2_d11_CD13": 2,
+      "Y2_d11_SSEA4": 2,
+      "Y2_d15_CD13": 1,
+      "Y2_d15_SSEA4": 1,
+      "Y2_d9_CD13": 1,
+      "Y2_d9_SSEA4": 1
+    },
+    "verdict": "OK"
+  },
+  "methylation_coverage": {
+    "Horvath skin & blood 2018": {
+      "n_cpg": 391,
+      "coverage_frac": 1.0,
+      "coverage_verdict": "OK"
+    },
+    "Horvath multi-tissue 2013": {
+      "n_cpg": 353,
+      "coverage_frac": 0.9461756373937678,
+      "coverage_verdict": "OK"
+    }
+  },
+  "clocks": {
+    "Horvath skin & blood 2018": {
+      "status": "AGREE_FRAGILE",
+      "fragile": true,
+      "n_agree": 7,
+      "n_pairs": 11,
+      "bar": 7,
+      "rho": 0.6454545454545455,
+      "reason": "7/11 pairs agree in sign against a bar of 7/11 -> the two modalities agree on the direction of the contrast",
+      "caveat": "bar moved 8/11 -> 7/11 by the \u00a76 freeze because 8/11 was UNRESOLVABLE (93.0%). This is a WEAKER test than registered. It also lands EXACTLY on the moved bar -- one pair flipping would fail it.",
+      "pairs": [
+        {
+          "donor": "O1",
+          "day": 11,
+          "delta_rna_years": -33.34073691200483,
+          "delta_meth_years": -6.757296695226084,
+          "same_sign": true
+        },
+        {
+          "donor": "O1",
+          "day": 15,
+          "delta_rna_years": -65.68937500043258,
+          "delta_meth_years": -61.58958678111529,
+          "same_sign": true
+        },
+        {
+          "donor": "O2",
+          "day": 9,
+          "delta_rna_years": 11.686904462076242,
+          "delta_meth_years": -6.289061939728973,
+          "same_sign": false
+        },
+        {
+          "donor": "O2",
+          "day": 11,
+          "delta_rna_years": -47.50105936523373,
+          "delta_meth_years": 14.983314948725392,
+          "same_sign": false
+        },
+        {
+          "donor": "O2",
+          "day": 15,
+          "delta_rna_years": -62.55306846547293,
+          "delta_meth_years": -77.73982890074018,
+          "same_sign": true
+        },
+        {
+          "donor": "Y1",
+          "day": 9,
+          "delta_rna_years": 64.47170917571583,
+          "delta_meth_years": -1.0475893737492088,
+          "same_sign": false
+        },
+        {
+          "donor": "Y1",
+          "day": 11,
+          "delta_rna_years": -30.869776826732988,
+          "delta_meth_years": -4.228121578410749,
+          "same_sign": true
+        },
+        {
+          "donor": "Y1",
+          "day": 15,
+          "delta_rna_years": -26.717552118502752,
+          "delta_meth_years": -56.59156257585349,
+          "same_sign": true
+        },
+        {
+          "donor": "Y2",
+          "day": 9,
+          "delta_rna_years": 40.30751622010622,
+          "delta_meth_years": -1.5826323943867604,
+          "same_sign": false
+        },
+        {
+          "donor": "Y2",
+          "day": 11,
+          "delta_rna_years": -41.77176858299342,
+          "delta_meth_years": -18.19558143254543,
+          "same_sign": true
+        },
+        {
+          "donor": "Y2",
+          "day": 15,
+          "delta_rna_years": -52.09420263401236,
+          "delta_meth_years": -76.30993257003722,
+          "same_sign": true
+        }
+      ],
+      "mean_delta_rna_years": -22.188310004317028,
+      "mean_delta_meth_years": -26.849807208460728,
+      "by_day": {
+        "9": {
+          "n": 3,
+          "n_agree": 0,
+          "mean_rna": 38.822043285966096,
+          "mean_meth": -2.973094569288314
+        },
+        "11": {
+          "n": 4,
+          "n_agree": 3,
+          "mean_rna": -38.37083542174124,
+          "mean_meth": -3.5494211893642182
+        },
+        "15": {
+          "n": 4,
+          "n_agree": 4,
+          "mean_rna": -51.763549554605156,
+          "mean_meth": -68.05772770693655
+        }
+      }
+    },
+    "Horvath multi-tissue 2013": {
+      "status": "AGREE_FRAGILE",
+      "fragile": true,
+      "n_agree": 7,
+      "n_pairs": 11,
+      "bar": 7,
+      "rho": 0.4909090909090909,
+      "reason": "7/11 pairs agree in sign against a bar of 7/11 -> the two modalities agree on the direction of the contrast",
+      "caveat": "bar moved 8/11 -> 7/11 by the \u00a76 freeze because 8/11 was UNRESOLVABLE (93.0%). This is a WEAKER test than registered. It also lands EXACTLY on the moved bar -- one pair flipping would fail it.",
+      "pairs": [
+        {
+          "donor": "O1",
+          "day": 11,
+          "delta_rna_years": -33.34073691200483,
+          "delta_meth_years": -2.5180965567892457,
+          "same_sign": true
+        },
+        {
+          "donor": "O1",
+          "day": 15,
+          "delta_rna_years": -65.68937500043258,
+          "delta_meth_years": -52.56294711650414,
+          "same_sign": true
+        },
+        {
+          "donor": "O2",
+          "day": 9,
+          "delta_rna_years": 11.686904462076242,
+          "delta_meth_years": -10.32235051602229,
+          "same_sign": false
+        },
+        {
+          "donor": "O2",
+          "day": 11,
+          "delta_rna_years": -47.50105936523373,
+          "delta_meth_years": 12.306489457035491,
+          "same_sign": false
+        },
+        {
+          "donor": "O2",
+          "day": 15,
+          "delta_rna_years": -62.55306846547293,
+          "delta_meth_years": -64.44586589330328,
+          "same_sign": true
+        },
+        {
+          "donor": "Y1",
+          "day": 9,
+          "delta_rna_years": 64.47170917571583,
+          "delta_meth_years": -1.7116649069413126,
+          "same_sign": false
+        },
+        {
+          "donor": "Y1",
+          "day": 11,
+          "delta_rna_years": -30.869776826732988,
+          "delta_meth_years": -15.908943838643832,
+          "same_sign": true
+        },
+        {
+          "donor": "Y1",
+          "day": 15,
+          "delta_rna_years": -26.717552118502752,
+          "delta_meth_years": -57.20911459178953,
+          "same_sign": true
+        },
+        {
+          "donor": "Y2",
+          "day": 9,
+          "delta_rna_years": 40.30751622010622,
+          "delta_meth_years": -17.30535053680042,
+          "same_sign": false
+        },
+        {
+          "donor": "Y2",
+          "day": 11,
+          "delta_rna_years": -41.77176858299342,
+          "delta_meth_years": -18.726603330811567,
+          "same_sign": true
+        },
+        {
+          "donor": "Y2",
+          "day": 15,
+          "delta_rna_years": -52.09420263401236,
+          "delta_meth_years": -64.06131976354904,
+          "same_sign": true
+        }
+      ],
+      "mean_delta_rna_years": -22.188310004317028,
+      "mean_delta_meth_years": -26.587797054010835,
+      "by_day": {
+        "9": {
+          "n": 3,
+          "n_agree": 0,
+          "mean_rna": 38.822043285966096,
+          "mean_meth": -9.779788653254675
+        },
+        "11": {
+          "n": 4,
+          "n_agree": 3,
+          "mean_rna": -38.37083542174124,
+          "mean_meth": -6.211788567302289
+        },
+        "15": {
+          "n": 4,
+          "n_agree": 4,
+          "mean_rna": -51.763549554605156,
+          "mean_meth": -59.569811841286494
+        }
+      }
+    }
+  },
+  "verdict_m2b": "AGREE_FRAGILE"
+}

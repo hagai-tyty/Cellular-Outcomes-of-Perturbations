@@ -39,6 +39,10 @@ from pathlib import Path
 
 import numpy as np
 
+_RESULTS = Path(__file__).resolve().parents[1] / "results"
+_RESULTS.mkdir(exist_ok=True)
+
+
 # --------------------------------------------------------------------------- #
 # Pure logic — data-free, fully unit-tested; nothing below imports repo data.  #
 # --------------------------------------------------------------------------- #
@@ -423,7 +427,7 @@ def main() -> int:
     out = {"script": "diag_zero_point", "utc": datetime.now(UTC).isoformat(timespec="seconds"),
            "gill_dir": gill_dir, "bars": bars(), "baselines": meta,
            "M1": m1, "M2": m2, "M3": m3, "decision": decision}
-    p = Path("diag_zero_point_results.json")
+    p = _RESULTS / "diag_zero_point_results.json"
     p.write_text(json.dumps(out, indent=2, default=str), encoding="utf-8")
     print(f"\n  wrote {p}")
     return 0

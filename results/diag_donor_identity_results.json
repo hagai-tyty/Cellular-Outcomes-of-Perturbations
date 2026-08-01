@@ -1,0 +1,198 @@
+{
+  "script": "diag_donor_identity",
+  "utc": "2026-07-31T17:57:57+00:00",
+  "preregistration": {
+    "p_both_correct_by_chance": 0.1088,
+    "n_probes": 5000,
+    "stability_bar": 0.95,
+    "shared_labels": [
+      "O1",
+      "O2"
+    ]
+  },
+  "panel_selection": {
+    "n_eligible": 419,
+    "n_trimodal": 419,
+    "mode": "trimodal",
+    "nc_samples": [
+      "O1_negative_control_10days_exp2",
+      "O1_negative_control_13days_exp1",
+      "O1_negative_control_13days_exp2",
+      "O1_negative_control_15days_exp1",
+      "O1_negative_control_15days_exp2",
+      "O1_negative_control_17days_exp1",
+      "O1_negative_control_17days_exp2",
+      "O2_negative_control_10days_exp2",
+      "O2_negative_control_13days_exp1",
+      "O2_negative_control_13days_exp2",
+      "O2_negative_control_15days_exp1",
+      "O2_negative_control_15days_exp2",
+      "O2_negative_control_17days_exp1",
+      "O2_negative_control_17days_exp2",
+      "O3_negative_control_10days_exp2",
+      "O3_negative_control_13days_exp1",
+      "O3_negative_control_13days_exp2",
+      "O3_negative_control_15days_exp1",
+      "O3_negative_control_15days_exp2",
+      "O3_negative_control_17days_exp1",
+      "O3_negative_control_17days_exp2"
+    ],
+    "donors": [
+      "O1",
+      "O1",
+      "O1",
+      "O1",
+      "O1",
+      "O1",
+      "O1",
+      "O2",
+      "O2",
+      "O2",
+      "O2",
+      "O2",
+      "O2",
+      "O2",
+      "O3",
+      "O3",
+      "O3",
+      "O3",
+      "O3",
+      "O3",
+      "O3"
+    ],
+    "n_panel": 419
+  },
+  "stability_bar_check": {
+    "null_median": 0.9680766449821664,
+    "null_p90": 0.9718087781852814,
+    "pass_rate": 1.0,
+    "usable_bar": 0.962437671151634,
+    "min_pass": 0.95,
+    "verdict": "RESOLVABLE",
+    "bar_proposed": 0.95,
+    "noise_sd": 0.10186395550417934,
+    "signal_sd": 0.317049355756507,
+    "n_treated_per_donor": {
+      "O1": 2,
+      "O2": 4,
+      "O3": 7
+    },
+    "n_replicate_pairs": 22
+  },
+  "panel_stability": {
+    "per_donor": {
+      "O1": 0.9379376046309121,
+      "O2": 0.9851789562091046,
+      "O3": 0.9901309278564778
+    },
+    "min": 0.9379376046309121,
+    "bar_proposed": 0.95,
+    "bar_used": 0.95,
+    "n_treated_per_donor": {
+      "O1": 2,
+      "O2": 4,
+      "O3": 7
+    },
+    "verdict": "MOVES"
+  },
+  "diagnosis": {
+    "stability_vs_failed_arm": {
+      "O1": 0.9902948572437459,
+      "O2": 0.9939622564842179,
+      "O3": 0.9949672112366932
+    },
+    "treated_sample_titles": {
+      "O1": [
+        "O1_transiently_reprogrammed_10days_exp2",
+        "O1_transiently_reprogrammed_17days_exp1"
+      ],
+      "O2": [
+        "O2_transiently_reprogrammed_10days_exp2",
+        "O2_transiently_reprogrammed_13days_exp1",
+        "O2_transiently_reprogrammed_13days_exp2",
+        "O2_transiently_reprogrammed_17days_exp1"
+      ],
+      "O3": [
+        "O3_transiently_reprogrammed_10days_exp2",
+        "O3_transiently_reprogrammed_13days_exp1",
+        "O3_transiently_reprogrammed_13days_exp2",
+        "O3_transiently_reprogrammed_15days_exp1",
+        "O3_transiently_reprogrammed_15days_exp2",
+        "O3_transiently_reprogrammed_17days_exp1",
+        "O3_transiently_reprogrammed_17days_exp2"
+      ]
+    }
+  },
+  "restricted_to_non_reprogramming": true,
+  "assignment": {
+    "O1": {
+      "correlations": {
+        "O1": 0.96188785114086,
+        "O2": 0.8415594954999276,
+        "O3": 0.42715099953505076
+      },
+      "best": "O1",
+      "best_r": 0.96188785114086,
+      "runner_up": "O2",
+      "margin": 0.12032835564093236,
+      "has_true_counterpart": true,
+      "correct": true
+    },
+    "O2": {
+      "correlations": {
+        "O1": 0.7719247093764787,
+        "O2": 0.9755079852732695,
+        "O3": 0.3925465358523938
+      },
+      "best": "O2",
+      "best_r": 0.9755079852732695,
+      "runner_up": "O1",
+      "margin": 0.20358327589679082,
+      "has_true_counterpart": true,
+      "correct": true
+    },
+    "Y1": {
+      "correlations": {
+        "O1": 0.73821255311677,
+        "O2": 0.6753871749715188,
+        "O3": 0.589693685208973
+      },
+      "best": "O1",
+      "best_r": 0.73821255311677,
+      "runner_up": "O2",
+      "margin": 0.06282537814525124,
+      "has_true_counterpart": false,
+      "correct": false
+    },
+    "Y2": {
+      "correlations": {
+        "O1": 0.7032671090607538,
+        "O2": 0.6528521099887991,
+        "O3": 0.5816853294945863
+      },
+      "best": "O1",
+      "best_r": 0.7032671090607538,
+      "runner_up": "O2",
+      "margin": 0.05041499907195479,
+      "has_true_counterpart": false,
+      "correct": false
+    }
+  },
+  "n_common_probes": 419,
+  "n_query_samples": 11,
+  "verdict": {
+    "status": "SAME_DONORS",
+    "reason": "all 2 shared labels match themselves, and their margins (min 0.1203) exceed every no-counterpart donor's (max 0.0628). The label match is genotype-backed, not assumed.",
+    "n_testable": 2,
+    "n_correct": 2,
+    "shared_margins": [
+      0.12032835564093236,
+      0.20358327589679082
+    ],
+    "control_margins": [
+      0.06282537814525124,
+      0.05041499907195479
+    ],
+    "margins_separate": true
+  }
+}

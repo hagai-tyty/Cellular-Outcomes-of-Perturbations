@@ -43,6 +43,10 @@ from pathlib import Path
 
 import numpy as np
 
+_RESULTS = Path(__file__).resolve().parents[1] / "results"
+_RESULTS.mkdir(exist_ok=True)
+
+
 # --------------------------------------------------------------------------- #
 # Pure logic — data-free, fully unit-tested; nothing below imports repo data.  #
 # --------------------------------------------------------------------------- #
@@ -242,7 +246,7 @@ def main() -> int:
            "e1b_day_max": REPROG_PHASE_DAY_MAX,
            "verdict_adults_only": verdict_adults,
            "verdict_with_ipsc": verdict_with_ipsc}
-    Path("diag_e1_trajectory_results.json").write_text(json.dumps(out, indent=2), encoding="utf-8")
+    _RESULTS / "diag_e1_trajectory_results.json".write_text(json.dumps(out, indent=2), encoding="utf-8")
     print("\n  wrote diag_e1_trajectory_results.json")
     return 0
 

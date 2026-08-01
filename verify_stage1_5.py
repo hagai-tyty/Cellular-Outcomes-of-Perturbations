@@ -39,6 +39,10 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
+_RESULTS = Path(__file__).resolve().parent / "results"
+_RESULTS.mkdir(exist_ok=True)
+
+
 # --------------------------------------------------------------------------- #
 # Pure logic (data-free, fully unit-tested) — nothing below imports repo data  #
 # --------------------------------------------------------------------------- #
@@ -301,7 +305,7 @@ def main() -> None:
             for s in stats
         ],
     }
-    out = Path("verify_stage1_5_results.json")
+    out = _RESULTS / "verify_stage1_5_results.json"
     out.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(f"\n  saved -> {out}   |   VERDICT: {verdict['status']}")
 

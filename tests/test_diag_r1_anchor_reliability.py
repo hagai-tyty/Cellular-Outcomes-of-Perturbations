@@ -148,7 +148,7 @@ def test_the_recorded_result_is_what_the_rules_produce():
     """Replay 2026-07-31's measured numbers through the pure rules, so a later edit to either
     the numbers or the rules that breaks their correspondence fails here."""
     import json
-    p = ROOT / "diag_r1_anchor_reliability_results.json"
+    p = ROOT / "results" / "diag_r1_anchor_reliability_results.json"
     if not p.exists():
         pytest.skip("results file not present")
     m = json.loads(p.read_text(encoding="utf-8"))["measurement"]

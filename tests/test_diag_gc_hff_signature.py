@@ -144,7 +144,7 @@ def test_cannot_verify_propagates():
 # ------------------------------------------------------------------ the recorded run ---- #
 def test_the_recorded_result_is_what_the_rules_produce():
     import json
-    p = ROOT / "diag_gc_hff_signature_results.json"
+    p = ROOT / "results" / "diag_gc_hff_signature_results.json"
     if not p.exists():
         pytest.skip("results file not present")
     r = json.loads(p.read_text(encoding="utf-8"))

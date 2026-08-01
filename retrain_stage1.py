@@ -37,6 +37,10 @@ import sys
 import time
 from pathlib import Path
 
+_RESULTS = Path(__file__).resolve().parent / "results"
+_RESULTS.mkdir(exist_ok=True)
+
+
 # Must be set BEFORE torch initialises CUDA, hence before any torch import. `set_global_seed`
 # already requests deterministic algorithms, but on CUDA >= 10.2 cuBLAS GEMMs remain
 # nondeterministic without this workspace setting -- torch warns about exactly that, and run 1
@@ -231,7 +235,7 @@ def main() -> None:
         print(f"  done in {row['minutes']} min | temperature {row['temperature']} | "
               f"q {row['conformal_q']} | sigma_scale {row['sigma_scale']} | "
               f"xdonor donors {row['xdonor_n_donors']}")
-        Path("retrain_stage1_results.json").write_text(
+        _RESULTS / "retrain_stage1_results.json".write_text(
             json.dumps(results, indent=2, default=str), encoding="utf-8")
 
     # ---- summary ----

@@ -49,6 +49,10 @@ from pathlib import Path
 
 import numpy as np
 
+_RESULTS = Path(__file__).resolve().parents[1] / "results"
+_RESULTS.mkdir(exist_ok=True)
+
+
 # --------------------------------------------------------------------------- #
 # Pure logic — data-free, fully unit-tested; nothing below imports repo data.  #
 # --------------------------------------------------------------------------- #
@@ -223,7 +227,7 @@ def main() -> int:
     out = {"script": "diag_d2_replication", "utc": datetime.now(UTC).isoformat(timespec="seconds"),
            "gse_dir": gse_dir, "bars": bars(), "timepoints": tps, "meta": meta,
            "verdict_primary_D0_D14": verdict, "rho_with_ipsc_sensitivity": float(rho_i)}
-    Path("diag_d2_replication_results.json").write_text(json.dumps(out, indent=2, default=str),
+    _RESULTS / "diag_d2_replication_results.json".write_text(json.dumps(out, indent=2, default=str),
                                                         encoding="utf-8")
     print("\n  wrote diag_d2_replication_results.json")
     return 0

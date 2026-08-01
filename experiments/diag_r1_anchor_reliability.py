@@ -84,6 +84,10 @@ for _p in (ROOT, ROOT / "src"):
 
 from audit_metrics import bar_verdict  # noqa: E402
 
+_RESULTS = Path(__file__).resolve().parents[1] / "results"
+_RESULTS.mkdir(exist_ok=True)
+
+
 N_SIM = 20000
 RNG = np.random.default_rng(0)
 
@@ -399,7 +403,7 @@ def measure(pre: dict, meth_dir: Path, rna_dir: Path) -> dict:
     # ceiling sits near the bar, then M-2a's criterion was near the limit of what ANY instrument
     # could reach here, and the SPLIT verdict says less about RNA than it appears to. This does NOT
     # change the pre-committed decision -- it qualifies what the decision means.
-    m2a_path = ROOT / "diag_m2a_calibratability_results.json"
+    m2a_path = ROOT / "results" / "diag_m2a_calibratability_results.json"
     ceiling = {"note": "descriptive, not pre-registered; does not alter any verdict"}
     if m2a_path.exists():
         prev = json.loads(m2a_path.read_text(encoding="utf-8"))
@@ -444,7 +448,7 @@ def main() -> int:
     else:
         print("\n  Pre-registration only. Re-run with --run to measure.")
 
-    Path("diag_r1_anchor_reliability_results.json").write_text(
+    _RESULTS / "diag_r1_anchor_reliability_results.json".write_text(
         json.dumps(out, indent=2, default=str), encoding="utf-8")
     print("\n  wrote diag_r1_anchor_reliability_results.json")
     return 0
