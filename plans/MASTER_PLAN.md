@@ -176,6 +176,23 @@ Once `R_eff` uses an **honest** uncertainty, the arithmetic is unforgiving:
 > **day-0** ΔAge baseline, which leaves an identity-change artefact in every label
 > (`STAGE_1_5_1_REVISED.md`). Measured against a **contemporaneous non-responder** control, the same
 > data gives **−28.3 yr (95% CI [−51.6, −5.0])**, peaking at **−37.3 yr on day 13** — replicating
+
+> **🆕 ADDED 2026-07-31 — §5b-ter diagnosed the symptom; Stage 1.5.2 found the cause.**
+> *Additive; the table and the 2026-07-26 note above are unmodified.*
+>
+> §5b-ter's row *"honest, uncorrected model → R_eff 0.0, g 0.00"* is correct and its arithmetic
+> holds. What it could not say is **why** the honest uncertainty is ~39 yr in the first place.
+>
+> `STAGE_1_5_2_LABEL_ANCHOR.md`: the ΔAge labels are produced by a clock that is **out of domain on
+> reprogramming cells and NOT calibratable** against methylation. The deployed cross-donor conformal
+> half-width is **q = 34.64 yr** (`bundle/conformal.json`) — the same order as §5b-ter's ~39 yr, and
+> now with a mechanism rather than a measurement.
+>
+> **The consequence for this section:** the fix §5b-ter implies (better uncertainty, level
+> correction) cannot recover `R_eff`, because the problem is not that the uncertainty is badly
+> estimated — it is that **the target it is estimating uncertainty about is artefact-laden**. That
+> makes §5c's per-donor level correction (Stage 2) a correction to an unvalidated quantity; see the
+> note added to `STAGE_2_LEVEL_CORRECTION.md` §0.
 > Gill et al.'s published ~−30 yr.
 >
 > **Two consequences for the arithmetic below, both favourable:**

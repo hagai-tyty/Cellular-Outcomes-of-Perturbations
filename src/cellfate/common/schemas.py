@@ -200,6 +200,34 @@ class ScalerParams(BaseModel):
 # --------------------------------------------------------------------------- #
 # RES parameters (serialised into the bundle so scoring is reproducible)       #
 # --------------------------------------------------------------------------- #
+class AgeProvenance(BaseModel):
+    """What the ΔAge labels a bundle was trained on actually rest on. Stage 1.5.3 C-4.
+
+    ``validated`` is False whenever the age labels come from a clock that has not been shown
+    to track a ground truth on the cells it was applied to. Stage 1.5.2 measured exactly that
+    and returned **NOT CALIBRATABLE** (ρ_partial +0.267 / +0.516 against a pre-frozen 0.50
+    bar, on 68 paired conditions), so a bundle trained on RNA-clock labels must say so rather
+    than ship a number that reads as if it were validated.
+
+    **The default is the conservative answer on purpose.** A bundle built before this field
+    existed reports "not validated", which is true. A default of ``True`` would silently vouch
+    for every bundle ever built.
+
+    ⚠️ This changes what the response SAYS, not what it computes: `res.py`'s arithmetic is
+    untouched, so a caller that ignores ``age_validated`` gets exactly the number it got
+    before. Making the OUTPUT honest rather than the documentation is option (c), and it
+    remains `STAGE_3_TOOL.md`'s question.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    validated: bool = False
+    basis: str = "rna_clock_uncalibrated"     # rna_clock_uncalibrated | methylation | mixed
+    note: str = ("Stage 1.5.2: the transcriptomic clock is NOT calibratable against "
+                 "methylation. ΔAge is usable for ranking WITHIN a donor; absolute values "
+                 "are not validated.")
+
+
 class ResParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

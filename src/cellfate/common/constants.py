@@ -102,6 +102,9 @@ BUNDLE_CONFIG_FILENAME: str = "config.yaml"
 BUNDLE_TEMPERATURE_FILENAME: str = "temperature.json"
 BUNDLE_CONFORMAL_FILENAME: str = "conformal.json"
 BUNDLE_RES_FILENAME: str = "res_params.json"
+# Stage 1.5.3 C-4. Optional: a bundle without it reports "not validated", which is
+# the conservative answer and true of every bundle built before this existed.
+BUNDLE_AGE_PROVENANCE_FILENAME: str = "age_provenance.json"
 BUNDLE_METRICS_FILENAME: str = "metrics.json"
 
 REPORTS_DIRNAME: str = "reports"

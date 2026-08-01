@@ -116,6 +116,31 @@ adding its resolvability test — a bar with no such test is not considered pre-
 This is the forward form of the audit that caught both Stage 1 problems. The habit is: **audit the
 bar before the run, not the run after the bar.**
 
+## 5b-bis. Two things §5b does not yet say — both learned in Stage 1.5.2
+
+*Additive; §5b above is unmodified.*
+
+**(i) A pre-committed FALLBACK is a bar, and must be resolvability-checked too.**
+`STAGE_1_5_2` §6 anticipated that its primary criterion might be unresolvable and pre-registered a
+fallback — which is good practice, and it registered the fallback **without checking it**. Measured,
+**the fallback was itself UNRESOLVABLE at 92.3%**. On the originally-planned geometry the stage would
+have had *no valid decisive criterion at all* and would not have known.
+
+> **Every branch of a pre-registration is a bar. Check the ones you hope not to use.**
+
+**(ii) A bar near the instrument's empirical ceiling is not a bar.**
+§5b asks whether a system meeting the intent *exactly* passes. It does not ask whether **anything**
+can reach the bar on this data. Stage 1.5.2 set ρ ≥ 0.50 against a null simulated at ρ_true = 0.70 —
+and then measured that **two clocks of the same modality, on the same samples, agree with each other
+at only ρ_partial +0.568** (§12-R), varying **+0.233 to +0.936** by cell state (§17).
+
+> **Measure the ceiling — the agreement achievable between two instruments of the same kind on the
+> same data — before setting a bar near it. A bar the reference standard cannot itself clear tests
+> the data, not the candidate.**
+
+Cheapest form: score a second instance of the *reference* modality by the identical criterion, on
+the identical samples. If it fails too, the bar is the problem.
+
 ## 6. When a result surprises you
 
 The default assumption is a **bug in the test**, not a discovery. Precedents from this project:

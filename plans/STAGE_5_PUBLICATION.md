@@ -180,6 +180,31 @@ def y1_probe():
   figure is the ΔAge sort at ~0.95
 - ❌ **Dose–response** — identifiability wall
 
+> ## 🆕 ADDED 2026-07-31 — one claim is now DISPROVED, and three need a stated limit
+>
+> *Additive; §1's audit table and §2's list above are unmodified.*
+>
+> **Add to §2's ❌ list — this is stronger than "cannot be claimed", it is measured and false:**
+>
+> - ❌ **"the transcriptomic clock can be calibrated against methylation"** — tested directly on
+>   paired samples and **refuted**. `STAGE_1_5_2_LABEL_ANCHOR.md` M-2a: ρ_partial **+0.267** and
+>   **+0.516** against a pre-frozen 0.50 bar, on 68 paired conditions; SPLIT ⇒ NOT CALIBRATABLE.
+>   The negative verdict passed its own falsification check (§12-R).
+>
+> **Limits that must travel with the ΔAge rows in §1:**
+>
+> | claim | limit to attach |
+> |---|---|
+> | anything quoting ΔAge **in years** | the label is RNA-clock-derived and not validated in absolute terms; the deployed cross-donor interval is **±34.64 yr** |
+> | *"deep matches but does not beat linear for clock-ΔAge"* | still true, and now **narrower**: it is a statement about predicting *this clock's output*, which is not a statement about age |
+> | *"donor-level calibration is the binding constraint (±12.7 yr)"* | true, and **not the only one** — the label's own validity is upstream of its calibration |
+>
+> **And one finding worth publishing that this creates:** a pre-registered, paired-ground-truth
+> demonstration that a widely-used transcriptomic clock **cannot** be rescued by calibration on
+> reprogramming cells — with the methylation anchor verified sound in the same experiment, and the
+> per-arm ceiling (§17) showing the reference's own precision varies 4× with the axis under study.
+> Negative, decisive, and reusable by anyone applying an RNA clock to reprogramming data.
+
 ## 3. Prior art — cite and position against
 
 | Work | Overlap | How you differ |

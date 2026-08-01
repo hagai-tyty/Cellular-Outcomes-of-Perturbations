@@ -40,9 +40,16 @@ class AgingClock(ABC):
 class LinearClock(AgingClock):
     """age = sum_g w_g * x_g + b, with weights keyed by gene symbol."""
 
-    def __init__(self, weights: dict[str, float], intercept: float = 0.0) -> None:
+    def __init__(self, weights: dict[str, float], intercept: float = 0.0,
+                 age_range: tuple[float, float] | None = None) -> None:
         self.weights = weights
         self.intercept = float(intercept)
+        # Stage 1.5.3 C-2. The age range the clock was FITTED on, from its own metadata.
+        # `clock_fit.py` has always written this and NOTHING read it -- so the pipeline has
+        # been extrapolating past the clock's declared validity in silence. It is carried here
+        # so a caller can ASK; `LinearClock` itself never enforces it, because the policy of
+        # what to do about extrapolation belongs to the label pipeline, not to the instrument.
+        self.age_range = (float(age_range[0]), float(age_range[1])) if age_range else None
 
     def predict_age(self, expr: np.ndarray, genes: list[str]) -> np.ndarray:
         w = np.array([self.weights.get(g, 0.0) for g in genes], dtype=np.float64)
@@ -68,7 +75,9 @@ class LinearClock(AgingClock):
         weights = {str(k): float(v) for k, v in d["weights"].items()}
         if not weights:
             raise ValueError(f"clock file {path} has empty weights")
-        return cls(weights, intercept=float(d.get("intercept", 0.0)))
+        meta = d.get("meta") or {}
+        return cls(weights, intercept=float(d.get("intercept", 0.0)),
+                   age_range=meta.get("age_range"))
 
     def to_json(self, path: str | Path, meta: dict | None = None) -> None:
         """Serialise fitted weights (+ optional provenance ``meta``) to JSON."""

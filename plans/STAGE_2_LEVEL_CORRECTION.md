@@ -143,6 +143,30 @@ run on **both a control and a perturbed sample** for those cells.
 
 Everything below assumes the answer is yes.
 
+> ## 🛑 ADDED 2026-07-31 — a SECOND non-code prerequisite, and it is upstream of the first
+>
+> *Additive; §0's wet-lab prerequisite above is unmodified and still applies.*
+>
+> §0 asks whether k ≈ 3 reference cells per donor is experimentally acceptable. **Ask this first:**
+>
+> > **Stage 2 corrects a per-donor OFFSET in ΔAge. `STAGE_1_5_2_LABEL_ANCHOR.md` established that
+> > ΔAge itself is not validated — the clock producing it is NOT CALIBRATABLE. Correcting the offset
+> > of an unvalidated quantity does not make it validated.**
+>
+> **This does not cancel Stage 2.** The offset may well be real, and §1's evidence for it stands.
+> What changes is the order of operations and what a success would mean:
+>
+> | | |
+> |---|---|
+> | ✅ still worth doing | the offset is measurable and the k≈3 recovery result (T7.4.3, T16) is unaffected |
+> | ⚠️ changed | a corrected ΔAge is a **better-centred unvalidated number**, not a validated one |
+> | 🛑 **do not spend wet-lab budget** | until `STAGE_1_5_3_EXECUTE.md`'s G-c step 2 has run. If HFF's labels are masked, the population Stage 2 corrects changes from 33,613 cells to ~75, and the reference-cell arithmetic must be redone |
+>
+> **The decisive number:** the two donors outside the clock's fitted age range have `dage_mae` **3×**
+> the adults' and **conformal coverage of exactly 0.000** (`scorecard/baseline.json`). A per-donor
+> offset correction is the right instrument for a level shift; it is the wrong instrument for
+> extrapolation past a clock's fitted range.
+
 ---
 
 ## 1. The defect

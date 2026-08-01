@@ -20,6 +20,7 @@ from . import constants as C
 from .errors import BundleError, ContractViolation, GenePanelMismatch, ShardIOError
 from .panel import GenePanel
 from .schemas import (
+    AgeProvenance,
     BundleMeta,
     ConformalParams,
     ManifestRow,
@@ -111,6 +112,9 @@ class ArtifactPaths:
     def bundle_conformal_file(self) -> Path: return self.bundle_dir / C.BUNDLE_CONFORMAL_FILENAME
     @property
     def bundle_res_file(self) -> Path: return self.bundle_dir / C.BUNDLE_RES_FILENAME
+    @property
+    def bundle_age_provenance_file(self) -> Path:
+        return self.bundle_dir / C.BUNDLE_AGE_PROVENANCE_FILENAME
     @property
     def bundle_scalers_file(self) -> Path: return self.bundle_dir / C.SCALERS_FILENAME
 
@@ -371,6 +375,18 @@ def save_res_params(paths: ArtifactPaths, r: ResParams) -> None:
 
 def load_res_params(paths: ArtifactPaths) -> ResParams:
     return ResParams.model_validate(read_json(paths.bundle_res_file))
+
+
+def load_age_provenance(paths: ArtifactPaths) -> AgeProvenance:
+    """What the bundle's ΔAge labels rest on. Stage 1.5.3 C-4.
+
+    A bundle without the file gets the DEFAULT, which is `validated=False`. That is
+    deliberate and it is the safe direction: every bundle built before this field
+    existed was trained on RNA-clock labels that Stage 1.5.2 found not calibratable,
+    so 'not validated' is not a fallback, it is the correct answer.
+    """
+    p = paths.bundle_age_provenance_file
+    return AgeProvenance.model_validate(read_json(p)) if p.exists() else AgeProvenance()
 
 
 def assert_bundle_complete(paths: ArtifactPaths) -> None:

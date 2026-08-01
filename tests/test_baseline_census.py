@@ -446,3 +446,59 @@ def test_cancer_sources_are_still_masked_through_delta_age():
     _d, mask, reasons = delta_age(clock, rng.normal(size=(4, 2)), genes, obs, source="tahoe")
     assert not mask.any()
     assert reasons == ["cancer_source"] * 4
+
+
+# ============================================================================ #
+# STAGE 1.5.3 STEP 3 — C-2 (the clock's declared age_range, carried not dropped)#
+# ============================================================================ #
+def test_linear_clock_carries_the_fitted_age_range_from_its_metadata():
+    """C-2. `clock_fit.py` WRITES `meta.age_range` and, until now, nothing read it --
+    `grep -rn "age_range" src/` returned the single write and no read."""
+    clock = LinearClock.from_json(ROOT / "configs" / "clocks" / "fleischer_clock.json")
+    assert clock.age_range == (1.0, 96.0)
+
+
+def test_a_clock_without_metadata_reports_no_range_rather_than_guessing():
+    """A clock whose provenance is unknown must not silently claim a validity range."""
+    assert LinearClock({"G0": 1.0}).age_range is None
+
+
+def test_the_range_is_carried_but_never_enforced_by_the_clock_itself():
+    """The clock reports what it was fitted on; the POLICY of what to do about
+    extrapolation belongs to the label pipeline, not to the clock."""
+    clock = LinearClock({"G0": 1.0}, intercept=0.0, age_range=(1.0, 96.0))
+    # a neonatal donor still gets an age predicted -- masking is age_label_policy's job
+    assert np.isfinite(clock.predict_age(np.array([[5.0]]), ["G0"])[0])
+
+
+def test_the_range_rule_is_off_by_default_in_dataconfig():
+    """Turning it on MOVES LABELS -- N2 and N3 are donor_age 0, below the clock's 1.0 --
+    so it is a pre-registered change, never a default."""
+    from cellfate.data.build_dataset import DataConfig
+    cfg = DataConfig(out="x", gene_panel="y")
+    assert cfg.enforce_clock_age_range is False
+
+
+def test_the_range_rule_masks_the_neonatal_donors_when_switched_on():
+    """The consequence, measured rather than assumed: at [1, 96] the age-0 donors go."""
+    from cellfate.data.aging import age_label_policy
+    obs = _obs(["N2", "N3", "Y1", "O1"], [False] * 4, donor_age=[0.0, 0.0, 29.0, 53.0])
+    mask, reasons = age_label_policy(4, "reprogramming", obs, clock_age_range=(1.0, 96.0))
+    assert list(mask) == [False, False, True, True]
+    assert reasons[:2] == ["donor_out_of_clock_range"] * 2
+
+
+def test_delta_age_leaves_the_range_rule_off_unless_a_range_is_passed():
+    """The step-3 guard in one assertion: the plumbing exists and is inert by default."""
+    genes = ["G0"]
+    clock = LinearClock({"G0": 1.0}, intercept=0.0, age_range=(1.0, 96.0))
+    obs = _obs(["N2"] * 3, [True, False, False], donor_age=[0.0] * 3)
+    expr = np.array([[1.0], [2.0], [3.0]])
+    # default: the clock KNOWS its range, and delta_age still does not use it
+    _d, mask, reasons = delta_age(clock, expr, genes, obs, source="reprogramming")
+    assert mask.all() and reasons == [None] * 3
+    # opt in explicitly and the same cells are masked
+    _d, mask, reasons = delta_age(clock, expr, genes, obs, source="reprogramming",
+                                  clock_age_range=clock.age_range)
+    assert not mask.any()
+    assert reasons == ["donor_out_of_clock_range"] * 3

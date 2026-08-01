@@ -38,4 +38,10 @@ class Response(BaseModel):
     in_distribution: bool
     epistemic_std: float
     predictive_entropy: float
+    # Stage 1.5.3 C-4. `delta_age_*` above is reported unchanged, but the caller now gets to
+    # know whether it is validated in ABSOLUTE terms. Both fields are DEFAULTED so every
+    # existing construction site keeps working, and the default is the conservative answer:
+    # a bundle that does not declare its provenance reports "not validated", which is true.
+    age_validated: bool = False        # False => delta_age_* is for WITHIN-donor ranking only
+    age_basis: str = "unknown"         # what the label rests on; see schemas.AgeProvenance
     warning: str | None = None

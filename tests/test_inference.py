@@ -287,7 +287,19 @@ def test_score_shard_all_responses_valid(bundle):
         lo, hi = r.delta_age_interval
         assert lo <= hi
         assert r.status in (APPROVED, REJECTED_OOD, REJECTED_UNSAFE, REJECTED_NO_REJUVENATION)
-        assert (r.warning is not None) == (r.status == REJECTED_OOD)
+        # Stage 1.5.3 C-4 CHANGED THIS INVARIANT, deliberately and openly. It used to read
+        # `(warning is not None) == (status == REJECTED_OOD)` -- i.e. `warning` existed for
+        # exactly one reason. C-4 adds a second, independent one: the ΔAge label class may be
+        # unvalidated even on a perfectly in-distribution query, and `OODDetector` (a latent
+        # Mahalanobis test) cannot express that. So the biconditional is replaced by the two
+        # implications that are actually true, which is STRICTLY STRONGER than the original in
+        # the direction that matters -- OOD must still always warn.
+        if r.status == REJECTED_OOD:
+            assert r.warning is not None and "Out-of-distribution" in r.warning
+        if not r.age_validated:
+            assert r.warning is not None and "delta_age is NOT validated" in r.warning
+        if r.status != REJECTED_OOD and r.age_validated:
+            assert r.warning is None
         # APPROVED implies it cleared the (smooth) safety floor
         if r.status == APPROVED:
             assert r.p_identity_preserved >= P.tau_safe - 3 * P.w - 1e-9
@@ -650,3 +662,60 @@ def test_schema_version_mismatch_rejected(bundle, tmp_path):
     io.write_json(paths.bundle_meta_file, meta)
     with pytest.raises(SchemaError):
         Predictor(clone)
+
+
+# ============================================================================ #
+# STAGE 1.5.3 STEP 4 — C-4 option (a): the response can say ΔAge is unvalidated #
+# ============================================================================ #
+def test_response_age_fields_default_to_the_conservative_answer():
+    """A bundle that does not declare its provenance must report NOT validated.
+
+    A default of True would silently vouch for every bundle ever built -- all of which were
+    trained on RNA-clock labels Stage 1.5.2 found not calibratable."""
+    from cellfate.inference.res import APPROVED
+    from cellfate.inference.schema import Response
+    r = Response(status=APPROVED, rejuvenation_efficacy_score=1.0, p_identity_preserved=0.9,
+                 p_identity_loss=0.05, p_apoptosis=0.05, delta_age_mean=-3.0,
+                 delta_age_interval=[-3.5, -2.5], in_distribution=True, epistemic_std=0.4,
+                 predictive_entropy=0.3)
+    assert r.age_validated is False
+    assert r.age_basis == "unknown"
+
+
+def test_age_provenance_defaults_to_unvalidated_rna_clock():
+    from cellfate.common.schemas import AgeProvenance
+    p = AgeProvenance()
+    assert p.validated is False
+    assert p.basis == "rna_clock_uncalibrated"
+    assert "NOT calibratable" in p.note
+
+
+def test_a_bundle_without_the_provenance_file_reports_unvalidated(tmp_path):
+    """Absent file -> the default, and the default is correct rather than a fallback."""
+    from cellfate.common.io import ArtifactPaths, load_age_provenance
+    paths = ArtifactPaths.of(tmp_path)
+    assert load_age_provenance(paths).validated is False
+
+
+def test_a_bundle_that_declares_methylation_provenance_is_read_back(tmp_path):
+    from cellfate.common.io import ArtifactPaths, load_age_provenance, write_json
+    from cellfate.common.schemas import AgeProvenance
+    paths = ArtifactPaths.of(tmp_path)
+    paths.bundle_dir.mkdir(parents=True)
+    write_json(paths.bundle_age_provenance_file,
+               AgeProvenance(validated=True, basis="methylation", note="Gill anchor").model_dump())
+    got = load_age_provenance(paths)
+    assert got.validated is True and got.basis == "methylation"
+
+
+def test_the_response_still_forbids_unknown_fields():
+    """C-4 adds two fields; it must not weaken the contract."""
+    from pydantic import ValidationError
+
+    from cellfate.inference.res import APPROVED
+    from cellfate.inference.schema import Response
+    with pytest.raises(ValidationError):
+        Response(status=APPROVED, rejuvenation_efficacy_score=1.0, p_identity_preserved=0.9,
+                 p_identity_loss=0.05, p_apoptosis=0.05, delta_age_mean=-3.0,
+                 delta_age_interval=[-3.5, -2.5], in_distribution=True, epistemic_std=0.4,
+                 predictive_entropy=0.3, bogus=1)

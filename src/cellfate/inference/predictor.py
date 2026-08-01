@@ -27,6 +27,7 @@ from cellfate.common.errors import ConfigError, GenePanelMismatch, SchemaError
 from cellfate.common.io import (
     ArtifactPaths,
     assert_bundle_complete,
+    load_age_provenance,
     load_bundle_meta,
     load_conformal,
     load_res_params,
@@ -92,6 +93,10 @@ class Predictor:
         self.platt = (float(temp.platt_a), float(temp.platt_b)) if temp.has_platt else None
         self.ood = OODDetector(self.paths)
         self.res_params = load_res_params(self.paths)
+        # Stage 1.5.3 C-4: what this bundle's ΔAge labels rest on. A bundle without
+        # the file reports `validated=False`, which is the correct answer for every
+        # bundle built before the field existed.
+        self.age_provenance = load_age_provenance(self.paths)
 
         conf = load_conformal(self.paths)
         key = str(float(conformal_level))

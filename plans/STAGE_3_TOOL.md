@@ -464,6 +464,31 @@ def recommend_stopping(X_now, bundle_root, risk_threshold=0.20,
     if rec is None:
         warnings.append("NO SAFE WITHDRAWAL WINDOW FOUND")
 
+> ## 🆕 ADDED 2026-07-31 — the recommendation rule sorts on a label Stage 1.5.2 could not validate
+>
+> *Additive; §4's rule and the `StoppingOption` dataclass above are unmodified.*
+>
+> `rec = min(ok, key=lambda o: o.delta_age)` makes **ΔAge the sole ordering key** of this tool's
+> output. `STAGE_1_5_2_LABEL_ANCHOR.md` returned **NOT CALIBRATABLE**: the transcriptomic clock does
+> not track methylation age (ρ_partial +0.267 / +0.516 against a pre-frozen 0.50 bar), and §12-R
+> confirmed the anchor itself is sound, so the failure is the RNA clock's.
+>
+> **What this does and does not invalidate:**
+>
+> | | |
+> |---|---|
+> | ❌ **absolute** ΔAge as a quantity to compare across donors | the number is not validated in years |
+> | ✅ **within-donor ordering** of withdrawal times | `rank_model_dage` is **0.91–0.99** across all six folds (`scorecard/baseline.json`), and 1.5.2 §17 found the RNA clock reaches 91% of the meth↔meth ceiling against one of the two references |
+>
+> **So the rule survives as a *ranking* rule and fails as a *reporting* rule** — which is precisely
+> the distinction §0.3's internal-control note above already asks this stage to make. The two should
+> be resolved together, not separately.
+>
+> **Concretely, for 3d:** `StoppingOption` (line 385) needs a validity field beside `delta_age`, and
+> `_to_day`'s output should be presented as an ordered shortlist rather than a ΔAge in years, unless
+> and until the label basis changes. `STAGE_1_5_3_EXECUTE.md` C-4 costs the equivalent change at the
+> inference boundary; do not solve it twice with two conventions.
+
     return StoppingReport(options, rec, reason, warnings)
 ```
 

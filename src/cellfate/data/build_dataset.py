@@ -95,6 +95,23 @@ class DataConfig:
     scaler_max_cells: int = 200_000
     continue_on_error: bool = False
     source_specs: tuple[dict, ...] = ()
+    # Stage 1.5.3 C-2: mask donors outside the clock's fitted `meta.age_range`.
+    # OFF by default because turning it on MOVES LABELS -- N2 and N3 are donor_age 0 and the
+    # shipped clock's range starts at 1.0, so 30 of the 75 non-HFF training labels would go.
+    # Enabling it is a pre-registered change with its own bar, never a side effect.
+    enforce_clock_age_range: bool = False
+
+
+def _clock_range(clock: AgingClock, cfg: DataConfig) -> tuple[float, float] | None:
+    """The clock's fitted age range, but only when the config opts in. Stage 1.5.3 C-2.
+
+    Two conditions, both required: the run must ASK for the rule (`enforce_clock_age_range`),
+    and the clock must actually declare a range. A clock with no provenance metadata returns
+    None and the rule stays off -- an unknown range must never be treated as "no limits".
+    """
+    if not getattr(cfg, "enforce_clock_age_range", False):
+        return None
+    return getattr(clock, "age_range", None)
 
 
 # --------------------------------------------------------------------------- #
@@ -135,7 +152,8 @@ def process_chunk(src, chunk, panel, clock: AgingClock, cfg: DataConfig, harmoni
         x_panel = to_panel_matrix(x_scaled, hgenes, panel)
         cc = cell_cycle_score(norm, raw.genes)     # cell cycle stays on raw norm
         d_age, age_mask, age_reason = delta_age(clock, x_clock, hgenes, raw.obs, raw.source,
-                                                census=census)
+                                                census=census,
+                                                clock_age_range=_clock_range(clock, cfg))
     else:
         y_cls = fate_labels(norm, raw.genes, raw.obs, cfg.label_tau)
         cc = cell_cycle_score(norm, raw.genes)
@@ -144,7 +162,8 @@ def process_chunk(src, chunk, panel, clock: AgingClock, cfg: DataConfig, harmoni
         # model input x_panel -- so aging genes filtered out of the HVG panel still
         # reach the clock. The model still trains on x_panel below.
         d_age, age_mask, age_reason = delta_age(clock, norm, raw.genes, raw.obs, raw.source,
-                                                census=census)
+                                                census=census,
+                                                clock_age_range=_clock_range(clock, cfg))
     cell_ids = raw.obs["cell_id"].tolist()
     aux: ChunkAux | None = None
     if cfg.deconfound and age_mask.any():

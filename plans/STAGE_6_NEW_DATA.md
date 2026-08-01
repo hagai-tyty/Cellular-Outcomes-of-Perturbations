@@ -34,6 +34,26 @@ work with downloads, checks, gates and acceptance criteria. This file is that wo
 > through reprogramming than RNA, which is why the field's rejuvenation results lean on it. If a
 > methylation option is available for the same samples, it is worth more than additional RNA-seq.
 
+> ## 🆕 ADDED 2026-07-31 — both notes above are promoted from advice to REQUIREMENT, and sized
+>
+> *Additive; the acquisition checklist and the prioritisation note above are unmodified.*
+>
+> `STAGE_1_5_2_LABEL_ANCHOR.md` closed with the RNA-clock route **shut**: five repair attempts
+> failed, the last being calibration against paired methylation. So the two notes above are no longer
+> preferences.
+>
+> 1. **Methylation is not "worth more" — for the age arm it is the only thing that works.** RNA can
+>    still serve the fate/safety head, whose labels do not run through a clock.
+> 2. **`STAGE_1_5_1_REV_FINAL.md` §11.2 supplies the sizing**, which this stage previously lacked:
+>    **≈16 transient-arm pairs** to settle the retention question — against the 9 that exist.
+> 3. **Size for the instrument, not just for n.** 1.5.2 §12-R measured **±7 yr donor-level
+>    methylation-clock error** (two donors of identical age 53 read 44.0 and 58.5). The retention
+>    effect is −6 to −9 yr — **the same size as the error of the instrument measuring it.** More
+>    donors improve the pairing; they do not sharpen the instrument. An acquisition that adds donors
+>    without adding replicates per donor will not settle it.
+> 4. **HFF methylation remains the single highest-value acquisition** — it is 99.7% of the age labels
+>    and no public series has it (`REV FINAL` §11.3).
+
 ---
 
 ## 0. READ THIS FIRST — the species blocker

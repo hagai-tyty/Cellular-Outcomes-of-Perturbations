@@ -27,6 +27,21 @@ def build_response(pred: Predictor, s: dict) -> Response:
     res, status = compute_res(s["S"], s["P_loss"], s["mu_age"], s["sigma_age"],
                               s["in_dist"], pred.res_params)
     lo, hi = interval(s["mu_age"], pred.q)
+    # Stage 1.5.3 C-4 option (a). Two independent things can be wrong with a prediction, and
+    # until now only one of them could be said: OOD (this query is unlike training) and
+    # UNVALIDATED AGE (the ΔAge label class itself was never shown to track a ground truth).
+    # `OODDetector` is a latent-space Mahalanobis test -- it cannot know the clock is out of
+    # domain -- so the second needed its own channel rather than a reuse of the first.
+    prov = getattr(pred, "age_provenance", None)
+    age_ok = bool(prov.validated) if prov is not None else False
+    notes = []
+    if not s["in_dist"]:
+        notes.append("Out-of-distribution: prediction not trustworthy.")
+    if not age_ok:
+        notes.append(
+            "delta_age is NOT validated in absolute terms (Stage 1.5.2: the transcriptomic "
+            "clock is not calibratable against methylation). Use it to RANK conditions within "
+            "this donor; do not read the number as years.")
     return Response(
         status=status,
         rejuvenation_efficacy_score=round(10.0 * res, 2),
@@ -38,7 +53,9 @@ def build_response(pred: Predictor, s: dict) -> Response:
         in_distribution=s["in_dist"],
         epistemic_std=round(s["sigma_age"], 3),
         predictive_entropy=round(s["entropy"], 3),
-        warning=None if s["in_dist"] else "Out-of-distribution: prediction not trustworthy.",
+        age_validated=age_ok,
+        age_basis=(prov.basis if prov is not None else "unknown"),
+        warning=" ".join(notes) or None,
     )
 
 
