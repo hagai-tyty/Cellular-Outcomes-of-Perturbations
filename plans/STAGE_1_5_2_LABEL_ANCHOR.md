@@ -903,6 +903,32 @@ and did not fire.
 ⚠️ **Both land EXACTLY on the bar**, and the bar itself was already loosened from 8/11 to 7/11 by
 the §6 freeze. One pair flipping fails it. Reported as `AGREE_FRAGILE`, not `AGREE`.
 
+> ### 🆕 ADDED on review — the audit trail proving the bar was DERIVED, not chosen
+>
+> *Added 2026-08-01. "You loosened the bar and then landed exactly on it" is the obvious challenge
+> to the paragraph above, and it is a fair one to raise. The answer is fully in the artefacts, but
+> it was split across two files and never stated, so it could not be checked without reconstructing
+> it by hand. Stated here instead.*
+>
+> | | | source |
+> |---|---|---|
+> | resolvability simulation ran | **13:11:39** | `stage_1_5_2_resolvability_results.json` |
+> | M-2b ran | **13:53:13** — **42 minutes later** | `diag_m2b_contrast_agreement_results.json` |
+> | registered bar 8/11 | **UNRESOLVABLE**, pass rate **0.9297** vs the 0.95 floor | resolvability |
+> | `usable_bar` **computed** by `audit_metrics` | **7.0** | resolvability |
+> | bar actually used by M-2b | **7** — *identical to the computed value* | M-2b |
+>
+> **The 7/11 bar is not a number someone picked. It is the output of §5b's `usable_bar`, computed
+> from a simulated null before the data was touched, and frozen 42 minutes before the run.** §5b's
+> instruction on an unresolvable bar is exactly *"move the threshold to `usable_bar`, or change the
+> geometry, or drop the criterion — but do it now, not after a run wears the failure."* That is what
+> happened, in that order, and the timestamps prove it.
+>
+> **What remains true and is not defended away:** the result landed *exactly* on the bar, so one pair
+> flipping changes the label. That is why it is recorded as `AGREE_FRAGILE` and why §14's conclusion
+> rests on the **0/3 at the discriminating timepoint**, not on the 7/11. **The fragility is real; the
+> goalpost-moving is not.**
+
 ### 🔴 The pooled number hides the whole story. Split by day:
 
 | day | agreement | mean Δ RNA | mean Δ METH (s&b) |

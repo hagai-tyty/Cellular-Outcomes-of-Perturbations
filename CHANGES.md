@@ -11,6 +11,42 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-01 (addendum) — the 6th item: M-2b's bar was DERIVED, and now the proof is written down
+
+**Status:** ✅ Applied. Documentation only; no code, no labels, no verdicts.
+
+The review produced **six** items — 3 bugs and 3 attack points — and the previous commit actioned
+**five**. The sixth (attack C, "M-2b passed by exactly zero margin") was judged to need no fix
+because §14 already discloses it as `AGREE_FRAGILE`. **That judgement was half right.** The
+*fragility* is disclosed. What was NOT written down is the answer to the sharper form of the
+challenge: *"you loosened the bar from 8/11 to 7/11 and then landed exactly on it."*
+
+Checked, and the answer is clean:
+
+| | | source |
+|---|---|---|
+| resolvability simulation ran | **13:11:39** | `stage_1_5_2_resolvability_results.json` |
+| M-2b ran | **13:53:13** — 42 minutes later | `diag_m2b_contrast_agreement_results.json` |
+| registered bar 8/11 | **UNRESOLVABLE**, pass rate 0.9297 vs the 0.95 floor | resolvability |
+| `usable_bar` **computed** by `audit_metrics` | **7.0** | resolvability |
+| bar actually used | **7** — identical to the computed value | M-2b |
+
+**The 7/11 bar is the output of §5b's `usable_bar`, computed from a simulated null before the data
+was touched and frozen 42 minutes before the run** — not a number chosen to fit a result. §5b's
+instruction on an unresolvable bar is *"move the threshold to `usable_bar` ... but do it now, not
+after a run wears the failure"*, and the timestamps show that is the order it happened in.
+
+This was fully present in the artefacts but split across two JSON files and never stated, so it
+could not be checked without reconstructing it by hand. Recorded in §14 — the same class of gap as
+the ceiling asymmetry: **the defence existed in the data and nobody had written it down.**
+
+**Not defended away:** the result landed exactly on the bar, so one pair flipping changes the label.
+That is why §14's conclusion rests on the **0/3 at the discriminating timepoint**, not on the 7/11.
+The fragility is real; the goalpost-moving is not.
+
+---
+
+
 ## 2026-08-01 — Line-by-line review of the Stage 1.5.2 / 1.5.3 work: 3 bugs fixed, 2 documentation gaps closed
 
 **Status:** ✅ Applied. **No label moves, no verdict changes.** Two shipped-code bugs fixed with
