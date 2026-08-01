@@ -186,7 +186,7 @@ def test_donor_age_and_batch_are_metadata_not_model_input():
 
 
 # ------------------------------------------------- REGRESSIONS (found in review) ---- #
-def test_census_keys_must_survive_one_cell_line_spanning_MANY_chunks():
+def test_census_keys_must_survive_one_cell_line_spanning_many_chunks():
     """The collision that silently discarded 44 of HFF's 45 chunks.
 
     `cell_line` is NOT unique across chunks: `verify_stage1_5_results.json` records HFF in 45

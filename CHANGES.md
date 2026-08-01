@@ -11,6 +11,57 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-01 — CI red X diagnosed: it was the LINT step, failing since 2026-07-26
+
+**Status:** ✅ Fixed and verified locally. Two renames, no logic touched.
+
+"Tests 3.11 and 3.12" are the **Python version matrix** in `.github/workflows/ci.yml`, not test
+names -- so the red X was the whole CI job failing on both interpreters, not two specific tests.
+
+**The failure was `ruff`, not `pytest`.** CI runs `ruff check src/ tests/ scripts/` **before**
+`pytest -q`, so the lint step was aborting the job and **pytest has not executed in CI since the
+lint break was introduced.** Reproduced locally with the exact CI command:
+
+```
+N802 Function name `test_census_keys_must_survive_one_cell_line_spanning_MANY_chunks` should be lowercase
+N802 Function name `test_pairing_KEEPS_exp1_exp2_replicates_for_averaging` should be lowercase
+Found 2 errors.
+```
+
+| offending name | introduced in | when |
+|---|---|---|
+| `test_pairing_KEEPS_...` | **`c7199d6`** | 2026-07-26 -- the original break |
+| `test_census_keys_..._MANY_chunks` | **`1380cb2`** | 2026-08-01 -- **mine**, added to an already-red build |
+
+Both used capitals inside a function name for emphasis. `pyproject.toml` deliberately selects the
+`N` (pep8-naming) rules and ignores five specific codes, **each with a written justification**
+(`N812`, `N818`, `N803`, `N806`, `N815`). **N802 is not among them**, so lowercase function names
+are the project's intended standard.
+
+**Fixed by renaming both to lowercase**, not by adding `N802` to the ignore list. Adding it would
+have widened a deliberately narrow, individually justified exception list in order to keep a
+stylistic flourish -- and "I wanted to shout in a function name" does not belong beside the reasons
+already there. The emphasis was already carried by both docstrings, so nothing was lost.
+
+Neither name is referenced in any `.md`, so the rename creates no cross-document drift.
+
+**Verified:** `python -m ruff check src/ tests/ scripts/` -> **All checks passed!**
+
+### ⚠️ What this does NOT establish
+
+**Whether `pytest` passes.** It has been unreachable in CI behind the lint failure since
+2026-07-26, and this machine has no `numpy`/`torch`/`pytest` to run it. Clearing the lint gate means
+the test step will now execute for the first time in weeks, and **it may surface failures that were
+simply never reached** -- including the three regression tests added in `1380cb2`, which have still
+never run anywhere. If the X persists after this, the cause is a genuine test failure and the CI log
+will finally name it.
+
+*(`experiments/` carries 11 ruff errors, but CI does not lint that path, so they are not the cause
+and are out of scope here.)*
+
+---
+
+
 ## 2026-08-01 (addendum) — the 6th item: M-2b's bar was DERIVED, and now the proof is written down
 
 **Status:** ✅ Applied. Documentation only; no code, no labels, no verdicts.

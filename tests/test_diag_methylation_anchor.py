@@ -177,7 +177,7 @@ def test_pairing_matches_on_donor_and_day_only():
     assert ma.pair_by_donor_day(meta, ma.TR, ma.NC) == [("O1", 13.0, ["a"], ["b"])]
 
 
-def test_pairing_KEEPS_exp1_exp2_replicates_for_averaging():
+def test_pairing_keeps_exp1_exp2_replicates_for_averaging():
     """REGRESSION. The first version required a unique sample per (donor, day, arm), which
     silently discarded 6 of 9 M-1 pairs -- GSE165179 runs every condition as exp1 AND exp2.
     Replicates are repeats of one condition and must be averaged, never dropped."""
