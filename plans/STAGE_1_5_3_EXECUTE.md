@@ -216,13 +216,13 @@ def age_label_policy(
 **Two tests this forces** (add to C-1's test list):
 
 ```python
-def test_masked_datasets_without_the_column_RAISES_rather_than_keeping_labels():
+def test_masked_datasets_without_the_column_raises_rather_than_keeping_labels():
     with pytest.raises(KeyError, match="dataset_id"):
         age_label_policy(3, "reprogramming", pd.DataFrame({"x": [1, 2, 3]}),
                          masked_datasets=frozenset({"hff_sc"}))
 
 
-def test_clock_age_range_without_donor_age_RAISES():
+def test_clock_age_range_without_donor_age_raises():
     with pytest.raises(KeyError, match="donor_age"):
         age_label_policy(3, "reprogramming", pd.DataFrame({"x": [1, 2, 3]}),
                          clock_age_range=(1.0, 96.0))
@@ -301,7 +301,7 @@ def test_a_missing_column_is_not_an_error():
                                clock_age_range=(1.0, 96.0))
     assert mask.all()
 
-def test_the_reason_is_None_exactly_where_the_mask_is_True():
+def test_the_reason_is_none_exactly_where_the_mask_is_true():
     """The invariant Sample validation depends on (schemas.py:126-130)."""
     obs = _obs(["A"] * 4, [False] * 4, donor_age=[0.0, 53.0, 200.0, 30.0])
     mask, reasons = age_label_policy(4, "reprogramming", obs, clock_age_range=(1.0, 96.0))
@@ -310,6 +310,13 @@ def test_the_reason_is_None_exactly_where_the_mask_is_True():
 
 Plus the real-data guard, in the same shape G-a used: run all six Gill donors and one HFF chunk
 through `delta_age` with defaults, and assert `np.array_equal` against the pre-change values.
+
+> ⚠️ **Every test name in this document is lowercase, and must stay that way.** `pyproject.toml:59`
+> selects the `N` rules and `:71` ignores only `N812, N818, N803, N806, N815` — **`N802` is not
+> among them**, so a capital inside a test function name is a lint error, and CI runs
+> `ruff check src/ tests/ scripts/` **before** `pytest`. That exact mistake kept CI red from
+> 2026-07-26 until 2026-08-01 and hid the whole suite behind it. Three names in this spec were
+> capitalised for emphasis and were lowercased on 2026-08-01; the emphasis belongs in the docstring.
 
 ---
 

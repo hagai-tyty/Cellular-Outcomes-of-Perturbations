@@ -809,6 +809,30 @@ Two readings, and both are defensible:
 > no verdict — M-2a's SPLIT ⇒ NOT CALIBRATABLE stands exactly as recorded — and nothing here was
 > computed after the fact to support it. What changes is only that the strongest objection to the
 > verdict now has its answer written down beside it.
+>
+> ### 🆕 2026-08-01 — the argument above, made arithmetic
+>
+> *Added on cross-review. The "2× asymmetry" reasoning is right and can be stated exactly rather
+> than qualitatively, which makes it checkable.*
+>
+> If a **single shared age factor** were all three instruments were measuring, each correlation
+> would be the product of two loadings: `ρ(i,j) = λᵢ·λⱼ`. Solving the three measured values:
+>
+> ```
+> λ_RNA  = sqrt(0.267 × 0.516 / 0.568) = 0.493
+> λ_sb   = 0.267 / 0.493               = 0.542
+> λ_mt   = 0.516 / 0.493               = 1.048   ← a correlation loading CANNOT exceed 1
+> ```
+>
+> **The three numbers are not jointly consistent with one common factor.** Fitting them requires
+> the multi-tissue clock to correlate with the shared signal at **1.048**, which is not a possible
+> value. There is no assignment of loadings that reproduces this pattern.
+>
+> ⚠️ **Do not over-read it.** These are *Spearman partial* correlations at n = 68, and 1.048 exceeds
+> the boundary by only 5% — comfortably inside sampling noise, so this is **at** the edge of what a
+> single common factor permits, not provably past it. The honest statement is that the data sit on
+> the boundary of the simplest model that could have rescued the RNA clock, and give it no room.
+> That is corroboration of the paragraph above, not a proof on its own.
 
 **What both readings agree on, and what actually matters:** a monotone calibration fitted here would
 be fitted against a reference that is only ~0.57 self-consistent after the reprogramming axis is
