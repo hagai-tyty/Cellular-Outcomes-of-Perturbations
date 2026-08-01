@@ -502,3 +502,36 @@ def test_delta_age_leaves_the_range_rule_off_unless_a_range_is_passed():
                                   clock_age_range=clock.age_range)
     assert not mask.any()
     assert reasons == ["donor_out_of_clock_range"] * 3
+
+
+def test_rewrite_shard_yage_survives_a_shard_that_predates_a_schema_column():
+    """REGRESSION (found auditing step 1-4, 2026-08-01). `shard_to_numpy` was made tolerant of
+    a missing `age_mask_reason` but `rewrite_shard_yage` was left STRICT, so it raised
+    `KeyError: ... age_mask_reason` on any pre-C-6 shard.
+
+    That path is not hypothetical: on a RESUMED build the progress tracker skips already-done
+    chunks, leaving older shards on disk, and `_deconfound_train_only` rewrites every shard.
+    Fresh builds never reach it, which is exactly why the suite missed it."""
+    import tempfile
+
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    from cellfate.common import io
+    old_schema = pa.schema([f for f in io.SHARD_SCHEMA if f.name != "age_mask_reason"])
+    n = 2
+    row = {"cell_id": ["c0", "c1"], "X": [[0.0, 0.0]] * n, "u_modality": ["tf"] * n,
+           "u_chem_fp": [None] * n, "u_gene_emb": [None] * n, "u_tf_emb": [[0.0]] * n,
+           "dose_time": [[0.0, 0.0]] * n, "y_cls": [[1.0, 0.0, 0.0]] * n,
+           "y_age": [1.0, 2.0], "age_mask": [True, True], "sig_scores": [[0.0] * 3] * n,
+           "cell_line": ["A"] * n, "pert_id": ["p"] * n, "scaffold_id": ["s"] * n,
+           "source": ["synth"] * n}
+    tmp = Path(tempfile.mkdtemp()) / "pre_c6.parquet"
+    pq.write_table(pa.table(row, schema=old_schema), tmp)
+
+    io.rewrite_shard_yage(tmp, np.array([9.0, 8.0]))       # must not raise
+
+    out = io.shard_to_numpy(io.read_shard(tmp))
+    assert list(out["y_age"]) == [9.0, 8.0]                # the rewrite landed
+    assert out["age_mask_reason"] == [None, None]          # backfilled, not invented
+    assert list(out["age_mask"]) == [True, True]           # nothing else disturbed

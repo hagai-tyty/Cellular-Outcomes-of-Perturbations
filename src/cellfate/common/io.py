@@ -191,6 +191,16 @@ def rewrite_shard_yage(path: str | Path, y_age: np.ndarray) -> None:
             f"rewrite_shard_yage length mismatch: {len(y_age)} != {len(d['cell_id'])}"
         )
     d["y_age"] = [None if not np.isfinite(v) else float(v) for v in y_age]
+    # Backfill any column this shard predates, so a shard written before a schema addition can
+    # still be rewritten. Without this the read path was tolerant (`shard_to_numpy`) while the
+    # WRITE path was strict, which breaks precisely on a RESUMED build: the progress tracker
+    # skips already-done chunks, leaving older shards on disk, and `_deconfound_train_only`
+    # then rewrites every one of them. Fresh builds never hit it, which is why the tests did
+    # not. `age_mask_reason` is the only such column today and None is its correct value for a
+    # shard that predates it.
+    for f in SHARD_SCHEMA:
+        if f.name not in d:
+            d[f.name] = [None] * len(d["cell_id"])
     new = pa.table(d, schema=SHARD_SCHEMA)
     buf = pa.BufferOutputStream()
     pq.write_table(new, buf, compression="zstd")
