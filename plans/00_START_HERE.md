@@ -58,6 +58,25 @@ a pre-registered accept/reject rule, so the decision is already made before you 
 
 ---
 
+## 🆕 Where things live (repo tidied 2026-08-01)
+
+Root now holds **only** the tools you run constantly and the libraries other code imports.
+Everything else moved, and every folder has a `HOW_TO_RUN` explaining what is in it.
+
+| folder | what is in it | how to run |
+|---|---|---|
+| **root** | `scorecard.py`, `retrain_stage1.py`, `audit_metrics.py`, the `diag_*`/`dump_*` tools | `python scorecard.py …` |
+| **`plan_tests/`** | 🆕 the **per-stage verification gates** — `verify_1a.py`, `verify_stage1_5.py`, `smoke_stage1.py` | [`plan_tests/HOW_TO_RUN.md`](../plan_tests/HOW_TO_RUN.md) |
+| **`experiments/`** | exploratory + numbered tests — `test18_forward_gate.py`, `test5_ridge_gap.py`, every `diag_*` | `experiments/HOW_TO_RUN.txt` |
+| **`local_runners/`** | the pipeline runners | `local_runners/HOW_TO_RUN.txt` |
+| **`tests/`** | the `pytest` suite — runs in CI, needs no data | `python -m pytest tests/ -q` |
+| **`results/`** | 🆕 every `*_results.json` a script writes | read-only output |
+| **`plans/archive/`** | 🆕 superseded drafts, kept as the audit trail | [`plans/archive/README.md`](archive/README.md) |
+
+**Everything still runs from the repo root**, whichever folder the script lives in.
+
+---
+
 ## Every command you will run, in order
 
 ```powershell
@@ -73,7 +92,7 @@ cd D:\cellfate-rx
 | 2 | `python scorecard.py compare baseline A_xdonor` | 1 | accept / reject |
 | 3 | *(implement Stage 2)* then `python scorecard.py snapshot --tag B_percalib` | 2 | level correction |
 | 4 | `python scorecard.py compare A_xdonor B_percalib` | 2 | accept / reject |
-| 5 | `python test18_forward_gate.py` | 3 | **the tool's existential gate** |
+| 5 | `python experiments/test18_forward_gate.py` | 3 | **the tool's existential gate** |
 | 6 | *(implement Stage 3)* then `python scorecard.py snapshot --tag C_forward` | 3 | the forward tool |
 | 7 | `python scorecard.py compare B_percalib C_forward` | 3 | accept / reject |
 | 8 | `python validate_stopping.py` | 4 | does it beat a fixed protocol? |
@@ -149,7 +168,7 @@ move*. If it does, the implementation is doing more than shifting.
 
 **Run the gate first — before any tool code is written:**
 ```powershell
-python test18_forward_gate.py
+python experiments\test18_forward_gate.py
 ```
 
 | Verdict | What you do |

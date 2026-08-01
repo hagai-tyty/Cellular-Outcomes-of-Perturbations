@@ -35,7 +35,7 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
@@ -51,7 +51,7 @@ from cellfate.training.dataset import (
 )
 from cellfate.training.xdonor_calib import MIN_INNER_TRAIN_FRAC
 
-_RESULTS = Path(__file__).resolve().parent / "results"
+_RESULTS = Path(__file__).resolve().parents[1] / "results"
 _RESULTS.mkdir(exist_ok=True)
 
 
@@ -230,7 +230,6 @@ def main() -> None:
     # matters is the count of donors that SURVIVE the skip, and the threshold is imported rather
     # than restated, so the two files cannot drift apart.
     bulk, usable = bulk_and_usable(results, ok_folds, inv_code)
-    n_usable = list(usable.values())
 
     # per-fold summary rows, judged on USABLE donors -- the same number the verdict uses
     rows = []
@@ -261,7 +260,7 @@ def main() -> None:
 
     report = {
         "script": "verify_1a",
-        "utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "utc": datetime.now(UTC).isoformat(timespec="seconds"),
         "verdict": {
             "status": status,
             "reason": reason,

@@ -48,11 +48,11 @@ from cellfate.data.harmonize import (
     Harmonizer,
 )
 
-# verify_stage1_5.py lives at the repo root; tests/ has no __init__.py, so pytest does not
+# verify_stage1_5.py lives in plan_tests/; tests/ has no __init__.py, so pytest does not
 # put the repo root on sys.path. Load it by path — exactly as tests/test_verify_1a.py loads
 # verify_1a.py — and reuse its PURE decision logic (importing it runs no data code, no I/O).
 _SPEC = importlib.util.spec_from_file_location(
-    "verify_stage1_5", Path(__file__).resolve().parents[1] / "verify_stage1_5.py")
+    "verify_stage1_5", Path(__file__).resolve().parents[1] / "plan_tests" / "verify_stage1_5.py")
 verify_stage1_5 = importlib.util.module_from_spec(_SPEC)
 sys.modules[_SPEC.name] = verify_stage1_5   # register BEFORE exec so @dataclass can resolve
 _SPEC.loader.exec_module(verify_stage1_5)

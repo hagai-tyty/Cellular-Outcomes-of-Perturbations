@@ -39,7 +39,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
-_RESULTS = Path(__file__).resolve().parent / "results"
+_RESULTS = Path(__file__).resolve().parents[1] / "results"
 _RESULTS.mkdir(exist_ok=True)
 
 
@@ -192,7 +192,7 @@ def build_sources(gse_dir: str, gill_dir: str):
     Mirrors run_multi_local.py:100-114. Imported lazily so this module stays
     data-free at import time (the unit tests import only the pure logic above).
     """
-    runners = Path(__file__).resolve().parent / "local_runners"
+    runners = Path(__file__).resolve().parents[1] / "local_runners"
     if str(runners) not in sys.path:
         sys.path.insert(0, str(runners))
     try:

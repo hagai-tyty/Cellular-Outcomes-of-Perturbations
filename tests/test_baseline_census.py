@@ -17,7 +17,9 @@ import pandas as pd
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-for _p in (ROOT, ROOT / "src"):
+# `plan_tests/` holds the per-stage verification gates (verify_1a, verify_stage1_5, smoke_stage1).
+# They are scripts, not a package, so the directory goes on the path to import from them.
+for _p in (ROOT, ROOT / "src", ROOT / "plan_tests"):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 

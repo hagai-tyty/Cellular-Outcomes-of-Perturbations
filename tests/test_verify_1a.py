@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 _SPEC = importlib.util.spec_from_file_location(
-    "verify_1a", Path(__file__).resolve().parents[1] / "verify_1a.py")
+    "verify_1a", Path(__file__).resolve().parents[1] / "plan_tests" / "verify_1a.py")
 verify_1a = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(verify_1a)
 

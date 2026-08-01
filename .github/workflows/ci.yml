@@ -32,7 +32,12 @@ jobs:
           pip install -e ".[dev]"
 
       - name: Lint (ruff)
-        run: ruff check src/ tests/ scripts/
+        # plan_tests/ added 2026-08-01: these are the per-stage verification gates, and while
+        # they sat at the repo root they were never linted. Two pre-existing errors surfaced the
+        # moment they came into scope, and both are fixed. experiments/ is deliberately still
+        # OUT of scope -- it carries 12 pre-existing errors in older exploratory scripts, and
+        # bringing it in is its own change with its own diff, not a side effect of a tidy-up.
+        run: ruff check src/ tests/ scripts/ plan_tests/
 
       - name: Test (pytest)
         run: pytest -q
