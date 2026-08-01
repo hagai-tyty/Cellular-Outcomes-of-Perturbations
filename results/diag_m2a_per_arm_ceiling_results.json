@@ -1,6 +1,6 @@
 {
   "script": "diag_m2a_per_arm_ceiling",
-  "utc": "2026-07-31T18:12:10+00:00",
+  "utc": "2026-08-01T01:28:46+00:00",
   "source": "diag_m2a_calibratability_results.json",
   "sharp_ceiling": 0.7,
   "arms": {

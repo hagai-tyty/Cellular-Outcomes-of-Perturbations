@@ -95,9 +95,14 @@ cd D:\cellfate-rx
 | 5 | `python experiments/test18_forward_gate.py` | 3 | **the tool's existential gate** |
 | 6 | *(implement Stage 3)* then `python scorecard.py snapshot --tag C_forward` | 3 | the forward tool |
 | 7 | `python scorecard.py compare B_percalib C_forward` | 3 | accept / reject |
-| 8 | `python validate_stopping.py` | 4 | does it beat a fixed protocol? |
-| 9 | `python test19_second_clock.py` | 5 | is the linearity claim clock-dependent? |
-| 10 | `python test_suite.py y1_probe` | 5 | is the fate edge a Y1 artifact? |
+| 8 | `python validate_stopping.py` ⚠️ | 4 | does it beat a fixed protocol? |
+| 9 | `python test19_second_clock.py` ⚠️ | 5 | is the linearity claim clock-dependent? |
+| 10 | `python experiments/test_suite.py y1_probe` | 5 | is the fate edge a Y1 artifact? |
+
+> ⚠️ **Not written yet.** Rows 8 and 9 are Stage 4/5 scripts that `STAGE_4_VALIDATION.md` and
+> `STAGE_5_PUBLICATION.md` specify but nobody has implemented — writing them is part of those
+> stages, not a prerequisite. Every other command in this table points at a file that exists today
+> (verified 2026-08-01).
 
 ---
 
@@ -215,7 +220,7 @@ Two gates before writing anything:
 
 ```powershell
 python test19_second_clock.py      # is "deep ties linear" an artifact of our linear clock?
-python test_suite.py y1_probe      # does the fate claim survive without Y1?
+python experiments/test_suite.py y1_probe      # does the fate claim survive without Y1?
 ```
 
 **Both can change what you are allowed to claim.** The second clock is the one a reviewer will

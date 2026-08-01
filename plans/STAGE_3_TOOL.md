@@ -111,7 +111,7 @@ A `mode` field records which, **asserted at load** (3d.6).
 **Run before writing any tool code:**
 
 ```powershell
-python test18_forward_gate.py
+python experiments/test18_forward_gate.py
 ```
 
 **What it tests.** Test 11.1 showed the current model ignores its time input entirely (ΔAge shifts

@@ -2771,3 +2771,20 @@ timestamp would have destroyed the provenance it proves.
 * `STAGE_1_5_3_EXECUTE.md`: the lint command widened to include `plan_tests/`, and the step-1 guard
   script `verify_age_mask_identical.py` reassigned from `experiments/` to `plan_tests/` — it is a
   per-stage gate, which is what that folder is for.
+
+### Pre-flight sweep for Stage 1.5.3 — dangling references
+
+Swept every `python <path>.py` command in every markdown file against the filesystem. Seven were
+stale after the reorganisation, all in operator-facing DO plans, all repointed:
+`STAGE_3_TOOL.md` ×1, `STAGE_6_NEW_DATA.md` ×3, `00_START_HERE.md` ×2, `REF_DATA_STRATEGY.md` ×1.
+
+Four references remain to files that do not exist, and **all four are correct as written**:
+
+| reference | why it is fine |
+|---|---|
+| `validate_stopping.py`, `test19_second_clock.py` | Stage 4/5 scripts those stages specify but nobody has written. Now marked ⚠️ in `00_START_HERE.md`'s command table so an operator is not surprised |
+| `experiments/diag_label_anchor.py` | the name §10 planned; §16.5 already records that the stage shipped five differently-named scripts instead |
+| `plan_tests/verify_age_mask_identical.py` | Stage 1.5.3's step-1 guard. The plan says explicitly that writing it *is* step 1 |
+
+Historical command lines in `CHANGES.md`, `DELTAAGE_LAB_NOTEBOOK.md` and `STAGE_1_DEVIATIONS.md`
+were deliberately **not** touched — they record what was actually run at the time.

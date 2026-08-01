@@ -60,7 +60,7 @@ will be worse. Your harmonization method mitigates but does not eliminate this.
 
 Accessions are in the papers.
 
-**Before committing compute:** run `python test_suite.py input_ablation` on any candidate dataset.
+**Before committing compute:** run `python experiments/test_suite.py input_ablation` on any candidate dataset.
 On Gill, `x+u ≈ x_only` because dose never varied. On a genuine dose dataset, `u_only` should
 separate. **If it doesn't, the dose axis isn't learnable there either — stop before building.**
 

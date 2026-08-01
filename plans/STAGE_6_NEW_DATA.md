@@ -123,7 +123,7 @@ assert (a.var_names.str.match(r"^[A-Z][a-z]")).mean() > 0.5, "expected mouse sym
 ### 6a.3 Run the gate on Schiebinger
 
 ```powershell
-python test18_forward_gate.py --data D:\schiebinger --targets fate
+python experiments/test18_forward_gate.py --data D:\schiebinger --targets fate
 ```
 
 *(needs a `--data` flag adding to the gate; ΔAge parts will be skipped for lack of a clock)*
@@ -171,13 +171,13 @@ Only for a **human** dataset. The pipeline steps, in order:
 | 2 | apply the Gill Projection harmonization | intercept-cancellation unit test still passes |
 | 3 | verify the clock applies | human fibroblast-like; otherwise ΔAge is invalid |
 | 4 | build fate labels from markers | all three classes present, none below ~5% |
-| 5 | **run `python test_suite.py input_ablation`** | **the decisive gate — see §5** |
+| 5 | **run `python experiments/test_suite.py input_ablation`** | **the decisive gate — see §5** |
 | 6 | re-run `scorecard.py snapshot --tag <dataset>` | compare against the Gill baseline |
 
 ## 5. The decisive gate for ANY new dataset
 
 ```powershell
-python test_suite.py input_ablation
+python experiments/test_suite.py input_ablation
 ```
 
 On Gill, `x+u ≈ x_only` because **dose never varied**. On a genuine dose dataset, `u_only` should
