@@ -101,7 +101,7 @@ def _dage(h: Harmonizer, clock: LinearClock, X: np.ndarray, ds: str,
     z = h.transform(X, h.genes, ds)
     x_clock = h.project_to_clock(z)
     obs = pd.DataFrame({"cell_line": [LINE] * len(X), "is_control": is_ctrl})
-    d, _mask = delta_age(clock, x_clock, h.genes, obs, source)
+    d, _mask, _reason = delta_age(clock, x_clock, h.genes, obs, source)
     return d
 
 
@@ -336,7 +336,7 @@ def test_the_silent_no_control_fallback_self_centres_a_line_to_zero():
     clock = LinearClock({"G0": 1.0}, intercept=40.0)
     expr = np.array([[5.0], [7.0], [9.0]])                    # ages 45, 47, 49
     obs = pd.DataFrame({"cell_line": ["X", "X", "X"], "is_control": [False, False, False]})
-    d, _mask = delta_age(clock, expr, ["G0"], obs, source="synth")
+    d, _mask, _reason = delta_age(clock, expr, ["G0"], obs, source="synth")
     assert d.mean() == pytest.approx(0.0)                     # self-centred, not control-relative
     # and it is genuinely the within-line mean that was subtracted, not a control mean
     assert np.allclose(d, np.array([45.0, 47.0, 49.0]) - 47.0)

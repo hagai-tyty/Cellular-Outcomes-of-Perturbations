@@ -134,7 +134,8 @@ def process_chunk(src, chunk, panel, clock: AgingClock, cfg: DataConfig, harmoni
         y_cls = fate_labels(x_scaled, hgenes, raw.obs, cfg.label_tau)
         x_panel = to_panel_matrix(x_scaled, hgenes, panel)
         cc = cell_cycle_score(norm, raw.genes)     # cell cycle stays on raw norm
-        d_age, age_mask = delta_age(clock, x_clock, hgenes, raw.obs, raw.source, census=census)
+        d_age, age_mask, age_reason = delta_age(clock, x_clock, hgenes, raw.obs, raw.source,
+                                                census=census)
     else:
         y_cls = fate_labels(norm, raw.genes, raw.obs, cfg.label_tau)
         cc = cell_cycle_score(norm, raw.genes)
@@ -142,7 +143,8 @@ def process_chunk(src, chunk, panel, clock: AgingClock, cfg: DataConfig, harmoni
         # the clock consumes the FULL profile (its own gene panel), NOT the 2000-HVG
         # model input x_panel -- so aging genes filtered out of the HVG panel still
         # reach the clock. The model still trains on x_panel below.
-        d_age, age_mask = delta_age(clock, norm, raw.genes, raw.obs, raw.source, census=census)
+        d_age, age_mask, age_reason = delta_age(clock, norm, raw.genes, raw.obs, raw.source,
+                                                census=census)
     cell_ids = raw.obs["cell_id"].tolist()
     aux: ChunkAux | None = None
     if cfg.deconfound and age_mask.any():
@@ -179,6 +181,7 @@ def process_chunk(src, chunk, panel, clock: AgingClock, cfg: DataConfig, harmoni
         y_cls=y_cls,
         y_age=d_age,
         age_mask=age_mask,
+        age_mask_reason=age_reason,
         sig_scores=sig,
         cell_line=raw.obs["cell_line"].tolist(),
         pert_id=pert_ids,

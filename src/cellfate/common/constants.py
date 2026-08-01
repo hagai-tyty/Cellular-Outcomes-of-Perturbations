@@ -72,6 +72,17 @@ N_DOSE_TIME: int = 2               # [log10(dose_uM), log(time_h)]
 # masked (age_mask = False) on these, while the safety head still trains on them.
 CANCER_SOURCES: frozenset[str] = frozenset({"tahoe"})
 
+# Datasets whose dAge labels are withheld from the age head by POLICY rather than by cell
+# type -- Stage 1.5.3 C-1, which exists because `age_mask` was a function of `source` alone
+# and BOTH reprogramming sources report source="reprogramming" (sources.py). There was
+# therefore no expressible policy that masks HFF and keeps Gill, which is exactly what
+# Stage 1.5.2's gate G-c step 2 needs. `dataset_id` already distinguishes them
+# ("hff_sc" / "gill_bulk") and was simply not consulted.
+#
+# EMPTY BY DEFAULT, and it must stay that way outside a pre-registered experiment: populating
+# it MOVES LABELS, which restarts every Stage 1 guard record.
+AGE_MASKED_DATASETS: frozenset[str] = frozenset()
+
 # --------------------------------------------------------------------------- #
 # Canonical artefact filenames / directory names (centralised so no string is  #
 # duplicated across packages). See cellfate.common.io.ArtifactPaths.           #

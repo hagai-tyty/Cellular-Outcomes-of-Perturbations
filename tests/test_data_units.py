@@ -237,7 +237,7 @@ def test_delta_age_centres_on_controls_for_normal_source():
         "cell_line": ["L0"] * 15 + ["L1"] * 15,
         "is_control": ([True] * 5 + [False] * 10) * 2,
     })
-    d, mask = delta_age(clock, x, genes, obs, source="synth")
+    d, mask, _reason = delta_age(clock, x, genes, obs, source="synth")
     assert mask.all()  # non-cancer source -> all ages valid
     line0_ctrl = d[:5]
     assert abs(line0_ctrl.mean()) < 1e-6  # ΔAge centred on each line's controls
@@ -247,7 +247,8 @@ def test_delta_age_masks_cancer_sources():
     panel = GenePanel([f"G{i}" for i in range(5)])
     clock = LinearClock.random(panel, seed=0)
     obs = pd.DataFrame({"cell_line": ["L0"] * 6, "is_control": [True] * 3 + [False] * 3})
-    _, mask = delta_age(clock, np.zeros((6, 5)), list(panel.genes), obs, source="tahoe")
+    _, mask, _reason = delta_age(clock, np.zeros((6, 5)), list(panel.genes), obs,
+                                 source="tahoe")
     assert not mask.any()  # tahoe is in CANCER_SOURCES
 
 

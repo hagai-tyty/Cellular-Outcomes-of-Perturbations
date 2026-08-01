@@ -50,9 +50,10 @@ def test_delta_age_is_bit_identical_with_and_without_the_census():
     expr = rng.normal(3.0, 1.0, size=(12, 8))
     obs = _obs(["A"] * 6 + ["B"] * 6, [True, False, False, True, False, False] * 2,
                batch=["E1", "E2"] * 6, donor_age=[53.0] * 12)
-    d_plain, m_plain = delta_age(clock, expr, genes, obs, source="reprogramming")
+    d_plain, m_plain, _r_plain = delta_age(clock, expr, genes, obs, source="reprogramming")
     census: dict = {}
-    d_census, m_census = delta_age(clock, expr, genes, obs, source="reprogramming", census=census)
+    d_census, m_census, _r_census = delta_age(clock, expr, genes, obs,
+                                              source="reprogramming", census=census)
     assert np.array_equal(d_plain, d_census)          # bit-identical, not "close"
     assert np.array_equal(m_plain, m_census)
     assert census, "the census must actually have been filled, or the test proves nothing"
@@ -337,3 +338,111 @@ def test_hff_donor_age_sits_outside_the_shipped_clocks_fitted_range():
     lo, hi = meta["age_range"]
     assert S.DONOR_AGE_YEARS < lo, f"{S.DONOR_AGE_YEARS} should be below the clock's {lo}"
     assert lo == 1.0 and hi == 96.0
+
+
+# ============================================================================ #
+# STAGE 1.5.3 STEP 2 — C-1 (`age_label_policy`)                                #
+# ============================================================================ #
+def test_default_policy_is_bit_identical_to_the_old_expression():
+    """THE GUARD. Rules 2 and 3 are off by default, so nothing may move -- even on cells that
+    WOULD qualify under them."""
+    from cellfate.data.aging import age_label_policy
+    obs = _obs(["A"] * 6, [True] + [False] * 5,
+               dataset_id=["hff_sc"] * 6, donor_age=[0.0] * 6)
+    mask, reasons = age_label_policy(6, "reprogramming", obs)
+    assert np.array_equal(mask, np.full(6, True))
+    assert reasons == [None] * 6
+
+
+def test_a_masked_dataset_is_masked_and_its_neighbour_in_the_same_chunk_is_not():
+    """The blocking capability C-1 exists for: HFF and Gill separable inside ONE chunk.
+    Before this, `age_mask` keyed on `source` alone and both report "reprogramming"."""
+    from cellfate.data.aging import age_label_policy
+    obs = _obs(["HFF"] * 2 + ["O1"] * 2, [False] * 4,
+               dataset_id=["hff_sc", "hff_sc", "gill_bulk", "gill_bulk"])
+    mask, reasons = age_label_policy(4, "reprogramming", obs,
+                                     masked_datasets=frozenset({"hff_sc"}))
+    assert list(mask) == [False, False, True, True]
+    assert reasons == ["dataset_policy", "dataset_policy", None, None]
+
+
+def test_the_cancer_rule_wins_and_is_reported_first():
+    """Order stability: a cell excluded twice reports the first rule, so the string does not
+    depend on the order the later rules happen to be written in."""
+    from cellfate.data.aging import age_label_policy
+    obs = _obs(["A"] * 2, [False] * 2, dataset_id=["hff_sc"] * 2)
+    mask, reasons = age_label_policy(2, "tahoe", obs, masked_datasets=frozenset({"hff_sc"}))
+    assert not mask.any()
+    assert reasons == ["cancer_source"] * 2
+
+
+def test_an_unknown_donor_age_never_masks():
+    """Absence of evidence is recorded, not acted on. NaN must not silently exclude."""
+    from cellfate.data.aging import age_label_policy
+    obs = _obs(["A"] * 3, [False] * 3, donor_age=[float("nan"), 53.0, 0.0])
+    mask, reasons = age_label_policy(3, "reprogramming", obs, clock_age_range=(1.0, 96.0))
+    assert list(mask) == [True, True, False]
+    assert reasons == [None, None, "donor_out_of_clock_range"]
+
+
+def test_masked_datasets_without_the_column_raises_rather_than_keeping_labels():
+    """BUG 3 from the cross-review: the original spec read `if masked_datasets and
+    "dataset_id" in obs.columns`, which silently KEEPS labels meant to be withheld -- the
+    unsafe direction, and invisible."""
+    from cellfate.data.aging import age_label_policy
+    with pytest.raises(KeyError, match="dataset_id"):
+        age_label_policy(3, "reprogramming", pd.DataFrame({"cell_line": ["a", "b", "c"]}),
+                         masked_datasets=frozenset({"hff_sc"}))
+
+
+def test_clock_age_range_without_donor_age_raises():
+    from cellfate.data.aging import age_label_policy
+    with pytest.raises(KeyError, match="donor_age"):
+        age_label_policy(3, "reprogramming", pd.DataFrame({"cell_line": ["a", "b", "c"]}),
+                         clock_age_range=(1.0, 96.0))
+
+
+def test_a_missing_column_is_not_an_error_when_the_policy_is_off():
+    """The distinction that makes the two raises above safe: OFF means inapplicable, not wrong."""
+    from cellfate.data.aging import age_label_policy
+    mask, reasons = age_label_policy(3, "reprogramming",
+                                     pd.DataFrame({"cell_line": ["a", "b", "c"]}))
+    assert mask.all() and reasons == [None] * 3
+
+
+def test_the_reason_is_none_exactly_where_the_mask_is_true():
+    """The invariant `Sample` validation depends on (schemas.py)."""
+    from cellfate.data.aging import age_label_policy
+    obs = _obs(["A"] * 4, [False] * 4, donor_age=[0.0, 53.0, 200.0, 30.0])
+    mask, reasons = age_label_policy(4, "reprogramming", obs, clock_age_range=(1.0, 96.0))
+    assert [r is None for r in reasons] == list(mask)
+
+
+def test_delta_age_returns_reasons_and_stays_bit_identical_at_defaults():
+    """C-1 widens delta_age to a 3-tuple. At defaults the first two must be unchanged."""
+    rng = np.random.default_rng(0)
+    genes = [f"G{i}" for i in range(8)]
+    clock = LinearClock({g: float(w) for g, w in zip(genes, rng.normal(size=8), strict=True)},
+                        intercept=41.5)
+    expr = rng.normal(3.0, 1.0, size=(12, 8))
+    obs = _obs(["A"] * 6 + ["B"] * 6, [True, False, False, True, False, False] * 2,
+               dataset_id=["hff_sc"] * 12, donor_age=[0.0] * 12)
+    d, mask, reasons = delta_age(clock, expr, genes, obs, source="reprogramming")
+    assert len(reasons) == 12 and set(reasons) == {None}
+    assert mask.all()
+    # and the arithmetic itself is untouched: ΔAge is age minus the per-line control mean
+    age = clock.predict_age(expr, genes)
+    want = age - _control_baseline(age, obs["cell_line"].to_numpy(),
+                                   obs["is_control"].to_numpy().astype(bool))
+    assert np.array_equal(d, want)
+
+
+def test_cancer_sources_are_still_masked_through_delta_age():
+    """The pre-existing rule, exercised end to end rather than only in the pure helper."""
+    rng = np.random.default_rng(1)
+    genes = ["G0", "G1"]
+    clock = LinearClock({"G0": 1.0, "G1": 0.5}, intercept=10.0)
+    obs = _obs(["A"] * 4, [True, False, False, False])
+    _d, mask, reasons = delta_age(clock, rng.normal(size=(4, 2)), genes, obs, source="tahoe")
+    assert not mask.any()
+    assert reasons == ["cancer_source"] * 4

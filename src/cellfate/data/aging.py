@@ -123,6 +123,76 @@ def _control_baseline(values: np.ndarray, lines: np.ndarray, is_ctrl: np.ndarray
     return baseline
 
 
+def age_label_policy(
+    n: int,
+    source: str,
+    obs: pd.DataFrame,
+    *,
+    masked_datasets: frozenset[str] = frozenset(),
+    clock_age_range: tuple[float, float] | None = None,
+) -> tuple[np.ndarray, list[str | None]]:
+    """Which cells get a usable ΔAge label, and -- when they do not -- WHY. Pure.
+
+    Stage 1.5.3 C-1. Before this, the rule was one expression keyed on ``source`` alone, and
+    both reprogramming sources report ``source = "reprogramming"`` -- so **no policy could
+    mask HFF and keep Gill**, which is precisely what Stage 1.5.2's gate G-c step 2 requires.
+
+    Three independent reasons, checked in decreasing order of certainty. The first is the
+    pre-existing rule and is never weakened by the other two; a cell excluded for more than one
+    reason reports the FIRST that applied, so the string is stable under reordering of the
+    later rules.
+
+      1. ``cancer_source``   -- the clock is out of distribution on transformed lines.
+                                Today's only rule (``CANCER_SOURCES``), unchanged.
+      2. ``dataset_policy``  -- gate G-c: this dataset's labels are withheld by decision, not
+                                by cell type. Empty by default.
+      3. ``donor_out_of_clock_range`` -- the donor's chronological age is outside the range the
+                                clock was FITTED on (``configs/clocks/*.json`` ->
+                                ``meta.age_range``). An UNKNOWN age never masks.
+
+    Returns ``(age_mask, reasons)`` with ``reasons[i] is None`` exactly where ``age_mask[i]``
+    is True -- the invariant :class:`~cellfate.common.schemas.Sample` validation enforces.
+    """
+    mask = np.full(n, True, dtype=bool)
+    reasons: list[str | None] = [None] * n
+
+    def _exclude(bad: np.ndarray, why: str) -> None:
+        newly = np.asarray(bad, dtype=bool) & mask
+        mask[newly] = False
+        for i in np.flatnonzero(newly):
+            reasons[i] = why
+
+    if source in C.CANCER_SOURCES:
+        _exclude(np.ones(n, dtype=bool), "cancer_source")
+
+    # FAIL LOUD, NEVER OPEN. If a withholding policy is switched on and the column it needs is
+    # absent, the silent outcome is to KEEP labels that were meant to be withheld -- the unsafe
+    # direction, and invisible. Not hypothetical: G-b reached Gill and not HFF, so `donor_age`
+    # was missing on HFF until C-3. The step order protects us; correctness must not depend on it.
+    if masked_datasets:
+        if "dataset_id" not in obs.columns:
+            raise KeyError(
+                "age_label_policy: masked_datasets was requested but obs has no 'dataset_id' "
+                "column, so the policy cannot be applied. Refusing to silently keep labels "
+                "that were meant to be withheld.")
+        _exclude(obs["dataset_id"].isin(masked_datasets).to_numpy(), "dataset_policy")
+
+    if clock_age_range is not None:
+        if "donor_age" not in obs.columns:
+            raise KeyError(
+                "age_label_policy: clock_age_range was requested but obs has no 'donor_age' "
+                "column (see C-3). Refusing to silently treat every cell as in-range.")
+        a = pd.to_numeric(obs["donor_age"], errors="coerce").to_numpy(dtype=float)
+        lo, hi = clock_age_range
+        # NaN comparisons are False, so an UNKNOWN donor age cannot mask. Deliberate, and
+        # distinct from the raise above: a missing COLUMN means the policy is inapplicable and
+        # is an error; a missing VALUE in a present column is recorded absence, and absence of
+        # evidence is not acted on.
+        _exclude((a < lo) | (a > hi), "donor_out_of_clock_range")
+
+    return mask, reasons
+
+
 def census_warnings(census: dict, min_controls: int = 2) -> list[str]:
     """Human-readable problems in a baseline census. Pure, so it is testable on its own.
 
@@ -189,8 +259,9 @@ def delta_age(
     source: str,
     census: dict | None = None,
     composition_cols: tuple[str, ...] = ("batch", "donor_age"),
-) -> tuple[np.ndarray, np.ndarray]:
-    """Compute (ΔAge, age_mask) from the **full normalised profile**.
+    clock_age_range: tuple[float, float] | None = None,
+) -> tuple[np.ndarray, np.ndarray, list[str | None]]:
+    """Compute (ΔAge, age_mask, age_mask_reason) from the **full normalised profile**.
 
     The clock is handed ``expr`` (N, len(genes)) with its gene symbols ``genes``
     -- the full profile, not the 2000-HVG model input -- so it can dot its
@@ -210,11 +281,16 @@ def delta_age(
     does not depend on whether ``census`` was supplied. ``composition_cols`` names
     the ``obs`` columns to summarise; missing ones are skipped, so a source that
     does not stamp them is not an error.
+
+    ``clock_age_range`` enables :func:`age_label_policy`'s third rule (Stage 1.5.3 C-2).
+    ``None`` -- the default -- leaves it off, so nothing changes unless a caller opts in.
     """
     age = clock.predict_age(expr, genes)
     lines = obs["cell_line"].to_numpy()
     is_ctrl = obs["is_control"].to_numpy().astype(bool)
     comp = {c: obs[c].to_numpy() for c in composition_cols if c in obs.columns} or None
     d = age - _control_baseline(age, lines, is_ctrl, census=census, composition=comp)
-    age_mask = np.full(age.shape[0], source not in C.CANCER_SOURCES, dtype=bool)
-    return d, age_mask
+    age_mask, age_mask_reason = age_label_policy(
+        age.shape[0], source, obs,
+        masked_datasets=C.AGE_MASKED_DATASETS, clock_age_range=clock_age_range)
+    return d, age_mask, age_mask_reason

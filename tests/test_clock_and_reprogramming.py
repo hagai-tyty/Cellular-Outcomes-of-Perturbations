@@ -111,7 +111,7 @@ def test_clock_consumes_full_profile_not_panel():
     genes = ["AGING_GENE", "OTHER1", "OTHER2"]
     expr = np.array([[2.0, 0.0, 0.0], [0.0, 0.0, 0.0]])   # cell0 expresses it, cell1 (control) doesn't
     obs = pd.DataFrame({"cell_line": ["L", "L"], "is_control": [False, True]})
-    d, mask = delta_age(clock, expr, genes, obs, source="reprogramming")
+    d, mask, _reason = delta_age(clock, expr, genes, obs, source="reprogramming")
     assert mask.all()                       # reprogramming is age-valid
     assert abs(d[0] - 10.0) < 1e-9          # 40+5*2=50 vs control 40 -> ΔAge=10 (clock read the gene)
 
