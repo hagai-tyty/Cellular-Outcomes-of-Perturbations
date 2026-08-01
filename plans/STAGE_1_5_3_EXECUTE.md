@@ -1,6 +1,29 @@
 # STAGE 1.5.3 — EXECUTE: the code changes Stage 1.5.2 forces
 
-**Status:** 🔵 **PRE-REGISTERED — NOT EXECUTED.** No `src/` file is edited by this document.
+> ## ✅ **STEPS 1–4 EXECUTED 2026-08-01. No label moved.**
+>
+> *The pre-registration below is unchanged. This box records what happened.*
+>
+> | step | shipped | gate |
+> |---|---|---|
+> | **1** | C-6 `age_mask_reason`, C-3 HFF donor metadata | **IDENTICAL, max\|Δ\| = 0.00e+00** |
+> | **2** | **C-1** — `age_mask` can finally address HFF | **IDENTICAL, 0.0** |
+> | **3** | C-2 — the clock's `age_range` carried, flag off | **IDENTICAL, 0.0** |
+> | **4** | C-4 option (a) + PART B.2's 7 annotations | `res.py` untouched; **zero deletions** in `plans/` |
+>
+> Gate: `plan_tests/verify_age_mask_identical.py`, baseline captured **before any `src/` edit**,
+> 7 chunks / 1944 cells, and it **self-tests that it can fail** before trusting a pass.
+> **676 tests pass**, ruff clean.
+>
+> **Demonstrated live:** HFF and Gill are now separable inside one chunk —
+> `hff_sc → age_mask=False, reason=dataset_policy` beside `gill_bulk → age_mask=True`.
+> **G-c step 2 is runnable; it was not before.**
+>
+> **One deviation:** C-6 ships the TOLERANT shard reader, not the strict one — see the note in
+> C-6 and in `CHANGES.md`. Steps **5–7 remain open by design**, and both policy flags are still
+> off.
+
+**Status:** 🔵 **PRE-REGISTERED — steps 1–4 now EXECUTED (see the box above); steps 5–7 open.**
 **Depends on:** `STAGE_1_5_2_LABEL_ANCHOR.md` (✅ closed) and `STAGE_1_5_1_REV_FINAL.md` §11 (✅ closed).
 **Blocking for:** Stage 2's premise, Stage 3's recommendation rule, Stage 5's claims.
 **Not blocking for:** the fate/safety head, which consumes no ΔAge and is untouched throughout.

@@ -2812,3 +2812,96 @@ changed**; the reports are still built exactly once per module.
 precisely the evidence that proved too weak when this was first closed on "~15 runs, no failures".
 What is established is that its most likely amplifier is gone, and that a future recurrence would
 be a real fixture/tmpdir question rather than an artefact of test ordering.
+
+---
+
+## 2026-08-01 — **Stage 1.5.3 steps 1–4 EXECUTED.** No label moved.
+
+`plans/STAGE_1_5_3_EXECUTE.md` steps 1–4. **676 tests pass** (was 645), ruff clean, and the
+bit-identity gate reads **max|Δ| = 0.00e+00** after every step.
+
+### The gate came first, and it self-tests that it can fail
+
+`plan_tests/verify_age_mask_identical.py` was written and its baseline captured **before any
+`src/` edit** — the only moment that can be done honestly. It compares ΔAge and `age_mask` by
+`np.array_equal` and SHA-256 of the raw float64 bytes, never a tolerance.
+
+**A gate that cannot fail is not a gate** (the `verify_1a` lesson). So every run first injects
+three faults into a copy of its own baseline and aborts unless all three are caught:
+
+| injected fault | caught |
+|---|---|
+| one ULP on a single ΔAge value | ✅ |
+| one flipped `age_mask` bit, ΔAge untouched | ✅ |
+| a reason string appearing while the policies are off | ✅ |
+| *(control)* an unchanged copy must PASS | ✅ |
+
+**Geometry:** all six Gill donors + one 1800-cell HFF chunk = **7 chunks, 1944 cells**.
+
+### What shipped
+
+| step | change | gate |
+|---|---|---|
+| **1** | **C-6** `age_mask_reason` through `Sample`, `ManifestRow`, both parquet schemas, `assemble_samples`. **C-3** HFF stamps `DONOR_AGE_YEARS = 0.0` + empty `batch` | IDENTICAL, 0.0 |
+| **2** | **C-1** `AGE_MASKED_DATASETS` + the pure `age_label_policy()`; `delta_age` returns a 3-tuple | IDENTICAL, 0.0 |
+| **3** | **C-2** `LinearClock.age_range` carried from `meta`; `DataConfig.enforce_clock_age_range = False` | IDENTICAL, 0.0 |
+| **4** | **C-4 option (a)** `AgeProvenance` + two defaulted `Response` fields + a warning list; **PART B.2's 7 annotations** to 6 plans | `res.py` untouched; **zero deletions** in `plans/` |
+
+### The blocking capability, demonstrated on real data
+
+```
+THE BLOCKING CAPABILITY -- one chunk, both datasets, same `source`:
+   hff_sc     age_mask=False reason=dataset_policy
+   hff_sc     age_mask=False reason=dataset_policy
+   gill_bulk  age_mask=True  reason=None
+   gill_bulk  age_mask=True  reason=None
+```
+
+**G-c step 2 is now runnable. It was not, before this stage** — `age_mask` keyed on `source`
+alone and both reprogramming sources report `"reprogramming"`.
+
+Also verified live: the clock now reports `age_range = (1.0, 96.0)`, and switching C-2 on masks
+all 21 cells of the neonatal donor N2 with reason `donor_out_of_clock_range` — while the default
+path leaves every one of them untouched.
+
+### 🔴 A deviation from the plan, and why
+
+**C-6 in the plan chose the STRICT migration** ("require the column, and rebuild"), reasoning that
+C-1/C-2 move labels and force a rebuild anyway.
+
+**That reasoning does not hold for steps 1–4.** Both policies ship with their flags **off**, so no
+label moves and no rebuild happens. Requiring the column would break every committed shard in
+`runs/` — read by `training/dataset.py`, `evaluation/data.py`, `inference/service.py` and three
+runners — **for zero benefit**. The plan's own caveat says exactly this: it *"must not ship in a
+release that does not already rebuild."*
+
+So `shard_to_numpy` reads the column **tolerantly**, with the reasoning at the call site. Step 6's
+rebuild is where it may be tightened.
+
+### One assertion changed in four steps, and it is called out rather than buried
+
+`tests/test_inference.py` asserted `(warning is not None) == (status == REJECTED_OOD)` — that
+`warning` existed for exactly one reason. **C-4 deliberately adds a second**: the ΔAge label class
+can be unvalidated on a perfectly in-distribution query, and `OODDetector` (a latent Mahalanobis
+test) cannot express that. The biconditional became the implications that are actually true, which
+is **strictly stronger** in the direction that matters — OOD must still always warn — plus the new
+one. **Every other assertion in the stage is untouched**, including
+`test_delta_age_masks_cancer_sources`, where only the tuple unpacking widened.
+
+### Defects of my own, caught before commit
+
+| | |
+|---|---|
+| `io.py` uses a **relative** import, so my absolute-form edit silently no-oped and `load_age_provenance` raised `NameError` in nine tests | |
+| my `predictor.py` import edit broke a parenthesised multi-line import | |
+| a test asserted `"not calibratable"` against a note reading `"NOT calibratable"` | |
+| an empty-table fixture exercised a numpy reshape edge case instead of the tolerance it was meant to test | |
+| a missing `ValidationError` import; two unsorted import blocks; one `N814` | |
+
+### What is NOT done, and is not supposed to be
+
+**Steps 5, 6, 7 remain open by design.** Step 5 is C-5's design plus its bar; **step 6 is G-c
+step 2**, the retrain, which is the first thing in this whole stage that moves a label; step 7 is
+whatever C-4 option (c) becomes at Stage 3. **`AGE_MASKED_DATASETS` is still empty and
+`enforce_clock_age_range` is still `False`** — the capability exists, and using it is a separate,
+pre-registered decision.
