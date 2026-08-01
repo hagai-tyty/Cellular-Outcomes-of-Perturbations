@@ -11,6 +11,38 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-01 — CI GREEN on 3.11 and 3.12. This closes the "not verified" caveat on three entries
+
+**Status:** ✅ Verified by execution, not by inspection.
+
+The first CI run after the lint fix (`84800fc`) is **green on both Python 3.11 and 3.12**. Because
+`ruff` had been aborting the job before `pytest` since **2026-07-26**, this is the first time the
+suite has actually executed in CI in roughly a week -- so green establishes considerably more than a
+routine pass:
+
+| what had never been CI-verified until now | status |
+|---|---|
+| the whole Stage 1.5.2 / 1.5.3 arc from the other machine (~19 commits) | ✅ passes |
+| the `src/` changes for gates **G-a** and **G-b** (`aging.py`, `sources.py`, `build_dataset.py`, `data/__init__.py`) | ✅ passes |
+| **`test_delta_age_is_bit_identical_with_and_without_the_census`** -- the hard guard that G-a records and does not compute | ✅ passes |
+| the census key-collision fix (`chunk_id::line`) | ✅ passes |
+| the `verify_stage1_5.py` ragged-row fix | ✅ passes |
+| the **three regression tests added in `1380cb2`**, which had never run anywhere | ✅ pass |
+| the suite on **two interpreters**, not just the data machine's | ✅ passes |
+
+**This retroactively closes an explicit caveat carried by the three preceding entries in this file**,
+each of which recorded that the suite could not be run locally (no `numpy`/`torch`/`pytest` on this
+machine) and was therefore *asserted-not-verified*. It is now verified, by execution, on a clean
+machine, twice.
+
+**What it still does not establish:** that any *label* is correct. CI proves the code does what its
+tests say, including that ΔAge is bit-identical across the G-a change. It says nothing about whether
+the ΔAge values themselves are right -- that is the question Stage 1.5.2 answered in the negative and
+Stage 1.5.3 exists to act on.
+
+---
+
+
 ## 2026-08-01 — CI red X diagnosed: it was the LINT step, failing since 2026-07-26
 
 **Status:** ✅ Fixed and verified locally. Two renames, no logic touched.
