@@ -11,6 +11,107 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-01 — Line-by-line review of the Stage 1.5.2 / 1.5.3 work: 3 bugs fixed, 2 documentation gaps closed
+
+**Status:** ✅ Applied. **No label moves, no verdict changes.** Two shipped-code bugs fixed with
+regression tests; one bug fixed in code that has not been written yet; two documentation gaps closed.
+
+Reviewed every change pulled from the other machine — `src/` diff line by line, and the load-bearing
+numbers recomputed from the raw artefacts rather than taken on trust.
+
+### What was verified as correct
+
+* **`aging.py`'s census is genuinely additive.** The baseline arithmetic is textually unchanged, and
+  `test_delta_age_is_bit_identical_with_and_without_the_census` uses `np.array_equal` (not
+  `allclose`) *and* asserts the census was non-empty, so it cannot pass vacuously.
+* **`sources.py`'s `_maybe_float` returns `None`, never `0.0`** — correct, because 0 is a real age
+  here (N2/N3 are neonatal) and a silent default would be indistinguishable from it.
+* **`verify_stage1_5.py` keeps the new G-a warnings OUT of `status`** — right call: four runs are
+  recorded against the Stage 1.5 PASS, and folding a new condition into it would retroactively
+  redefine what those PASSes meant.
+* **M-2a's verdict logic** correctly demoted ρ_within and used ρ_partial — the fallback that was
+  pre-registered in §6.
+* **The resolvability work is the strongest part, and it corrected me.** My §6 fallback (ρ_partial at
+  n=22) was **itself UNRESOLVABLE at 0.9233**. It was caught, and fixed by changing the *geometry*
+  (n=68 via GSE165177) rather than the bar — §5b applied exactly as written.
+* **M-2b** — registered bar 8/11 was unresolvable, moved to the §5b `usable_bar` of 7/11, landed at
+  exactly 7/11, correctly marked FRAGILE, and the pass flagged as a day-axis artefact.
+* **C-2's evidence recomputed from `scorecard/baseline.json` and matches exactly:** `dage_mae_model`
+  3.01x, `dage_mae_ridge` 2.63x, `conformal_coverage` **0.000** on both out-of-range donors,
+  `rank_model_dage` 0.910 vs 0.967.
+* **GSE165178's join re-confirmed** at 22/22, 0 unmatched.
+* **The changed `diag_methylation_anchor_results.json`** differs only in `utc` and `data_dir` — the
+  re-run reproduced **identically**.
+
+### Bug 1 (shipped) — the baseline census silently discarded 44 of HFF's 45 chunks
+
+`build_dataset.py` merged each chunk's census with `baseline_census.update(chunk_census)`, keyed on
+`cell_line`. **`cell_line` is not unique across chunks:** `verify_stage1_5_results.json` records
+**HFF in 45 of them**. Every chunk overwrote the previous one, so the manifest kept **one** record —
+for the dataset carrying ~99.8% of the age labels. A baseline problem in any chunk but the last was
+invisible, which is precisely what gate G-a exists to prevent. It also undercut C-3, whose HFF
+metadata fix is verified *through* this census.
+
+**Fixed** by keying on `f"{chunk_id}::{line}"` and stamping `chunk_id` / `cell_line` into the record.
+Demonstrated: three chunks of one line collapse to 1 record under the old key and keep all 3 (and all
+4 warnings) under the new one. All 15 existing tests were single-chunk, so nothing caught it.
+
+### Bug 2 (shipped) — `verify_stage1_5.py` crashed on any errored chunk
+
+G-a widened the census table to six columns; the error branch still appended **five**. `render_table`
+indexes `row[i] for i in range(len(headers))`, so a short row raises `IndexError` — crashing the
+renderer on exactly the path `scan_build` goes out of its way to survive (*"recorded per chunk, never
+aborts the scan"*). **Fixed**; header and both append sites now verified at 6 cells.
+
+### Bug 3 (not yet written) — `age_label_policy` failed open
+
+C-1's planned helper read `if masked_datasets and "dataset_id" in obs.columns:`. If a withholding
+policy is switched on and the column it needs is absent, the silent outcome is to **keep labels that
+were meant to be withheld** — the unsafe direction, and invisible. Not hypothetical: C-3 records that
+G-b reached Gill and never reached HFF, so `donor_age` is missing on HFF today. **The spec now
+raises**, with two tests added, and distinguishes a missing *column* (policy inapplicable — error)
+from a missing *value* (recorded absence — never acted on).
+
+### Gap 1 — C-2's range evidence does not explain Y2
+
+The in-range mean coverage of 0.601 hides a split: O1 0.810, O2 0.667, Y1 0.737, **Y2 0.190**. Three
+folds have broken coverage and the range criterion identifies **two**. Y2 is comfortably inside
+`[1, 96]` and still fails. The claim as worded ("the two worst folds", "the range field is
+informative") is correct, but it is **not a complete account of the calibration failure** and must
+not be presented as one. Recorded in C-2.
+
+### Gap 2 — the ceiling asymmetry argues FOR the verdict, and nobody had written it down
+
+§12-R honestly recorded both readings of the ceiling, including the one that *qualifies* the verdict
+(RNA↔multi-tissue reaches 91% of the meth↔meth ceiling). The inference it licenses was never drawn,
+and it runs the other way.
+
+**These are not two RNA clocks — they are ONE RNA clock against two methylation references**, and
+those references agree with each other at **+0.568**:
+
+| | ρ_partial |
+|---|---|
+| Horvath-mt ↔ Horvath-sb (the two references, to each other) | **+0.568** |
+| Fleischer RNA ↔ Horvath-mt | +0.516 |
+| Fleischer RNA ↔ Horvath-sb | **+0.267** |
+
+Anything genuinely tracking the shared signal must correlate with **both** references at broadly
+similar strength, since each reference's own reliability bounds how well any third measurement can
+agree with it. A **2x asymmetry against references that agree with each other at 0.57** is the
+signature of tracking something **clock-specific rather than age** — §1's diagnosis reached from an
+independent direction. **So the qualifying reading does not survive**, and SPLIT understates the
+result. Recorded as an inference from already-published numbers; nothing was computed after the fact.
+
+### Not verified
+
+The full suite was **not re-run** — this machine has no `numpy`/`pytest`. The two shipped fixes were
+syntax-checked, the table widths verified programmatically, and `census_warnings` exercised directly
+on the new record shape. **The three new regression tests in `tests/test_baseline_census.py` have not
+been executed** and must be run on the data machine.
+
+---
+
+
 ## 2026-07-30 (correction, same day) — Stage 1.5.2's gate was unsatisfiable; D2/D3 had already been measured
 
 **Status:** ✅ Corrected. Markdown only; `src/` untouched. Supersedes the gate wording committed in

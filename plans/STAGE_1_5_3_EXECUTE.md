@@ -183,16 +183,49 @@ def age_label_policy(
     if source in C.CANCER_SOURCES:
         _exclude(np.ones(n, dtype=bool), "cancer_source")
 
-    if masked_datasets and "dataset_id" in obs.columns:
+    # FAIL LOUD, NEVER OPEN. If a withholding policy is switched on and the column it needs is
+    # absent, the silent outcome is to KEEP labels that were meant to be withheld -- the unsafe
+    # direction, and invisible. This is not hypothetical: C-3 records that G-b reached Gill and
+    # never reached HFF, so `donor_age` is missing on HFF *today*. The step order (C-3 in step 1,
+    # C-2 in step 3) protects us, but correctness must not depend on the step order.
+    if masked_datasets:
+        if "dataset_id" not in obs.columns:
+            raise KeyError(
+                "age_label_policy: masked_datasets was requested but obs has no 'dataset_id' "
+                "column, so the policy cannot be applied. Refusing to silently keep labels "
+                "that were meant to be withheld.")
         _exclude(obs["dataset_id"].isin(masked_datasets).to_numpy(), "dataset_policy")
 
-    if clock_age_range is not None and "donor_age" in obs.columns:
+    if clock_age_range is not None:
+        if "donor_age" not in obs.columns:
+            raise KeyError(
+                "age_label_policy: clock_age_range was requested but obs has no 'donor_age' "
+                "column (see C-3: G-b reached Gill, not HFF). Refusing to silently treat every "
+                "cell as in-range.")
         a = pd.to_numeric(obs["donor_age"], errors="coerce").to_numpy(dtype=float)
         lo, hi = clock_age_range
-        # NaN comparisons are False, so an unknown donor age cannot mask. Deliberate.
+        # NaN comparisons are False, so an UNKNOWN donor age cannot mask. Deliberate, and
+        # distinct from the raise above: a missing COLUMN means the policy is inapplicable and
+        # is an error; a missing VALUE in a present column is recorded absence, and absence of
+        # evidence is not acted on.
         _exclude((a < lo) | (a > hi), "donor_out_of_clock_range")
 
     return mask, reasons
+```
+
+**Two tests this forces** (add to C-1's test list):
+
+```python
+def test_masked_datasets_without_the_column_RAISES_rather_than_keeping_labels():
+    with pytest.raises(KeyError, match="dataset_id"):
+        age_label_policy(3, "reprogramming", pd.DataFrame({"x": [1, 2, 3]}),
+                         masked_datasets=frozenset({"hff_sc"}))
+
+
+def test_clock_age_range_without_donor_age_RAISES():
+    with pytest.raises(KeyError, match="donor_age"):
+        age_label_policy(3, "reprogramming", pd.DataFrame({"x": [1, 2, 3]}),
+                         clock_age_range=(1.0, 96.0))
 ```
 
 and at the call site (today's line 219):
@@ -352,6 +385,29 @@ Three things make this hard to explain away:
 
 This does not prove that masking N2/N3 is right — **it proves the range field is informative**, and
 that discarding it cost the project its two worst folds' worth of diagnosis.
+
+> #### ⚠️ What the range does NOT explain — Y2
+>
+> *Added on review, because the aggregate hides it and a reviewer will not.* The in-range group's
+> mean coverage of 0.601 is not uniform:
+>
+> | donor | O1 | O2 | Y1 | **Y2** |
+> |---|---:|---:|---:|---:|
+> | age | 53 | 53 | 29 | **35** |
+> | `conformal_coverage` | 0.810 | 0.667 | 0.737 | **0.190** |
+> | `dage_mae_model` | 5.39 | 7.54 | 7.28 | **14.06** |
+>
+> **Y2 is comfortably inside `[1, 96]` and still fails.** Three folds have broken coverage
+> (N2 0.000, N3 0.000, Y2 0.190) and the range criterion identifies **two of the three**.
+>
+> So the claim above is correct exactly as worded — the range predicts the two worst folds *by
+> MAE*, and it is informative — but it is **not a complete account of the calibration failure**,
+> and it must not be presented as one. Something else is wrong with Y2. Whatever that is, it is
+> not out-of-range extrapolation, and this stage does not identify it.
+>
+> **Consequence for C-2:** the range check is worth wiring in on the evidence above; it is *not*
+> a sufficient basis for concluding that in-range donors are trustworthy. That inference would
+> be refuted by Y2 on the project's own scorecard.
 
 ### The change
 

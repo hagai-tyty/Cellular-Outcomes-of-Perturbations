@@ -225,7 +225,11 @@ def _render(stats: list[ChunkControlStat], verdict: dict) -> None:
     rows = []
     for s in sorted(stats, key=lambda x: x.chunk_id):
         if s.error is not None:
-            rows.append([s.chunk_id, s.cell_line, "ERR", "ERR", s.error[:36]])
+            # Six cells, matching the header. `render_table` indexes `row[i] for i in
+            # range(len(headers))`, so a short row raises IndexError -- which would crash the
+            # renderer on exactly the errored-chunk path `scan_build` goes out of its way to
+            # survive ("recorded per chunk, never aborts the scan").
+            rows.append([s.chunk_id, s.cell_line, "ERR", "ERR", s.error[:36], "-"])
             continue
         flag = "** FALLBACK FIRED **" if s.fallback_fired else "ok"
         notes = []

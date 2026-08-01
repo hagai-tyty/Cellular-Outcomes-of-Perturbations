@@ -183,3 +183,61 @@ def test_donor_age_and_batch_are_metadata_not_model_input():
     with pytest.raises(ValidationError, match="donor_age"):
         Request(X_raw=[0.0], u_modality="tf", u_descriptor="OSKM", dose_uM=1.0, time_h=24.0,
                 donor_age=53.0)
+
+
+# ------------------------------------------------- REGRESSIONS (found in review) ---- #
+def test_census_keys_must_survive_one_cell_line_spanning_MANY_chunks():
+    """The collision that silently discarded 44 of HFF's 45 chunks.
+
+    `cell_line` is NOT unique across chunks: `verify_stage1_5_results.json` records HFF in 45
+    of them. `run()` merged each chunk's census with `baseline_census.update(chunk_census)`,
+    keyed on the line alone, so every chunk overwrote the previous one and the manifest kept a
+    single record -- for the dataset carrying ~99.8% of the age labels. A baseline problem in
+    any chunk but the last became invisible, which is precisely what G-a exists to prevent.
+
+    This asserts the merge policy `run()` uses, on the shape that actually broke it.
+    """
+    per_chunk = {}
+    for i in range(3):
+        c: dict = {}
+        obs = _obs(["HFF"] * 4, [True, False, False, False])
+        clock = LinearClock({"G0": 1.0}, intercept=0.0)
+        delta_age(clock, np.arange(4.0).reshape(4, 1), ["G0"], obs,
+                  source="reprogramming", census=c)
+        per_chunk[f"reprogramming:HFF:b{i}"] = c
+
+    merged_buggy: dict = {}
+    for c in per_chunk.values():
+        merged_buggy.update(c)
+    assert len(merged_buggy) == 1, "precondition: keying on cell_line alone collides"
+
+    merged: dict = {}
+    for cid, c in per_chunk.items():
+        for line, rec in c.items():
+            merged[f"{cid}::{line}"] = {**rec, "chunk_id": cid, "cell_line": line}
+
+    assert len(merged) == 3, "every chunk must keep its own census record"
+    assert {r["chunk_id"] for r in merged.values()} == set(per_chunk)
+    assert {r["cell_line"] for r in merged.values()} == {"HFF"}
+
+
+def test_census_warnings_ignores_the_chunk_id_and_cell_line_fields():
+    """The namespaced record gained two str fields; neither may be read as a composition list."""
+    census = {"reprogramming:HFF:b0::HFF": {
+        "n_control": 1, "n_cells": 4, "source": "controls", "unreplicated": True,
+        "chunk_id": "reprogramming:HFF:b0", "cell_line": "HFF"}}
+    w = census_warnings(census)
+    assert len(w) == 1 and "n=1" in w[0]
+
+
+def test_render_handles_an_errored_chunk_without_crashing():
+    """G-a widened the table to six columns; the error branch still appended five.
+
+    `render_table` indexes `row[i] for i in range(len(headers))`, so the short row raised
+    IndexError -- crashing the renderer on the one path `scan_build` deliberately survives.
+    """
+    from verify_stage1_5 import _render
+
+    stats = [ChunkControlStat("c0", "A", 0, 0, error="RuntimeError('boom')"),
+             ChunkControlStat("c1", "B", 10, 2)]
+    _render(stats, decide_verdict(stats))

@@ -313,7 +313,13 @@ def run(cfg: DataConfig, sources: list[DataSource] | None = None,
             chunk_census: dict = {}
             samples, aux = process_chunk(src, chunk, panel, clock, cfg, harmonizer,
                                          census=chunk_census)
-            baseline_census.update(chunk_census)
+            # Key by chunk AND line, never by line alone. `cell_line` is NOT unique across
+            # chunks -- HFF spans 45 of them (verify_stage1_5_results.json) -- so a plain
+            # `.update()` keyed on the line silently kept 1 record and discarded 44, for the
+            # dataset that carries ~99.8% of the age labels. The whole point of G-a is that a
+            # baseline problem in ANY chunk stays visible.
+            for line, rec in chunk_census.items():
+                baseline_census[f"{cid}::{line}"] = {**rec, "chunk_id": cid, "cell_line": line}
             if not samples:
                 tracker.mark_done(cid, 0)
                 continue

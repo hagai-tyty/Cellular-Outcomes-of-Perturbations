@@ -772,6 +772,44 @@ Two readings, and both are defensible:
   RNA clock does nearly as well as a second methylation clock does. So the SPLIT is partly a
   property of **disagreement between the two methylation references**, not of the RNA clock alone.
 
+> ### 🆕 ADDED on review — the ASYMMETRY is itself the evidence, and it settles the two readings
+>
+> *Added 2026-08-01. The table above was recorded honestly, including the reading that qualifies
+> the verdict — but the inference it licenses was never drawn, and it runs in the verdict's
+> favour. A reviewer who reaches the "91% of ceiling" line and stops there will reach the wrong
+> conclusion.*
+>
+> **These are not two RNA clocks. They are ONE RNA clock (Fleischer) measured against two
+> methylation references** — and those two references agree with each other at **+0.568**.
+>
+> | | ρ_partial |
+> |---|---:|
+> | Horvath-mt ↔ Horvath-sb — *the two references, to each other* | **+0.568** |
+> | Fleischer RNA ↔ Horvath-mt | +0.516 |
+> | Fleischer RNA ↔ Horvath-sb | **+0.267** |
+>
+> **If the RNA clock were tracking true biological age, it could not do this.** The two
+> methylation clocks are largely measuring one shared quantity — that is what ρ = 0.568 between
+> them means, on only 60 shared CpGs. Anything that tracks that shared quantity must correlate
+> with **both** of them at broadly similar strength, because each reference's own reliability
+> bounds how well *any* third measurement can agree with it.
+>
+> Instead the RNA clock agrees with one at **0.52** and the other at **0.27** — a **2× asymmetry
+> against references that agree with each other at 0.57.** A measurement of the common signal
+> cannot be twice as correlated with one noisy proxy of that signal as with an equally noisy
+> second proxy. **The asymmetry is the signature of tracking something clock-specific rather than
+> age**, which is exactly §1's diagnosis arrived at from an independent direction.
+>
+> **So the "qualifying" reading does not survive.** RNA↔multi-tissue reaching 91% of the ceiling
+> is not evidence the RNA clock nearly works; **paired with RNA↔skin-&-blood at 47%, it is
+> evidence it does not.** A verdict of SPLIT understates this — the correct reading is that the
+> RNA clock fails a test the two methylation clocks pass against each other.
+>
+> **Recorded as an inference from already-published numbers, not a new measurement.** It changes
+> no verdict — M-2a's SPLIT ⇒ NOT CALIBRATABLE stands exactly as recorded — and nothing here was
+> computed after the fact to support it. What changes is only that the strongest objection to the
+> verdict now has its answer written down beside it.
+
 **What both readings agree on, and what actually matters:** a monotone calibration fitted here would
 be fitted against a reference that is only ~0.57 self-consistent after the reprogramming axis is
 removed. **M-2c would have been meaningless even if M-2a had passed** — which independently
