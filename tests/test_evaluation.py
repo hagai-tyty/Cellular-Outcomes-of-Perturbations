@@ -347,12 +347,30 @@ def eval_bundle(tmp_path_factory):
     return root
 
 
-def test_evaluate_writes_reports_and_wellformed_gates(eval_bundle):
+@pytest.fixture(scope="module")
+def eval_reports(eval_bundle):
+    """Run `evaluate()` once and hand back `(reports_dir, gates)`.
+
+    This is a FIXTURE rather than a side effect of the first test for a reason. Three tests below
+    read `reports/cell_line.json`, and only one of them used to write it — so running any of the
+    other two on its own failed with `FileNotFoundError`, 100% of the time, and the suite passed
+    only because pytest happened to run the writer first. That is the order dependence recorded in
+    `STAGE_1_5_1_REV_FINAL.md` §10.7 / §11.5, and it is also the most likely amplifier of the
+    intermittent failure logged there.
+
+    As a module-scoped fixture the reports are built on demand by whichever test asks first, and
+    still only built once per module.
+    """
     out = eval_bundle / "reports"
     cfg = EvalConfig(bundle=str(eval_bundle), dataset=str(eval_bundle), out=str(out),
                      regimes=("cell_line", "scaffold"),
                      baselines=("mean", "ridge", "x_only", "predict_control"))
     gates = evaluate(cfg)
+    return out, gates
+
+
+def test_evaluate_writes_reports_and_wellformed_gates(eval_reports):
+    out, gates = eval_reports
 
     # every reported regime carries all four boolean gate keys
     assert set(gates) <= {"cell_line", "scaffold"}
@@ -370,7 +388,7 @@ def test_evaluate_writes_reports_and_wellformed_gates(eval_bundle):
     assert "cell_line" in summary["regimes"]
 
 
-def test_cell_line_regime_is_multiclass_with_finite_metrics(eval_bundle):
+def test_cell_line_regime_is_multiclass_with_finite_metrics(eval_bundle, eval_reports):
     from cellfate.common.io import ArtifactPaths
     from cellfate.evaluation.data import gather_split
 
@@ -379,17 +397,17 @@ def test_cell_line_regime_is_multiclass_with_finite_metrics(eval_bundle):
     assert test.n > 0
     assert len(np.unique(test.y_cls)) == 3  # decoupled scaffolds -> all classes present
 
-    out = eval_bundle / "reports"
+    out, _gates = eval_reports
     R = json.loads((out / "cell_line.json").read_text())
     # model AUROC/PR-AUC are finite on a genuinely multi-class test split
     assert all(np.isfinite(R["model"][f"auroc_{c}"]) for c in range(3))
     assert all(np.isfinite(R["model"][f"prauc_{c}"]) for c in range(3))
 
 
-def test_model_beats_trivial_baseline_on_cell_line(eval_bundle):
+def test_model_beats_trivial_baseline_on_cell_line(eval_reports):
     # the model must clear the central-tendency baselines even if it cannot beat the
     # near-perfect linear baselines on trivially-separable synthetic data
-    out = eval_bundle / "reports"
+    out, _gates = eval_reports
     R = json.loads((out / "cell_line.json").read_text())
     model_prauc = mean_finite(R["model"][f"prauc_{c}"] for c in range(3))
     mean_prauc = mean_finite(R["mean"][f"prauc_{c}"] for c in range(3))

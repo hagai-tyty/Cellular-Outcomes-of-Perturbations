@@ -850,6 +850,33 @@ transient rather than left as an open worry. *(The record of it stays here, per 
 > **Owner: whoever next touches `evaluation/`.** Fixing A is a few lines and would also remove the
 > most likely amplifier of B. It does **not** block Stage 1.5.3 steps 1–4, and saying so is a
 > judgement about scope, not a dismissal.
+>
+> ### ✅ FIXED 2026-08-01, same day — problem A is gone and B has not recurred
+>
+> *The judgement above said this did not block Stage 1.5.3. That was true and it was also the wrong
+> place to leave it: "does not block" is not "no issue", and the fix was a few lines.*
+>
+> **Root cause, confirmed:** `evaluate()` was called inside
+> `test_evaluate_writes_reports_and_wellformed_gates`, and **three** tests read the
+> `reports/cell_line.json` it produced. Two of them therefore only worked if pytest happened to run
+> the writer first.
+>
+> **The fix:** report generation extracted into its own module-scoped fixture, `eval_reports`, which
+> returns `(reports_dir, gates)`. Every test that needs the reports now depends on the fixture
+> instead of on another test, so the reports are built on demand by whichever test asks first — and
+> still built only once per module. **No assertion was changed.**
+>
+> | check | before | after |
+> |---|---|---|
+> | each of the 3 tests run **alone** | ❌ 2 of 3 failed, 100% of the time | ✅ **all 3 pass** (35.4 s / 31.9 s / 30.2 s) |
+> | `tests/test_evaluation.py` alone, ×3 | passed (masking the defect) | ✅ 31 passed, ×3 |
+> | full suite, ×4 consecutive | 1 failure in ~5 runs | ✅ **645 passed, 1 skipped, ×4** |
+>
+> **On problem B:** the intermittent failure has not recurred in the four consecutive full runs
+> since. That is **not proof it is gone** — B was always rare, and four clean runs is exactly the
+> evidence that was too weak the first time this was closed. What *is* established is that its most
+> likely amplifier is removed. **If it ever reappears, it is now a genuine fixture/tmpdir question
+> and not an artefact of test ordering**, which is a materially better place to debug from.
 
 ## 11.6 What is genuinely still open, in one place
 
@@ -858,7 +885,7 @@ transient rather than left as an open worry. *(The record of it stays here, per 
 | **§5 retention** (−6 to −9 yr, at the resolution boundary) | **Stage 6** | ≈16 transient-arm pairs ⇒ **more donors**. Size for the ±7 yr between-donor instrument error, not just for n |
 | **HFF's age labels** | **Stage 6** | methylation for HFF. No public series has it |
 | **`age_mask` for HFF** | **Stage 1.5.2 G-c step 2** | one retrain, metric pre-registered first. Does not need new data |
-| 🆕 **the `test_evaluation` flake** *(reopened 2026-08-01)* | **whoever next touches `evaluation/`** | fix the order dependence (problem A above); it blocks nothing, and it is listed so it stops being rediscovered |
+| ~~the `test_evaluation` flake~~ | ✅ **CLOSED 2026-08-01** — order dependence fixed by the `eval_reports` fixture; all 3 tests now pass in isolation and the suite is clean ×4. Problem B has not recurred, and is no longer masked by ordering if it ever does | — |
 
 **Everything else in this document is answered.** Two of the three are acquisition items that no
 amount of further analysis can close, and saying so is the point of this section.

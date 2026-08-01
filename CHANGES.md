@@ -2788,3 +2788,27 @@ Four references remain to files that do not exist, and **all four are correct as
 
 Historical command lines in `CHANGES.md`, `DELTAAGE_LAB_NOTEBOOK.md` and `STAGE_1_DEVIATIONS.md`
 were deliberately **not** touched — they record what was actually run at the time.
+
+### ✅ The `test_evaluation` order dependence — FIXED, not just disclosed
+
+Earlier the same day this was reopened, characterised, given an owner, and judged not to block
+Stage 1.5.3. All of that was true, and **"does not block" is not "no issue"** — the fix was a few
+lines, so it was done.
+
+**Root cause:** `evaluate()` ran inside `test_evaluate_writes_reports_and_wellformed_gates`, and
+**three** tests read the `reports/cell_line.json` it produced. Two of them only worked if pytest
+happened to run the writer first.
+
+**Fix:** report generation extracted into a module-scoped fixture `eval_reports` returning
+`(reports_dir, gates)`. Tests now depend on the fixture rather than on each other. **No assertion
+changed**; the reports are still built exactly once per module.
+
+| check | before | after |
+|---|---|---|
+| the 3 tests run **individually** | ❌ 2 of 3 failed, deterministically | ✅ all 3 pass |
+| full suite, 4 consecutive runs | 1 failure in ~5 | ✅ 645 passed, 1 skipped, ×4 |
+
+**Not overclaimed:** the *intermittent* half has not recurred in four clean runs, which is
+precisely the evidence that proved too weak when this was first closed on "~15 runs, no failures".
+What is established is that its most likely amplifier is gone, and that a future recurrence would
+be a real fixture/tmpdir question rather than an artefact of test ordering.
