@@ -356,3 +356,53 @@ def test_s153_option_2_scores_higher_and_costs_the_fate_task_nothing():
     opt2 = next(v for k, v in cs.items() if k.startswith("Option 2"))
     assert opt2["B2"]["pass_rate"] > opt1["B2"]["pass_rate"]
     assert d["option1_fate_cost"]["fold_oversampled"] > 5.0     # the cost Option 2 avoids
+
+
+# ===================================================================== #
+# Stage 1.5.3 STEP 5c -- C-5's THRESHOLD, registered before the code.   #
+# 5b pinned a fixed W=8; the readiness audit found that would have      #
+# handicapped step 6's CONTROL arm and tilted the result toward the     #
+# treatment's own conclusion. These grade the rule that replaced it.    #
+# ===================================================================== #
+_C5C = _Path(__file__).resolve().parents[1] / "results" / "register_c5c_bar_results.json"
+
+
+def test_s153_c5c_control_arm_never_accumulates():
+    """Bar A1, and the most important row in this file for step 6.
+
+    The unmasked arm has every cell age-valid, so the first batch already clears `k` and the
+    window must close at W=1 every single time -- i.e. training is bit-identical to today. If
+    this is ever below 1.0, `scorecard/baseline.json` has stopped being a valid reference and
+    the step-6 comparison is confounded by the mechanism meant to de-confound it.
+
+    An EQUALITY, deliberately, not a >= 0.95 rate: "almost never accumulates" is not identity.
+    """
+    a1 = _load_json(_C5C)["bars"]["A1"]
+    assert a1["value"] == 1.0 and a1["pass"] is True
+    assert _load_json(_C5C)["arm_a"]["mean_batches_per_window"] == 1.0
+
+
+def test_s153_c5c_masked_arm_clears_the_cell_count_bar():
+    """Bar A2 -- B2's >= 4 cells, restated for the adaptive rule, where it now holds by
+    construction rather than by luck. The residual shortfall is only the W_max forced close."""
+    a2 = _load_json(_C5C)["bars"]["A2"]
+    assert a2["value"] >= a2["bar"] and a2["pass"] is True
+
+
+def test_s153_c5c_beats_the_fixed_w_design_it_replaced():
+    """Bar A3. The 5c redesign exists to remove a bias, but it must not cost arm B its age
+    optimisation in the process -- otherwise it trades one defect for another."""
+    a3 = _load_json(_C5C)["bars"]["A3"]
+    assert a3["value"] > a3["bar"] and a3["pass"] is True
+
+
+def test_s153_c5c_attempt_1_is_kept_as_a_regression():
+    """Forcing a close at each epoch's end manufactured one partial window per epoch and failed
+    A2 on its own (4.44 pp of a 6.12 pp shortfall). Kept measurable so the record shows why it
+    was dropped. If this ever passes, the geometry changed and the choice must be revisited."""
+    d = _load_json(_C5C)
+    assert d["attempt1_close_at_epoch_end"]["frac_windows_ge_k"] < d["bars"]["A2"]["bar"]
+
+
+def test_s153_c5c_all_bars_pass():
+    assert _load_json(_C5C)["all_pass"] is True

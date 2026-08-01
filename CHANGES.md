@@ -3128,3 +3128,72 @@ under a fixed shuffle seed; and a test that every label is still used exactly on
 rule selects *windows*, not *labels*.
 
 No `src/` file touched by this entry — it is a plan correction. Step 6 stays blocked until 5c ships.
+
+---
+
+## 2026-08-02 — Stage 1.5.3 **step 5c**: C-5 Option 2 implemented, and it ships **inert**
+
+`python plan_tests/register_c5c_bar.py` -> `results/register_c5c_bar_results.json`, then the code.
+**743 tests pass** (+22: 18 new, +4 auto-discovered by the `test_results_paths.py` write-path guard).
+Ruff clean. **No label moved, no retrain, nothing rebuilt.**
+
+### The bar went first — and it failed, which is why it goes first
+
+`REF_GROUND_RULES.md` §5b: the bar is registered before the change it grades. Attempt 1 forced the
+age window to close at each epoch's last batch, so every label would be consumed inside its own
+epoch. It scored **93.9 %** against A2's 95 % bar and **failed**.
+
+The bar was not lowered. Attributing the shortfall: the epoch-end window accounted for **4.44 pp** of
+the 6.12 pp gap and the irreducible `W_max` limit for only **1.67 pp** — the *mechanism* was wrong,
+not the bar. Letting the window **carry across the epoch boundary** removes the artificial partial
+window entirely, and is *simpler code* (one fewer special case). Re-run: **98.2 %, PASS.**
+
+| bar | what it grades | result |
+|---|---|---|
+| **A1** | control arm closes every window at W = 1 — an **equality**, not a rate | **1.0000** ✅ |
+| **A2** | P(window holds ≥ 4 age cells) in the masked arm | **98.2 %** ✅ (bar 0.95) |
+| **A3** | masked arm gets *more* age updates than the fixed W = 8 it replaced | **980 vs 480** ✅ |
+
+### A3 was an unexpected bonus: the bias fix also doubles the age optimisation
+
+Triggering on accumulated **cells** rather than **batches** closes a window as soon as it is worth
+stepping on, so the masked arm gets **16.3 updates/epoch (980 over the run)** instead of fixed-W's
+8/epoch (480) — at the same per-update quality. **That directly reduces the "480 updates may be too
+few to converge" risk that 5b had to leave open**, without touching the learning rate.
+
+### What shipped
+
+| file | change |
+|---|---|
+| `models/losses.py` | `+ huber_age_window()` — one Huber over the window's cells, `Σloss/Σcells` |
+| `models/__init__.py` | export it |
+| `training/train.py` | `+ _AgeWindow`, and 6 lines in the batch loop |
+| `training/train_model.py` | `+ age_window_k: int = 1`, `+ age_window_max_batches: int = 8` |
+
+**`age_window_k = 1` is the default, and 1 means OFF — the pre-1.5.3 path, bit for bit.** It ships
+inert on purpose: this stage's guard is that nothing moves until step 6 turns it on deliberately in
+**both** arms. It also makes the rollback a one-value edit rather than a revert.
+
+### The gate, proved rather than asserted
+
+`test_arm_a_is_bit_identical_when_every_cell_is_age_valid` runs `train_member` twice — mechanism off,
+then on — and compares **every parameter tensor** with `torch.equal`. It passes, and holds for
+k ∈ {2, 4, 8, 16}.
+
+A test that only asserts invariance can pass on a no-op, so two more sit beside it: one confirming
+the mechanism **does** move a sparsely-labelled run, and — the real check — **the exact bug the
+readiness audit found was re-injected** (a fixed-W window ignoring the cell count) and confirmed to
+fail **both** arm-A identity tests plus the drift check, then restored.
+
+18 tests in `tests/test_c5c_age_accumulation.py` + 5 rows in `tests/test_bars_resolvable.py`, covering
+all five gates: arm-A identity, `Σloss/Σcells` (constructed so a mean-of-means gives a visibly
+different answer), the fate head still stepping on a held-back batch, determinism under a fixed seed,
+and windows-not-labels. One test drives the **shipped** `_AgeWindow` against the bar script's
+`close_windows` over 30 random sequences, so the simulation the decision rests on cannot drift from
+the code that ships.
+
+### Still open, unchanged by this step
+
+Whether the age head **learns** from 75 labels is `dage_mae_model` at step 6. 5c improves the odds
+(980 updates, not 480) and removes a bias; it settles nothing about the outcome. Step 6 remains the
+first thing that moves a label, and needs ~2× a full LOOCV run.

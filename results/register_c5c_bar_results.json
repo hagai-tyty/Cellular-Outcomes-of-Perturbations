@@ -1,0 +1,112 @@
+{
+  "script": "register_c5c_bar",
+  "utc": "2026-08-01T23:21:33+00:00",
+  "rule": {
+    "k": 4,
+    "w_max": 8,
+    "close_at_epoch_end": false,
+    "carries_window_across_epochs": true
+  },
+  "attempt1_close_at_epoch_end": {
+    "windows_per_epoch": 16.805,
+    "mean_cells_per_window": 4.410711097887534,
+    "mean_batches_per_window": 3.867896459387087,
+    "frac_windows_at_W1": 0.042576614102945554,
+    "frac_windows_ge_k": 0.9388277298423089,
+    "updates_over_run": 1008.3
+  },
+  "geometry": {
+    "n_train": 33688,
+    "batch": 512,
+    "steps_per_epoch": 65,
+    "epochs": 60
+  },
+  "arm_a": {
+    "windows_per_epoch": 65.0,
+    "mean_cells_per_window": 512.0,
+    "mean_batches_per_window": 1.0,
+    "frac_windows_at_W1": 1.0,
+    "frac_windows_ge_k": 1.0,
+    "updates_over_run": 3900.0
+  },
+  "arm_b": {
+    "windows_per_epoch": 16.334,
+    "mean_cells_per_window": 4.532080323252112,
+    "mean_batches_per_window": 3.9793988000489775,
+    "frac_windows_at_W1": 0.028743724745928737,
+    "frac_windows_ge_k": 0.9819701236684217,
+    "updates_over_run": 980.04
+  },
+  "bars": {
+    "A1": {
+      "desc": "arm A closes every window at W=1",
+      "bar": 1.0,
+      "value": 1.0,
+      "pass": true,
+      "verdict": "RESOLVABLE"
+    },
+    "A2": {
+      "desc": "P(window holds >= 4 cells) in arm B",
+      "bar": 0.95,
+      "value": 0.9819701236684217,
+      "pass": true
+    },
+    "A3": {
+      "desc": "arm B updates exceed fixed-W design",
+      "bar": 480,
+      "value": 980.04,
+      "pass": true
+    }
+  },
+  "k_sweep": {
+    "2": {
+      "windows_per_epoch": 28.7625,
+      "mean_cells_per_window": 2.567579313342025,
+      "mean_batches_per_window": 2.259800086918731,
+      "frac_windows_at_W1": 0.3165580182529335,
+      "frac_windows_ge_k": 0.9988700564971752,
+      "updates_over_run": 1725.75
+    },
+    "3": {
+      "windows_per_epoch": 20.685,
+      "mean_cells_per_window": 3.539279671259367,
+      "mean_batches_per_window": 3.1422528402223833,
+      "frac_windows_at_W1": 0.10454435581339135,
+      "frac_windows_ge_k": 0.994198694706309,
+      "updates_over_run": 1241.1
+    },
+    "4": {
+      "windows_per_epoch": 16.3625,
+      "mean_cells_per_window": 4.503437738731856,
+      "mean_batches_per_window": 3.972192513368984,
+      "frac_windows_at_W1": 0.02857142857142857,
+      "frac_windows_ge_k": 0.9781512605042016,
+      "updates_over_run": 981.75
+    },
+    "6": {
+      "windows_per_epoch": 11.7075,
+      "mean_cells_per_window": 6.301943198804185,
+      "mean_batches_per_window": 5.551783045056587,
+      "frac_windows_at_W1": 0.0012812299807815502,
+      "frac_windows_ge_k": 0.8902412983130472,
+      "updates_over_run": 702.4499999999999
+    },
+    "8": {
+      "windows_per_epoch": 9.6475,
+      "mean_cells_per_window": 7.641098730240995,
+      "mean_batches_per_window": 6.737496760818865,
+      "frac_windows_at_W1": 0.0,
+      "frac_windows_ge_k": 0.683596786732314,
+      "updates_over_run": 578.85
+    },
+    "12": {
+      "windows_per_epoch": 8.3175,
+      "mean_cells_per_window": 8.963029756537422,
+      "mean_batches_per_window": 7.813645927261797,
+      "frac_windows_at_W1": 0.0,
+      "frac_windows_ge_k": 0.21911632100991885,
+      "updates_over_run": 499.05000000000007
+    }
+  },
+  "all_pass": true
+}

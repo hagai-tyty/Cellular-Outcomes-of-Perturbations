@@ -58,6 +58,27 @@ def huber_age_loss(age_pred: torch.Tensor, age_true: torch.Tensor,
     return F.huber_loss(age_pred[m], age_true[m], delta=delta)
 
 
+def huber_age_window(preds, trues, zero_like: torch.Tensor,
+                     delta: float = 2.0) -> torch.Tensor:
+    """Huber over the age cells of a whole ACCUMULATION WINDOW (Stage 1.5.3 C-5, Option 2).
+
+    ``preds``/``trues`` are the per-cell tensors gathered across the window's batches. The loss is
+    one mean over every cell in the window -- i.e. ``sum(per-cell losses) / total valid cells``.
+
+    **Not a mean of per-batch means.** That is the trap this function exists to close: with
+    ``reduction='mean'`` a batch holding one age cell produces the same loss magnitude as a batch
+    holding nine, so averaging batch means would weight a single cell as heavily as nine -- the
+    exact defect C-5 exists to remove, moved up one level. Concatenating first and reducing once is
+    what makes the window's gradient an honest mean over its evidence.
+
+    ``zero_like`` supplies the graph for the empty-window case, mirroring ``huber_age_loss``: a
+    window with no age cell must contribute a differentiable zero, never a detached constant.
+    """
+    if not preds:
+        return zero_like.sum() * 0.0
+    return F.huber_loss(torch.cat(preds), torch.cat(trues), delta=delta)
+
+
 class MultiTaskLoss(nn.Module):
     """Kendall & Gal (2018) homoscedastic uncertainty weighting of two tasks.
 

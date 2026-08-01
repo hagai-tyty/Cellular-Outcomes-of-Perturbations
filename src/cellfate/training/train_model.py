@@ -73,6 +73,19 @@ class TrainConfig:
     focal_gamma: float = 2.0
     class_weight_beta: float = 0.999
     huber_delta: float = 2.0
+    # Stage 1.5.3 C-5 Option 2 (step 5c). Hold age cells back until an optimiser update carries
+    # >= age_window_k of them, or age_window_max_batches have passed. Bar registered in
+    # plan_tests/register_c5c_bar.py BEFORE the code (REF_GROUND_RULES.md 5b).
+    #
+    # DEFAULT 1 = OFF = the pre-1.5.3 path, bit-for-bit. It ships inert on purpose: this stage's
+    # guard is that nothing moves until step 6 turns it on deliberately in BOTH arms. k = 4 is
+    # B2's registered threshold; 8 is 5b's sensitivity ceiling.
+    #
+    # Note it is a no-op in the UNMASKED arm even when on -- every cell is age-valid there, so the
+    # first batch already clears k and the window closes at W = 1. That is the point, not a
+    # limitation: the control keeps today's training exactly while the masked arm accumulates.
+    age_window_k: int = 1
+    age_window_max_batches: int = 8
     # calibration / device / RES
     conformal_levels: tuple[float, ...] = (0.90,)
     device: str = "cpu"

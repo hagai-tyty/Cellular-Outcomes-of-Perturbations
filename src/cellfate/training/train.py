@@ -21,6 +21,7 @@ from cellfate.models import (
     class_balanced_weights,
     focal_loss,
     huber_age_loss,
+    huber_age_window,
 )
 
 from .dataset import AM_I, DT_I, FP_I, X_I, YA_I, YC_I, loader
@@ -104,6 +105,99 @@ def _eval_loss(model, dl, class_w, gamma, huber_delta, device) -> float:
     return tot / max(n, 1)
 
 
+class _AgeWindow:
+    """Stage 1.5.3 C-5 Option 2 — accumulate age cells until a window is worth stepping on.
+
+    THE DEFECT. With HFF's ΔAge labels masked (C-1), 75 age-valid cells sit among 33 688 training
+    cells, so uniform shuffling puts ~1.14 of them in a 512-cell batch: ~32% of batches hit the
+    hard zero in ``huber_age_loss`` and the survivors carry a Huber over one or two cells, from
+    which ``MultiTaskLoss`` then learns ``s_age``. That is noise, not a gradient.
+
+    THE RULE, registered at step 5c before this code existed
+    (``plan_tests/register_c5c_bar.py`` -> ``results/register_c5c_bar_results.json``):
+
+        hold age cells back until the window carries >= ``k`` of them, or ``w_max`` batches have
+        passed, then take ONE Huber over the whole window.
+
+    WHY A CELL COUNT AND NOT A BATCH COUNT. Step 6 compares two arms and only one is masked. The
+    control arm has every cell age-valid (~512 per batch), so a fixed window of W batches would cut
+    its age updates 65 -> 8 for no benefit while helping the treatment arm -- the mechanism would
+    handicap the control and tilt the result toward the treatment's own conclusion. Triggering on
+    ``k`` cells makes the control close at W = 1 on the first batch every time, i.e. **exactly
+    today's behaviour**, while the masked arm accumulates. One policy, both arms; it only behaves
+    differently because the data differ, which is what a controlled comparison is. Bar A1 asserts
+    that identity, and ``tests/test_c5c_age_accumulation.py`` asserts it against the real loop.
+
+    WHY BUFFERED CELLS ARE RE-RUN, NOT RE-USED FROM THEIR ORIGINAL GRAPH. The optimiser steps on
+    every batch (the fate task must not be slowed down), so a gradient held from an earlier batch
+    would be stale -- computed against parameters that have since moved. The buffer therefore
+    stores detached INPUTS and the window re-runs them through the current model, costing one extra
+    forward over ~3 cells. Correctness over cleverness; and in the control arm the buffer is always
+    empty, so there is no extra forward at all.
+
+    The window CARRIES across the epoch boundary. Forcing a close at each epoch's end was tried
+    first (step 5c attempt 1) and manufactured one deliberately-partial window per epoch, which
+    was 4.44 pp of a 6.12 pp shortfall and failed bar A2 on its own.
+    """
+
+    __slots__ = ("k", "w_max", "x", "fp", "dt", "ya", "batches", "n_closed", "n_short")
+
+    def __init__(self, k: int, w_max: int) -> None:
+        self.k, self.w_max = int(k), int(w_max)
+        self.x: list[torch.Tensor] = []
+        self.fp: list[torch.Tensor] = []
+        self.dt: list[torch.Tensor] = []
+        self.ya: list[torch.Tensor] = []
+        self.batches = 0
+        self.n_closed = self.n_short = 0
+
+    @property
+    def n_cells(self) -> int:
+        return sum(int(t.shape[0]) for t in self.ya)
+
+    def offer(self, x, fp, dt, ya, am) -> bool:
+        """Add a batch's age-valid cells; return True when the window should close now.
+
+        The current batch's cells are counted but NOT buffered -- on a close they are consumed
+        straight from the live graph, and only on a hold are they detached and kept.
+        """
+        self.batches += 1
+        m = am.bool()
+        n_here = int(m.sum())
+        if self.n_cells + n_here >= self.k or self.batches >= self.w_max:
+            return True
+        if n_here:
+            self.x.append(x[m].detach())
+            self.fp.append(fp[m].detach())
+            self.dt.append(dt[m].detach())
+            self.ya.append(ya[m].detach())
+        return False
+
+    def close(self, model, ag, ya, am, delta: float):
+        """One Huber over every age cell in the window: buffered ones re-run, current ones live."""
+        m = am.bool()
+        preds, trues = [], []
+        if self.ya:                       # empty in the control arm -> no extra forward
+            _, buf_ag, _ = model(torch.cat(self.x), torch.cat(self.fp), torch.cat(self.dt))
+            preds.append(buf_ag)
+            trues.append(torch.cat(self.ya))
+        if bool(m.any()):
+            preds.append(ag[m])
+            trues.append(ya[m])
+        n = sum(int(t.shape[0]) for t in trues)
+        self.n_closed += 1
+        self.n_short += int(n < self.k)
+        self.reset()
+        return huber_age_window(preds, trues, ag, delta)
+
+    def reset(self) -> None:
+        self.x.clear()
+        self.fp.clear()
+        self.dt.clear()
+        self.ya.clear()
+        self.batches = 0
+
+
 def train_member(make_model, train_ds, val_ds, cfg, seed: int, device: str):
     """Train one member; return (model in eval mode, best monitored loss)."""
     set_global_seed(seed)
@@ -117,6 +211,11 @@ def train_member(make_model, train_ds, val_ds, cfg, seed: int, device: str):
     train_dl = loader(train_ds, cfg.batch_size, shuffle=True)
     monitor_dl = loader(val_ds, cfg.batch_size, shuffle=False) if len(val_ds) else train_dl
 
+    # C-5 Option 2. `age_window_k <= 1` restores the pre-1.5.3 path exactly -- the documented
+    # rollback, and what every test written before this change continues to exercise.
+    win = (_AgeWindow(cfg.age_window_k, cfg.age_window_max_batches)
+           if getattr(cfg, "age_window_k", 1) > 1 else None)
+
     best, best_state, bad = float("inf"), None, 0
     for _epoch in range(cfg.epochs):
         model.train()
@@ -125,7 +224,14 @@ def train_member(make_model, train_ds, val_ds, cfg, seed: int, device: str):
                                      for i in (X_I, FP_I, DT_I, YC_I, YA_I, AM_I))
             lg, ag, _ = model(x, fp, dt)
             l_cls = focal_loss(lg, yc, class_w, cfg.focal_gamma)
-            l_age = huber_age_loss(ag, ya, am, cfg.huber_delta)
+            if win is None:
+                l_age = huber_age_loss(ag, ya, am, cfg.huber_delta)
+            elif win.offer(x, fp, dt, ya, am):
+                l_age = win.close(model, ag, ya, am, cfg.huber_delta)
+            else:
+                # held back: the age task contributes nothing to THIS step, exactly as an
+                # age-free batch already does today. The fate task steps regardless.
+                l_age = ag.sum() * 0.0
             loss = mtl(l_cls, l_age)
             opt.zero_grad()
             loss.backward()

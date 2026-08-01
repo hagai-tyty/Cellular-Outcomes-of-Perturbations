@@ -16,11 +16,13 @@ from .losses import (
     class_balanced_weights,
     focal_loss,
     huber_age_loss,
+    huber_age_window,
 )
 from .network import CellFateNet, mc_dropout_predict
 
 __all__ = [
     "CellFateNet", "mc_dropout_predict",
     "CellEncoder", "ChemEncoder", "TFEncoder", "ClassificationHead", "AgeHead",
-    "class_balanced_weights", "focal_loss", "huber_age_loss", "MultiTaskLoss",
+    "class_balanced_weights", "focal_loss", "huber_age_loss", "huber_age_window",
+    "MultiTaskLoss",
 ]
