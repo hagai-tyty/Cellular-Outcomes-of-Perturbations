@@ -1,0 +1,142 @@
+{
+  "script": "register_c5_bar",
+  "utc": "2026-08-01T22:19:16+00:00",
+  "geometry": {
+    "n_train": 33688,
+    "n_age_masked": 75,
+    "batch": 512,
+    "mean_cells_uniform": 1.139871764426502
+  },
+  "bars": {
+    "B1": {
+      "desc": "P(update contributes any age gradient)",
+      "bar": 0.95
+    },
+    "B2": {
+      "desc": "P(age gradient uses >= 4 cells)",
+      "bar": 0.95,
+      "min_cells": 4
+    }
+  },
+  "reference_dense": {
+    "B1": {
+      "null_median": 1.0,
+      "null_p90": 1.0,
+      "pass_rate": 1.0,
+      "usable_bar": 1.0,
+      "min_pass": 0.95,
+      "verdict": "RESOLVABLE"
+    },
+    "B2": {
+      "null_median": 1.0,
+      "null_p90": 1.0,
+      "pass_rate": 1.0,
+      "usable_bar": 1.0,
+      "min_pass": 0.95,
+      "verdict": "RESOLVABLE"
+    }
+  },
+  "candidates": {
+    "status quo (uniform shuffling)": {
+      "config": {
+        "weight": 1.0,
+        "accumulate": 1
+      },
+      "mean_cells": 1.14845,
+      "B1": {
+        "null_median": 1.0,
+        "null_p90": 1.0,
+        "pass_rate": 0.6893,
+        "usable_bar": 0.0,
+        "min_pass": 0.95,
+        "verdict": "UNRESOLVABLE"
+      },
+      "B2": {
+        "null_median": 0.0,
+        "null_p90": 0.0,
+        "pass_rate": 0.02865,
+        "usable_bar": 0.0,
+        "min_pass": 0.95,
+        "verdict": "UNRESOLVABLE"
+      }
+    },
+    "Option 3 (pin s_age only)": {
+      "config": {
+        "weight": 1.0,
+        "accumulate": 1
+      },
+      "mean_cells": 1.1381,
+      "B1": {
+        "null_median": 1.0,
+        "null_p90": 1.0,
+        "pass_rate": 0.68435,
+        "usable_bar": 0.0,
+        "min_pass": 0.95,
+        "verdict": "UNRESOLVABLE"
+      },
+      "B2": {
+        "null_median": 0.0,
+        "null_p90": 0.0,
+        "pass_rate": 0.0284,
+        "usable_bar": 0.0,
+        "min_pass": 0.95,
+        "verdict": "UNRESOLVABLE"
+      }
+    },
+    "Option 2 (accumulate, W=8)": {
+      "config": {
+        "weight": 1.0,
+        "accumulate": 8
+      },
+      "mean_cells": 9.1283,
+      "B1": {
+        "null_median": 1.0,
+        "null_p90": 1.0,
+        "pass_rate": 0.99975,
+        "usable_bar": 1.0,
+        "min_pass": 0.95,
+        "verdict": "RESOLVABLE"
+      },
+      "B2": {
+        "null_median": 1.0,
+        "null_p90": 1.0,
+        "pass_rate": 0.9821,
+        "usable_bar": 1.0,
+        "min_pass": 0.95,
+        "verdict": "RESOLVABLE"
+      }
+    },
+    "Option 1 (sampler, w=7.1)": {
+      "config": {
+        "weight": 7.113862433862434,
+        "accumulate": 1
+      },
+      "mean_cells": 7.9699,
+      "B1": {
+        "null_median": 1.0,
+        "null_p90": 1.0,
+        "pass_rate": 0.99985,
+        "usable_bar": 1.0,
+        "min_pass": 0.95,
+        "verdict": "RESOLVABLE"
+      },
+      "B2": {
+        "null_median": 1.0,
+        "null_p90": 1.0,
+        "pass_rate": 0.9618,
+        "usable_bar": 1.0,
+        "min_pass": 0.95,
+        "verdict": "RESOLVABLE"
+      }
+    }
+  },
+  "discriminates": true,
+  "required_weight_for_8_cells": 7.113862433862434,
+  "option1_fate_cost": {
+    "weight": 7.113862433862434,
+    "age_share_before": 0.0022263120398955116,
+    "age_share_after": 0.015625,
+    "fold_oversampled": 7.0183333333333335,
+    "extra_share_of_batch": 0.013398687960104488
+  }
+}

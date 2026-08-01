@@ -292,3 +292,67 @@ def test_s152_gc_slope_band_is_two_sided():
     lo, hi = _load_json(_GC)["preregistration"]["slope_band"]
     assert lo < hi < 0
     assert hi / lo == pytest.approx(0.25, abs=1e-9)      # 2x each way around the mean
+
+
+# ===================================================================== #
+# STAGE 1.5.3 C-5 — the age head's per-update occupancy bars.           #
+# Registered BEFORE any retrain, which is what step 5 requires: the bar #
+# grades the MECHANISM, because the outcome metric needs step 6's run.  #
+# ===================================================================== #
+_C5 = _Path(__file__).resolve().parents[1] / "results" / "register_c5_bar_results.json"
+
+
+def test_s153_c5_bars_are_resolvable_on_the_dense_regime():
+    """The system that meets the intent exactly is today's DENSE regime -- before masking,
+    every cell carries an age label. If THAT failed, the bars would be measuring the sample
+    size rather than the mechanism."""
+    r = _load_json(_C5)["reference_dense"]
+    assert r["B1"]["verdict"] == "RESOLVABLE" and r["B1"]["pass_rate"] == 1.0
+    assert r["B2"]["verdict"] == "RESOLVABLE" and r["B2"]["pass_rate"] == 1.0
+
+
+def test_s153_c5_bars_actually_discriminate_between_the_options():
+    """A bar every candidate passes decides nothing. This is the check that makes it a bar
+    rather than a formality, and the registration script exits non-zero without it."""
+    assert _load_json(_C5)["discriminates"] is True
+
+
+def test_s153_the_status_quo_fails_both_bars():
+    """Pins C-5's premise: 75 labels among 33,688 cells at batch 512 is 1.14 per update, so
+    ~31% of updates contribute NOTHING and almost none clears 4 cells."""
+    c = _load_json(_C5)["candidates"]["status quo (uniform shuffling)"]
+    assert c["B1"]["verdict"] == "UNRESOLVABLE" and c["B1"]["pass_rate"] < 0.75
+    assert c["B2"]["verdict"] == "UNRESOLVABLE" and c["B2"]["pass_rate"] < 0.10
+    assert c["mean_cells"] < 1.3
+
+
+def test_s153_option_3_is_indistinguishable_from_the_status_quo():
+    """Pinning `s_age` does nothing about occupancy -- exactly C-5's criticism of it, now
+    measured rather than asserted."""
+    cs = _load_json(_C5)["candidates"]
+    quo = cs["status quo (uniform shuffling)"]
+    opt3 = cs["Option 3 (pin s_age only)"]
+    assert opt3["B1"]["verdict"] == quo["B1"]["verdict"] == "UNRESOLVABLE"
+    assert abs(opt3["mean_cells"] - quo["mean_cells"]) < 0.2
+
+
+def test_s153_both_surviving_options_clear_both_bars():
+    cs = _load_json(_C5)["candidates"]
+    survivors = [k for k, v in cs.items()
+                 if v["B1"]["verdict"] == v["B2"]["verdict"] == "RESOLVABLE"]
+    assert len(survivors) == 2
+    assert any("Option 1" in s for s in survivors) and any("Option 2" in s for s in survivors)
+
+
+def test_s153_option_2_scores_higher_and_costs_the_fate_task_nothing():
+    """The finding that overturned the plan's original recommendation of Option 1.
+
+    Option 2 (accumulate) clears B2 by more than Option 1 (sampler) AND changes no sampling,
+    so the fate head's training distribution is untouched. Option 1 oversamples the 75 age
+    cells ~7x, which the plan itself flagged as 'not free'."""
+    d = _load_json(_C5)
+    cs = d["candidates"]
+    opt1 = next(v for k, v in cs.items() if k.startswith("Option 1"))
+    opt2 = next(v for k, v in cs.items() if k.startswith("Option 2"))
+    assert opt2["B2"]["pass_rate"] > opt1["B2"]["pass_rate"]
+    assert d["option1_fate_cost"]["fold_oversampled"] > 5.0     # the cost Option 2 avoids

@@ -804,6 +804,69 @@ and `fate_ece` are re-read before/after, and a move in any of them is a finding 
 oversampling 75 cells is exactly the kind of change that helps one head by quietly reshaping the
 other's training distribution.
 
+> ### ✅ STEP 5 EXECUTED 2026-08-02 — the bar is registered, and **it overturned the recommendation above**
+>
+> `python plan_tests/register_c5_bar.py` → `results/register_c5_bar_results.json`. No `src/` file
+> touched, no label moved, no retrain. **699 tests pass**, ruff clean.
+>
+> #### What the bar had to be, given the gate
+>
+> Step 5's gate is *"bar RESOLVABLE **before any retrain**"*, and that decides what it can measure:
+> `dage_mae_model` needs step 6's run, so the bar must grade the **mechanism**, not the outcome.
+> Two bars, because "non-zero" is not "usable":
+>
+> | | | |
+> |---|---|---|
+> | **B1** | P(update contributes **any** age gradient) | ≥ 0.95 |
+> | **B2** | P(that gradient uses **≥ 4 cells**) | ≥ 0.95 |
+>
+> **B1 alone would have been too easy.** C-5's diagnosis is not only the 32 % empty batches — it is
+> also that the survivors carry *"a Huber loss over one or two cells"*. A mechanism can clear B1 and
+> still feed the optimiser per-cell noise. `k = 4` is the smallest value that halves the per-update
+> standard error relative to a single cell (SE ∝ 1/√m), and any `k ≥ 2` is already a bar only an
+> oversampling or accumulating mechanism can meet.
+>
+> #### The result
+>
+> | candidate | mean cells/update | B1 | B2 | |
+> |---|---:|---:|---:|---|
+> | status quo (uniform shuffling) | 1.15 | 68.9 % | 2.9 % | ❌ **FAIL** |
+> | **Option 3** — pin `s_age` only | 1.14 | 68.4 % | 2.8 % | ❌ **FAIL** |
+> | **Option 2** — accumulate, W = 8 | **9.13** | **100 %** | **98.2 %** | ✅ **PASS** |
+> | **Option 1** — sampler, w = 7.1 | 7.97 | 100 % | 96.2 % | ✅ **PASS** |
+>
+> **Resolvable:** the dense regime — every cell age-labelled, i.e. today, before masking — clears
+> both at **100 %**. **Discriminating:** the bar separates the candidates, and the script exits
+> non-zero if it ever stops doing so. A bar everything passes decides nothing.
+>
+> #### 🔴 The recommendation above is WITHDRAWN. Option 2, not Option 1.
+>
+> C-5 recommended Option 1 on intuition. Measured, **Option 2 wins on both axes that matter**:
+>
+> 1. **It scores higher on the harder bar** — 98.2 % vs 96.2 % on B2.
+> 2. **It costs the fate task nothing.** Option 1 needs `w = 7.1`, which oversamples the 75 age
+>    cells **7.0×** — from 0.223 % to 1.563 % of every batch, a **1.34 %** shift in the fate head's
+>    training mix. C-5 flagged that as *"not free"*; this is the number, and Option 2's is zero
+>    because it changes no sampling at all.
+>
+> Option 1's only advantage was simplicity, and it buys that by putting Stage 1's guard record — the
+> `+0.000` bit-identical run — at risk for no measured gain.
+>
+> **Option 3 is dead, and now provably so:** it is `weight=1, accumulate=1`, i.e. *identical to the
+> status quo by construction*. Pinning `s_age` does nothing about occupancy. That was C-5's
+> criticism of it; it is now a measurement.
+>
+> #### What still rides on step 6
+>
+> The bar grades the mechanism. Whether the age head actually **learns** from 75 labels is
+> `dage_mae_model` at step 6, and no simulation can answer it. **The fate guards
+> (`fate_prauc`, `fate_roc`, `fate_ece`) must still read "noise"** — with Option 2 there is no
+> resampling to disturb them, which is exactly why it is the safer choice.
+>
+> Registered in `tests/test_bars_resolvable.py` (6 rows) with 12 unit tests on the pure functions,
+> including the closed-form checks: the uniform mean reproduces C-5's 1.14, and the empty-batch rate
+> matches both the exact binomial `(1−p)^512` and the plan's `e^−1.14` estimate.
+
 ### 🔴 The second consequence, which is easy to miss: the cell-cycle deconfounder moves too
 
 `build_dataset.py:449-457` fits the deconfounder on **age-valid TRAIN cells only**:
@@ -1294,7 +1357,7 @@ did not**.
 | **2** | C-1 (`AGE_MASKED_DATASETS`, empty) | **ΔAge and `age_mask` bit-identical**; `tests/test_data_units.py:246` assertions unmodified | ❌ no | rides step 1's |
 | **3** | C-2 (`age_range`, flag off) | same bit-identity guard, flag off | ❌ no | rides step 1's |
 | **4** | **C-4 option (a)** + PART B annotations (text in **B.2**) | `Response` gains two **defaulted** fields; annotations additive, `git diff --stat plans/` shows **zero deletions** | ❌ no | ❌ no |
-| **5** | C-5 design + its bar through `audit_metrics.bar_verdict` | bar **RESOLVABLE** before any retrain; row added to `tests/test_bars_resolvable.py` | ❌ no | ❌ no |
+| **5** ✅ | C-5 design + its bar — **DONE 2026-08-02, and it chose Option 2 over Option 1** | bar RESOLVABLE on the dense regime, DISCRIMINATES between options, 6 rows in `tests/test_bars_resolvable.py` | ❌ no | ❌ no |
 | **6** | **G-c step 2** (PART C) | snapshot first; **rollback exercised, not assumed** | ✅ **yes** | ✅ yes, ×2 arms |
 
 > **C-4 moved from step 7 to step 4 on 2026-07-31**, when option (a) was chosen. It sat last only

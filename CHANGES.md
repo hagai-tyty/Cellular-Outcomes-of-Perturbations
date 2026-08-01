@@ -2905,3 +2905,61 @@ step 2**, the retrain, which is the first thing in this whole stage that moves a
 whatever C-4 option (c) becomes at Stage 3. **`AGE_MASKED_DATASETS` is still empty and
 `enforce_clock_age_range` is still `False`** — the capability exists, and using it is a separate,
 pre-registered decision.
+
+---
+
+## 2026-08-02 — Stage 1.5.3 **step 5**: C-5's bar registered, and it overturned the recommendation
+
+`python plan_tests/register_c5_bar.py` -> `results/register_c5_bar_results.json`. No `src/` file
+touched, no label moved, no retrain. **699 tests pass**, ruff clean.
+
+### The bar had to grade the mechanism, not the outcome
+
+Step 5's gate is *"bar RESOLVABLE **before any retrain**"*, which rules out `dage_mae_model` -- that
+needs step 6's run. So the bar measures what the mechanism delivers per optimiser update:
+
+| | | |
+|---|---|---|
+| **B1** | P(update contributes **any** age gradient) | ≥ 0.95 |
+| **B2** | P(that gradient uses **≥ 4 cells**) | ≥ 0.95 |
+
+**B1 alone would have been too easy.** C-5's diagnosis is not only the 32 % empty batches, it is
+also that the survivors carry *"a Huber loss over one or two cells"*. `k = 4` is the smallest value
+that halves the per-update standard error against a single cell (SE ∝ 1/√m).
+
+### The result
+
+| candidate | mean cells/update | B1 | B2 | |
+|---|---:|---:|---:|---|
+| status quo (uniform shuffling) | 1.15 | 68.9 % | 2.9 % | ❌ FAIL |
+| Option 3 — pin `s_age` only | 1.14 | 68.4 % | 2.8 % | ❌ FAIL |
+| **Option 2 — accumulate, W = 8** | **9.13** | **100 %** | **98.2 %** | ✅ **PASS** |
+| Option 1 — sampler, w = 7.1 | 7.97 | 100 % | 96.2 % | ✅ PASS |
+
+**Resolvable:** the dense regime (today, before masking) clears both at 100 %.
+**Discriminating:** the bar separates the candidates, and the script **exits non-zero** if it ever
+stops doing so — a bar everything passes decides nothing.
+
+### 🔴 The plan recommended Option 1. The measurement says Option 2.
+
+1. **Option 2 scores higher on the harder bar** — 98.2 % vs 96.2 % on B2.
+2. **Option 2 costs the fate task nothing.** Option 1 needs `w = 7.1`, oversampling the 75 age cells
+   **7.0×** (0.223 % → 1.563 % of every batch, a **1.34 %** shift in the fate head's training mix).
+   C-5 called that *"not free"*; this is the number, and Option 2's is zero because it changes no
+   sampling at all.
+
+Option 1's only advantage was simplicity, and it buys that by putting Stage 1's `+0.000`
+bit-identical guard record at risk for no measured gain.
+
+**Option 3 is dead, and now provably so:** it is `weight=1, accumulate=1` — *identical to the status
+quo by construction*. Pinning `s_age` does nothing about occupancy.
+
+### What the bar cannot settle
+
+Whether the age head actually **learns** from 75 labels is `dage_mae_model` at step 6, and no
+simulation answers it. The fate guards must still read "noise" there — with Option 2 there is no
+resampling to disturb them, which is precisely why it is the safer choice.
+
+Registered as 6 rows in `tests/test_bars_resolvable.py`, with 12 unit tests on the pure functions
+including closed-form checks: the uniform mean reproduces C-5's 1.14, and the empty-batch rate
+matches both the exact binomial `(1−p)^512` and the plan's `e^−1.14` estimate.
