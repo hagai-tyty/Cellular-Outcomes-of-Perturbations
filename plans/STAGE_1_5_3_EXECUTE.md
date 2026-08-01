@@ -809,6 +809,11 @@ other's training distribution.
 > `python plan_tests/register_c5_bar.py` → `results/register_c5_bar_results.json`. No `src/` file
 > touched, no label moved, no retrain. **699 tests pass**, ruff clean.
 >
+> *(Correction, 2026-08-02: the committed state of step 5 is **703** passing, not 699 — the figure
+> was written mid-step and four more tests went into the same commit before it landed. Left as
+> written above per the annotate-never-rewrite rule; measured with
+> `pytest --ignore=tests/test_c5_deeper_tests.py` at `724e359`. Nothing else in the block changes.)*
+>
 > #### What the bar had to be, given the gate
 >
 > Step 5's gate is *"bar RESOLVABLE **before any retrain**"*, and that decides what it can measure:
@@ -866,6 +871,128 @@ other's training distribution.
 > Registered in `tests/test_bars_resolvable.py` (6 rows) with 12 unit tests on the pure functions,
 > including the closed-form checks: the uniform mean reproduces C-5's 1.14, and the empty-batch rate
 > matches both the exact binomial `(1−p)^512` and the plan's `e^−1.14` estimate.
+
+> ### ✅ STEP 5b EXECUTED 2026-08-02 — deeper tests before committing to the option
+>
+> `python plan_tests/c5_deeper_tests.py` → `results/c5_deeper_tests_results.json`. READ-ONLY:
+> no `src/` file, no label moved, no training. 30 unit tests
+> (`tests/test_c5_deeper_tests.py` + `tests/test_register_c5_bar.py`), ruff clean.
+>
+> #### Why a second script, when step 5 already chose
+>
+> B1/B2 grade **occupancy** — does an update get an age gradient, over how many cells. Deciding a
+> design on that alone is deciding on the one axis that happened to get measured. Seven axes it
+> cannot see were tested; a fourth candidate (a hybrid) was added so the comparison was not forced
+> between two extremes. **Two of the seven changed the reading, and one of my own claims was
+> weaker than I had stated it.**
+>
+> | candidate | eff cells | dup | **grad upd** | cover | donor | **reps/ep** | fate churn |
+> |---|---:|---:|---:|---:|---:|---:|---:|
+> | status quo (shuffle) | 1.14 | 1.00 | 2 660 | 98.8 % | 1.01 | 0.99 | 0.0 % |
+> | Option 1 — sampler w = 7.1 | 7.59 | 1.05 | **3 900** | 99.9 % | 1.04 | **6.93** | **36.4 %** |
+> | **Option 2 — accumulate W = 8** | **9.07** | **1.00** | 480 | 98.5 % | **1.01** | **0.98** | **0.0 %** |
+> | Option 4 — hybrid w = 3, W = 3 | 9.41 | 1.07 | 1 260 | **94.8 %** | **1.06** | 2.92 | 36.1 % |
+>
+> #### D6 — the diagnostic that actually settled it: *information* vs *repetition*
+>
+> A sampler weight does not create labels. **There are 75 and there will be 75.** Weight `w` runs
+> `w` age-epochs inside every fate-epoch, so across the run:
+>
+> | | passes over the same 75 labels |
+> |---|---:|
+> | status quo / **Option 2** | **59** — one pass per epoch, i.e. what "60 epochs" means |
+> | Option 4 | 175 |
+> | Option 1 | **416** |
+>
+> Option 1's extra gradient updates are bought entirely by **re-showing the same 75 labels 7× per
+> epoch**. That is not more data; it is 416 effective epochs over 75 examples — a memorisation
+> regime. Worse for step 6 specifically: it changes *three* things at once (delivery, exposure, and
+> the fate head's sampling), so a `dage_mae_model` move could not be attributed to the fix. **Step 6
+> is a diagnostic retrain whose entire purpose is attribution**, and the one-change rule applies.
+>
+> Option 2 changes **delivery only** — same labels, same one pass per epoch, same fate training set,
+> regrouped so no update is empty. That is the minimal intervention, and it is asserted as a test
+> (`test_accumulation_changes_delivery_and_not_exposure`): if it ever stops being true, this
+> decision must be reopened.
+>
+> #### D7 — I would have overstated Option 2's cost by 47 %
+>
+> The status quo does **not** get 3 900 age updates. 32 % of its batches hit the hard zero at
+> `losses.py:55-57`, so it gets **2 660**. Comparing Option 2's 480 against 3 900 — which is what
+> the update count alone invites — inflates the apparent cost of accumulation by nearly half.
+>
+> #### 🟡 D5 came out WEAKER than step 5 implied, and is corrected here
+>
+> Step 5 quantified Option 1's fate cost as a 1.34 % shift in batch composition and I expected the
+> bootstrap to be the larger, unmeasured cost. Per epoch it is — **36.4 %** of fate cells are missed.
+> But a bootstrap **re-rolls its misses every epoch**: over 60 epochs `P(a cell is never seen)` is
+> **1.8 × 10⁻²⁶**. Nothing is deleted. The real cost is variance — **59.3 ± 7.7 visits, CV 13 %** —
+> against a permutation's exact 60. That is a genuine cost, but it is *sampling variance*, not
+> *data loss*, and reporting the 36 % alone would have been the same kind of overclaim this stage
+> keeps catching elsewhere.
+>
+> #### Option 4 (the hybrid) loses on its own merits, not by exclusion
+>
+> It was added to break a forced choice, and it is **dominated**: it still pays Option 1's full
+> bootstrap cost (36.1 %), still repeats labels 3×, and posts the **worst label coverage (94.8 % —
+> it misses 4 of the 75 labels in an average epoch)** and the **worst donor balance (1.06)** of any
+> candidate, for 1 260 updates. There is no axis on which it is the best choice.
+>
+> #### 🔵 W = 8, and W = 7 is rejected for a measured reason
+>
+> W = 8 was chosen for comfort, not derived, so the whole range was swept. **W = 7 is the smallest
+> that clears B2** (95.6 % vs the 95 % bar) and buys 540 updates instead of 480. It is still the
+> wrong choice — 75 is not a constant, it is what survives C-1 masking *on this fold*, and other
+> LODO folds hold out other donors:
+>
+> | n_age | W = 7 | W = 8 |
+> |---:|---:|---:|
+> | 75 | 95.6 % ✅ | 98.1 % ✅ |
+> | 70 | **93.7 % ❌** | 97.2 % ✅ |
+> | 65 | 91.3 % ❌ | 95.6 % ✅ |
+> | 60 | 88.0 % ❌ | 93.4 % ❌ |
+>
+> W = 7 falls below its own bar as soon as the label count moves at all. **12.5 % more updates is not
+> worth sitting 0.6 pp above the bar.** W = 8 holds to n_age ≥ 65; below that, C-5 needs revisiting
+> regardless of W — recorded here so it is a known boundary rather than a surprise at step 6.
+>
+> #### ✅ Decision: **Option 2, W = 8** — confirmed, now on seven axes rather than one
+>
+> Step 5's choice survives the deeper tests and is strengthened: Option 2 is best or tied-best on
+> every axis except update count, and D7 shows that gap is 5.5× rather than the 8× it appears.
+>
+> #### 🟠 The one residual risk, pre-registered
+>
+> **480 age updates may be too few to converge**, and no simulation can tell — it is `dage_mae_model`
+> at step 6. Pre-registered contingency so it is not decided after seeing the answer: if the age
+> head is still underfit at the end of the run (training age loss visibly falling at the final
+> epoch), the remedy is a higher **age learning rate**, *not* a smaller W — W is pinned by the
+> sensitivity table above, and lowering it trades a bar-margin for updates. Any such change is its
+> own pre-registered Change with its own bar.
+>
+> #### ⚠️ The implementation trap step 6 must avoid — pinned now, before any code is written
+>
+> `huber_age_loss` (`src/cellfate/models/losses.py:48-58`) ends in
+> `F.huber_loss(age_pred[m], age_true[m], delta=delta)` — **`reduction='mean'` by default**, over
+> the valid cells *in that batch*. So the obvious implementation of Option 2 — average the per-batch
+> age losses over the window — is **wrong**: it weights a 1-cell batch exactly as heavily as a
+> 9-cell batch, which is the very defect C-5 exists to remove, moved up one level.
+>
+> **Requirement, not a suggestion:** the window's age loss must be `Σ(per-cell losses) / Σ(valid
+> cells)` across all W batches — one mean over the window's cells, not a mean of means. That needs
+> `reduction='sum'` plus a running valid-cell count.
+>
+> Two second-order points that follow, left to step 6 to resolve but recorded so they are not
+> discovered late:
+> * the normaliser is not known until the window closes, so either hold the graph across W batches
+>   (memory ×W) or normalise by the expected count `W × 1.14 ≈ 9.1` and accept a small bias — the
+>   second is standard gradient accumulation and almost certainly right here;
+> * `MultiTaskLoss` (`losses.py:61`) sums the fate and age terms, and **the fate term must keep
+>   stepping every batch**. Only the age term accumulates. If both accumulate, Option 2 has silently
+>   become "train 8× less", the fate guards will move, and its whole claim to cost the fate task
+>   nothing is void.
+>
+> A test asserting the mean-of-means error is *not* present belongs with that change.
 
 ### 🔴 The second consequence, which is easy to miss: the cell-cycle deconfounder moves too
 
@@ -1191,7 +1318,7 @@ the only cells with labels in both arms:
 |---|---|---|
 | **primary** | `dage_mae_model` | the direct question: does the age head predict Gill's ΔAge better with or without HFF's labels? |
 | **secondary** | `rank_model_dage` | 1.5.2 §17 and the baseline both show ranking survives where absolute values do not; a split between these two is itself informative |
-| **guard** | `fate_prauc`, `fate_roc`, `fate_ece` | must **not** move. The fate head consumes no ΔAge, so a move means the change reached something it must not — especially under C-5 Option 1's resampling |
+| **guard** | `fate_prauc`, `fate_roc`, `fate_ece` | must **not** move. The fate head consumes no ΔAge, so a move means the change reached something it must not — ~~especially under C-5 Option 1's resampling~~ **(2026-08-02: Option 2 was chosen, so there is no resampling and this guard is now a strictly cleaner test — under Option 1 a move would have been ambiguous between the fix and the bootstrap; under Option 2 the fate head's input is untouched, so any move is unambiguous)** |
 | **context** | `conformal_coverage` | already 0.000 on N2/N3; watch whether masking changes that |
 
 **Baseline to beat (arm A, `scorecard/baseline.json`):** `dage_mae_model` = N2 21.79, N3 29.70,
@@ -1253,7 +1380,7 @@ cold.
 | `src/cellfate/inference/schema.py` | `+ age_validated`, `+ age_basis` (defaulted) | +2 | C-4 |
 | `src/cellfate/inference/service.py` | warning list instead of a single string | ~10 | C-4 |
 | `src/cellfate/inference/predictor.py` | load `AgeProvenance` | +3 | C-4 |
-| `src/cellfate/training/train.py` | sampler (**only if** C-5 Option 1) | ~6 | C-5 |
+| `src/cellfate/training/train.py` | ~~sampler (**only if** C-5 Option 1)~~ → **age-loss accumulation, W = 8** (Option 2, chosen at step 5/5b) | ~10 | C-5 |
 | `tests/` | 4 new files + widened unpacking in 4 existing | +250 | all |
 
 **Untouched:** `models/`, `training/train_model.py`'s calibration path, `evaluation/`, every
@@ -1358,6 +1485,7 @@ did not**.
 | **3** | C-2 (`age_range`, flag off) | same bit-identity guard, flag off | ❌ no | rides step 1's |
 | **4** | **C-4 option (a)** + PART B annotations (text in **B.2**) | `Response` gains two **defaulted** fields; annotations additive, `git diff --stat plans/` shows **zero deletions** | ❌ no | ❌ no |
 | **5** ✅ | C-5 design + its bar — **DONE 2026-08-02, and it chose Option 2 over Option 1** | bar RESOLVABLE on the dense regime, DISCRIMINATES between options, 6 rows in `tests/test_bars_resolvable.py` | ❌ no | ❌ no |
+| **5b** ✅ | deeper tests D1–D7 before committing — **DONE 2026-08-02: Option 2 CONFIRMED, W = 8 pinned** | ranking stable on 7 axes, not 1; W chosen for margin against a shrinking label set, not for the minimum | ❌ no | ❌ no |
 | **6** | **G-c step 2** (PART C) | snapshot first; **rollback exercised, not assumed** | ✅ **yes** | ✅ yes, ×2 arms |
 
 > **C-4 moved from step 7 to step 4 on 2026-07-31**, when option (a) was chosen. It sat last only

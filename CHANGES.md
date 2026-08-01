@@ -2963,3 +2963,105 @@ resampling to disturb them, which is precisely why it is the safer choice.
 Registered as 6 rows in `tests/test_bars_resolvable.py`, with 12 unit tests on the pure functions
 including closed-form checks: the uniform mean reproduces C-5's 1.14, and the empty-batch rate
 matches both the exact binomial `(1−p)^512` and the plan's `e^−1.14` estimate.
+
+---
+
+## 2026-08-02 — Stage 1.5.3 **step 5b**: deeper tests before committing to C-5's option
+
+`python plan_tests/c5_deeper_tests.py` -> `results/c5_deeper_tests_results.json`. READ-ONLY: no
+`src/` file touched, no label moved, no training. **721 tests pass** (18 new), ruff clean.
+
+*(Correction to the step-5 entry above: its committed state is **703** passing, not 699 — the figure
+was written mid-step and four more tests landed in the same commit. Left as written per the
+annotate-never-rewrite rule.)*
+
+### Why, when step 5 had already chosen
+
+B1/B2 grade **occupancy** — does an update get an age gradient, over how many cells. Choosing a
+design on that alone is choosing on the one axis that happened to get measured. Seven axes it cannot
+see were tested (D1–D7), plus a fourth **hybrid** candidate so the comparison was not forced between
+two extremes. **Two of the seven changed the reading, and one of my own step-5 claims was weaker than
+I had stated it.**
+
+| candidate | eff cells | dup | **grad upd** | cover | donor | **reps/ep** | fate churn |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| status quo (shuffle) | 1.14 | 1.00 | 2 660 | 98.8 % | 1.01 | 0.99 | 0.0 % |
+| Option 1 — sampler w = 7.1 | 7.59 | 1.05 | **3 900** | 99.9 % | 1.04 | **6.93** | **36.4 %** |
+| **Option 2 — accumulate W = 8** | **9.07** | **1.00** | 480 | 98.5 % | **1.01** | **0.98** | **0.0 %** |
+| Option 4 — hybrid w = 3, W = 3 | 9.41 | 1.07 | 1 260 | **94.8 %** | **1.06** | 2.92 | 36.1 % |
+
+### D6 — the diagnostic that settled it: *information* vs *repetition*
+
+A sampler weight does not create labels. **There are 75 and there will be 75.** Weight `w` runs `w`
+age-epochs inside every fate-epoch: across the run the status quo and Option 2 make **59** passes
+over those 75 labels (one per epoch, i.e. what "60 epochs" means), Option 4 makes 175, and **Option 1
+makes 416**.
+
+Option 1's extra gradient updates are bought entirely by re-showing the same 75 labels 7× per epoch
+— 416 effective epochs over 75 examples, a memorisation regime. Worse for step 6 specifically: it
+changes *three* things at once (delivery, exposure, and the fate head's sampling), so a
+`dage_mae_model` move could not be attributed to the fix. **Step 6 is a diagnostic retrain whose
+entire purpose is attribution**, and the one-change rule applies.
+
+Option 2 changes **delivery only** — same labels, same one pass per epoch, same fate training set,
+regrouped so no update is empty. Asserted as a test
+(`test_accumulation_changes_delivery_and_not_exposure`): if it stops being true, reopen the decision.
+
+### D7 — step 5's cost comparison would have been overstated by 47 %
+
+The status quo does **not** get 3 900 age updates. 32 % of its batches hit the hard zero at
+`models/losses.py:55-57`, so it gets **2 660**. Comparing Option 2's 480 against 3 900 inflates the
+apparent cost of accumulation by nearly half.
+
+### 🟡 D5 came out WEAKER than step 5 implied — corrected
+
+Step 5 quantified Option 1's fate cost as a 1.34 % batch-composition shift and I expected the
+bootstrap to be the larger, unmeasured cost. Per epoch it is — **36.4 %** of fate cells are missed.
+But a bootstrap **re-rolls its misses every epoch**: over 60 epochs `P(a cell is never seen)` is
+**1.8 × 10⁻²⁶**. Nothing is deleted. The real cost is variance — **59.3 ± 7.7 visits, CV 13 %** —
+against a permutation's exact 60. A genuine cost, but *sampling variance*, not *data loss*; the 36 %
+alone would have been an overclaim.
+
+### Option 4 (the hybrid) loses on its own merits, not by exclusion
+
+Added to break a forced choice, it is **dominated**: it still pays Option 1's full bootstrap cost
+(36.1 %), still repeats labels 3×, and posts the **worst label coverage** (94.8 % — it misses 4 of
+the 75 labels in an average epoch) and **worst donor balance** (1.06) of any candidate, for 1 260
+updates. No axis makes it the best choice.
+
+### 🔵 W = 8, and W = 7 rejected for a measured reason
+
+W = 8 was chosen for comfort, not derived, so the whole range was swept. **W = 7 is the smallest that
+clears B2** (95.6 % vs the 95 % bar) and buys 540 updates instead of 480 — and is still wrong, because
+75 is not a constant, it is what survives C-1 masking *on this fold*:
+
+| n_age | W = 7 | W = 8 |
+|---:|---:|---:|
+| 75 | 95.6 % ✅ | 98.1 % ✅ |
+| 70 | **93.7 % ❌** | 97.2 % ✅ |
+| 65 | 91.3 % ❌ | 95.6 % ✅ |
+| 60 | 88.0 % ❌ | 93.4 % ❌ |
+
+W = 7 falls below its own bar as soon as the label count moves at all. 12.5 % more updates is not
+worth sitting 0.6 pp above the bar. W = 8 holds to n_age ≥ 65; below that C-5 needs revisiting
+regardless of W — recorded as a known boundary rather than a step-6 surprise.
+
+### ✅ Decision: **Option 2, W = 8** — confirmed on seven axes rather than one
+
+### 🟠 Residual risk + the implementation trap, both pre-registered
+
+**480 age updates may be too few to converge**, and no simulation can tell — that is
+`dage_mae_model` at step 6. Contingency fixed in advance so it is not decided after seeing the
+answer: if the age head is still underfit at the final epoch, the remedy is a higher **age learning
+rate**, *not* a smaller W.
+
+`huber_age_loss` (`src/cellfate/models/losses.py:48-58`) ends in `F.huber_loss(...)` —
+**`reduction='mean'` by default**, over the valid cells *in that batch*. So averaging the per-batch
+age losses over the window is **wrong**: it weights a 1-cell batch as heavily as a 9-cell batch,
+which is the very defect C-5 exists to remove, moved up one level. The window's loss must be
+`Σ(per-cell losses) / Σ(valid cells)`. And **the fate term must keep stepping every batch** — if both
+accumulate, Option 2 has silently become "train 8× less" and its claim to cost the fate task nothing
+is void.
+
+18 unit tests in `tests/test_c5_deeper_tests.py`, graded against closed forms and constructions with
+known answers — including the bootstrap spread checked against a direct 3 000-run simulation.

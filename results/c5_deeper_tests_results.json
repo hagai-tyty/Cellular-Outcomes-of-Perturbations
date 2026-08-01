@@ -1,0 +1,311 @@
+{
+  "script": "c5_deeper_tests",
+  "utc": "2026-08-01T22:31:16+00:00",
+  "geometry": {
+    "n_train": 33688,
+    "n_age": 75,
+    "batch": 512,
+    "steps_per_epoch": 65,
+    "epochs": 60,
+    "donors": {
+      "N2": 14,
+      "N3": 16,
+      "O2": 18,
+      "Y1": 13,
+      "Y2": 14
+    }
+  },
+  "candidates": {
+    "status quo (shuffle)": {
+      "config": {
+        "weight": 1.0,
+        "accumulate": 1,
+        "replacement": false
+      },
+      "raw_cells_per_batch": 1.1403846153846153,
+      "effective_cells_per_update": 1.1403846153846153,
+      "raw_cells_per_update": 1.1403846153846153,
+      "label_coverage": 0.9883333333333333,
+      "unique_cells_seen": 33280.0,
+      "nonzero_age_updates_per_epoch": 44.325,
+      "total_age_draws": 74.125,
+      "age_updates_per_epoch": 65,
+      "donor_balance": {
+        "per_donor": {
+          "N2": {
+            "labels": 14,
+            "visits": 552,
+            "share_of_visits": 0.18617200674536255,
+            "share_of_labels": 0.18666666666666668,
+            "ratio": 0.9973500361358708
+          },
+          "N3": {
+            "labels": 16,
+            "visits": 637,
+            "share_of_visits": 0.21483979763912311,
+            "share_of_labels": 0.21333333333333335,
+            "ratio": 1.0070615514333896
+          },
+          "O2": {
+            "labels": 18,
+            "visits": 712,
+            "share_of_visits": 0.24013490725126477,
+            "share_of_labels": 0.24,
+            "ratio": 1.0005621135469365
+          },
+          "Y1": {
+            "labels": 13,
+            "visits": 512,
+            "share_of_visits": 0.17268128161888702,
+            "share_of_labels": 0.17333333333333334,
+            "ratio": 0.9962381631858866
+          },
+          "Y2": {
+            "labels": 14,
+            "visits": 552,
+            "share_of_visits": 0.18617200674536255,
+            "share_of_labels": 0.18666666666666668,
+            "ratio": 0.9973500361358708
+          }
+        },
+        "max_over_min": 1.0108642578125,
+        "worst_deviation": 0.007061551433389601
+      },
+      "fate_cells_unseen_per_epoch": 0.012111137497031632,
+      "fate_unseen_above_tail": 4.85722573273506e-17,
+      "total_age_updates": 3900,
+      "nonzero_age_updates_total": 2659.5,
+      "visits_per_label_per_epoch": 0.9883333333333333,
+      "effective_age_epochs_over_run": 59.3,
+      "bootstrap_spread": null,
+      "duplicate_inflation": 1.0
+    },
+    "Option 1 (sampler w=7.1)": {
+      "config": {
+        "weight": 7.1,
+        "accumulate": 1,
+        "replacement": true
+      },
+      "raw_cells_per_batch": 7.993846153846155,
+      "effective_cells_per_update": 7.585384615384615,
+      "raw_cells_per_update": 7.993846153846155,
+      "label_coverage": 0.9986666666666666,
+      "unique_cells_seen": 21007.475,
+      "nonzero_age_updates_per_epoch": 65.0,
+      "total_age_draws": 519.6,
+      "age_updates_per_epoch": 65,
+      "donor_balance": {
+        "per_donor": {
+          "N2": {
+            "labels": 14,
+            "visits": 3820,
+            "share_of_visits": 0.18379522709776752,
+            "share_of_labels": 0.18666666666666668,
+            "ratio": 0.9846172880237546
+          },
+          "N3": {
+            "labels": 16,
+            "visits": 4400,
+            "share_of_visits": 0.21170130869899922,
+            "share_of_labels": 0.21333333333333335,
+            "ratio": 0.9923498845265588
+          },
+          "O2": {
+            "labels": 18,
+            "visits": 4969,
+            "share_of_visits": 0.23907813702848346,
+            "share_of_labels": 0.24,
+            "ratio": 0.9961589042853478
+          },
+          "Y1": {
+            "labels": 13,
+            "visits": 3679,
+            "share_of_visits": 0.1770111624326405,
+            "share_of_labels": 0.17333333333333334,
+            "ratio": 1.0212182448036953
+          },
+          "Y2": {
+            "labels": 14,
+            "visits": 3916,
+            "share_of_visits": 0.1884141647421093,
+            "share_of_labels": 0.18666666666666668,
+            "ratio": 1.0093615968327285
+          }
+        },
+        "max_over_min": 1.03717277486911,
+        "worst_deviation": 0.021218244803695274
+      },
+      "fate_cells_unseen_per_epoch": 0.3764107397292805,
+      "fate_unseen_above_tail": 0.36429960223224894,
+      "total_age_updates": 3900,
+      "nonzero_age_updates_total": 3900.0,
+      "visits_per_label_per_epoch": 6.928,
+      "effective_age_epochs_over_run": 415.68,
+      "bootstrap_spread": {
+        "expected_visits_over_run": 59.27333175017811,
+        "sd_visits_over_run": 7.698803301233457,
+        "cv": 0.12988646114380642,
+        "p_never_seen_in_whole_run": 1.8094101545237712e-26
+      },
+      "duplicate_inflation": 1.053848494067539
+    },
+    "Option 2 (accumulate W=8)": {
+      "config": {
+        "weight": 1.0,
+        "accumulate": 8,
+        "replacement": false
+      },
+      "raw_cells_per_batch": 1.1365384615384613,
+      "effective_cells_per_update": 9.071875,
+      "raw_cells_per_update": 9.071875,
+      "label_coverage": 0.9850000000000001,
+      "unique_cells_seen": 33280.0,
+      "nonzero_age_updates_per_epoch": 8.0,
+      "total_age_draws": 73.875,
+      "age_updates_per_epoch": 8,
+      "donor_balance": {
+        "per_donor": {
+          "N2": {
+            "labels": 14,
+            "visits": 550,
+            "share_of_visits": 0.18612521150592218,
+            "share_of_labels": 0.18666666666666668,
+            "ratio": 0.9970993473531545
+          },
+          "N3": {
+            "labels": 16,
+            "visits": 631,
+            "share_of_visits": 0.21353637901861253,
+            "share_of_labels": 0.21333333333333335,
+            "ratio": 1.0009517766497462
+          },
+          "O2": {
+            "labels": 18,
+            "visits": 713,
+            "share_of_visits": 0.2412859560067682,
+            "share_of_labels": 0.24,
+            "ratio": 1.005358150028201
+          },
+          "Y1": {
+            "labels": 13,
+            "visits": 510,
+            "share_of_visits": 0.17258883248730963,
+            "share_of_labels": 0.17333333333333334,
+            "ratio": 0.9957048028114017
+          },
+          "Y2": {
+            "labels": 14,
+            "visits": 551,
+            "share_of_visits": 0.18646362098138747,
+            "share_of_labels": 0.18666666666666668,
+            "ratio": 0.9989122552574328
+          }
+        },
+        "max_over_min": 1.0096949891067541,
+        "worst_deviation": 0.0053581500282009475
+      },
+      "fate_cells_unseen_per_epoch": 0.012111137497031632,
+      "fate_unseen_above_tail": 4.85722573273506e-17,
+      "total_age_updates": 480,
+      "nonzero_age_updates_total": 480.0,
+      "visits_per_label_per_epoch": 0.985,
+      "effective_age_epochs_over_run": 59.1,
+      "bootstrap_spread": null,
+      "duplicate_inflation": 1.0
+    },
+    "Option 4 (hybrid w=3, W=3)": {
+      "config": {
+        "weight": 3.0,
+        "accumulate": 3,
+        "replacement": true
+      },
+      "raw_cells_per_batch": 3.368846153846154,
+      "effective_cells_per_update": 9.40952380952381,
+      "raw_cells_per_update": 10.08452380952381,
+      "label_coverage": 0.9483333333333335,
+      "unique_cells_seen": 21117.2,
+      "nonzero_age_updates_per_epoch": 21.0,
+      "total_age_draws": 218.975,
+      "age_updates_per_epoch": 21,
+      "donor_balance": {
+        "per_donor": {
+          "N2": {
+            "labels": 14,
+            "visits": 1612,
+            "share_of_visits": 0.18403927388971345,
+            "share_of_labels": 0.18666666666666668,
+            "ratio": 0.9859246815520363
+          },
+          "N3": {
+            "labels": 16,
+            "visits": 1816,
+            "share_of_visits": 0.20732960383605434,
+            "share_of_labels": 0.21333333333333335,
+            "ratio": 0.9718575179815047
+          },
+          "O2": {
+            "labels": 18,
+            "visits": 2169,
+            "share_of_visits": 0.24763100810594818,
+            "share_of_labels": 0.24,
+            "ratio": 1.0317958671081175
+          },
+          "Y1": {
+            "labels": 13,
+            "visits": 1506,
+            "share_of_visits": 0.1719374357803402,
+            "share_of_labels": 0.17333333333333334,
+            "ratio": 0.9919467448865781
+          },
+          "Y2": {
+            "labels": 14,
+            "visits": 1656,
+            "share_of_visits": 0.18906267838794383,
+            "share_of_labels": 0.18666666666666668,
+            "ratio": 1.0128357770782705
+          }
+        },
+        "max_over_min": 1.061674008810573,
+        "worst_deviation": 0.03179586710811755
+      },
+      "fate_cells_unseen_per_epoch": 0.37315364521491334,
+      "fate_unseen_above_tail": 0.36104250771788177,
+      "total_age_updates": 1260,
+      "nonzero_age_updates_total": 1260.0,
+      "visits_per_label_per_epoch": 2.9196666666666666,
+      "effective_age_epochs_over_run": 175.18,
+      "bootstrap_spread": {
+        "expected_visits_over_run": 59.27333175017811,
+        "sd_visits_over_run": 7.698803301233457,
+        "cv": 0.12988646114380642,
+        "p_never_seen_in_whole_run": 1.8094101545237712e-26
+      },
+      "duplicate_inflation": 1.0717358299595143
+    }
+  },
+  "option2_smallest_W_clearing_B2": 7,
+  "b2_sensitivity_to_label_count": {
+    "75": {
+      "7": 0.95595,
+      "8": 0.981425
+    },
+    "70": {
+      "7": 0.9374,
+      "8": 0.971725
+    },
+    "65": {
+      "7": 0.912725,
+      "8": 0.95645
+    },
+    "60": {
+      "7": 0.8804,
+      "8": 0.93405
+    },
+    "55": {
+      "7": 0.8364,
+      "8": 0.9022
+    }
+  },
+  "b2_min_cells": 4,
+  "b2_bar": 0.95
+}
