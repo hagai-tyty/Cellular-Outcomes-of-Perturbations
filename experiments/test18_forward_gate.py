@@ -1,7 +1,7 @@
 """
 Test 18 — THE GATE for the stopping-time tool: does a forward Δt signal exist at all?
 
-    python test18_forward_gate.py
+    python experiments/test18_forward_gate.py
 
 WHY THIS RUNS BEFORE ANY TRAINING CODE.
 The product we want is: "given my culture as it is now, when should I withdraw?" That requires the

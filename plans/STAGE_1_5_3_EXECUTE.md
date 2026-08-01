@@ -93,7 +93,7 @@ Every row was checked directly. Nothing here is inherited from a previous docume
 | **C-2** | read the clock's declared `age_range` instead of discarding it | 🟠 substantive | E4/E5/E13 — the range exists, is ignored, and would change which labels are valid |
 | **C-3** | stamp `donor_age` / `batch` on HFF too | 🟡 mechanical | G-b reached Gill and not HFF (E6); C-2 cannot fire for HFF without it |
 | **C-4** | give the deployed response a way to say **"ΔAge is not validated here"** | ✅ **DECIDED 2026-07-31 — option (a)** | E7–E10 — the product's score is multiplied by an unvalidated term and cannot report that |
-| **C-5** | make the age head **and the cell-cycle deconfounder** survive a 450×-smaller label set | 🟠 substantive | E11/E14/E15 + `build_dataset.py:445-451` — arithmetic below |
+| **C-5** | make the age head **and the cell-cycle deconfounder** survive a 450×-smaller label set | 🟠 substantive | E11/E14/E15 + `build_dataset.py:449-457` — arithmetic below |
 | **C-6** | record **why** a label was masked, not just that it was | 🟡 mechanical | three distinct reasons will exist after C-1/C-2; a bool cannot carry them |
 
 **Nothing in `src/cellfate/models/`, `training/train.py`, or the fate/safety path is touched.**
@@ -783,7 +783,7 @@ other's training distribution.
 
 ### 🔴 The second consequence, which is easy to miss: the cell-cycle deconfounder moves too
 
-`build_dataset.py:445-451` fits the deconfounder on **age-valid TRAIN cells only**:
+`build_dataset.py:449-457` fits the deconfounder on **age-valid TRAIN cells only**:
 
 ```python
 for i, cell in enumerate(aux.cell_ids):
@@ -800,8 +800,8 @@ Gill** samples. Two things change at once, and neither is a sample-size problem:
 * **the guard is `len(d_tr) >= 2`** — there is no minimum that would notice a 450× drop, and no
   warning is emitted.
 
-`coef` is then applied to **every** shard (`build_dataset.py:456`), including the masked HFF cells,
-whose `y_age` is subsequently NaN'd (`457-460`) — so the masked cells are unaffected in the end, but
+`coef` is then applied to **every** shard (`build_dataset.py:462`), including the masked HFF cells,
+whose `y_age` is subsequently NaN'd (`463-466`) — so the masked cells are unaffected in the end, but
 **every surviving Gill label is deconfounded by a coefficient estimated from bulk data.**
 
 **Add to step 6's pre-registration:** report `coef` before and after, and treat a large move as a
@@ -1184,10 +1184,10 @@ Option (c) would touch it, and is deferred to Stage 3.
 ```bash
 # STEP 1-3: the code changes. After EACH one:
 python -m pytest tests/ -q
-python -m ruff check src/ tests/ scripts/
+python -m ruff check src/ tests/ scripts/ plan_tests/
 
 # the bit-identity guard on real data (steps 1-3 must all pass this)
-python experiments/verify_age_mask_identical.py "D:\Gill" "D:\GSE242423"
+python plan_tests/verify_age_mask_identical.py "D:\Gill" "D:\GSE242423"
 
 # STEP 4: C-4 option (a) + plan annotations -- both additive only
 python -m pytest tests/test_inference.py -q   # the two new Response fields are DEFAULTED,
@@ -1204,7 +1204,7 @@ python retrain_stage1.py && python scorecard.py snapshot --tag gc2_B_mask_hff
 python scorecard.py compare gc2_A_keep_hff gc2_B_mask_hff
 ```
 
-`experiments/verify_age_mask_identical.py` does not exist yet — **writing it is part of step 1**, and
+`plan_tests/verify_age_mask_identical.py` does not exist yet — **writing it is part of step 1**, and
 it is the same shape as the G-a real-data check: run every Gill donor and one HFF chunk through
 `delta_age` with defaults and assert `np.array_equal` against values captured before the change.
 
@@ -1239,7 +1239,7 @@ Stated including the ones that came back clean, because a check that found nothi
 | 8 | Stage 2 becomes pointless | ⚠️ **not pointless, but re-premised** — the offset may be real; what is unvalidated is the quantity it offsets. P-4 says exactly that rather than cancelling the stage |
 | 9 | the ΔAge concept itself is dead | ❌ **no** — REV FINAL §4 measured real rejuvenation on methylation with an inert control. **The concept is vindicated; the RNA labels are not** (`REV FINAL` §4.5) |
 | 10 | masking a cell leaves a stale `y_age` behind, tripping the schema | ❌ **no** — `assemble.py:44` is already `y_age=(float(y_age[i]) if masked else None)`, which is exactly what `schemas.py:126-130` requires in both directions. **C-1 needs no companion change here**, and that was checked rather than assumed |
-| 11 | the cell-cycle deconfounder is unaffected | ✅ **real, and easy to miss** — `build_dataset.py:445-451` fits it on age-valid TRAIN cells, so masking HFF moves it from 33 613 single-cell to 75 **bulk** samples, past a guard that only checks `>= 2`. See C-5 |
+| 11 | the cell-cycle deconfounder is unaffected | ✅ **real, and easy to miss** — `build_dataset.py:449-457` fits it on age-valid TRAIN cells, so masking HFF moves it from 33 613 single-cell to 75 **bulk** samples, past a guard that only checks `>= 2`. See C-5 |
 | 12 | Stage 1.5.2's own `src/`-untouched guarantee is broken by this stage | ❌ **no** — 1.5.2 is closed. This is a **separate** stage whose whole purpose is the `src/` change, which is why it is a new document rather than an appendix to that one |
 
 ---
@@ -1295,13 +1295,13 @@ Commands for every step are in **PART E**; per-change rollback is in **PART F**.
 
 | requirement | how |
 |---|---|
-| no label moves in steps 1–5 | `np.array_equal` on **ΔAge, `age_mask` and the new `age_mask_reason`** (which must be all-`None` at defaults), in a unit test **and** on all six real Gill donors plus one HFF chunk — the pattern G-a already used. Written as `experiments/verify_age_mask_identical.py` in step 1 |
+| no label moves in steps 1–5 | `np.array_equal` on **ΔAge, `age_mask` and the new `age_mask_reason`** (which must be all-`None` at defaults), in a unit test **and** on all six real Gill donors plus one HFF chunk — the pattern G-a already used. Written as `plan_tests/verify_age_mask_identical.py` in step 1 — it is a per-stage gate, which is what that folder is for |
 | the cancer rule is untouched | `tests/test_data_units.py:246` — only its tuple unpacking may widen to 3 values; **if an assertion needs changing, revert** |
 | the rebuild in step 1 is faithful | rebuilt shards compared against the pre-change ones on every column except the new one |
 | every new pure function is unit-tested with no repo data | the pattern of the five `diag_*` scripts |
 | every new bar is registered | one row per bar in `tests/test_bars_resolvable.py`; a bar without one is not pre-registered (§5b) |
 | full suite green | currently **564 passing** |
-| lint | `ruff check src/ tests/ scripts/` clean. *(12 pre-existing errors in four older `experiments/`+`tests/` files are not introduced here and are not in scope)* |
+| lint | `ruff check src/ tests/ scripts/ plan_tests/` clean — **`plan_tests/` was added to CI's scope on 2026-08-01**, so the command is wider than it was when this stage was written. *(12 pre-existing errors remain in older `experiments/` files, which are deliberately still out of scope)* |
 | the record | `CHANGES.md` + `experiments/DELTAAGE_LAB_NOTEBOOK.md`, prediction before result |
 
 **Rollback.** Steps 1–5 are revertible by `git revert` with no data consequence. Step 6 changes

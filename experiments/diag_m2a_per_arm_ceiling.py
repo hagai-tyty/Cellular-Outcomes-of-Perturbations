@@ -152,7 +152,7 @@ def main() -> int:
            "utc": datetime.now(UTC).isoformat(timespec="seconds"),
            "source": src.name, "sharp_ceiling": SHARP_CEILING,
            "arms": arms, "reading_correction": dec}
-    _RESULTS / "diag_m2a_per_arm_ceiling_results.json".write_text(
+    (_RESULTS / "diag_m2a_per_arm_ceiling_results.json").write_text(
         json.dumps(out, indent=2, default=str), encoding="utf-8")
     print("\n  wrote diag_m2a_per_arm_ceiling_results.json")
     print("  NOTE: every arm's n is 9-12, which §6 froze as UNRESOLVABLE for a rho bar.")

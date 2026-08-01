@@ -1,7 +1,7 @@
 """
 STAGE 1a VERIFICATION — did the donor label column land, and is inner-LODO possible?
 
-    python verify_1a.py
+    python plan_tests/verify_1a.py
 
 WHY THIS EXISTS. Stage 1b fits calibration on cross-donor statistics, produced by an inner
 leave-one-donor-out over the TRAINING donors. That loop is impossible unless the training

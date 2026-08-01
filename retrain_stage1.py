@@ -235,7 +235,7 @@ def main() -> None:
         print(f"  done in {row['minutes']} min | temperature {row['temperature']} | "
               f"q {row['conformal_q']} | sigma_scale {row['sigma_scale']} | "
               f"xdonor donors {row['xdonor_n_donors']}")
-        _RESULTS / "retrain_stage1_results.json".write_text(
+        (_RESULTS / "retrain_stage1_results.json").write_text(
             json.dumps(results, indent=2, default=str), encoding="utf-8")
 
     # ---- summary ----

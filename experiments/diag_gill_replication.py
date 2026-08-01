@@ -183,7 +183,7 @@ def main() -> int:
         print(f"  responder-minus-control separation = {r - f:+.1f} yr "
               "(the quantity a working clock should make negative)")
 
-    _RESULTS / "diag_gill_replication_results.json".write_text(json.dumps(
+    (_RESULTS / "diag_gill_replication_results.json").write_text(json.dumps(
         {"script": "diag_gill_replication", "utc": datetime.now(UTC).isoformat(timespec="seconds"),
          "peak_days": PEAK_DAYS, "gill_reported": GILL_REPORTED, "results": results},
         indent=2, default=str), encoding="utf-8")

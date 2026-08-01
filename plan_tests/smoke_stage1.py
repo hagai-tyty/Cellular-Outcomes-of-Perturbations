@@ -1,7 +1,7 @@
 """
 END-TO-END SMOKE TEST for Stage 1, on synthetic data shaped like the REAL failure.
 
-    python smoke_stage1.py
+    python plan_tests/smoke_stage1.py
 
 WHY THIS EXISTS. Stage 1 run 1 burned 3.5 h of GPU and produced a void experiment, because
 `cell_line` merged one bulk corpus (HFF, 33,613 cells) with six tiny donors (~14 cells each) and

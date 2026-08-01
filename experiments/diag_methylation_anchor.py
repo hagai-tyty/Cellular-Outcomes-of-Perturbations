@@ -433,7 +433,7 @@ def main() -> int:
            "utc": datetime.now(UTC).isoformat(timespec="seconds"),
            "data_dir": str(ddir), "n_samples": len(meta),
            "clocks": blocks, "intercept_sweep": sweeps}
-    _RESULTS / "diag_methylation_anchor_results.json".write_text(
+    (_RESULTS / "diag_methylation_anchor_results.json").write_text(
         json.dumps(out, indent=2, default=str), encoding="utf-8")
     print("\n  wrote diag_methylation_anchor_results.json")
     return 0

@@ -448,7 +448,7 @@ def main() -> int:
     else:
         print("\n  Pre-registration only. Re-run with --run to measure.")
 
-    _RESULTS / "diag_r1_anchor_reliability_results.json".write_text(
+    (_RESULTS / "diag_r1_anchor_reliability_results.json").write_text(
         json.dumps(out, indent=2, default=str), encoding="utf-8")
     print("\n  wrote diag_r1_anchor_reliability_results.json")
     return 0

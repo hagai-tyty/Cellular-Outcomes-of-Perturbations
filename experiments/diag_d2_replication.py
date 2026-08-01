@@ -227,7 +227,7 @@ def main() -> int:
     out = {"script": "diag_d2_replication", "utc": datetime.now(UTC).isoformat(timespec="seconds"),
            "gse_dir": gse_dir, "bars": bars(), "timepoints": tps, "meta": meta,
            "verdict_primary_D0_D14": verdict, "rho_with_ipsc_sensitivity": float(rho_i)}
-    _RESULTS / "diag_d2_replication_results.json".write_text(json.dumps(out, indent=2, default=str),
+    (_RESULTS / "diag_d2_replication_results.json").write_text(json.dumps(out, indent=2, default=str),
                                                         encoding="utf-8")
     print("\n  wrote diag_d2_replication_results.json")
     return 0

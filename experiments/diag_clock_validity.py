@@ -584,7 +584,7 @@ def main() -> int:
            "denominator_sensitivity": g["denominator_sensitivity"],
            "attribution": att, "baseline_pred": g["baseline_pred"],
            "baseline_pred_restricted": g["baseline_pred_restricted"], "decision": decision}
-    _RESULTS / "diag_clock_validity_results.json".write_text(json.dumps(out, indent=2, default=str),
+    (_RESULTS / "diag_clock_validity_results.json").write_text(json.dumps(out, indent=2, default=str),
                                                         encoding="utf-8")
     print("\n  wrote diag_clock_validity_results.json")
     return 0

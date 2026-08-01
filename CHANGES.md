@@ -2658,3 +2658,116 @@ python -m pytest tests/ -q                                   # 564 passing (was 
 python experiments/diag_donor_identity.py --run "D:\GSE165178" "D:\GSE165179"
 python experiments/diag_m2a_per_arm_ceiling.py
 ```
+
+---
+
+## 2026-08-01 — Working tree tidied. No result, label or verdict altered.
+
+Housekeeping only, recorded because the standing rule is that everything is recorded. **567 tests
+pass and the CI lint command passes after every step below.** `src/` behaviour is untouched.
+
+### Root: 40 files → 12
+
+| what | why |
+|---|---|
+| **untracked `gene2vec_cache.txt` (55 MB)** | it is a **download cache**, not an artefact — `experiments/test_suite.py:64` re-fetches it on demand. Gitignored; the file stays on disk |
+| **deleted 5 `.zip` files (49 MB)** | verified byte-for-byte that each is an **exact duplicate** of a directory that is *also* tracked (10/10, 7/7, and 13/13 files present unpacked). `*.zip` added to `.gitignore` so it cannot recur |
+| **moved 19 `*_results.json` → `results/`** | every one was referenced by code, so this was a repoint, not a move: 18 writers now resolve a `_RESULTS` constant, 6 test files and 2 cross-reading scripts follow |
+| **deleted `demo.ipynb`** | superseded |
+
+**The check that matters for the results move:** `pytest -rs` reported **no skips**. Those tests
+`pytest.skip` when their results file is missing, so "no skips" is what proves they found the new
+location rather than passing vacuously.
+
+### Scripts sorted by what they are
+
+| moved to | files |
+|---|---|
+| **`experiments/`** | `test18_forward_gate.py` — an exploratory numbered test, joining `test5_ridge_gap.py` and the rest |
+| **`plan_tests/` (new)** | `verify_1a.py`, `verify_stage1_5.py`, `smoke_stage1.py` — the **per-stage verification gates**, i.e. the scripts a plan names as the thing that decides whether that stage passed. With `HOW_TO_RUN.md` |
+| **stayed at root** | `scorecard.py`, `retrain_stage1.py`, `audit_metrics.py` (imported by 6 files), and the three `diag_*`/`dump_*` diagnostics `tests/` imports |
+
+**Four breakages the move caused, found before shipping rather than after:**
+
+1. `verify_1a.py` and `verify_stage1_5.py` both resolved `results/` as `__file__.parent`, which after
+   the move pointed at `plan_tests/results`. → `parents[1]`.
+2. `verify_stage1_5.py` resolved `local_runners/` the same way. → `parents[1]`.
+3. **`tests/test_harmonize.py` and `tests/test_verify_1a.py` load these scripts by PATH** via
+   `spec_from_file_location`, so a grep for `import X` missed them entirely. This turned the suite
+   red mid-way and is the reason the tests were run *before* committing.
+4. `tests/test_baseline_census.py` imports `verify_stage1_5` by name → `plan_tests/` added to its
+   `sys.path`.
+
+### Stage 1.5.1 drafts ARCHIVED, not deleted
+
+The five superseded drafts moved to `plans/archive/`. **They were not deleted, and that is
+deliberate:** `STAGE_1_5_1_REV_FINAL.md` §10.7 records as a *verified check* that they are
+"byte-unmodified", which only means something if they are readable next to the final document — and
+they are cited by **nine** other files, `STAGE_1_5_1_REVISED.md` twelve times.
+
+All five SHA-256 hashes verified identical across the move; `git mv` used so history follows.
+`plans/archive/README.md` explains what each draft was and what superseded it.
+
+### CI lint scope widened
+
+`plan_tests/` added to `ruff check src/ tests/ scripts/`. Moving `verify_1a.py` into a linted
+directory surfaced **two pre-existing errors** (`F841` dead local, `UP017` `timezone.utc`) — it had
+never been linted, because root was never in scope. Both fixed.
+
+**`experiments/` deliberately left OUT of scope:** it carries 12 pre-existing errors in older
+scripts, and cleaning those is its own change with its own diff, not something to smuggle into a
+tidy-up.
+
+### Documentation follow-through
+
+* `plans/00_START_HERE.md` gains a **"where things live"** map, and its two runnable `test18`
+  references now point at `experiments/`.
+* `plans/STAGE_1_5_3_EXECUTE.md`: the lint command in PART E and §6 widened to include
+  `plan_tests/`, and the step-1 guard script `verify_age_mask_identical.py` reassigned from
+  `experiments/` to `plan_tests/` — it is a per-stage gate, which is what that folder is for.
+* **Historical command lines in `CHANGES.md` and the lab notebook are left exactly as written.**
+  They record what was actually run at the time, which is the point of them.
+
+### One correction this surfaced, unrelated to the tidy-up
+
+The review commits earlier the same day added 8 lines to `build_dataset.py` around line 313. That
+shifted every citation below it by **+6**, and `STAGE_1_5_3_EXECUTE.md` cited the cell-cycle
+deconfounder block four times. Corrected: `445-451` → **`449-457`**, `456` → **`462`**,
+`457-460` → **`463-466`**. All 38 of that document's `src/` citations were then re-verified against
+the files by content, not just by range.
+
+### 🔴 A bug the tidy-up itself introduced, found and fixed the same day
+
+The results-file move repointed 18 writers with a regex, `Path("x.json")` -> `_RESULTS / "x.json"`.
+**That was wrong in 20 places across 16 files**, because `.` binds tighter than `/` in Python:
+
+```python
+_RESULTS / "x.json".write_text(...)      # calls .write_text on the STRING -> AttributeError
+(_RESULTS / "x.json").write_text(...)    # correct
+```
+
+**No existing test could catch it.** The unit tests exercise the pure functions and read the
+recorded JSON; none of them calls `main()`, so all 567 passed against code that could not write its
+own output. It surfaced only when a writer was actually executed as part of the pre-flight check
+for Stage 1.5.3.
+
+All 20 fixed. **`tests/test_results_paths.py` added** so the class of bug cannot pass again: it
+statically checks every writer for the missing parentheses, for bare CWD-relative
+`Path("x_results.json")`, for a `_RESULTS` constant that is `__file__`-relative at the right depth,
+and that no `*_results.json` is left in the repo root. Verified the guard works by reintroducing the
+bug and watching it fail.
+
+**Verified afterwards by running writers end to end**, including from a different working
+directory, to confirm the paths are `__file__`-relative in fact and not just in intent. The two
+regenerated artefacts were then **restored to their committed versions**: they differed only in
+`utc` and in `set`-iteration order, and `STAGE_1_5_2_LABEL_ANCHOR.md` §14 cites
+`13:11:39` as evidence that the bar was frozen 42 minutes *before* M-2b ran. Overwriting that
+timestamp would have destroyed the provenance it proves.
+
+### Also corrected in the same pass
+
+* Stale usage strings inside the moved scripts — `python verify_stage1_5.py` etc. still printed the
+  old path in their `--help` text and in the "source data not found" message a user actually sees.
+* `STAGE_1_5_3_EXECUTE.md`: the lint command widened to include `plan_tests/`, and the step-1 guard
+  script `verify_age_mask_identical.py` reassigned from `experiments/` to `plan_tests/` — it is a
+  per-stage gate, which is what that folder is for.

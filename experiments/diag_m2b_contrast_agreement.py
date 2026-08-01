@@ -293,7 +293,7 @@ def main() -> int:
 
     if j["verdict"] != "OK":
         print("\n  ==> ABORT (§10 step 1). The join is not 22/22, so no statistic is computed.")
-        _RESULTS / "diag_m2b_contrast_agreement_results.json".write_text(
+        (_RESULTS / "diag_m2b_contrast_agreement_results.json").write_text(
             json.dumps(out, indent=2, default=str), encoding="utf-8")
         return 1
 
@@ -311,7 +311,7 @@ def main() -> int:
     if "--run" not in sys.argv:
         print("\n  §10 step 1 complete and PASSED. No statistic computed.")
         print("  M-2b itself is gated on G-a (§0). Re-run with --run once G-a is in.")
-        _RESULTS / "diag_m2b_contrast_agreement_results.json".write_text(
+        (_RESULTS / "diag_m2b_contrast_agreement_results.json").write_text(
             json.dumps(out, indent=2, default=str), encoding="utf-8")
         return 0
 
@@ -368,7 +368,7 @@ def main() -> int:
     print(f"  ==> M-2b VERDICT: {out['verdict_m2b']}"
           f"{'  -- §6: a criterion met on one clock and not the other is SPLIT' if out['verdict_m2b'] == 'SPLIT' else ''}")
 
-    _RESULTS / "diag_m2b_contrast_agreement_results.json".write_text(
+    (_RESULTS / "diag_m2b_contrast_agreement_results.json").write_text(
         json.dumps(out, indent=2, default=str), encoding="utf-8")
     print("\n  wrote diag_m2b_contrast_agreement_results.json")
     return 0

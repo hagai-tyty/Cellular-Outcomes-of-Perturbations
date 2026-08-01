@@ -1,8 +1,8 @@
 """
 STAGE 1.5 VERIFICATION — did the silent ΔAge zero-point fallback fire on the real build?
 
-    python verify_stage1_5.py                       # defaults: D:\\GSE242423  D:\\Gill
-    python verify_stage1_5.py "D:\\GSE242423" "D:\\Gill"
+    python plan_tests/verify_stage1_5.py                       # defaults: D:\\GSE242423  D:\\Gill
+    python plan_tests/verify_stage1_5.py "D:\\GSE242423" "D:\\Gill"
 
 WHY THIS EXISTS (STAGE_1_5_HARMONIZATION_AUDIT.md §0.2, §2 Group E).
 ΔAge is control-relative: `ΔAge = age - mean(age over that line's vehicle controls)`. But
@@ -281,7 +281,7 @@ def main() -> None:
 
     if not (Path(gse_dir).exists() and Path(gill_dir).exists()):
         print("\n   !! source data not found at those paths. Pass them as arguments:")
-        print('      python verify_stage1_5.py "D:\\GSE242423" "D:\\Gill"')
+        print('      python plan_tests/verify_stage1_5.py "D:\\GSE242423" "D:\\Gill"')
         print("   (Group A–D of tests/test_harmonize.py cover everything that does NOT need the data.)")
         return
 

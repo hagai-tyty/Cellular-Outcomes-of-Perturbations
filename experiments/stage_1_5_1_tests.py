@@ -602,7 +602,7 @@ def main() -> int:
 
     out = {"script": "stage_1_5_1_tests", "utc": datetime.now(UTC).isoformat(timespec="seconds"),
            "gse113957_dir": known, "gill_dir": gill, "tests": RESULTS}
-    _RESULTS / "stage_1_5_1_tests_results.json".write_text(json.dumps(out, indent=2, default=str),
+    (_RESULTS / "stage_1_5_1_tests_results.json").write_text(json.dumps(out, indent=2, default=str),
                                                       encoding="utf-8")
     print("\n  wrote stage_1_5_1_tests_results.json")
     return 0

@@ -146,7 +146,7 @@ def main() -> int:
     report("M-2c LODO MAE (ACTUAL donors)",
            sim_lodo_mae(n_donors), 8.0, True, f"{n_donors} folds")
 
-    _RESULTS / "stage_1_5_2_resolvability_results.json".write_text(
+    (_RESULTS / "stage_1_5_2_resolvability_results.json").write_text(
         json.dumps({"script": "stage_1_5_2_resolvability",
                     "utc": datetime.now(UTC).isoformat(timespec="seconds"), **out},
                    indent=2, default=str), encoding="utf-8")

@@ -250,7 +250,7 @@ def main() -> int:
 
     if "--run" not in sys.argv:
         print("\n  Pre-registration only. Re-run with --run to measure.")
-        _RESULTS / "diag_gc_hff_signature_results.json".write_text(
+        (_RESULTS / "diag_gc_hff_signature_results.json").write_text(
             json.dumps(out, indent=2, default=str), encoding="utf-8")
         return 0
 
@@ -297,7 +297,7 @@ def main() -> int:
     if dec["action"] == "MASK_HFF_IN_PHASE_2":
         print(f"\n  CONSEQUENCE, stated plainly: masking HFF leaves {total - hff} age labels.")
 
-    _RESULTS / "diag_gc_hff_signature_results.json".write_text(
+    (_RESULTS / "diag_gc_hff_signature_results.json").write_text(
         json.dumps(out, indent=2, default=str), encoding="utf-8")
     print("\n  wrote diag_gc_hff_signature_results.json")
     return 0
