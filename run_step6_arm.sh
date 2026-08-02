@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# STAGE 1.5.3 step 6 (G-c step 2) -- ONE ARM, then its snapshot.
+# STAGE 1.5.3 step 6 (G-c step 2) -- ONE ARM: build, train, snapshot.
 #   ./run_step6_arm.sh A    # control  : AGE_MASKED_DATASETS = frozenset()
 #   ./run_step6_arm.sh B    # treatment: AGE_MASKED_DATASETS = {"hff_sc"}
 #
-# Arm B OVERWRITES arm A's builds (scorecard.py:132 resolves cellfate_loocv_<donor> exactly),
-# so the snapshot is chained onto the run rather than left as a separate step a human must
-# remember. Losing arm A's snapshot means repeating hours of compute.
+# The arms write SEPARATE fold roots (cellfate_loocv_<donor>_armA/_armB) via
+# CELLFATE_FOLD_SUFFIX, which scorecard.py honours too. The first step-6 run let arm B
+# overwrite arm A, which cost arm A's scalers.json -- its deconfounder coefficient had to
+# be reported from a proxy build. Both arms now survive on disk (~1.6 GB per arm).
 set -euo pipefail
 ARM="${1:?usage: run_step6_arm.sh A|B}"
 case "$ARM" in
@@ -15,7 +16,8 @@ case "$ARM" in
 esac
 PY=/d/.venv-cellfate/Scripts/python.exe
 export PYTHONUTF8=1
-echo "=== step 6 arm $ARM -> snapshot '$TAG' ==="
+export CELLFATE_FOLD_SUFFIX="_arm${ARM}"
+echo "=== step 6 arm $ARM | fold roots cellfate_loocv_<donor>${CELLFATE_FOLD_SUFFIX} -> snapshot '$TAG' ==="
 "$PY" local_runners/run_loocv.py "D:\GSE242423" "D:\Gill" --arm "$ARM" --age-window-k 4
 "$PY" scorecard.py snapshot --tag "$TAG"
 echo "=== arm $ARM done and snapshotted as $TAG ==="

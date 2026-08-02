@@ -16,6 +16,7 @@ USAGE (repo root, venv active):
 from __future__ import annotations
 
 import json
+import os
 import statistics as stats
 import sys
 import traceback
@@ -64,12 +65,14 @@ def main() -> None:
     tag = f"gc2_{arm}_" + ("mask_hff" if arm == "B" else "keep_hff")
     print(f"\n[step6] arm {arm} | AGE_MASKED_DATASETS = {set(rml.AGE_MASKED) or '(empty)'} | "
           f"age_window_k = {k}")
-    # The fold roots stay `cellfate_loocv_<donor>` because scorecard.py:132 resolves exactly that
-    # name. So the arms run SEQUENTIALLY and arm B overwrites arm A's builds -- which is fine and
-    # is what PART E already specifies, because the comparison reads the scorecard SNAPSHOTS
-    # (JSON in scorecard/), not the builds. Snapshot before starting the next arm or it is lost.
-    print(f"[step6] snapshot IMMEDIATELY after this run: python scorecard.py snapshot --tag {tag}")
-    print("[step6] arm B overwrites arm A's builds -- do not start it before snapshotting arm A.")
+    # Fold roots are arm-suffixed via CELLFATE_FOLD_SUFFIX (below), which scorecard.py honours
+    # too, so BOTH arms' builds survive on disk. The first step-6 run shared one root and arm B
+    # overwrote arm A, costing arm A's scalers.json -- its deconfounder coefficient then had to be
+    # reported from a proxy build. ~1.6 GB per arm; the snapshot is still chained on by
+    # run_step6_arm.sh so the metrics land immediately either way.
+    sfx = os.environ.get("CELLFATE_FOLD_SUFFIX", "")
+    print(f"[step6] fold roots: cellfate_loocv_<donor>{sfx or ' (UNSUFFIXED -- arms would collide)'}")
+    print(f"[step6] snapshot after this run: python scorecard.py snapshot --tag {tag}")
 
     Path("loocv_results").mkdir(exist_ok=True)
     folds: list[dict] = []
@@ -79,7 +82,10 @@ def main() -> None:
         print(f"[LOOCV fold {i}/{len(DONORS)}]  held-out donor = {donor}")
         print("=" * 78)
         rml.HOLDOUT_DONOR = donor
-        rml.ROOT = f"cellfate_loocv_{donor}"
+        # STAGE 1.5.3 step 6: arm-suffixed roots so arm B does not overwrite arm A. The first run
+        # did, which cost arm A's scalers.json (its deconfounder coefficient had to be reported
+        # from a proxy build). scorecard.py reads the same suffix from CELLFATE_FOLD_SUFFIX.
+        rml.ROOT = f"cellfate_loocv_{donor}{os.environ.get('CELLFATE_FOLD_SUFFIX', '')}"
         try:
             rml.main()
         except SystemExit as e:

@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import platform
 import sys
 from datetime import datetime, timezone
@@ -129,7 +130,11 @@ def _sp(a, b):
 
 
 def measure_fold(donor: str):
-    root = resolve_root(f"cellfate_loocv_{donor}")
+    # STAGE 1.5.3 step 6: `CELLFATE_FOLD_SUFFIX` lets the two arms keep SEPARATE fold builds
+    # (`cellfate_loocv_N2_armA` / `_armB`) instead of the second overwriting the first. The first
+    # run lost arm A's `scalers.json`, so its deconfounder coefficient had to be reported from a
+    # proxy build. Unset -> the historical name, so every existing snapshot still resolves.
+    root = resolve_root(f"cellfate_loocv_{donor}{os.environ.get('CELLFATE_FOLD_SUFFIX', '')}")
     try:
         paths = ArtifactPaths.of(root)
         tr = gather_split(paths, REGIME, "train")

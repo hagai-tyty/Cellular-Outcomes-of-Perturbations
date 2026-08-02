@@ -33,6 +33,7 @@ from cellfate.common.schemas import ManifestRow
 from .aging import (
     AgingClock,
     LinearClock,
+    age_label_policy,
     census_warnings,
     delta_age,
     recenter_on_control_arrays,
@@ -70,6 +71,17 @@ class ChunkAux:
     d_age_raw: np.ndarray
     cc: np.ndarray
     age_mask: np.ndarray
+    # STAGE 1.5.3 C-I. Cells whose ΔAge is COMPUTABLE, which is not the same question as whose
+    # label the age head is allowed to TRAIN on. It differs from ``age_mask`` by exactly the
+    # ``dataset_policy`` exclusions (C-1's ``AGE_MASKED_DATASETS``): a cell withheld from training
+    # still has a perfectly good ΔAge, so it must still inform the cell-cycle deconfounder and the
+    # control re-centring. Using ``age_mask`` for those made ``y_age`` itself depend on the
+    # training policy, which is what confounded step 6's first run -- see results/STEP6_REPORT.md.
+    deconfound_mask: np.ndarray = None  # type: ignore[assignment]
+
+    def __post_init__(self) -> None:
+        if self.deconfound_mask is None:      # pre-C-I callers keep the old meaning
+            self.deconfound_mask = self.age_mask
 
 
 @dataclass
@@ -165,8 +177,18 @@ def process_chunk(src, chunk, panel, clock: AgingClock, cfg: DataConfig, harmoni
                                                 census=census,
                                                 clock_age_range=_clock_range(clock, cfg))
     cell_ids = raw.obs["cell_id"].tolist()
+    # STAGE 1.5.3 C-I: the SAME policy minus the dataset rule. `masked_datasets=frozenset()`
+    # rather than reading `age_mask_reason`, because the policy assigns only the FIRST reason that
+    # fires -- a cell both out-of-clock-range and dataset-masked reads "dataset_policy", and
+    # inverting on the reason string would wrongly readmit it. Recomputing is exact and cheap.
+    deconfound_mask, _ = age_label_policy(
+        len(cell_ids), raw.source, raw.obs,
+        masked_datasets=frozenset(), clock_age_range=_clock_range(clock, cfg))
     aux: ChunkAux | None = None
-    if cfg.deconfound and age_mask.any():
+    # Guard on the COMPUTABLE mask: an all-HFF chunk has no trainable label under arm B, but its
+    # ΔAge values are exactly what the deconfounder needs. Guarding on `age_mask` dropped those
+    # chunks from the fit entirely.
+    if cfg.deconfound and deconfound_mask.any():
         aux = ChunkAux(
             cell_ids=cell_ids,
             cell_line=raw.obs["cell_line"].to_numpy().copy(),
@@ -174,6 +196,7 @@ def process_chunk(src, chunk, panel, clock: AgingClock, cfg: DataConfig, harmoni
             d_age_raw=np.asarray(d_age, dtype=np.float64).copy(),
             cc=np.asarray(cc, dtype=np.float64).copy(),
             age_mask=age_mask.copy(),
+            deconfound_mask=deconfound_mask.copy(),
         )
 
     smiles = raw.obs["smiles"].tolist()
@@ -421,6 +444,7 @@ def _write_cc_sidecar(paths, sid: str, aux: ChunkAux) -> None:
         d_age_raw=np.asarray(aux.d_age_raw, dtype=np.float64),
         cc=np.asarray(aux.cc, dtype=np.float64),
         age_mask=np.asarray(aux.age_mask, dtype=bool),
+        deconfound_mask=np.asarray(aux.deconfound_mask, dtype=bool),
     )
 
 
@@ -435,6 +459,11 @@ def _load_cc_sidecars(paths) -> dict[str, ChunkAux]:
             cell_ids=[str(c) for c in z["cell_ids"]], cell_line=z["cell_line"],
             is_control=z["is_control"], d_age_raw=z["d_age_raw"],
             cc=z["cc"], age_mask=z["age_mask"],
+            # Tolerant read: a sidecar written before C-I has no `deconfound_mask`. Falling back
+            # to `age_mask` reproduces the pre-C-I behaviour exactly rather than crashing a
+            # RESUMED build -- the same lesson as `rewrite_shard_yage`'s backfill.
+            deconfound_mask=(z["deconfound_mask"] if "deconfound_mask" in z.files
+                             else z["age_mask"]),
         )
     return out
 
@@ -471,18 +500,25 @@ def _deconfound_train_only(cfg, paths, rows, splits, aux_by_sid) -> tuple[float,
     train_ids = {cid for cid, sp in splits[cfg.primary_regime].items()
                  if sp == Split.TRAIN.value}
     d_tr, cc_tr = [], []
+    # STAGE 1.5.3 C-I: fit on cells whose ΔAge is COMPUTABLE, not on cells whose label the age
+    # head may train on. Those are different questions, and conflating them made `y_age` depend on
+    # `AGE_MASKED_DATASETS` -- so step 6's two arms had different TARGET VARIABLES, not just
+    # different label counts. See results/STEP6_REPORT.md section 3, confound C-I.
     for aux in aux_by_sid.values():
         for i, cell in enumerate(aux.cell_ids):
-            if aux.age_mask[i] and cell in train_ids:
+            if aux.deconfound_mask[i] and cell in train_ids:
                 d_tr.append(aux.d_age_raw[i])
                 cc_tr.append(aux.cc[i])
     coef = (fit_deconfounder(np.asarray(d_tr), np.asarray(cc_tr))
             if len(d_tr) >= 2 else (0.0, 0.0))
 
-    # Pass 2: re-apply the single train-fit transform to every shard.
+    # Pass 2: re-apply the single train-fit transform to every shard. `deconfound_mask` again --
+    # the control RE-CENTRING is part of computing ΔAge, so it must not narrow to the training
+    # subset either. Which cells the loss uses is governed by the `age_mask` COLUMN, written
+    # separately by `assemble_samples`; this function only decides the VALUE of `y_age`.
     for sid, aux in aux_by_sid.items():
         d = deconfound_age(aux.d_age_raw, aux.cc, coef)
-        m = aux.age_mask
+        m = aux.deconfound_mask
         y = np.full(d.shape[0], np.nan, dtype=np.float64)
         if m.any():
             y[m] = recenter_on_control_arrays(d[m], aux.cell_line[m], aux.is_control[m])
