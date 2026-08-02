@@ -42,6 +42,35 @@ def main() -> None:
     rml.GSE_DIR, rml.GILL_DIR = gse_dir, gill_dir
     rml.HARMONIZE = True
 
+    # STAGE 1.5.3 step 6: the arm and C-5's threshold, passed through rather than hand-edited.
+    #   --arm A  -> AGE_MASKED_DATASETS = frozenset()            (control)
+    #   --arm B  -> AGE_MASKED_DATASETS = frozenset({"hff_sc"})  (treatment)
+    # `--age-window-k 4` in BOTH arms: 1 means OFF, and running the arms at different k would
+    # make the comparison measure two changes at once.
+    arm = "A"
+    k = 1
+    argv = sys.argv[3:]
+    for flag, cast in (("--arm", str), ("--age-window-k", int)):
+        if flag in argv:
+            v = cast(argv[argv.index(flag) + 1])
+            if flag == "--arm":
+                arm = v.upper()
+            else:
+                k = v
+    if arm not in ("A", "B"):
+        raise SystemExit(f"--arm must be A or B, got {arm!r}")
+    rml.AGE_MASKED = frozenset({"hff_sc"}) if arm == "B" else frozenset()
+    rml.AGE_WINDOW_K = k
+    tag = f"gc2_{arm}_" + ("mask_hff" if arm == "B" else "keep_hff")
+    print(f"\n[step6] arm {arm} | AGE_MASKED_DATASETS = {set(rml.AGE_MASKED) or '(empty)'} | "
+          f"age_window_k = {k}")
+    # The fold roots stay `cellfate_loocv_<donor>` because scorecard.py:132 resolves exactly that
+    # name. So the arms run SEQUENTIALLY and arm B overwrites arm A's builds -- which is fine and
+    # is what PART E already specifies, because the comparison reads the scorecard SNAPSHOTS
+    # (JSON in scorecard/), not the builds. Snapshot before starting the next arm or it is lost.
+    print(f"[step6] snapshot IMMEDIATELY after this run: python scorecard.py snapshot --tag {tag}")
+    print("[step6] arm B overwrites arm A's builds -- do not start it before snapshotting arm A.")
+
     Path("loocv_results").mkdir(exist_ok=True)
     folds: list[dict] = []
 

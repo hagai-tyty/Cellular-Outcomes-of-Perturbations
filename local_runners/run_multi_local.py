@@ -49,6 +49,17 @@ ENSEMBLE = 5
 BATCH = 256
 ROOT = "cellfate_multi"
 
+# --- STAGE 1.5.3 step 6 (G-c step 2) -------------------------------------------------
+# The ARM. frozenset() = arm A (control, every cell age-labelled); frozenset({"hff_sc"}) = arm B.
+# Read by `delta_age` -> `age_label_policy` at BUILD time (aging.py:304), which is why step 6 must
+# run through THIS driver and not retrain_stage1.py -- that one reuses shards, so the switch would
+# never reach the data and both arms would train identically. Proved 2026-08-02; see the step-6
+# pre-flight box in plans/STAGE_1_5_3_EXECUTE.md.
+AGE_MASKED: frozenset[str] = frozenset()
+# C-5 Option 2's threshold. 1 = OFF = pre-1.5.3 behaviour. Step 6 sets 4 in BOTH arms.
+AGE_WINDOW_K: int = 1
+AGE_WINDOW_MAX_BATCHES: int = 8
+
 HERE = Path(__file__).resolve().parent
 # The clock lives in the REPO ROOT `configs/`, not under `local_runners/`. This previously pointed
 # at HERE/"configs"/... -- a path that does not exist -- so any rebuild aborted in `build_clock`
@@ -124,6 +135,12 @@ def main() -> None:
         test_donor = next((d for d in gill_donors if d.upper().startswith("O")), gill_donors[0])
     print(f"[data] Gill donors: {gill_donors}  ->  holding out '{test_donor}' as TEST")
 
+    # Set the arm BEFORE the build: `age_label_policy` reads this constant during `delta_age`.
+    from cellfate.common import constants as _C
+    _C.AGE_MASKED_DATASETS = frozenset(AGE_MASKED)
+    print(f"[arm ] AGE_MASKED_DATASETS = {set(AGE_MASKED) or '(empty -> arm A, control)'} | "
+          f"age_window_k = {AGE_WINDOW_K}")
+
     if os.path.isdir(ROOT):
         shutil.rmtree(ROOT)
     print(f"\n[1/5] BUILD combined dataset (regime={REGIME}, holdout={test_donor}, "
@@ -183,13 +200,47 @@ def main() -> None:
         print("   [acceptance] with harmonization ON, the Gill donors' mean ΔAge above should now be")
         print("   on a comparable scale to HFF (no +16..+64 artifact) -- that is A1-A3 from the spec.")
 
+    # ---------------------------------------------------------------------------- #
+    # B-1 GUARD (STAGE 1.5.3 step 6). The arm must have actually taken effect.        #
+    # ---------------------------------------------------------------------------- #
+    # The dangerous failure here does not raise -- it returns a plausible NULL. If the arm switch
+    # silently misses (wrong driver, wrong dataset_id string, stale shards), both arms train on
+    # identical data, the paired CI includes 0, and the pre-registered outcome table reads that as
+    # "HFF's labels contribute nothing -> discard them" -- throwing away 99.7% of the project's age
+    # labels on a run where the treatment was never applied. So assert it BEFORE spending the train.
+    _tr = df[df.cell_id.map(lambda c: splits.get(c)) == "train"]
+    n_tr, n_age_tr = len(_tr), int(_tr.age_mask.sum())
+    frac = n_age_tr / max(n_tr, 1)
+    print(f"\n[guard] train split: {n_age_tr:,} age-valid of {n_tr:,} cells ({frac:.2%})")
+    if AGE_MASKED:
+        if not 0 < frac < 0.05:
+            raise SystemExit(
+                f"\n[FATAL] arm B asked to mask {set(AGE_MASKED)} but {frac:.2%} of train cells "
+                "are still age-valid.\nExpected well under 5% (~75 of ~33,700). The mask did NOT "
+                "take effect, so this arm is\nidentical to the control and the comparison would "
+                "return a FAKE NULL. Check that the\nsource emits dataset_id exactly as named, and "
+                "that this build really rebuilt -- shards\nare NOT reusable across arms.")
+        print(f"[guard] OK: arm B masked {set(AGE_MASKED)} -> {n_age_tr:,} labels survive")
+    else:
+        if frac < 0.5:
+            raise SystemExit(
+                f"\n[FATAL] arm A (control) should have essentially every train cell age-valid, "
+                f"but only {frac:.2%} are.\nSomething masked labels that step 6 did not ask to mask.")
+        print("[guard] OK: arm A (control) carries its full label set")
+    with open(f"{ROOT}/step6_arm_census.json", "w", encoding="utf-8") as _f:
+        json.dump({"arm": sorted(AGE_MASKED) or ["__control__"], "age_window_k": AGE_WINDOW_K,
+                   "n_train_cells": n_tr, "n_age_valid_train": n_age_tr,
+                   "frac_age_valid_train": frac, "holdout_donor": test_donor}, _f, indent=2)
+
     from cellfate.training.train_model import TrainConfig
     from cellfate.training.train_model import run as train_run
     print(f"\n[2/5] TRAIN {ENSEMBLE}-member ensemble on {device} (leave-cell-line-out) ...")
     train_run(TrainConfig(dataset_dir=ROOT, out=ROOT, regime=REGIME,
                           d_cell=256, d_u=256, latent_dim=256, p_drop=0.2, lr=1e-3,
                           epochs=EPOCHS, patience=10, batch_size=BATCH, ensemble_size=ENSEMBLE,
-                          base_seed=0, conformal_levels=(0.90,), device=device))
+                          base_seed=0, conformal_levels=(0.90,), device=device,
+                          age_window_k=AGE_WINDOW_K,
+                          age_window_max_batches=AGE_WINDOW_MAX_BATCHES))
     m = json.load(open(f"{ROOT}/bundle/metrics.json"))
     print(f"\n[check] trained on {m['n_train']:,} cells | validated on {m['n_val']:,} | "
           f"calibrated on {m['n_calib']:,}")
