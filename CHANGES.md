@@ -3661,3 +3661,81 @@ target from earlier. To be resolved once both arms are snapshotted, not mid-run.
 
 Arm B is now running; it overwrites the root fold set, which is why arm A's snapshot was chained
 onto its own run.
+
+---
+
+## 2026-08-02 — 🔬 **STEP 6 / G-c step 2 RAN. Primary result: INCONCLUSIVE — and the design is confounded.**
+
+Both arms rebuilt from raw GEO and retrained, 6 folds each, `age_window_k = 4` in both.
+`scorecard/gc2_A_keep_hff.json`, `scorecard/gc2_B_mask_hff.json`. The B-1 guard passed on all 12
+folds: arm A **33 688 / 33 688** age-valid, arm B **75 / 33 688** — 75 exactly, the plan's E11
+prediction, reached independently by a fresh build.
+
+### The primary metric, with the SD and MDE reported alongside as required
+
+| | |
+|---|---|
+| per-fold deltas (B − A) | `+21.37, −7.22, +3.63, +1.84, +5.35, −1.15` |
+| **observed effect** | **+3.971 yr** (arm B worse) |
+| **observed SD** | **9.599 yr** — *never measured before this run* |
+| **MDE** (1.0494 × SD) | **10.074 yr** |
+| 95 % CI | `[−6.102, +14.045]` — includes 0 |
+| power for Δ\* = 3.57 at this SD | **11.3 %** |
+
+**|effect| 3.97 ≤ MDE 10.07.** The pre-registered rule is explicit and was fixed before any number
+existed: *a null with MDE > Δ\* is **INCONCLUSIVE** and licenses nothing.* This is **not** evidence
+that HFF's labels contribute nothing, and it does **not** license discarding 99.7 % of the age labels.
+
+The registered crossover for ≥95 % power was SD ≤ 1.91 yr. The observed SD is **5× that**. The arms
+do not track each other, which is exactly the risk the bar was registered to expose — and it took
+the run to measure it. N2 alone (+21.37 against a −7…+5 spread elsewhere) carries most of the SD.
+
+### 🔴 Worse than underpowered: the comparison is CONFOUNDED. Two changes, not one.
+
+**`ridge` regressed almost as much as the model** — and ridge never touches the trained age head:
+
+| | arm A | arm B | diff |
+|---|---:|---:|---:|
+| `rank_model_dage` | 0.948 | 0.761 | **−0.186** |
+| `rank_ridge_dage` | 0.955 | 0.808 | **−0.146** |
+| `dage_mae_ridge` | 14.05 | 23.27 | **+9.21** |
+
+The cause is C-5's **second consequence**, landing in full: `_deconfound_train_only` refits on
+age-valid TRAIN cells, so masking HFF drops it from **33 613 single cells to 75 bulk samples** — and
+the refitted transform is applied to *every* cell's `y_age`, including the held-out evaluation
+targets. The coefficient does not shift, it changes character:
+
+| fold | arm A (slope, intercept) | arm B (slope, intercept) |
+|---|---|---|
+| N2 | −3.93, −3.42 | **−24.20, +10.12** |
+| O1 | −9.27, −10.09 | **−24.80, +6.62** |
+| Y2 | −9.66, −9.92 | **−24.88, +3.06** |
+
+Slope ~2.5–6× steeper, intercept sign-flipped in all three.
+
+> **So arm B is not "arm A minus HFF's labels." It is a different target variable.** The run measures
+> the age head having 75 labels **and** a different ΔAge definition for everything, simultaneously —
+> a one-change-rule violation baked into the design, not into its execution. **The pre-registered
+> outcome table cannot be applied to this result**, in any of its three branches.
+
+### Fate guards: three of four hold
+
+`fate_prauc` (0.992→0.981), `fate_roc` (0.983→0.961) and `fate_ece` (0.249→0.326) all read **noise**,
+as required. But **`fate ECE (Platt)` REGRESSED** — 0.140 → 0.288, CI `[+0.008, +0.288]`. The plan
+says a move there "is a finding to explain, not a trade-off." It is consistent with the same cause:
+`y_age` moving changes which cells the calibration path sees. Recorded, not waved through.
+
+Also regressed: `interval width` 65.9 → 91.9 `[+3.59, +48.53]`.
+
+### What this licenses
+
+**Nothing about discarding HFF's labels.** The honest reading is that step 6 as designed cannot
+answer its question: the treatment is entangled with a refit of the ΔAge target itself. Making it
+answerable needs the deconfounder held FIXED across arms — fit it once on arm A and reuse the
+coefficient in arm B — so the only difference is which labels the age head sees. That is a new
+change with its own bar, not a re-read of this run.
+
+⚠️ **Gap in this record:** arm B overwrote arm A's builds, so arm A's `proliferation_coef` above is
+the July `runs/` build used as a proxy (arm A reproduced baseline to 3 decimals, so it is a close
+one, but it is a proxy and is labelled as such). Future arm runs should copy `scalers.json` out
+before the next arm starts.
