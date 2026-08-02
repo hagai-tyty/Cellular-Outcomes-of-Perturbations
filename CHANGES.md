@@ -3564,3 +3564,51 @@ Remaining before the run: plumb `age_window_k = 4` and the arm switch into the r
 add the guard asserting the arms' age-valid counts differ before training. Cost, from
 `run_loocv.py`'s own docstring: *"~6 full builds. Expect a few hours; run it overnight"* — twice,
 once per arm.
+
+---
+
+## 2026-08-02 — Step 6 plumbing + the arm-contrast proof, and arm A launched
+
+### The three fixes
+
+1. **The arm switch now reaches the data.** `run_multi_local.py` gains `AGE_MASKED` /
+   `AGE_WINDOW_K` / `AGE_WINDOW_MAX_BATCHES` and sets `constants.AGE_MASKED_DATASETS` **before the
+   build** — where `age_label_policy` reads it, via `delta_age` at `aging.py:304`. This is precisely
+   why step 6 must run through this driver and not `retrain_stage1.py`, which reuses shards.
+2. **`age_window_k` is plumbed into `TrainConfig`.** The rebuild driver omitted it too, so step 6
+   would have run at `k = 1` = OFF whatever the plan said.
+3. **The B-1 guard**, placed *before* training so it fails before the compute is spent. Arm B must
+   leave under 5 % of train cells age-valid and more than zero; arm A must leave over 50 %. Either
+   way it writes `step6_arm_census.json`.
+
+`run_loocv.py` takes `--arm A|B --age-window-k 4`. `run_step6_arm.sh` chains the snapshot onto the
+run, because arm B overwrites arm A's builds (`scorecard.py:132` resolves `cellfate_loocv_<donor>`
+exactly) and a forgotten snapshot costs hours of recompute.
+
+### 🔬 The contrast proof — two scratch single-fold builds, identical geometry
+
+Not inferred from older builds: both arms were actually built, holdout donor O1, same scratch
+config (800 cells/timepoint, 2 epochs, 1 member), differing **only** in the mask.
+
+| arm | age-valid / train cells | | `age_window_k` |
+|---|---:|---:|---:|
+| **A** (control) | **5 718 / 5 718** | 100.00 % | 4 |
+| **B** (treatment) | **78 / 5 718** | 1.36 % | 4 |
+
+**Identical train-cell count, 98.64 % of labels removed.** One change, and it lands. Both branches of
+the B-1 guard executed and passed — the arm-A branch had never run before. Both smoke runs went
+end-to-end (build → train → evaluate → bundle, exit 0).
+
+This is the direct refutation of the failure mode the pre-flight found: through `retrain_stage1.py`
+the two arms were provably identical (127 815 / 127 815 either way); through the rebuild driver they
+differ by construction.
+
+### Launched
+
+Arm A (control) is running: 6 folds, `--age-window-k 4`, auto-snapshotting to `gc2_A_keep_hff`.
+`xdonor_calibration` defaults to `True`, so each fold trains **6 ensembles** (5 inner + 1 deployed).
+Expect hours per arm, twice. Scratch dirs and the root `cellfate_multi_bundle.zip` cleaned up.
+
+Still to report when both arms land: the **observed SD and MDE alongside the effect**, per the
+registered bar — and if `|effect| <= MDE`, the pre-registered reading is INCONCLUSIVE, not "the
+labels make no difference".
