@@ -1,0 +1,66 @@
+{
+  "script": "step6_preflight",
+  "utc": "2026-08-02T20:41:56+00:00",
+  "smoke": {
+    "epochs": 2,
+    "ensemble": 1,
+    "max_cells": 800,
+    "holdout": "O1"
+  },
+  "census_arm_a": {
+    "arm": [
+      "__control__"
+    ],
+    "age_window_k": 4,
+    "n_train_cells": 5718,
+    "n_age_valid_train": 5718,
+    "frac_age_valid_train": 1.0,
+    "holdout_donor": "O1"
+  },
+  "census_arm_b": {
+    "arm": [
+      "hff_sc"
+    ],
+    "age_window_k": 4,
+    "n_train_cells": 5718,
+    "n_age_valid_train": 78,
+    "frac_age_valid_train": 0.013641133263378805,
+    "holdout_donor": "O1"
+  },
+  "y_age_comparison": {
+    "n_common": 1024,
+    "nan_pattern_mismatches": 0,
+    "both_nan": 0,
+    "max_abs_y_age_delta": 0.0,
+    "worst_cell": null,
+    "cells_whose_age_mask_differs": 900
+  },
+  "checks": [
+    {
+      "name": "P1 arms differ in trainable labels",
+      "pass": true,
+      "detail": "A 5,718 vs B 78 of 5,718"
+    },
+    {
+      "name": "P2 age_window_k = 4 in both arms",
+      "pass": true,
+      "detail": "A k=4, B k=4"
+    },
+    {
+      "name": "P3 y_age BIT-IDENTICAL across arms",
+      "pass": true,
+      "detail": "max|delta| 0.000e+00 over 1,024 cells, 0 NaN-pattern mismatches"
+    },
+    {
+      "name": "P3b the difference is in age_mask ONLY (not vacuous)",
+      "pass": true,
+      "detail": "900 cells differ in age_mask"
+    },
+    {
+      "name": "P4 arms kept SEPARATE builds",
+      "pass": true,
+      "detail": "cellfate_pf_armA and cellfate_pf_armB both present"
+    }
+  ],
+  "all_pass": true
+}

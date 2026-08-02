@@ -74,38 +74,41 @@ def build_arm(arm: str, root: str) -> dict:
     return json.loads(Path(root, "step6_arm_census.json").read_text(encoding="utf-8"))
 
 
-def read_y_age(root: str) -> dict[str, tuple[float, bool]]:
-    """cell_id -> (y_age, age_mask), read straight off the shards. Pure I/O."""
+def compare_y_age(root_a: str, root_b: str) -> dict:
+    """P3. `y_age` must match ROW FOR ROW; only `age_mask` may differ.
+
+    Compared positionally per shard, **not** keyed by ``cell_id``. A first draft of this used a
+    ``{cell_id: y_age}`` dict and silently compared 1 024 of 7 062 rows, because `cell_id` is not
+    unique across the dataset -- the same cell recurs under different perturbations, so the dict
+    kept only the last occurrence of each. A 15 % sample is not a gate for a 10 h run. Shard
+    filenames and row order are deterministic, and both are asserted rather than assumed.
+    """
     from cellfate.common import io
-    out: dict[str, tuple[float, bool]] = {}
-    for sh in sorted(Path(root, "shards").glob("*.parquet")):
-        a = io.shard_to_numpy(io.read_shard(sh))
-        for i, cid in enumerate(a["cell_id"]):
-            out[str(cid)] = (float(a["y_age"][i]), bool(a["age_mask"][i]))
-    return out
-
-
-def compare_y_age(A: dict, B: dict) -> dict:
-    """P3. `y_age` must match cell-for-cell; only `age_mask` may differ. Pure."""
-    common = sorted(set(A) & set(B))
-    both_nan = mism = 0
+    sa = sorted(Path(root_a, "shards").glob("*.parquet"))
+    sb = sorted(Path(root_b, "shards").glob("*.parquet"))
+    if [p.name for p in sa] != [p.name for p in sb]:
+        return {"error": "shard filenames differ between arms", "rows_compared": 0,
+                "max_abs_y_age_delta": float("inf"), "nan_pattern_mismatches": -1,
+                "rows_whose_age_mask_differs": 0, "cell_id_order_mismatches": len(sa)}
+    rows = nan_mis = mask_diff = order_mis = 0
     worst = 0.0
-    worst_cell = None
-    for c in common:
-        ya, yb = A[c][0], B[c][0]
-        if np.isnan(ya) and np.isnan(yb):
-            both_nan += 1
+    for pa, pb in zip(sa, sb, strict=True):
+        a = io.shard_to_numpy(io.read_shard(pa))
+        b = io.shard_to_numpy(io.read_shard(pb))
+        if [str(x) for x in a["cell_id"]] != [str(x) for x in b["cell_id"]]:
+            order_mis += 1
             continue
-        if np.isnan(ya) != np.isnan(yb):
-            mism += 1
-            continue
-        d = abs(ya - yb)
-        if d > worst:
-            worst, worst_cell = d, c
-    mask_diff = sum(1 for c in common if A[c][1] != B[c][1])
-    return {"n_common": len(common), "nan_pattern_mismatches": mism, "both_nan": both_nan,
-            "max_abs_y_age_delta": worst, "worst_cell": worst_cell,
-            "cells_whose_age_mask_differs": mask_diff}
+        ya, yb = np.asarray(a["y_age"], float), np.asarray(b["y_age"], float)
+        ma, mb = np.asarray(a["age_mask"], bool), np.asarray(b["age_mask"], bool)
+        nan_mis += int((np.isnan(ya) != np.isnan(yb)).sum())
+        ok = ~np.isnan(ya) & ~np.isnan(yb)
+        if ok.any():
+            worst = max(worst, float(np.abs(ya[ok] - yb[ok]).max()))
+        mask_diff += int((ma != mb).sum())
+        rows += len(ya)
+    return {"rows_compared": rows, "shards_compared": len(sa),
+            "cell_id_order_mismatches": order_mis, "nan_pattern_mismatches": nan_mis,
+            "max_abs_y_age_delta": worst, "rows_whose_age_mask_differs": mask_diff}
 
 
 def main() -> int:
@@ -119,8 +122,7 @@ def main() -> int:
     print(f"  building arm B -> {rootB} ...")
     cenB = build_arm("B", rootB)
 
-    yA, yB = read_y_age(rootA), read_y_age(rootB)
-    cmp_ = compare_y_age(yA, yB)
+    cmp_ = compare_y_age(rootA, rootB)
 
     checks: list[tuple[str, bool, str]] = []
 
@@ -137,15 +139,16 @@ def main() -> int:
 
     # P3 -- THE ONE. y_age must not move.
     p3 = (cmp_["nan_pattern_mismatches"] == 0 and cmp_["max_abs_y_age_delta"] == 0.0
-          and cmp_["n_common"] > 0)
-    checks.append(("P3 y_age BIT-IDENTICAL across arms", p3,
-                   f"max|delta| {cmp_['max_abs_y_age_delta']:.3e} over {cmp_['n_common']:,} cells, "
-                   f"{cmp_['nan_pattern_mismatches']} NaN-pattern mismatches"))
+          and cmp_["rows_compared"] > 0 and cmp_["cell_id_order_mismatches"] == 0)
+    checks.append(("P3 y_age BIT-IDENTICAL across arms (row-exact)", p3,
+                   f"max|delta| {cmp_['max_abs_y_age_delta']:.3e} over "
+                   f"{cmp_['rows_compared']:,} ROWS, {cmp_['nan_pattern_mismatches']} NaN "
+                   f"mismatches, {cmp_['cell_id_order_mismatches']} order mismatches"))
 
     # P3b -- and it must not be vacuous: the arms DO differ, in age_mask only
-    p3b = cmp_["cells_whose_age_mask_differs"] > 0
+    p3b = cmp_["rows_whose_age_mask_differs"] > 0
     checks.append(("P3b the difference is in age_mask ONLY (not vacuous)", p3b,
-                   f"{cmp_['cells_whose_age_mask_differs']:,} cells differ in age_mask"))
+                   f"{cmp_['rows_whose_age_mask_differs']:,} rows differ in age_mask"))
 
     # P4 -- separate roots, both alive
     p4 = Path(rootA).is_dir() and Path(rootB).is_dir() and rootA != rootB

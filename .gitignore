@@ -37,6 +37,7 @@ outputs/
 cellfate_loocv_*/
 cellfate_multi*/
 cellfate_step6_*/
+cellfate_pf_*/
 runs/
 *.pt
 
