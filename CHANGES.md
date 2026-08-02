@@ -3739,3 +3739,48 @@ change with its own bar, not a re-read of this run.
 the July `runs/` build used as a proxy (arm A reproduced baseline to 3 decimals, so it is a close
 one, but it is a proxy and is labelled as such). Future arm runs should copy `scalers.json` out
 before the next arm starts.
+
+---
+
+## 2026-08-02 — Step 6 deep analysis: **three confounds**, and the report
+
+Full report: `results/STEP6_REPORT.md`.
+
+### The headline, restated with everything alongside it
+
+`dage_mae_model`, paired B − A, 6 folds: **effect +3.971 yr | SD 9.599 | MDE 10.074 |
+CI [−6.102, +14.045] | power for Δ\* at this SD 11.3 %**. |effect| ≤ MDE ⇒ **INCONCLUSIVE**, per the
+rule registered before any number existed. Dropping the N2 outlier does **not** rescue it
+(n=5: effect +0.491, SD 4.933, MDE 6.125 — still inconclusive).
+
+### Three confounds, not one
+
+* **C-I — the ΔAge target moved.** The deconfounder refits from 33 613 single cells to 75 bulk
+  samples; slope goes −3.93 → −24.20 (N2) with the intercept sign-flipping, and the new transform is
+  applied to every cell including held-out evaluation targets. Arm B is a different target variable.
+* **C-II — 🆕 the label pool's composition shifts into the clock's extrapolation zone.** N2 and N3 are
+  donor age **0**, outside `fleischer_clock.json`'s `age_range = [1.0, 96.0]`. Their share of the age
+  labels goes from **0.09 % in arm A to 40 % in arm B** (30 of 75). Masking HFF does not merely
+  reduce labels — it up-weights out-of-clock-range donors by ~400×. Nothing registered this.
+* **C-III — ridge is not a control.** `scorecard.py:95` fits it on `tr.y_age[tr.mask]`, the same
+  masked labels, so it suffers both changes too. **I had framed it as isolating the target change;
+  that was wrong.** What it does show: ridge degraded on all six folds, the model on four, mean
+  excess −5.24 yr — the model degrades *less* than the linear baseline under identical damage, but
+  the DiD CI [−12.58, +2.10] includes 0, so it is suggestive, not established.
+
+### Also found
+
+* **`scorecard.py`'s `level shift` row prints the mean without its sign.** A reads `5.713` but is
+  **−5.713**; signed means move −5.713 → +2.267 (looks better) while magnitudes move 13.12 → 18.66
+  (actually worse). A reader trusting that row would draw the opposite conclusion.
+* **N2 breaks in arm B**: MAE 21.79 → 43.17, level shift 15.0 → 42.2, **conformal coverage
+  1.00 → 0.095**. Stated as observation; that C-II explains it is a hypothesis this run cannot test.
+* **Fate guards: 3 of 4 hold.** `fate_ece` (Platt) regressed 0.140 → 0.288 [+0.008, +0.288].
+
+### Conclusion
+
+The primary result licenses nothing. **The experiment as designed cannot answer its question** — the
+treatment is entangled with a refit of the target and a 400× reweighting of extrapolated donors. The
+*machinery* is sound: guards fired, both arms hit their predicted label counts, arm A reproduced
+baseline exactly, C-5 Option 2 cost the control nothing. What failed is the comparison's validity,
+and the plan predicted the dominant cause in writing before the run.
