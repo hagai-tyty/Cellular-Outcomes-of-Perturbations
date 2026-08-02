@@ -11,6 +11,55 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-02 — Fix the late-crash encoding bug: scripts finished their work, then died before writing it
+
+**Status:** ✅ Fixed in 4 forward-path scripts and verified by re-running the one that failed.
+**756 passed**, CI lint clean.
+
+Found while checking whether step 6 could run locally. `experiments/diag_m2a_calibratability.py`
+computed everything, printed its SPLIT verdict, and then **raised `UnicodeEncodeError` on a `Δ`
+character under codepage `cp1255`** — *before* writing its results JSON. The recorded result
+survived only because the crash beat the write.
+
+**The failure mode is the dangerous kind: late.** All the compute succeeds, the verdict reaches the
+screen, and the artefact is silently never persisted. On a long diagnostic that is an entire run
+thrown away, and nothing in the output says so.
+
+**22 scripts print characters this codepage cannot encode.** Fixed the four on the forward path:
+
+| script | why it matters |
+|---|---|
+| `plan_tests/verify_age_mask_identical.py` | the step-1 **bit-identity gate** |
+| `scorecard.py` | what **step 6** compares its arms with |
+| `experiments/diag_m2a_calibratability.py` | the one that actually lost its output |
+| `experiments/diag_gc_hff_signature.py` | current G-c step 1 diagnostic |
+
+`plan_tests/verify_stage1_5.py` **already carried this guard** (line 270) with the same cp1255
+rationale, so the convention was copied rather than invented. Extended to `stderr` as well, because
+a traceback whose source line contains one of those characters fails the same way — which is exactly
+what happened to the detector script written to find this.
+
+The remaining 18 are historical one-off experiment scripts (`test3_linearity.py`, `test7_*`,
+`test18_forward_gate.py`, …) that are already run and recorded and sit on no forward path. Left alone
+deliberately rather than swept up.
+
+### Verified by re-running the failure
+
+`diag_m2a_calibratability.py` now exits **0**, renders `Δ` and `§` correctly, and **writes its
+JSON** (timestamp moved from 2026-07-31T13:18:41 to 2026-08-02T06:36:54).
+
+**And it reproduced bit-for-bit on a different machine:** every `rho_all` / `rho_partial` identical
+to the data-machine run (0.4445 / 0.2671 skin & blood, 0.6902 / 0.5163 multi-tissue), verdict SPLIT.
+So `results/diag_m2a_calibratability_results.json` changes only in its timestamp in this commit —
+the numbers are unchanged, and the re-run is now an independent cross-machine reproduction of M-2a
+rather than a single recorded result.
+
+*(`scorecard.py` carries 2 pre-existing ruff errors at lines 232 and 266 — `UP017`, `E702`. Not
+introduced here, not on CI's lint path, left alone.)*
+
+---
+
+
 ## 2026-08-02 — Step 6's bar REGISTERED, and `k = 4` pinned. Suite verified locally at 756 passing
 
 **Status:** ✅ Both gaps from the deep review are closed. **Full suite run locally for the first

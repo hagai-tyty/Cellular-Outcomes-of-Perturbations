@@ -1,6 +1,6 @@
 {
   "script": "diag_m2a_calibratability",
-  "utc": "2026-07-31T13:18:41+00:00",
+  "utc": "2026-08-02T06:36:54+00:00",
   "n_plu_genes": 18,
   "bar": 0.5,
   "clocks": {
@@ -55,7 +55,7 @@
           "donor": "O1",
           "arm": "failed_to_transiently_reprogram",
           "day": 15,
-          "age_rna": 81.80395371965824,
+          "age_rna": 81.80395371965818,
           "age_meth": 1.4384330209640723,
           "plu": 0.07436051219701767
         },
@@ -63,7 +63,7 @@
           "donor": "O1",
           "arm": "failed_to_transiently_reprogram",
           "day": 17,
-          "age_rna": 79.7159513422828,
+          "age_rna": 79.71595134228292,
           "age_meth": 1.403267943818972,
           "plu": 0.0739336833357811
         },
@@ -71,7 +71,7 @@
           "donor": "O1",
           "arm": "failing_to_transiently_reprogram_intermediate",
           "day": 10,
-          "age_rna": 74.07124979619051,
+          "age_rna": 74.07124979619056,
           "age_meth": 1.0762864763740307,
           "plu": 0.5240527987480164
         },
@@ -79,7 +79,7 @@
           "donor": "O1",
           "arm": "failing_to_transiently_reprogram_intermediate",
           "day": 13,
-          "age_rna": 75.68467351101037,
+          "age_rna": 75.68467351101032,
           "age_meth": 1.2552226243146596,
           "plu": 0.5463021397590637
         },
@@ -119,7 +119,7 @@
           "donor": "O1",
           "arm": "negative_control",
           "day": 15,
-          "age_rna": 92.98303898231708,
+          "age_rna": 92.98303898231705,
           "age_meth": 1.3549945791670477,
           "plu": 0.055488184094429016
         },
@@ -127,7 +127,7 @@
           "donor": "O1",
           "arm": "negative_control",
           "day": 17,
-          "age_rna": 98.708145214004,
+          "age_rna": 98.7081452140039,
           "age_meth": 1.5173680180331788,
           "plu": 0.057900821790099144
         },
@@ -183,7 +183,7 @@
           "donor": "O1",
           "arm": "transient_reprogramming_intermediate",
           "day": 15,
-          "age_rna": 49.49995783389474,
+          "age_rna": 49.49995783389469,
           "age_meth": 0.1973538138280045,
           "plu": 0.6205474138259888
         },
@@ -191,7 +191,7 @@
           "donor": "O1",
           "arm": "transient_reprogramming_intermediate",
           "day": 17,
-          "age_rna": 49.39004274349595,
+          "age_rna": 49.39004274349597,
           "age_meth": -0.10005092961503535,
           "plu": 0.573498547077179
         },
@@ -215,7 +215,7 @@
           "donor": "O2",
           "arm": "failed_to_transiently_reprogram",
           "day": 10,
-          "age_rna": 116.5176523442619,
+          "age_rna": 116.51765234426162,
           "age_meth": 1.7181595999905779,
           "plu": 0.07368773221969604
         },
@@ -231,7 +231,7 @@
           "donor": "O2",
           "arm": "failed_to_transiently_reprogram",
           "day": 15,
-          "age_rna": 107.96712195956346,
+          "age_rna": 107.96712195956349,
           "age_meth": 2.1109586236516114,
           "plu": 0.10685899667441845
         },
@@ -247,7 +247,7 @@
           "donor": "O2",
           "arm": "failing_to_transiently_reprogram_intermediate",
           "day": 10,
-          "age_rna": 79.83921414468334,
+          "age_rna": 79.83921414468338,
           "age_meth": 1.7843382209726577,
           "plu": 0.41904395818710327
         },
@@ -255,7 +255,7 @@
           "donor": "O2",
           "arm": "failing_to_transiently_reprogram_intermediate",
           "day": 13,
-          "age_rna": 79.10003578075369,
+          "age_rna": 79.10003578075373,
           "age_meth": 1.7572998938528273,
           "plu": 0.5610616207122803
         },
@@ -287,7 +287,7 @@
           "donor": "O2",
           "arm": "negative_control",
           "day": 13,
-          "age_rna": 113.2454537848753,
+          "age_rna": 113.24545378487534,
           "age_meth": 1.7406538464078523,
           "plu": 0.053374405950307846
         },
@@ -303,7 +303,7 @@
           "donor": "O2",
           "arm": "negative_control",
           "day": 17,
-          "age_rna": 119.24882545505946,
+          "age_rna": 119.24882545505947,
           "age_meth": 1.7240428457887185,
           "plu": 0.054899588227272034
         },
@@ -359,7 +359,7 @@
           "donor": "O2",
           "arm": "transient_reprogramming_intermediate",
           "day": 15,
-          "age_rna": 52.59173755559803,
+          "age_rna": 52.591737555598016,
           "age_meth": 0.13871469806585757,
           "plu": 0.762134313583374
         },
@@ -367,7 +367,7 @@
           "donor": "O2",
           "arm": "transient_reprogramming_intermediate",
           "day": 17,
-          "age_rna": 47.73822234299619,
+          "age_rna": 47.73822234299618,
           "age_meth": -0.6151832660644356,
           "plu": 0.8762986660003662
         },
@@ -415,7 +415,7 @@
           "donor": "O3",
           "arm": "failed_to_transiently_reprogram",
           "day": 15,
-          "age_rna": 100.42742204927235,
+          "age_rna": 100.42742204927225,
           "age_meth": 0.7056430205563786,
           "plu": 0.07098628953099251
         },
@@ -423,7 +423,7 @@
           "donor": "O3",
           "arm": "failed_to_transiently_reprogram",
           "day": 17,
-          "age_rna": 96.58991793943835,
+          "age_rna": 96.58991793943825,
           "age_meth": 0.8146918031822264,
           "plu": 0.08233942836523056
         },
@@ -431,7 +431,7 @@
           "donor": "O3",
           "arm": "failing_to_transiently_reprogram_intermediate",
           "day": 10,
-          "age_rna": 76.43795888280077,
+          "age_rna": 76.43795888280091,
           "age_meth": 1.2570132630381743,
           "plu": 0.45911121368408203
         },
@@ -439,7 +439,7 @@
           "donor": "O3",
           "arm": "failing_to_transiently_reprogram_intermediate",
           "day": 13,
-          "age_rna": 81.3234742928575,
+          "age_rna": 81.32347429285757,
           "age_meth": 1.1714981335054098,
           "plu": 0.5108835697174072
         },
@@ -463,7 +463,7 @@
           "donor": "O3",
           "arm": "negative_control",
           "day": 10,
-          "age_rna": 117.8967528313475,
+          "age_rna": 117.89675283134746,
           "age_meth": 1.111532042613523,
           "plu": 0.06472432613372803
         },
@@ -471,7 +471,7 @@
           "donor": "O3",
           "arm": "negative_control",
           "day": 13,
-          "age_rna": 109.61868753944363,
+          "age_rna": 109.61868753944346,
           "age_meth": 1.086308830820546,
           "plu": 0.05850565433502197
         },
@@ -543,7 +543,7 @@
           "donor": "O3",
           "arm": "transient_reprogramming_intermediate",
           "day": 15,
-          "age_rna": 53.03334266556935,
+          "age_rna": 53.03334266556942,
           "age_meth": 0.2164169246286517,
           "plu": 0.5800147652626038
         },
@@ -551,7 +551,7 @@
           "donor": "O3",
           "arm": "transiently_reprogrammed",
           "day": 10,
-          "age_rna": 97.34813215904515,
+          "age_rna": 97.34813215904518,
           "age_meth": 1.1924370013644014,
           "plu": 0.12600113451480865
         },
@@ -567,7 +567,7 @@
           "donor": "O3",
           "arm": "transiently_reprogrammed",
           "day": 15,
-          "age_rna": 118.4090353941865,
+          "age_rna": 118.40903539418662,
           "age_meth": 0.923663587974779,
           "plu": 0.05681529454886913
         },
@@ -575,7 +575,7 @@
           "donor": "O3",
           "arm": "transiently_reprogrammed",
           "day": 17,
-          "age_rna": 83.12698581747745,
+          "age_rna": 83.12698581747759,
           "age_meth": 1.9862827062360295,
           "plu": 0.1096353754401207
         }
@@ -632,7 +632,7 @@
           "donor": "O1",
           "arm": "failed_to_transiently_reprogram",
           "day": 15,
-          "age_rna": 81.80395371965824,
+          "age_rna": 81.80395371965818,
           "age_meth": 1.2891734004220277,
           "plu": 0.07436051219701767
         },
@@ -640,7 +640,7 @@
           "donor": "O1",
           "arm": "failed_to_transiently_reprogram",
           "day": 17,
-          "age_rna": 79.7159513422828,
+          "age_rna": 79.71595134228292,
           "age_meth": 0.8915950462874995,
           "plu": 0.0739336833357811
         },
@@ -648,7 +648,7 @@
           "donor": "O1",
           "arm": "failing_to_transiently_reprogram_intermediate",
           "day": 10,
-          "age_rna": 74.07124979619051,
+          "age_rna": 74.07124979619056,
           "age_meth": 0.7712894337122576,
           "plu": 0.5240527987480164
         },
@@ -656,7 +656,7 @@
           "donor": "O1",
           "arm": "failing_to_transiently_reprogram_intermediate",
           "day": 13,
-          "age_rna": 75.68467351101037,
+          "age_rna": 75.68467351101032,
           "age_meth": 0.7014481526211426,
           "plu": 0.5463021397590637
         },
@@ -696,7 +696,7 @@
           "donor": "O1",
           "arm": "negative_control",
           "day": 15,
-          "age_rna": 92.98303898231708,
+          "age_rna": 92.98303898231705,
           "age_meth": 1.287709371942612,
           "plu": 0.055488184094429016
         },
@@ -704,7 +704,7 @@
           "donor": "O1",
           "arm": "negative_control",
           "day": 17,
-          "age_rna": 98.708145214004,
+          "age_rna": 98.7081452140039,
           "age_meth": 1.2752933707765046,
           "plu": 0.057900821790099144
         },
@@ -760,7 +760,7 @@
           "donor": "O1",
           "arm": "transient_reprogramming_intermediate",
           "day": 15,
-          "age_rna": 49.49995783389474,
+          "age_rna": 49.49995783389469,
           "age_meth": -0.11484311895656032,
           "plu": 0.6205474138259888
         },
@@ -768,7 +768,7 @@
           "donor": "O1",
           "arm": "transient_reprogramming_intermediate",
           "day": 17,
-          "age_rna": 49.39004274349595,
+          "age_rna": 49.39004274349597,
           "age_meth": -0.5646921141570004,
           "plu": 0.573498547077179
         },
@@ -792,7 +792,7 @@
           "donor": "O2",
           "arm": "failed_to_transiently_reprogram",
           "day": 10,
-          "age_rna": 116.5176523442619,
+          "age_rna": 116.51765234426162,
           "age_meth": 1.5978494515494046,
           "plu": 0.07368773221969604
         },
@@ -808,7 +808,7 @@
           "donor": "O2",
           "arm": "failed_to_transiently_reprogram",
           "day": 15,
-          "age_rna": 107.96712195956346,
+          "age_rna": 107.96712195956349,
           "age_meth": 1.5162777151696551,
           "plu": 0.10685899667441845
         },
@@ -824,7 +824,7 @@
           "donor": "O2",
           "arm": "failing_to_transiently_reprogram_intermediate",
           "day": 10,
-          "age_rna": 79.83921414468334,
+          "age_rna": 79.83921414468338,
           "age_meth": 1.118662793196713,
           "plu": 0.41904395818710327
         },
@@ -832,7 +832,7 @@
           "donor": "O2",
           "arm": "failing_to_transiently_reprogram_intermediate",
           "day": 13,
-          "age_rna": 79.10003578075369,
+          "age_rna": 79.10003578075373,
           "age_meth": 1.0290357492747644,
           "plu": 0.5610616207122803
         },
@@ -864,7 +864,7 @@
           "donor": "O2",
           "arm": "negative_control",
           "day": 13,
-          "age_rna": 113.2454537848753,
+          "age_rna": 113.24545378487534,
           "age_meth": 1.5175618013887369,
           "plu": 0.053374405950307846
         },
@@ -880,7 +880,7 @@
           "donor": "O2",
           "arm": "negative_control",
           "day": 17,
-          "age_rna": 119.24882545505946,
+          "age_rna": 119.24882545505947,
           "age_meth": 1.634075956275884,
           "plu": 0.054899588227272034
         },
@@ -936,7 +936,7 @@
           "donor": "O2",
           "arm": "transient_reprogramming_intermediate",
           "day": 15,
-          "age_rna": 52.59173755559803,
+          "age_rna": 52.591737555598016,
           "age_meth": -0.47404129483615004,
           "plu": 0.762134313583374
         },
@@ -944,7 +944,7 @@
           "donor": "O2",
           "arm": "transient_reprogramming_intermediate",
           "day": 17,
-          "age_rna": 47.73822234299619,
+          "age_rna": 47.73822234299618,
           "age_meth": -1.1450876281372966,
           "plu": 0.8762986660003662
         },
@@ -992,7 +992,7 @@
           "donor": "O3",
           "arm": "failed_to_transiently_reprogram",
           "day": 15,
-          "age_rna": 100.42742204927235,
+          "age_rna": 100.42742204927225,
           "age_meth": 1.1276518157658861,
           "plu": 0.07098628953099251
         },
@@ -1000,7 +1000,7 @@
           "donor": "O3",
           "arm": "failed_to_transiently_reprogram",
           "day": 17,
-          "age_rna": 96.58991793943835,
+          "age_rna": 96.58991793943825,
           "age_meth": 1.1391171437475376,
           "plu": 0.08233942836523056
         },
@@ -1008,7 +1008,7 @@
           "donor": "O3",
           "arm": "failing_to_transiently_reprogram_intermediate",
           "day": 10,
-          "age_rna": 76.43795888280077,
+          "age_rna": 76.43795888280091,
           "age_meth": 0.9610231779047942,
           "plu": 0.45911121368408203
         },
@@ -1016,7 +1016,7 @@
           "donor": "O3",
           "arm": "failing_to_transiently_reprogram_intermediate",
           "day": 13,
-          "age_rna": 81.3234742928575,
+          "age_rna": 81.32347429285757,
           "age_meth": 0.624854125184037,
           "plu": 0.5108835697174072
         },
@@ -1040,7 +1040,7 @@
           "donor": "O3",
           "arm": "negative_control",
           "day": 10,
-          "age_rna": 117.8967528313475,
+          "age_rna": 117.89675283134746,
           "age_meth": 1.0692112603335107,
           "plu": 0.06472432613372803
         },
@@ -1048,7 +1048,7 @@
           "donor": "O3",
           "arm": "negative_control",
           "day": 13,
-          "age_rna": 109.61868753944363,
+          "age_rna": 109.61868753944346,
           "age_meth": 0.9891074989355457,
           "plu": 0.05850565433502197
         },
@@ -1120,7 +1120,7 @@
           "donor": "O3",
           "arm": "transient_reprogramming_intermediate",
           "day": 15,
-          "age_rna": 53.03334266556935,
+          "age_rna": 53.03334266556942,
           "age_meth": -0.16592512749445754,
           "plu": 0.5800147652626038
         },
@@ -1128,7 +1128,7 @@
           "donor": "O3",
           "arm": "transiently_reprogrammed",
           "day": 10,
-          "age_rna": 97.34813215904515,
+          "age_rna": 97.34813215904518,
           "age_meth": 0.8725406334746992,
           "plu": 0.12600113451480865
         },
@@ -1144,7 +1144,7 @@
           "donor": "O3",
           "arm": "transiently_reprogrammed",
           "day": 15,
-          "age_rna": 118.4090353941865,
+          "age_rna": 118.40903539418662,
           "age_meth": 0.8964347013599108,
           "plu": 0.05681529454886913
         },
@@ -1152,7 +1152,7 @@
           "donor": "O3",
           "arm": "transiently_reprogrammed",
           "day": 17,
-          "age_rna": 83.12698581747745,
+          "age_rna": 83.12698581747759,
           "age_meth": 0.8776640939135594,
           "plu": 0.1096353754401207
         }

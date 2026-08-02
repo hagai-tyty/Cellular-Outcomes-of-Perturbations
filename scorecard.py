@@ -421,6 +421,16 @@ def cmd_compare(tag_a: str, tag_b: str):
 
 
 def main():
+    # cp1255 (Hebrew) and other legacy Windows codepages cannot encode the characters this
+    # script prints. Without this the script does ALL its work, prints its verdict, and then
+    # dies on a print -- BEFORE writing its JSON, so the result is lost. Same guard as
+    # plan_tests/verify_stage1_5.py:270; stderr is included too, because a traceback whose
+    # source line contains one of those characters would fail the same way.
+    for _s in (sys.stdout, sys.stderr):
+        try:
+            _s.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:  # noqa: BLE001
+            pass
     ap = argparse.ArgumentParser(description="CellFate-Rx metric scorecard")
     sub = ap.add_subparsers(dest="cmd")
     s = sub.add_parser("snapshot")

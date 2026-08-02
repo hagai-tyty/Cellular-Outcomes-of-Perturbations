@@ -225,6 +225,16 @@ def load_hff(run_dir: Path) -> tuple[np.ndarray, np.ndarray, dict]:
 
 
 def main() -> int:
+    # cp1255 (Hebrew) and other legacy Windows codepages cannot encode the characters this
+    # script prints. Without this the script does ALL its work, prints its verdict, and then
+    # dies on a print -- BEFORE writing its JSON, so the result is lost. Same guard as
+    # plan_tests/verify_stage1_5.py:270; stderr is included too, because a traceback whose
+    # source line contains one of those characters would fail the same way.
+    for _s in (sys.stdout, sys.stderr):
+        try:
+            _s.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:  # noqa: BLE001
+            pass
     print("STAGE 1.5.2 G-c step 1 — do HFF's ΔAge labels carry the rejuvenation signature?\n")
     print("  PHASE 1: freeze the bars. No label is read in this phase.\n")
     print(f"  the signature to match (REV FINAL §4.4(b)): slope {METH_SLOPES} yr/day, "
