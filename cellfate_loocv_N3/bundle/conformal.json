@@ -1,0 +1,15 @@
+{
+  "levels": [
+    0.9
+  ],
+  "q": {
+    "0.9": 24.391517639160156
+  },
+  "sigma_scale": 9.88876095134592,
+  "sigma_scale_mc": 11.048689175470711,
+  "sigma_scale_mode": "ensemble",
+  "sigma_calibrated_modes": [
+    "ensemble",
+    "mc_dropout"
+  ]
+}

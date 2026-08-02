@@ -1,0 +1,10 @@
+{
+  "arm": [
+    "__control__"
+  ],
+  "age_window_k": 4,
+  "n_train_cells": 33690,
+  "n_age_valid_train": 33690,
+  "frac_age_valid_train": 1.0,
+  "holdout_donor": "Y1"
+}

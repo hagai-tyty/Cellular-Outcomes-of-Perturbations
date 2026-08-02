@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "n_members": 5,
+  "gene_panel_hash": "783f269a214aa972",
+  "classes": [
+    "safe",
+    "loss",
+    "death"
+  ],
+  "conformal_levels": [
+    0.9
+  ],
+  "created_at": 1785670493.7273386,
+  "deps_hash": "f990f17a658b",
+  "config_hash": "97917410702f"
+}

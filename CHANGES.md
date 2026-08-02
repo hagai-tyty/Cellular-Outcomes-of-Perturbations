@@ -3612,3 +3612,52 @@ Expect hours per arm, twice. Scratch dirs and the root `cellfate_multi_bundle.zi
 Still to report when both arms land: the **observed SD and MDE alongside the effect**, per the
 registered bar — and if `|effect| <= MDE`, the pre-registered reading is INCONCLUSIVE, not "the
 labels make no difference".
+
+---
+
+## 2026-08-02 — Step 6 **arm A complete**, and bar A1 is confirmed in production
+
+`./run_step6_arm.sh A` → `scorecard/gc2_A_keep_hff.json`. **All 6 folds rebuilt from raw GEO and
+retrained**, 11:23 → 16:27 (~1 h/fold: ~25 min build + ~35 min train, 6 ensembles/fold on a GTX 1080).
+No fold SKIPPED or FAILED.
+
+### The guard fired on every fold
+
+```
+[arm ] AGE_MASKED_DATASETS = (empty -> arm A, control) | age_window_k = 4
+[guard] train split: 33,688 age-valid of 33,688 cells (100.00%)
+[guard] OK: arm A (control) carries its full label set
+```
+
+**33 688** — exactly the plan's E11 training-split figure, arrived at independently by a fresh build.
+
+### 🔵 Arm A reproduces `baseline.json` to 3 decimals, on all six folds
+
+| donor | arm A (k=4) | baseline |
+|---|---:|---:|
+| N2 | 21.794 | 21.79 |
+| N3 | 29.695 | 29.69 |
+| O1 | 5.388 | 5.39 |
+| O2 | 7.535 | 7.54 |
+| Y1 | 7.279 | 7.28 |
+| Y2 | 14.057 | 14.06 |
+
+Two things follow, and I checked they were not the same thing as "the rebuild silently didn't happen":
+
+1. **Bar A1 holds in production.** 5c predicted that with every cell age-valid the window closes at
+   W = 1 and `huber_age_window` reduces to `huber_age_loss`, leaving the control arm bit-identical.
+   That was a simulation plus a unit test on a toy model; this is a full 6-fold LOOCV rebuild with
+   the mechanism ON. **`age_window_k = 4` costs the control arm nothing**, so `baseline.json` stays a
+   valid reference and the step-6 comparison is not confounded by the mechanism.
+2. **Determinism holds across ~3 weeks and a full rebuild** from raw GEO.
+
+**Verified it was a real rebuild, not reuse:** the run writes to `./cellfate_loocv_<donor>` (ROOT is
+relative), all six built today 11:23–16:27, and `scorecard.resolve_root` searches `"."` first so the
+snapshot measured *those* builds — not the July copies still sitting under `runs/`.
+
+⚠️ **Housekeeping to settle after step 6:** there are now two fold sets — stale July builds in
+`runs/` and today's in the repo root, with the root ones shadowing. The root is also the tidy-up
+target from earlier. To be resolved once both arms are snapshotted, not mid-run.
+
+Arm B is now running; it overwrites the root fold set, which is why arm A's snapshot was chained
+onto its own run.
