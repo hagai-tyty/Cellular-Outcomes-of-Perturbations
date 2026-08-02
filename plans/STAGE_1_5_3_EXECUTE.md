@@ -1617,7 +1617,63 @@ did not**.
 | **5** ✅ | C-5 design + its bar — **DONE 2026-08-02, and it chose Option 2 over Option 1** | bar RESOLVABLE on the dense regime, DISCRIMINATES between options, 6 rows in `tests/test_bars_resolvable.py` | ❌ no | ❌ no |
 | **5b** ✅ | deeper tests D1–D7 before committing — **DONE 2026-08-02: Option 2 CONFIRMED, W = 8 pinned** | ranking stable on 7 axes, not 1; W chosen for margin against a shrinking label set, not for the minimum | ❌ no | ❌ no |
 | **5c** ✅ | **C-5 Option 2 IMPLEMENTED — DONE 2026-08-02, ships inert (`age_window_k = 1`)** — `training/train.py`, threshold on accumulated age cells with `W_max = 8`. Added 2026-08-02: no step previously scheduled it, and a fixed W biases arm A. See the readiness audit in C-5 | `k` registered via `bar_verdict`; **arm-A behaviour bit-identical to today**; window loss is `Σloss/Σcells` not a mean of means; fate term still steps every batch; determinism asserted | ❌ no | ❌ no |
-| **6** | **G-c step 2** (PART C) | snapshot first; **rollback exercised, not assumed**; **5c must have shipped** | ✅ **yes** | ✅ yes, ×2 arms |
+| **6** | **G-c step 2** (PART C) | snapshot first; **rollback exercised, not assumed**; **5c must have shipped**; **`age_window_k = 4` set in BOTH arms** (see 🆕 below); **the arm-comparison bar registered and its MDE reported** | ✅ **yes** | ✅ yes, ×2 arms |
+
+> ### 🆕 ADDED 2026-08-02 — two things step 6 was missing, found on review
+>
+> #### (a) `age_window_k = 4` must be set explicitly, in BOTH arms
+>
+> **5c ships inert at `age_window_k = 1`, and 1 means OFF.** The gate above previously said only
+> *"5c must have shipped"*, and no command in PART E sets `k`. **Run as written, both arms would use
+> `k = 1`, arm B would be starved, and problem #1 from the readiness audit would return silently** —
+> the exact confound 5c was built to remove, reintroduced by a default.
+>
+> `k = 4` is not a new choice: it is **B2's registered value** (the smallest `k` that halves the
+> per-update standard error, `1/√4 = 0.50`). Arm A holds ~512 age cells per batch, so it closes at
+> `W = 1` and stays bit-identical to today; arm B accumulates. **One policy, both arms** — they
+> differ only because the data differ.
+>
+> #### (b) The comparison itself had NO registered bar — now it does
+>
+> Every bar registered for this stage grades a **mechanism** (B1/B2 for C-5, A1/A2/A3 for C-5c).
+> The comparison step 6 actually decides on — arm A vs arm B on `dage_mae_model`, paired across 6
+> donor folds — had none. Ground rule §5b: *"a bar with no such test is not considered
+> pre-registered."*
+>
+> Registered by **`plan_tests/register_gc_step2_bar.py`** → `results/register_gc_step2_bar_results.json`,
+> with 3 rows in `tests/test_bars_resolvable.py`. **Δ\* = 3.57 yr**, derived from Stage 2 §12's
+> existing *"≥ 25 % drop in `dage_mae_model`"* applied to the 14.29 yr recorded baseline — an
+> established threshold for this same metric, not a number invented here.
+>
+> | SD(per-fold difference) | MDE | P(detect Δ\*) | |
+> |---|---|---|---|
+> | 0.5 yr | 0.52 | 1.0000 | ✅ RESOLVABLE |
+> | **1.0 yr** | **1.05** | **1.0000** | ✅ **RESOLVABLE** |
+> | 2.0 yr | 2.10 | 0.9338 | ❌ UNRESOLVABLE |
+> | 3.0 yr | 3.15 | 0.6476 | ❌ UNRESOLVABLE |
+> | 5.0 yr | 5.25 | 0.2955 | ❌ UNRESOLVABLE |
+> | 13.7 yr *(arms independent)* | 14.38 | 0.0752 | ❌ **almost pure noise** |
+>
+> *(false-positive rate at a true effect of 0: **0.0508** — the CI is honest, it is only weak.)*
+>
+> **Δ\* is detectable at ≥95 % only if the two arms track each other to within ~1 yr per fold**, on a
+> metric whose baseline already ranges 5.39 → 29.69 across folds. That is a demanding requirement and
+> **it is not known to hold.**
+>
+> #### The reading rule, pre-registered because the null is the dangerous outcome
+>
+> The two directions are not symmetric. *"B better"* is self-limiting. **"CI includes 0" is the
+> trap** — read as *"HFF's labels contribute nothing, discard them"*, it would throw away **99.7 % of
+> the age labels on a null that may simply be underpowered.**
+>
+> | observed | licensed conclusion |
+> |---|---|
+> | CI excludes 0 **and** \|effect\| > MDE | conclusive in that direction |
+> | CI includes 0 **and** MDE ≤ Δ\* | genuine null — the labels really do not help |
+> | CI includes 0 **and** MDE > Δ\* | 🔴 **INCONCLUSIVE. Licenses NOTHING**, and specifically does **not** license discarding HFF's labels. Report as underpowered and say so |
+>
+> **The run must report its own observed SD and MDE beside the effect.** Without them the outcome
+> table cannot be applied, because which row you are in depends on the MDE.
 
 > **C-4 moved from step 7 to step 4 on 2026-07-31**, when option (a) was chosen. It sat last only
 > because the choice between the three options depended on G-c step 2's result; **(a) has no such

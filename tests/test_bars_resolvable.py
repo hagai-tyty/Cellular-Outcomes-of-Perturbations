@@ -78,6 +78,29 @@ def band_pass_rate(null, lo, hi):
 # --------------------------------------------------------------- the registry ---- #
 # One entry per acceptance bar. `expect` is what the resolvability rule REQUIRES; a "retired"
 # entry documents a bar we removed BECAUSE it was unresolvable, and asserts it stays that way.
+# --------------------------------------------------------------------------- #
+# STAGE 1.5.3 step 6 / G-c step 2 -- the ARM COMPARISON.                       #
+# --------------------------------------------------------------------------- #
+def null_gc_step2_paired(sd: float, delta: float = 3.5723, n_folds: int = 6,
+                         n_sim: int = 20_000, seed: int = 0) -> np.ndarray:
+    """|t| for a paired `n_folds`-fold comparison whose TRUE effect is `delta`.
+
+    `delta` defaults to DELTA* -- Stage 2 sec 12's registered ">=25% drop in dage_mae_model"
+    applied to the 14.29 yr recorded baseline. Graded against the two-sided t critical value,
+    which is exactly the outcome table's "CI excludes 0" rule.
+
+    Registered because step 6 decides whether 99.7% of the age labels are discarded and its
+    criterion had NO bar. See plan_tests/register_gc_step2_bar.py.
+    """
+    rng = np.random.default_rng(seed)
+    d = rng.normal(delta, sd, size=(n_sim, n_folds))
+    se = d.std(axis=1, ddof=1) / np.sqrt(n_folds)
+    return np.abs(d.mean(axis=1)) / np.maximum(se, 1e-12)
+
+
+_T_CRIT_5 = 2.5705818366147395      # t(.975, df=5)
+
+
 REGISTERED_BARS = [
     {
         "name": "conformal_coverage in [0.85,0.95], pooled marginal",
@@ -119,6 +142,39 @@ REGISTERED_BARS = [
                 "set at z_0.95 of the null SE instead. A correct clock (true gap 53 yr, cv_mae "
                 "12.27) clears that ~99.6% of the time. The 29-vs-35 middle contrast is "
                 "deliberately NOT gated -- it is half the clock's error and unresolvable.",
+    },
+    {
+        "name": "G-c step 2 arm comparison, DELTA*=3.57 yr at SD(diff)=1.0 (step 6)",
+        "kind": "higher",
+        "null": lambda: null_gc_step2_paired(sd=1.0),
+        "bar": _T_CRIT_5,
+        "expect": "RESOLVABLE",
+        "where": "plan_tests/register_gc_step2_bar.py; STAGE_1_5_3_EXECUTE.md step 6",
+        "note": "the ONLY regime in which step 6 can detect an effect worth acting on. The arms "
+                "must track each other to within ~1 yr per fold for the paired CI to resolve "
+                "DELTA*.",
+    },
+    {
+        "name": "G-c step 2 arm comparison at SD(diff)=3.0 -- UNDERPOWERED (step 6)",
+        "kind": "higher",
+        "null": lambda: null_gc_step2_paired(sd=3.0),
+        "bar": _T_CRIT_5,
+        "expect": "UNRESOLVABLE",
+        "where": "plan_tests/register_gc_step2_bar.py",
+        "note": "a REAL effect of DELTA* is detected only ~65% of the time here, so a null is not "
+                "evidence of absence. Registered so the underpowered regime is a recorded fact "
+                "rather than something rediscovered after the run -- the fate_ece lesson.",
+    },
+    {
+        "name": "G-c step 2 arm comparison at SD(diff)=13.7 (arms independent) (step 6)",
+        "kind": "higher",
+        "null": lambda: null_gc_step2_paired(sd=13.7),
+        "bar": _T_CRIT_5,
+        "expect": "UNRESOLVABLE",
+        "where": "plan_tests/register_gc_step2_bar.py",
+        "note": "sqrt(2) x the 9.67 yr baseline fold SD -- the pessimistic bound if pairing "
+                "cancels nothing. Detection collapses to ~7.5%, barely above the 5% false-positive "
+                "rate: the test would be almost pure noise.",
     },
 ]
 

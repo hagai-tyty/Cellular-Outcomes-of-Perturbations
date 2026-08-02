@@ -1,0 +1,81 @@
+{
+  "script": "register_gc_step2_bar",
+  "utc": "2026-08-02T05:44:43.428612+00:00",
+  "geometry": {
+    "n_folds": 6,
+    "paired": true,
+    "n_sim": 40000,
+    "seed": 0
+  },
+  "mde_multiplier": 1.0494356398959845,
+  "baseline_folds": {
+    "N2": 21.7936,
+    "N3": 29.695,
+    "O1": 5.3876,
+    "O2": 7.535,
+    "Y1": 7.2791,
+    "Y2": 14.0567
+  },
+  "baseline_fold_sd": 9.67168990666402,
+  "delta_star_years": 3.5727916666666673,
+  "delta_star_derivation": "Stage 2 sec 12 registers >=25% drop in dage_mae_model as its TARGET; applied to the recorded baseline mean of 14.29 yr. Derived from an existing bar, not chosen here.",
+  "checks": {
+    "SD=0.5": {
+      "delta": 3.5727916666666673,
+      "sd": 0.5,
+      "pass_rate": 1.0,
+      "mde": 0.5247178199479923,
+      "verdict": "RESOLVABLE"
+    },
+    "SD=1.0": {
+      "delta": 3.5727916666666673,
+      "sd": 1.0,
+      "pass_rate": 1.0,
+      "mde": 1.0494356398959845,
+      "verdict": "RESOLVABLE"
+    },
+    "SD=2.0": {
+      "delta": 3.5727916666666673,
+      "sd": 2.0,
+      "pass_rate": 0.93385,
+      "mde": 2.098871279791969,
+      "verdict": "UNRESOLVABLE"
+    },
+    "SD=3.0": {
+      "delta": 3.5727916666666673,
+      "sd": 3.0,
+      "pass_rate": 0.647575,
+      "mde": 3.1483069196879536,
+      "verdict": "UNRESOLVABLE"
+    },
+    "SD=5.0": {
+      "delta": 3.5727916666666673,
+      "sd": 5.0,
+      "pass_rate": 0.2955,
+      "mde": 5.247178199479922,
+      "verdict": "UNRESOLVABLE"
+    },
+    "SD=8.0": {
+      "delta": 3.5727916666666673,
+      "sd": 8.0,
+      "pass_rate": 0.145075,
+      "mde": 8.395485119167876,
+      "verdict": "UNRESOLVABLE"
+    },
+    "SD=13.7": {
+      "delta": 3.5727916666666673,
+      "sd": 13.7,
+      "pass_rate": 0.07525,
+      "mde": 14.377268266574987,
+      "verdict": "UNRESOLVABLE"
+    }
+  },
+  "false_positive_rate_at_delta_0": 0.05075,
+  "max_resolvable_sd": 1.0,
+  "decision_rule": {
+    "conclusive_A_better": "mean(A-B) < 0 favouring A AND CI excludes 0 AND |effect| > MDE",
+    "conclusive_B_better": "mean(A-B) > 0 favouring B AND CI excludes 0 AND |effect| > MDE",
+    "INCONCLUSIVE": "CI includes 0 while MDE > DELTA*. The comparison could not have detected an effect worth acting on, so it licenses NOTHING -- in particular it does NOT license discarding HFF's labels. Report as underpowered and say so.",
+    "null_is_only_evidence_of_absence_when": "MDE <= DELTA* (i.e. observed SD <= 1.0 yr at 6 folds)"
+  }
+}

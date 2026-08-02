@@ -11,6 +11,71 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-02 — Step 6's bar REGISTERED, and `k = 4` pinned. Suite verified locally at 756 passing
+
+**Status:** ✅ Both gaps from the deep review are closed. **Full suite run locally for the first
+time this session — 756 passed**, CI lint clean.
+
+### GAP 1 closed — the arm comparison now has a bar
+
+Step 6 decides whether **99.7 % of the project's age labels** are kept or discarded, and its
+criterion had no registered bar. Every bar for this stage graded a *mechanism* (B1/B2, A1/A2/A3).
+Ground rule §5b: *"a bar with no such test is not considered pre-registered."*
+
+**`plan_tests/register_gc_step2_bar.py`** → `results/register_gc_step2_bar_results.json`, plus **3
+rows** in `tests/test_bars_resolvable.py`.
+
+**Δ\* = 3.57 yr, derived not chosen:** Stage 2 §12 already registers *"≥ 25 % drop in
+`dage_mae_model`"* as its TARGET; applied to the 14.29 yr recorded baseline. Using the project's own
+existing threshold for the same metric avoids inventing one.
+
+| SD(per-fold difference) | MDE | P(detect Δ\*) | verdict |
+|---|---|---|---|
+| 0.5 | 0.52 | 1.0000 | RESOLVABLE |
+| **1.0** | **1.05** | **1.0000** | **RESOLVABLE** |
+| 2.0 | 2.10 | 0.9338 | UNRESOLVABLE |
+| 3.0 | 3.15 | 0.6476 | UNRESOLVABLE |
+| 5.0 | 5.25 | 0.2955 | UNRESOLVABLE |
+| 13.7 *(arms independent)* | 14.38 | 0.0752 | almost pure noise |
+
+False-positive rate at a true effect of 0: **0.0508** — the CI is honest, it is only weak.
+
+**Δ\* is detectable at ≥ 95 % only if the arms track each other to within ~1 yr per fold**, on a
+metric whose baseline already ranges 5.39 → 29.69 across folds. That is demanding and **is not known
+to hold.**
+
+**The reading rule is pre-registered because the NULL is the dangerous outcome.** "B better" is
+self-limiting. *"CI includes 0"* read as "HFF's labels contribute nothing, discard them" would throw
+away 99.7 % of the labels **on a null that may simply be underpowered.** So: CI includes 0 **with
+MDE > Δ\*** is **INCONCLUSIVE and licenses nothing** — explicitly not a licence to discard. The run
+must report its observed SD and MDE beside the effect, because which row of the outcome table
+applies depends on the MDE.
+
+### GAP 2 closed — `age_window_k = 4` pinned into step 6
+
+5c ships inert at `k = 1`, and 1 means OFF. Step 6's gate said only *"5c must have shipped"*, and no
+command set `k`. **Run as written, both arms would have used k = 1, arm B would be starved, and
+problem #1 from the readiness audit would return silently** — the confound 5c exists to remove,
+reintroduced by a default. `k = 4` is B2's registered value, not a new choice.
+
+### Found by running the tests rather than reading them
+
+The new script defined `_RESULTS` as `ROOT / "results"`. `test_results_paths.py` checks that form
+**by regex** and cannot follow the indirection, so it failed. Spelled out to
+`Path(__file__).resolve().parents[1] / "results"`. Worth recording: the convention test earned its
+keep on the first new file written after it.
+
+### Verification capability improved
+
+`numpy`, `scipy`, `pyarrow`, `pandas`, `torch` (CPU) and the `[dev]` extra are now installed here,
+so the suite runs locally. Previous entries in this file carried an explicit
+*"suite not re-run, asserted not verified"* caveat; that no longer applies from this entry onward.
+
+*(2 ruff errors remain in `experiments/` — `F541`, `F401`. Not in CI's lint path and out of scope.)*
+
+---
+
+
 ## 2026-08-02 — Deep review of steps 1-5: work is sound, but step 6 is NOT ready (two gaps)
 
 **Status:** ✅ 3 fixes applied and pushed. **2 gaps found in step 6's readiness — not yet fixed.**
