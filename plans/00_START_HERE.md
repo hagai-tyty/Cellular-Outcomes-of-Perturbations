@@ -58,6 +58,79 @@ a pre-registered accept/reject rule, so the decision is already made before you 
 
 ---
 
+## 🆕 THE ORDER OF WORK FROM HERE — decided 2026-08-02
+
+> *Additive. The 2026-07-22 status table above is left exactly as written; it predates the entire
+> Stage 1.5 → 1.5.3 arc and is kept as the record of that moment, not corrected.*
+
+### Where the project actually stands
+
+| | |
+|---|---|
+| **Fate head** | ✅ **works** — `fate_roc` 0.983, `fate_prauc` 0.992. Untouched by every ΔAge problem below |
+| **ΔAge, relative** | ⚠️ `rank_model_dage` 0.948 — but that is the model reproducing **its own labels'** ordering. Internally consistent, **not externally validated** |
+| **ΔAge, absolute** | 🔴 **broken** — `dage_mae_model` 14.29 yr against a clock whose own error is 12.27 (**SNR ≈ 0.90**); `conformal_coverage` 0.401 against a nominal 0.9 |
+| **The product (RES)** | 🔴 `res_median` **0.000 on every fold** — `R_eff` needs `mu_age < −30 yr` against a measured ~−11, so it rejects everything, and not because the treatment failed |
+| **Why** | the RNA clock is out of domain on reprogramming cells (1.5.1), and **not calibratable** against methylation (1.5.2 M-2a, SPLIT) |
+| **What is real** | methylation measures **−24 to −28 yr** with an inert negative control and a dose-response at p = 0.0001. **The biology is there; the RNA instrument cannot see it** |
+
+**ΔAge is not optional and is not being dropped.** The whole lab notebook exists to make it right.
+The order below is how.
+
+### The order
+
+| # | do this | why here | cost |
+|---|---|---|---|
+| **1** | **Finish 1.5.3 — run step 6.** The only item left | Built, gated, bar registered. Its answer redirects everything downstream: *B better* ⇒ Stage 6 must **replace** HFF's labels; *A better* ⇒ it may **supplement**; *INCONCLUSIVE* ⇒ the blocker is donor count | one retrain |
+| **2** | **Stage 1.5.4** *(to be written)* — can a model **learn** age from RNA? | M-2a tested whether the **existing Fleischer clock's output** tracks methylation age → no. **Nobody asked whether a model trained on the transcriptome can.** Different question: that clock was fitted on quiescent fibroblasts against *chronological* age. ~90 paired RNA+methylation samples are already on disk | **free** |
+| **3** | **Integrate GSE165177** | 95 adult samples, donors **38 and 53**, all inside the clock's `[1, 96]`, all methylation-paired. Takes in-range labels **~45 → ~140**. Already downloaded, referenced by no training config | **free** |
+| **4** | **Rewrite Stage 6** *(to be written)* | It names **2 of the 6 datasets you now hold**. Cannot be executed as written | writing only |
+| **5** | **Execute Stage 6 — acquire** | The actual fix. Sized by #4 | 💰 real |
+
+**Steps 1–3 are free and none of them fixes ΔAge at scale. Only #5 does.** 1–4 exist so that #5 buys
+the right thing.
+
+### The number that decides everything, and nobody has computed it
+
+**How many DONORS does the age arm need?** Not samples — **donors**. Every unresolved statistic in
+this project is donor-limited, not sample-limited:
+
+* **M3** — is the per-donor offset real or `n=1` baseline noise? *56 % of variance, 95 % CI
+  **[9 %, 100 %]*** — unresolvable at 6 donors.
+* **Contrast B** (retention) — needs **≈16 pairs**, has **9**.
+* **Step 6's own MDE** — `1.049 × SD(per-fold difference)` at 6 folds; Δ\* = 3.57 yr is detectable
+  only if that SD is **≤ ~1 yr**.
+
+**GSE165177 triples the labels and adds ONE donor.** That is the trap to avoid in step #4: sizing
+Stage 6 on sample count would buy the wrong thing.
+
+### Two facts to carry into step 6
+
+* **`age_window_k = 4` in BOTH arms.** The default is 1, which means OFF — arm B would be starved
+  and the confound 5c exists to remove would come back silently.
+* **Report the observed per-fold SD and MDE beside the effect.** Which row of the outcome table
+  applies *depends* on the MDE. A CI containing 0 with MDE > Δ\* is **INCONCLUSIVE and licenses
+  nothing** — in particular it does **not** license discarding HFF's labels.
+
+### Why HFF may not be fixable at all
+
+HFF is a **neonatal foreskin fibroblast line, donor age 0**, outside the clock's fitted range, and
+its day-0 baseline reads **84.5 yr**. But the deeper issue is not the instrument:
+
+> **A neonatal cell has almost no chronological age to remove.** Reprogramming resets epigenetic age
+> toward embryonic, and a newborn line is already near zero. Even a *perfect* instrument would read
+> HFF's true ΔAge as ≈ 0.
+
+Better measurement on HFF buys an accurate ≈ 0. That is why the age arm needs **adult-donor** data,
+and why "B better" is the *expected* outcome of step 6 rather than a surprise.
+
+> **Neither 1.5.4 nor the Stage 6 rewrite exists yet.** They are named here as work, not linked as
+> documents — the file table above lists only files that exist, deliberately. `STAGE_6_NEW_DATA.md`
+> once carried an acceptance gate naming a test that had never been written, and that gate could
+> therefore never fail; the same mistake is not repeated here.
+
+---
+
 ## 🆕 Where things live (repo tidied 2026-08-01)
 
 Root now holds **only** the tools you run constantly and the libraries other code imports.

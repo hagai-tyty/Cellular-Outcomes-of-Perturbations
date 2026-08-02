@@ -11,6 +11,51 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-02 — The order of work from here, written into `00_START_HERE.md`
+
+**Status:** ✅ Documentation only. Additive section; the 2026-07-22 status table is left byte-intact.
+
+Asked to write the plan and running order into a file. **Put it in `00_START_HERE.md` rather than a
+new document**, because that file's own opening line is *"The running order for the whole project"* —
+a second document claiming to be the order is exactly the drift this project keeps having to
+correct. Its "Where you are right now" table was last touched **2026-07-22**, so it predates the
+entire Stage 1.5 → 1.5.3 arc; that table is preserved as the record of its moment and the new
+section sits beside it.
+
+### What the section records
+
+**Where the project actually stands**, with every figure re-verified from `scorecard/baseline.json`
+before it was written down: fate head **works** (`fate_roc` 0.983, `fate_prauc` 0.992); ΔAge
+*relative* consistent but **not externally validated** (`rank_model_dage` 0.948 is the model
+reproducing its own labels); ΔAge *absolute* **broken** (14.29 yr against a 12.27 yr instrument,
+**SNR ≈ 0.90**; coverage 0.401 vs nominal 0.9); and the product **dead** — `res_median` **0.000 on
+every fold**, because `R_eff` needs `mu_age < −30` against a measured ~−11.
+
+**The order:** (1) finish 1.5.3 by running step 6; (2) **Stage 1.5.4** — can a model *learn* age
+from RNA, the question M-2a never asked; (3) integrate **GSE165177**; (4) rewrite Stage 6; (5)
+acquire. **Steps 1–3 are free and none of them fixes ΔAge at scale — only #5 does.** 1–4 exist so
+that #5 buys the right thing.
+
+**The number nobody has computed:** how many **donors** the age arm needs. Every unresolved statistic
+here is donor-limited — M3's *[9 %, 100 %]* CI, contrast B's ≈16-vs-9 pairs, step 6's MDE of
+`1.049 × SD` at 6 folds. **GSE165177 triples the labels and adds one donor**, which is precisely the
+trap to avoid when sizing Stage 6.
+
+**Why HFF may not be fixable at all:** a neonatal line has almost no chronological age to remove, so
+even a perfect instrument reads its true ΔAge as ≈ 0. Better measurement on HFF buys an accurate
+zero. That is why the age arm needs **adult-donor** data — and why "B better" is the *expected*
+outcome of step 6 rather than a surprise.
+
+### One deliberate omission
+
+**Stage 1.5.4 and the Stage 6 rewrite are named as work, not linked as documents**, and no row was
+added for them to the file table. `STAGE_6_NEW_DATA.md` once carried an acceptance gate naming a test
+that had never been written — a gate that could therefore never fail. Listing a plan file before it
+exists is the same mistake, and the section says so explicitly.
+
+---
+
+
 ## 2026-08-02 — Fix the late-crash encoding bug: scripts finished their work, then died before writing it
 
 **Status:** ✅ Fixed in 4 forward-path scripts and verified by re-running the one that failed.
