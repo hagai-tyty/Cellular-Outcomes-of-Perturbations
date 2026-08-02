@@ -11,6 +11,77 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-02 — Deep review of steps 1-5: work is sound, but step 6 is NOT ready (two gaps)
+
+**Status:** ✅ 3 fixes applied and pushed. **2 gaps found in step 6's readiness — not yet fixed.**
+
+Reviewed the other machine's steps 1-5 across logic, bars, coding and flow, recomputing the
+load-bearing numbers rather than trusting them.
+
+### Verified correct (checked, not assumed)
+
+* **The core guarantee holds.** `verify_age_mask_identical` -> **IDENTICAL, max_abs_delta 0.0** over
+  7 chunks -- and it carries a **self-test** proving it can detect a 1-ULP change, a mask flip and a
+  reason appearing. A gate whose only exercised path says PASS is not a gate; this one is not that.
+* **Every switch ships inert:** `AGE_MASKED_DATASETS` empty, `enforce_clock_age_range=False`,
+  `age_window_k=1`.
+* **C-5's bar arithmetic reproduces exactly.** p = 75/33688 = 0.002226 -> 1.140 cells/batch (claimed
+  1.14); P(empty) = 0.3195 exact vs 0.3199 Poisson (claimed ~32%); B1 = 0.6805 (claimed 68.9%);
+  B2 status quo = 0.0286 (claimed 2.9%). `k = 4` halves the per-update SE **exactly** (1/sqrt 4).
+* **The bar DISCRIMINATES and the script exits non-zero if it stops doing so** -- stronger than §5b
+  requires.
+* **The plan's own recommendation was overturned by measurement** (Option 1 -> Option 2) and
+  withdrawn openly rather than quietly replaced.
+* **Mutation-tested guard:** they re-injected the exact fixed-W bug the readiness audit found,
+  confirmed the guard fails, then restored.
+* `huber_age_window` reduces once over concatenated cells, **not** a mean of batch means.
+* `_AgeWindow` **re-forwards** buffered cells rather than storing stale activations.
+* C-4's `age_ok` defaults to **False** when provenance is absent -- the conservative direction.
+* Cleanup deleted **no `.py` or `.md`** -- only zips, a cache and a notebook.
+* All three of my earlier fixes survived, including the fail-open `raise`.
+
+### Fixed in this commit
+
+1. **`zip(..., strict=True)`** in `experiments/verify_rev_final_4_4.py` (2 sites, mine). An
+   unchecked `zip` truncates silently -- the same shape as the census collision.
+2. **That script wrote to the repo root**, which the tidy-up had moved to `results/`. Repointed both
+   its read and its write to `_RESULTS`, and cleared its 7 `E701`s with a lookup table. **All four
+   checks still reproduce byte-for-byte** (V1 -24.05/-27.55, V2 -1.13/-3.62, V3 rho -0.885/-0.842).
+3. **A hole in `tests/test_results_paths.py`.** Its `_RESULTS` check began
+   `if "_RESULTS" not in t: pytest.skip("reads results but does not write any")` -- an **assumption,
+   not a check**. The script in (2) mentioned a `*_results.json`, defined no `_RESULTS`, and wrote to
+   root; it was skipped under a message asserting it did not write. The next run would have dropped a
+   stray JSON into the root and turned `test_no_results_json_is_left_in_the_repo_root` red -- a
+   latent CI failure the file existed to prevent. The skip is now conditional on the script
+   containing no write call. Simulated over all 23 writers: none trips it.
+
+### 🔴 GAP 1 — step 6's decision has NO registered bar
+
+Registered bars: B1/B2 (C-5), A1/A2/A3 (C-5c), and Stage 1.5.2's. **All grade mechanisms.** The
+comparison that step 6 actually decides on -- arm A vs arm B on `dage_mae_model`, paired across 6
+donor folds -- has **no `bar_verdict` row and no resolvability check**.
+
+Ground rule §5b: *"a bar with no such test is not considered pre-registered."* By the project's own
+standard, **step 6's criterion is not pre-registered.**
+
+It matters here more than usual. `sensitivity_multiplier(6)` gives **MDE = 1.050 x SD(per-fold
+difference)**, and that SD has never been measured. Baseline `dage_mae_model` already ranges
+5.39 -> 29.69 across folds (SD 9.67). If the paired difference is anywhere near as heterogeneous, a
+real effect would read as noise -- **exactly the §5b failure that bit Stage 1 twice on `fate_ece`
+and that Stage 1.5.2 caught for M-2a.** This is the step that decides whether 99.7% of the age
+labels are discarded; it should not be the one bar nobody checked.
+
+### 🔴 GAP 2 — step 6 never pins `age_window_k = 4`
+
+5c ships inert at `age_window_k = 1`, and 1 means OFF. Step 6's gate row says only *"5c must have
+shipped"*. **Nothing instructs the operator to set `k = 4` in both arms**, and no command in PART E
+sets it. Run as written, both arms use k = 1, arm B is starved again, and **problem #1 from the
+readiness audit returns silently** -- the confound 5c was created to remove. The value is derived
+(B2's registered `k`), so this is a one-line pin, not a decision.
+
+---
+
+
 ## 2026-08-01 — CI GREEN on 3.11 and 3.12. This closes the "not verified" caveat on three entries
 
 **Status:** ✅ Verified by execution, not by inspection.

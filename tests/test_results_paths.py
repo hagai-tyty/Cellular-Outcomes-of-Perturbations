@@ -32,6 +32,10 @@ ROOT = Path(__file__).resolve().parents[1]
 # covered the moment it lands.
 SCRIPT_DIRS = [ROOT / "experiments", ROOT / "plan_tests", ROOT]
 
+# Any call that could put a file on disk. Used to tell a genuine WRITER from a script that
+# merely reads a `*_results.json` as input -- the distinction the `_RESULTS` check turns on.
+_WRITE_CALL = re.compile(r"\.write_text\s*\(|\.write_bytes\s*\(|json\.dump\s*\(")
+
 
 def _scripts() -> list[Path]:
     out: list[Path] = []
@@ -76,7 +80,18 @@ def test_every_writer_defines_a_results_constant_pointing_at_the_repo_root(path:
     """`_RESULTS` must resolve to `<repo>/results` from the script's own location, not the CWD."""
     t = path.read_text(encoding="utf-8")
     if "_RESULTS" not in t:
-        pytest.skip("reads results but does not write any")
+        # The skip below used to be unconditional, with the message "reads results but does not
+        # write any" -- an ASSUMPTION, not a check. `verify_rev_final_4_4.py` mentioned a
+        # `*_results.json`, defined no `_RESULTS`, and wrote to `root / "..._results.json"`; it was
+        # skipped under a message asserting it did not write. The tidy-up had moved its output to
+        # `results/`, so the next run would have dropped a stray JSON back into the repo root and
+        # turned `test_no_results_json_is_left_in_the_repo_root` red -- a latent failure that this
+        # test existed to prevent and silently waved through.
+        assert not _WRITE_CALL.search(t), (
+            f"{path.name}: mentions a *_results.json AND writes files, but defines no _RESULTS "
+            "constant, so this test cannot check where it writes. Adopt the convention:\n"
+            '  _RESULTS = Path(__file__).resolve().parents[N] / "results"')
+        pytest.skip("mentions a results file but writes nothing")
     m = re.search(r'_RESULTS = Path\(__file__\)\.resolve\(\)\.(parent|parents\[(\d+)\]) / "results"',
                   t)
     assert m, f"{path.name}: _RESULTS must be __file__-relative, not CWD-relative"

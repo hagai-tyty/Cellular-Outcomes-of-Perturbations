@@ -1,0 +1,34 @@
+Deep review of steps 1-5: 3 fixes, and step 6 is not ready
+
+Reviewed logic, bars, coding and flow, recomputing the load-bearing numbers.
+
+VERIFIED. The core guarantee holds: verify_age_mask_identical reports IDENTICAL
+at max_abs_delta 0.0 over 7 chunks, and carries a self-test proving it detects a
+1-ULP change, a mask flip and a reason appearing. Every switch ships inert.
+C-5's bar arithmetic reproduces exactly (1.140 cells/batch, P(empty) 0.3195
+exact vs 0.3199 Poisson, B1 0.6805, B2 0.0286) and k=4 halves the per-update SE
+exactly. The bar discriminates and the script exits non-zero if it stops doing
+so. The plan's own recommendation was overturned by measurement and withdrawn
+openly. The guard was mutation-tested by re-injecting the exact bug the readiness
+audit found. No .py or .md was lost in the cleanup, and all three of my earlier
+fixes survived.
+
+FIXED HERE. Two zips without strict= in my own verify_rev_final_4_4.py; that
+script still wrote to the repo root after the tidy-up moved its output to
+results/ (repointed, E701s cleared, all four checks still reproduce byte for
+byte); and a hole in tests/test_results_paths.py whose _RESULTS check skipped on
+an assumption rather than a check, silently waving through the very script that
+would have dropped a stray JSON in the root and turned the suite red.
+
+GAP 1, not fixed. Step 6's decision -- arm A vs arm B on dage_mae_model, paired
+over 6 donor folds -- has no registered bar and no resolvability check. Ground
+rule 5b says a bar without one is not pre-registered. MDE is 1.050 x SD of the
+per-fold difference and that SD has never been measured, while baseline
+dage_mae_model already ranges 5.39 to 29.69 across folds. This is the step that
+decides whether 99.7% of the age labels are discarded.
+
+GAP 2, not fixed. Step 6 never pins age_window_k = 4. 5c ships inert at k = 1,
+and the step-6 gate says only "5c must have shipped". Run as written, both arms
+use k = 1, arm B is starved, and problem #1 from the readiness audit returns.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>

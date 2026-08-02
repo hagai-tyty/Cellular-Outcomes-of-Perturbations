@@ -49,6 +49,9 @@ from pathlib import Path
 # --------------------------------------------------------------------------- #
 # Pure logic — data-free                                                       #
 # --------------------------------------------------------------------------- #
+_RESULTS = Path(__file__).resolve().parents[1] / "results"
+_RESULTS.mkdir(exist_ok=True)
+
 ADULT_AGE = 20.0
 
 # Two-sided t, indexed by degrees of freedom. Matches diag_methylation_anchor.py's treatment.
@@ -67,18 +70,27 @@ def to_lp(age: float, adult_age: float = ADULT_AGE) -> float:
             else math.log((age + 1.0) / (1 + adult_age)))
 
 
+# Substring -> arm, MOST SPECIFIC FIRST. The three INTERMEDIATE arms contain the fibroblast arms'
+# substrings ("failing_to_transiently_reprogram_intermediate" contains "transiently_reprogram"), so
+# a reordering of this table silently mislabels arms. It is a table rather than a chain of `if`s so
+# that the precedence is data, and visible, instead of control flow.
+_ARM_PATTERNS: tuple[tuple[str, str], ...] = (
+    ("failing_to_transiently_reprogram_intermediate", "FLI"),
+    ("negative_control_intermediate", "NCI"),
+    ("transient_reprogramming_intermediate", "TRI"),
+    ("failed_to_transiently_reprogram", "FL"),
+    ("negative_control", "NC"),
+    ("transiently_reprogrammed", "TR"),
+)
+
+
 def arm_of(name: str) -> str | None:
-    """Map a GEO sample title to its arm. Order matters: the INTERMEDIATE arms contain the
-    fibroblast arms' substrings, so they must be tested first."""
+    """Map a GEO sample title to its arm, or None if it is not one we contrast."""
     n = name.lower()
-    if "failing_to_transiently_reprogram_intermediate" in n: return "FLI"
-    if "negative_control_intermediate" in n:                 return "NCI"
-    if "transient_reprogramming_intermediate" in n:          return "TRI"
-    if "failed_to_transiently_reprogram" in n:               return "FL"
-    if "negative_control" in n:                              return "NC"
-    if "transiently_reprogrammed" in n:                      return "TR"
-    if re.match(r"^o\d\s+fib$", n.strip()):                  return "FIB"
-    return None
+    for needle, arm in _ARM_PATTERNS:
+        if needle in n:
+            return arm
+    return "FIB" if re.match(r"^o\d\s+fib$", n.strip()) else None
 
 
 def paired_ci(vals: list[float]) -> dict:
@@ -109,7 +121,7 @@ def _ranks(v: list[float]) -> list[float]:
 def _pearson(x: list[float], y: list[float]) -> float:
     n = len(x)
     mx, my = sum(x) / n, sum(y) / n
-    num = sum((a - mx) * (b - my) for a, b in zip(x, y))
+    num = sum((a - mx) * (b - my) for a, b in zip(x, y, strict=True))
     den = math.sqrt(sum((a - mx) ** 2 for a in x) * sum((b - my) ** 2 for b in y))
     return num / den if den else float("nan")
 
@@ -165,7 +177,7 @@ def ols_slope(x: list[float], y: list[float]) -> float:
     n = len(x)
     mx, my = sum(x) / n, sum(y) / n
     den = sum((a - mx) ** 2 for a in x)
-    return sum((a - mx) * (b - my) for a, b in zip(x, y)) / den if den else float("nan")
+    return sum((a - mx) * (b - my) for a, b in zip(x, y, strict=True)) / den if den else float("nan")
 
 
 # --------------------------------------------------------------------------- #
@@ -234,7 +246,7 @@ def main() -> int:
         j = json.loads((root / "configs" / "clocks" / f"{f}.json").read_text(encoding="utf-8"))
         clocks[f] = {k: float(v) for k, v in j["weights"].items()}
 
-    prev_path = root / "diag_methylation_anchor_results.json"
+    prev_path = _RESULTS / "diag_methylation_anchor_results.json"
     if not prev_path.exists():
         print("ERROR: run diag_methylation_anchor.py first (needed for the intercepts)")
         return 2
@@ -287,7 +299,7 @@ def main() -> int:
               f"{A['n_pairs_below_20']}  ->  derived {A['mean']:+.2f} vs "
               f"intercept-free {A['intercept_free']['mean']:+.2f}")
 
-    dest = root / "verify_rev_final_4_4_results.json"
+    dest = _RESULTS / "verify_rev_final_4_4_results.json"
     dest.write_text(json.dumps(out, indent=2), encoding="utf-8")
     print(f"\nwrote {dest.name}")
     return 0
