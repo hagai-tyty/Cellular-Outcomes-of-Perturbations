@@ -3427,3 +3427,60 @@ the code that ships.
 Whether the age head **learns** from 75 labels is `dage_mae_model` at step 6. 5c improves the odds
 (980 updates, not 480) and removes a bias; it settles nothing about the outcome. Step 6 remains the
 first thing that moves a label, and needs ~2× a full LOOCV run.
+
+---
+
+## 2026-08-02 — Review of the 5 incoming commits: 4 verified, 1 correction
+
+Pulled `9592db4..28565b7` and checked each independently rather than accepting the claims.
+
+### Verified by re-derivation, not taken on trust
+
+* **Both changed results files moved only their timestamp.** Compared every numeric leaf:
+  `diag_m2a_calibratability_results.json` (851 leaves) drifted at most **2.44e-15** relative, and
+  `verify_rev_final_4_4_results.json` (389 leaves) by **exactly 0.00e+00**. No conclusion moved; the
+  M-2a SPLIT verdict now has an independent cross-machine reproduction.
+* **The `verify_rev_final_4_4.py` path bug was real, and it was mine.** The repo tidy-up moved
+  `diag_methylation_anchor_results.json` into `results/` but the script still read it from the root,
+  so it would have hard-errored *and* dropped a stray JSON in the root. **A fifth move-induced
+  breakage from that reorg** — I had found four.
+* **The `test_results_paths.py` hole was real.** My `pytest.skip("reads results but does not write
+  any")` asserted something it never checked. Confirmed against the pre-fix file: it mentioned a
+  results JSON, defined no `_RESULTS`, and *did* write — skipped silently. I also scanned all 50
+  scripts for write idioms the new regex misses (`open(...,'w')`, `to_csv`, `np.save`, `savefig`,
+  `to_parquet`): **none slip through** today.
+* **Step 6's power arithmetic reproduces exactly.** Independently re-simulated: MDE multiplier
+  1.0494 (vs 1.05), power 0.9338 / 0.6476 / 0.0752 at SD 2.0 / 3.0 / 13.7, FPR 0.0505 (vs 0.0508).
+  Δ\* = 3.57 is 25 % of the 14.29 yr baseline mean, and the independent-arms bound 13.68 ≈ 13.7 —
+  both check out. Their 7.5 % figure is the **correct-sign** definition, stricter than the plain
+  "CI excludes 0" I first computed, and the right one.
+* **`experiments/` lint went 11 → 2 errors**, and CI does not lint that directory anyway
+  (`ruff check src/ tests/ scripts/ plan_tests/`). No regression.
+
+### GAP 2 was a real hole in my own step 5c
+
+5c ships inert at `age_window_k = 1`, and 1 means OFF. Confirmed directly: the step-6 command block
+sets `AGE_MASKED_DATASETS` and **never sets `age_window_k`**. Run as written, both arms would have
+used k = 1, arm B would be starved, and problem #1 from my own readiness audit would have returned
+silently. Shipping inert was right; failing to schedule turning it on was not. Now pinned in the
+step-6 gate.
+
+### 🔵 The one correction: "SD ≤ ~1.0 yr" understated the usable SD by ~2×
+
+`register_gc_step2_bar.py` computed its headline as `max(passing gridpoint)` over
+`CANDIDATE_SDS = (0.5, 1.0, 2.0, ...)`. The grid **jumps 1.0 → 2.0 and never samples between**, so
+it reported 1.0. Solving for the crossover by bisection: **1.91 yr** — independently cross-checked at
+power 0.9609 / 0.9523 / 0.9428 for SD 1.85 / 1.90 / 1.95.
+
+Every number in the sweep table is correct and I reproduced all of them. Only the *conclusion drawn
+from it* was wrong — and only conservatively. **But it was decision-relevant:** an observed SD in
+**(1.0, 1.91]** would have been declared INCONCLUSIVE while the run was in fact ≥95 % powered,
+discarding a real result on a reporting artefact — in the step that decides whether 99.7 % of the
+age labels are thrown away.
+
+Fixed: `max_resolvable_sd()` bisects instead of reading a gridpoint, both figures go into the results
+JSON, and two tests pin it — one that the solved value exceeds the gridpoint, one that independently
+re-simulates the power actually delivered at the reported crossover. The plan's original sentence is
+left as written with a correction box beside it, per the annotate-never-rewrite rule.
+
+758 tests pass, ruff clean on the CI scope.

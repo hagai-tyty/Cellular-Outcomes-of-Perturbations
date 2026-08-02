@@ -1660,6 +1660,21 @@ did not**.
 > metric whose baseline already ranges 5.39 → 29.69 across folds. That is a demanding requirement and
 > **it is not known to hold.**
 >
+> > 🔵 **Corrected 2026-08-02 on review — the "~1 yr" above is too pessimistic by about 2×.**
+> > It was read off the sweep table, whose largest *passing gridpoint* is 1.0 because the grid jumps
+> > 1.0 → 2.0 and never samples between. Solving for the crossover by bisection instead:
+> > **Δ\* is detectable at ≥95 % whenever SD(per-fold difference) ≤ 1.91 yr**
+> > (independently cross-checked: power 0.9609 at SD 1.85, 0.9523 at 1.90, 0.9428 at 1.95).
+> >
+> > The table above is left exactly as first recorded — every value in it is correct, and I
+> > reproduced all of them independently (0.9338, 0.6476, 0.0752, FPR 0.0508). Only the *conclusion
+> > drawn from it* was wrong, and only in the conservative direction.
+> >
+> > **Why it still matters:** an observed SD in **(1.0, 1.91]** would have been declared
+> > INCONCLUSIVE by the sentence above when the run was in fact ≥95 % powered — discarding a real
+> > result. `register_gc_step2_bar.py` now solves for this rather than reading a gridpoint, and
+> > `test_s153_step6_crossover_is_solved_not_read_off_the_grid` pins it.
+>
 > #### The reading rule, pre-registered because the null is the dangerous outcome
 >
 > The two directions are not symmetric. *"B better"* is self-limiting. **"CI includes 0" is the

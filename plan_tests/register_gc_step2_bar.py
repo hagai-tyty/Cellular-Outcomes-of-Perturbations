@@ -104,6 +104,25 @@ def power_at(delta: float, sd: float, rng: np.random.Generator) -> dict:
             "mde": sensitivity_multiplier(N_FOLDS) * sd}
 
 
+def max_resolvable_sd(delta: float, rng: np.random.Generator, *,
+                      lo: float = 0.1, hi: float = 8.0, iters: int = 24) -> float:
+    """Largest SD(per-fold difference) at which DELTA* still clears MIN_PASS_RATE. Pure-ish.
+
+    Solved by bisection rather than read off `CANDIDATE_SDS`. The grid is for display and jumps
+    1.0 -> 2.0, so its largest passing gridpoint is 1.0 while the true crossover is near 1.9 --
+    taking the gridpoint understates the usable SD by about 2x and would wrongly label a
+    perfectly well-powered run INCONCLUSIVE. Power falls monotonically in SD at fixed delta,
+    which is what makes bisection valid here.
+    """
+    for _ in range(iters):
+        mid = 0.5 * (lo + hi)
+        if power_at(delta, mid, rng)["pass_rate"] >= MIN_PASS_RATE:
+            lo = mid
+        else:
+            hi = mid
+    return lo
+
+
 def main() -> int:
     rng = np.random.default_rng(SEED)
     ds = delta_star()
@@ -128,12 +147,17 @@ def main() -> int:
 
     fp = power_at(0.0, 3.0, rng)
     resolvable = [r["sd"] for r in rows if r["verdict"] == "RESOLVABLE"]
-    max_sd = max(resolvable) if resolvable else 0.0
+    grid_sd = max(resolvable) if resolvable else 0.0
+    max_sd = max_resolvable_sd(ds, rng)
 
     print(f"\n  false-positive check (true delta = 0): {fp['pass_rate']:.4f}  "
           f"(must be ~0.05; a CI that over-rejects would manufacture a verdict)")
-    print(f"\n  => DELTA* is detectable at >= {MIN_PASS_RATE:.0%} only when "
-          f"SD(per-fold difference) <= ~{max_sd:.1f} yr.")
+    print(f"\n  => DELTA* is detectable at >= {MIN_PASS_RATE:.0%} whenever "
+          f"SD(per-fold difference) <= {max_sd:.2f} yr.")
+    print(f"     (The grid above only shows {grid_sd:.1f}, its largest PASSING gridpoint -- it "
+          f"jumps {grid_sd:.1f} -> 2.0 and\n      never samples between, so reading the crossover "
+          "off it understates the usable SD by ~2x.\n      The figure above is solved for, not "
+          "read off the grid. Corrected 2026-08-02.)")
     print("     The run MUST report its own observed SD and MDE. If |observed effect| <= MDE the")
     print("     result is INCONCLUSIVE -- NOT 'the labels make no difference'.\n")
 
@@ -145,6 +169,8 @@ def main() -> int:
         "baseline_folds": BASELINE_FOLDS,
         "baseline_fold_sd": base_sd,
         "delta_star_years": ds,
+        "max_resolvable_sd_years": max_sd,
+        "max_resolvable_sd_gridpoint": grid_sd,
         "delta_star_derivation":
             "Stage 2 sec 12 registers >=25% drop in dage_mae_model as its TARGET; applied to the "
             "recorded baseline mean of 14.29 yr. Derived from an existing bar, not chosen here.",

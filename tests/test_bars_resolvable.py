@@ -462,3 +462,38 @@ def test_s153_c5c_attempt_1_is_kept_as_a_regression():
 
 def test_s153_c5c_all_bars_pass():
     assert _load_json(_C5C)["all_pass"] is True
+
+
+_GC2 = _Path(__file__).resolve().parents[1] / "results" / "register_gc_step2_bar_results.json"
+
+
+def test_s153_step6_crossover_is_solved_not_read_off_the_grid():
+    """The sweep grid jumps 1.0 -> 2.0, so its largest PASSING gridpoint is 1.0 while the true
+    crossover is ~1.91. Reading the gridpoint understated the usable SD by about 2x and would
+    have declared any run with SD in (1.0, 1.91] INCONCLUSIVE while it was in fact >=95% powered
+    -- discarding a real result on a reporting artefact. Corrected 2026-08-02.
+
+    Pinned here so the grid can be re-tuned for display without silently re-introducing it.
+    """
+    d = _load_json(_GC2)
+    solved, gridpoint = d["max_resolvable_sd_years"], d["max_resolvable_sd_gridpoint"]
+    assert solved > gridpoint, "the crossover was read off the grid again"
+    assert 1.7 < solved < 2.1, f"crossover moved to {solved}; the power model changed"
+
+
+def test_s153_step6_crossover_actually_delivers_the_power_it_claims():
+    """Independent of the script: simulate at the reported crossover and just above it."""
+    import numpy as _np
+    from scipy.stats import t as _t
+    sd = _load_json(_GC2)["max_resolvable_sd_years"]
+    delta, n, sims = _load_json(_GC2)["delta_star_years"], 6, 60_000
+    tcrit = float(_t.ppf(0.975, n - 1))
+
+    def _power(s):
+        rng = _np.random.default_rng(4)
+        d = rng.normal(delta, s, size=(sims, n))
+        m, sdv = d.mean(axis=1), d.std(axis=1, ddof=1)
+        return float(((_np.abs(m) > tcrit * sdv / _np.sqrt(n)) & (m > 0)).mean())
+
+    assert _power(sd) >= MIN_PASS_RATE - 0.01     # powered at the crossover
+    assert _power(sd * 1.6) < MIN_PASS_RATE       # and genuinely not, well above it

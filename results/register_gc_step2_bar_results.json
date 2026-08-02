@@ -1,6 +1,6 @@
 {
   "script": "register_gc_step2_bar",
-  "utc": "2026-08-02T05:44:43.428612+00:00",
+  "utc": "2026-08-02T07:07:12.632273+00:00",
   "geometry": {
     "n_folds": 6,
     "paired": true,
@@ -18,6 +18,8 @@
   },
   "baseline_fold_sd": 9.67168990666402,
   "delta_star_years": 3.5727916666666673,
+  "max_resolvable_sd_years": 1.9106070578098295,
+  "max_resolvable_sd_gridpoint": 1.0,
   "delta_star_derivation": "Stage 2 sec 12 registers >=25% drop in dage_mae_model as its TARGET; applied to the recorded baseline mean of 14.29 yr. Derived from an existing bar, not chosen here.",
   "checks": {
     "SD=0.5": {
@@ -71,11 +73,11 @@
     }
   },
   "false_positive_rate_at_delta_0": 0.05075,
-  "max_resolvable_sd": 1.0,
+  "max_resolvable_sd": 1.9106070578098295,
   "decision_rule": {
     "conclusive_A_better": "mean(A-B) < 0 favouring A AND CI excludes 0 AND |effect| > MDE",
     "conclusive_B_better": "mean(A-B) > 0 favouring B AND CI excludes 0 AND |effect| > MDE",
     "INCONCLUSIVE": "CI includes 0 while MDE > DELTA*. The comparison could not have detected an effect worth acting on, so it licenses NOTHING -- in particular it does NOT license discarding HFF's labels. Report as underpowered and say so.",
-    "null_is_only_evidence_of_absence_when": "MDE <= DELTA* (i.e. observed SD <= 1.0 yr at 6 folds)"
+    "null_is_only_evidence_of_absence_when": "MDE <= DELTA* (i.e. observed SD <= 1.9 yr at 6 folds)"
   }
 }
