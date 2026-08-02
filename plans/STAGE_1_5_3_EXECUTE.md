@@ -1817,3 +1817,40 @@ GEO) can run here today.
 **A guard belongs on B-1:** step 6 must assert that the two arms' age-valid label counts actually
 differ (≈33 688 vs ≈75 on the training split) *before* it trains anything. A comparison whose two
 arms are identical must fail loudly, not return a null.
+
+> ### 🔵 CORRECTION to the pre-flight above, same day — **B-3 was wrong. Step 6 IS runnable.**
+>
+> I wrote *"no raw GEO input on this machine"*. **That was my error**: I searched `find . -maxdepth 2`
+> — inside the repo — when the pipeline's own default is `D:\GSE242423` and `D:\Gill`, outside it.
+> The data has been there all along. Verified present:
+>
+> | input | | |
+> |---|---:|---|
+> | `D:\GSE242423\*genes*.tsv.gz` | 1 | `GSE242423_scRNA_genes.tsv.gz` |
+> | `D:\GSE242423\*matrix.mtx.gz` | 9 | `GSM7763419_D0.matrix.mtx.gz`, … |
+> | `D:\GSE242423\*barcodes*` | 9 | |
+> | `D:\Gill\*series_matrix*` | 1 | `GSE165176_series_matrix.txt.gz` |
+> | Gill expression matrix | 1 | `GSE165176_Log2_RPM_Sendai_reprogramming.txt.gz` |
+> | `configs/clocks/fleischer_clock.json` | ✓ | |
+>
+> Also verified, because I had just proved the *opposite* for the retrain path and would not assume
+> the converse: **the arm switch does reach the build.** `aging.py:304` reads
+> `C.AGE_MASKED_DATASETS` at call time inside `delta_age`, which `build_dataset.py` calls during the
+> build — and `sources.py:730` emits `dataset_id="hff_sc"`, so the string matches. This fold's
+> manifest carries **42 481 HFF cells against 124 Gill donor samples**, consistent with the ~75
+> training labels the plan predicts after masking.
+>
+> **What survives from the pre-flight, unchanged:**
+> * **B-1 stands** — `retrain_stage1.py` is simply the wrong driver. PART E must call the *rebuild*
+>   path (`local_runners/run_loocv.py`, which rebuilds each fold from raw), not the retrain path.
+>   The proof that the retrain path cannot see the arm change is unaffected.
+> * **B-2 stands and is now broader** — `run_multi_local.py:189` builds its `TrainConfig` without
+>   `age_window_k` too, so the *rebuild* driver would also silently run at `k = 1` = OFF.
+> * **B-3's substance stands** — arm B is not a mask flip; `_deconfound_train_only` moves `y_age`
+>   itself. What was wrong was only my conclusion that it could not be redone here. A full rebuild
+>   regenerates `_cc_cache`, so its emptiness does not matter on this path.
+>
+> **Remaining work before the run:** plumb `age_window_k = 4` and the arm switch into the rebuild
+> driver, and add the B-1 guard that asserts the two arms' age-valid counts actually differ before
+> training. **Cost:** `run_loocv.py`'s own docstring says *"~6 full builds. Expect a few hours; run it
+> overnight"* — and step 6 needs that **twice**, once per arm.

@@ -3534,3 +3534,33 @@ the cheap route (re-mask in place) nor the full rebuild can run here today.
    (≈33 688 vs ≈75 on train) *before* training. Two identical arms must fail loudly, not return null.
 
 Nothing was run, nothing was rebuilt, no snapshot taken, no bundle touched. 758 tests still pass.
+
+---
+
+## 2026-08-02 — Correction: **B-3 was wrong. Step 6 is runnable; the GEO data was there all along**
+
+I wrote *"no raw GEO input on this machine."* **That was my error** — I searched `find . -maxdepth 2`,
+inside the repo, when the pipeline's own defaults are `D:\GSE242423` and `D:\Gill`, outside it.
+
+Verified present: the GSE242423 genes file, 9 matrix + 9 barcode files, the Gill series matrix, the
+Gill expression matrix, and the Fleischer clock. Nothing was missing and nothing had changed.
+
+Also verified rather than assumed — having just proved the *opposite* for the retrain path:
+**the arm switch does reach the build.** `aging.py:304` reads `C.AGE_MASKED_DATASETS` at call time
+inside `delta_age`, which `build_dataset.py` calls during the build, and `sources.py:730` emits
+`dataset_id="hff_sc"`, so the filter string matches. The N2 fold's manifest holds **42 481 HFF cells
+vs 124 Gill donor samples**, consistent with the ~75 training labels expected after masking.
+
+**Unchanged from the pre-flight:**
+* **B-1 stands** — `retrain_stage1.py` is the wrong driver; PART E must call the rebuild path
+  (`local_runners/run_loocv.py`). The proof that the retrain path cannot see the arm change holds.
+* **B-2 stands and is broader** — `run_multi_local.py:189` also builds `TrainConfig` without
+  `age_window_k`, so the rebuild driver would silently run at `k = 1` = OFF too.
+* **B-3's substance stands** — arm B is not a mask flip, because `_deconfound_train_only` moves
+  `y_age` itself. Only my "cannot be done here" conclusion was wrong; a full rebuild regenerates
+  `_cc_cache`.
+
+Remaining before the run: plumb `age_window_k = 4` and the arm switch into the rebuild driver, and
+add the guard asserting the arms' age-valid counts differ before training. Cost, from
+`run_loocv.py`'s own docstring: *"~6 full builds. Expect a few hours; run it overnight"* — twice,
+once per arm.
