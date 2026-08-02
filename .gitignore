@@ -31,6 +31,15 @@ outputs/
 *.parquet
 *.ckpt
 
+# --- LOOCV / step-6 fold builds. These land in the REPO ROOT because run_multi_local.py's
+# ROOT is a relative path, where nothing above matched them -- 90.5 MB of bundles and model
+# weights were committed by a `git add -A` on 2026-08-02 before these rules existed.
+cellfate_loocv_*/
+cellfate_multi*/
+cellfate_step6_*/
+runs/
+*.pt
+
 # --- Experiment tracking / secrets ---
 wandb/
 .env
