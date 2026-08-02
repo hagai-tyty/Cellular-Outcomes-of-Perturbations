@@ -3484,3 +3484,53 @@ re-simulates the power actually delivered at the reported crossover. The plan's 
 left as written with a correction box beside it, per the annotate-never-rewrite rule.
 
 758 tests pass, ruff clean on the CI scope.
+
+---
+
+## 2026-08-02 — 🛑 Step 6 pre-flight: **STOPPED before running.** The run as documented would fabricate a null
+
+Cleared to run step 6 with `age_window_k = 4` in both arms. I ran the pre-flight first and did **not**
+start the retrain. Three blockers; the first is the dangerous kind — it does not fail, it returns a
+plausible answer.
+
+### B-1 🔴 The retrain path cannot see the arm change — proved, not inferred
+
+`retrain_stage1.py` **reuses the existing shards** (its own docstring says so) and redoes only
+train → calibrate → bundle. Its `retrain()` imports exactly `TrainConfig` and `train_model.run`, and
+`run()` only calls `load_split_tensors`. **There is no build step on that path.** But `age_mask` is
+computed at *build* time in `build_dataset.py` and written into the shards, then read back at
+`training/dataset.py:57`.
+
+Measured on `runs/cellfate_loocv_N2` (103 shards), reading `age_mask` off disk with the constant set
+both ways: **127 815 / 127 815 age-valid either way — identical.**
+
+Both arms would train on the same data. With `base_seed = 0` and deterministic algorithms the two
+snapshots would differ by ~nothing, the paired CI would include 0, and the pre-registered outcome
+table reads that as *"HFF's labels are not contributing → mask them anyway"* — **licensing the
+discard of 99.7 % of the project's age labels on a run where the treatment was never applied.**
+
+The step-6 bar cannot catch this: it grades the comparison, not whether the arms differ at all.
+
+### B-2 `age_window_k` cannot be set through the documented path
+
+`retrain_stage1.py:147` builds `TrainConfig(...)` from a fixed kwarg list with **no `age_window_k`**,
+so it takes the default `1` = OFF. GAP 2 is closed in the plan and still open in the code.
+
+### B-3 A faithful arm B is not a mask flip, and the material to build it is gone
+
+`_deconfound_train_only` (`build_dataset.py:448`) fits the deconfounder on age-valid TRAIN cells and
+rewrites `y_age` on every shard, so masking HFF moves `y_age` itself — C-5's "second consequence".
+Redoing that needs the `_cc_cache` sidecars, and **all six folds hold 0 of them** (deleted at the end
+of a build). There is also no `data/` directory — **no raw GEO input on this machine.** So neither
+the cheap route (re-mask in place) nor the full rebuild can run here today.
+
+### What step 6 requires
+
+1. Restore the raw GEO inputs and rebuild **per arm** (6 folds × 2 arms). `retrain_stage1.py` is the
+   wrong driver; PART E must name the rebuild path.
+2. Plumb `age_window_k` through that driver and **assert** it is 4 in both arms.
+3. Stop deleting `_cc_cache`, so a future arm-B build is cheap and needs no re-download.
+4. **Guard B-1 directly:** step 6 must assert the two arms' age-valid label counts differ
+   (≈33 688 vs ≈75 on train) *before* training. Two identical arms must fail loudly, not return null.
+
+Nothing was run, nothing was rebuilt, no snapshot taken, no bundle touched. 758 tests still pass.

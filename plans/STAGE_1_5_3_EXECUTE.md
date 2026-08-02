@@ -1617,7 +1617,7 @@ did not**.
 | **5** ✅ | C-5 design + its bar — **DONE 2026-08-02, and it chose Option 2 over Option 1** | bar RESOLVABLE on the dense regime, DISCRIMINATES between options, 6 rows in `tests/test_bars_resolvable.py` | ❌ no | ❌ no |
 | **5b** ✅ | deeper tests D1–D7 before committing — **DONE 2026-08-02: Option 2 CONFIRMED, W = 8 pinned** | ranking stable on 7 axes, not 1; W chosen for margin against a shrinking label set, not for the minimum | ❌ no | ❌ no |
 | **5c** ✅ | **C-5 Option 2 IMPLEMENTED — DONE 2026-08-02, ships inert (`age_window_k = 1`)** — `training/train.py`, threshold on accumulated age cells with `W_max = 8`. Added 2026-08-02: no step previously scheduled it, and a fixed W biases arm A. See the readiness audit in C-5 | `k` registered via `bar_verdict`; **arm-A behaviour bit-identical to today**; window loss is `Σloss/Σcells` not a mean of means; fate term still steps every batch; determinism asserted | ❌ no | ❌ no |
-| **6** | **G-c step 2** (PART C) | snapshot first; **rollback exercised, not assumed**; **5c must have shipped**; **`age_window_k = 4` set in BOTH arms** (see 🆕 below); **the arm-comparison bar registered and its MDE reported** | ✅ **yes** | ✅ yes, ×2 arms |
+| **6** 🛑 **BLOCKED** | **G-c step 2** (PART C) — *attempted 2026-08-02, STOPPED before running; see the pre-flight box below* | snapshot first; **rollback exercised, not assumed**; **5c must have shipped**; **`age_window_k = 4` set in BOTH arms** (see 🆕 below); **the arm-comparison bar registered and its MDE reported** | ✅ **yes** | ✅ yes, ×2 arms |
 
 > ### 🆕 ADDED 2026-08-02 — two things step 6 was missing, found on review
 >
@@ -1741,3 +1741,79 @@ than absorbed.
   falsification check (§12-R), and §17 re-audited every number in it against the artefacts.
 
 ---
+
+---
+
+## 🛑 STEP 6 PRE-FLIGHT, 2026-08-02 — **STOPPED. The run as documented would fabricate a null.**
+
+Cleared to run step 6 with `age_window_k = 4` in both arms. I ran the pre-flight first and did **not**
+start the retrain. Three blockers, the first of which is the dangerous kind: it does not fail, it
+returns a plausible answer.
+
+### B-1 🔴 The retrain path cannot see the arm change — **proved, not inferred**
+
+PART E's step-6 block is:
+
+```bash
+python retrain_stage1.py && python scorecard.py snapshot --tag gc2_A_keep_hff
+#   ... set AGE_MASKED_DATASETS = {"hff_sc"} ...
+python retrain_stage1.py && python scorecard.py snapshot --tag gc2_B_mask_hff
+```
+
+`retrain_stage1.py`'s own docstring says it **reuses the existing shards** and redoes only
+train → calibrate → bundle. Its `retrain()` imports exactly two things — `TrainConfig` and
+`train_model.run` — and `run()` only calls `load_split_tensors`. **No build step exists on that path.**
+
+`age_mask` is computed in `build_dataset.py` at *build* time and written into the shards;
+`training/dataset.py:57` reads it back with `arr["age_mask"]`. So the constant never reaches training.
+
+Measured on `runs/cellfate_loocv_N2` (103 shards), reading `age_mask` straight off disk:
+
+| `AGE_MASKED_DATASETS` | age-valid cells |
+|---|---|
+| `frozenset()` (arm A) | **127 815 / 127 815** |
+| `frozenset({"hff_sc"})` (arm B) | **127 815 / 127 815** |
+
+**Identical.** Both arms would train on the same data. With `base_seed = 0` and deterministic
+algorithms the two snapshots would differ by ~nothing, the paired CI would include 0, and the
+pre-registered outcome table reads that as *"HFF's labels are not contributing → mask them anyway."*
+
+> **That would license discarding 99.7 % of the project's age labels on a run in which the treatment
+> was never applied.** It is precisely the failure the step-6 bar was registered to guard against,
+> arriving through a door the bar cannot see — the bar grades the comparison, not whether the arms
+> differ.
+
+### B-2 `age_window_k` cannot be set through the documented path
+
+The step-6 gate now says *"`age_window_k = 4` in BOTH arms"*, but `retrain_stage1.py:147` builds
+`TrainConfig(...)` from a fixed kwarg list that **does not include `age_window_k`**, so it takes the
+default — `1`, which means **OFF**. GAP 2 is closed in the *plan* and still open in the *code*.
+
+### B-3 A faithful arm B is not a mask flip, and the material to do it is gone
+
+`_deconfound_train_only` (`build_dataset.py:448`) fits the cell-cycle deconfounder on **age-valid
+TRAIN cells**, then re-centres and rewrites `y_age` on *every* shard. Masking HFF therefore moves
+`y_age` itself — exactly C-5's "second consequence". Redoing it needs the `_cc_cache` sidecars
+(`d_age_raw`, `cc`, `is_control`, `age_mask`), and those are deleted at the end of a build:
+
+| fold | N2 | N3 | O1 | O2 | Y1 | Y2 |
+|---|---|---|---|---|---|---|
+| `_cc_cache/*.npz` | **0** | **0** | **0** | **0** | **0** | **0** |
+
+There is also no `data/` directory — **no raw GEO input on this machine.** So neither the cheap route
+(re-mask in place) nor the full route (`run_multi_local.py`, which `rmtree`s and rebuilds from raw
+GEO) can run here today.
+
+### What step 6 actually requires
+
+1. **Restore the raw GEO inputs**, then rebuild **per arm** — 6 folds × 2 arms, full harmonisation →
+   QC → clock → shards → train. `retrain_stage1.py` is the wrong driver for this step; PART E must
+   name the rebuild path instead.
+2. **Plumb `age_window_k` through** whichever driver runs it, and assert it is 4 in both arms rather
+   than trusting a comment.
+3. **Stop deleting `_cc_cache`** (or make its retention a flag). Keeping it makes a future arm-B
+   build cheap and reproducible without re-downloading — worth doing regardless of step 6.
+
+**A guard belongs on B-1:** step 6 must assert that the two arms' age-valid label counts actually
+differ (≈33 688 vs ≈75 on the training split) *before* it trains anything. A comparison whose two
+arms are identical must fail loudly, not return a null.
