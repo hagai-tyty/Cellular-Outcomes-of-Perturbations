@@ -1854,3 +1854,55 @@ arms are identical must fail loudly, not return a null.
 > driver, and add the B-1 guard that asserts the two arms' age-valid counts actually differ before
 > training. **Cost:** `run_loocv.py`'s own docstring says *"~6 full builds. Expect a few hours; run it
 > overnight"* — and step 6 needs that **twice**, once per arm.
+
+---
+
+## 🔵 STEP 6 RERUN — pre-registration, written 2026-08-03 BEFORE arm B exists
+
+Arm A has run post-C-I and **reproduces the pre-C-I arm A exactly** (`max|Δ| = 0.000e+00` on all six
+folds, `dage_mae_model` N2 21.7936, N3 29.6950, O1 5.3876, O2 7.5350, Y1 7.2791, Y2 14.0567). That is
+the predicted result: in arm A `deconfound_mask == age_mask`, so C-I is a no-op on the control.
+`scorecard/baseline.json` therefore remains a valid reference.
+
+### Primary — unchanged from the first run
+
+`dage_mae_model`, paired 95 % CI across **all 6 folds**. Reading rule, unchanged and still binding:
+
+| observed | licensed conclusion |
+|---|---|
+| B better, CI excludes 0 | HFF's labels were hurting the age head → mask them |
+| CI includes 0 **and MDE ≤ Δ\*** | the labels are genuinely not contributing → mask them |
+| CI includes 0 **and MDE > Δ\*** | **INCONCLUSIVE — licenses nothing** |
+| A better, CI excludes 0 | HFF's labels help → keep them |
+
+### 🆕 Secondary — the C-II in-range subset, registered NOW because it cannot be added later
+
+**C-II is not a bug and is not fixed.** Masking HFF leaves 75 labels of which **40 % are N2 + N3,
+donor age 0, outside `fleischer_clock.json`'s validated `age_range = [1.0, 96.0]`** — against 0.09 %
+in arm A. So even a perfectly de-confounded step 6 asks *"does the age head do better on 75 labels,
+two fifths of them extrapolated?"*
+
+Enabling C-2 to remove them makes matters **worse**: N2/N3 lose their evaluation labels too, dropping
+the design to 4 folds and the MDE multiplier from **1.049 → 1.591 × SD**. So C-2 stays **OFF**.
+
+Registered instead: a **secondary** paired CI over the **4 in-range folds only (O1, O2, Y1, Y2)**.
+
+* It is **secondary and underpowered by construction** — n = 4, multiplier 1.591. It cannot overturn
+  the primary, and a "significant" secondary against a null primary is **not** a finding.
+* Its purpose is one question: *does the result look different once the extrapolated donors are out
+  of the evaluation?* Agreement strengthens the primary; disagreement is a flag for C-2, not a
+  result.
+* It is written here **before arm B has run**, precisely so it cannot be produced afterwards to
+  rescue an inconvenient primary.
+
+⚠️ **Status: proposed by me, not yet ruled on by the project owner.** If it is rejected it must be
+struck **before** arm B's numbers are read, not after.
+
+### Also fixed for this rerun
+
+* **C-I** — `y_age` no longer depends on the training-label policy. Pre-flight P3: `y_age`
+  **bit-identical across arms, row-exact over 7 062 rows**, `max|Δ| = 0.000e+00`, with 6 938 rows
+  differing in `age_mask` and nothing else.
+* **The overwrite** — `CELLFATE_FOLD_SUFFIX` gives each arm its own fold roots, so arm A's
+  `scalers.json` (and its deconfounder coefficient) survives arm B this time. Both coefficients will
+  be reported from the runs themselves, not from a proxy.
