@@ -398,3 +398,89 @@ python scorecard.py compare gc2_A_keep_hff gc2_B_mask_hff
 | bars | `plan_tests/register_gc_step2_bar.py`, rows in `tests/test_bars_resolvable.py` |
 | invariants | `tests/test_ci_deconfounder_arm_invariance.py` (6 tests, incl. a mutation check) |
 | raw record | `CHANGES.md`, and `results/STEP6_REPORT.md` for the two runs as they were written |
+
+---
+---
+
+# ARM C — the label-permutation control (2026-08-03)
+
+**Purpose.** The A−B ranking gap (−0.0688) was confounded between *(i)* HFF's labels carry
+information, and *(ii)* 75 labels is simply too few, whatever they contain. Arm C holds label
+**volume** at arm A's level and destroys only the cell↔label **pairing**.
+
+**Validity, pre-flight, all six checks passed on the real build:** 33 688 trainable labels (= arm A
+exactly), HFF label multiset identical, **42 481 of 42 481 labels moved**, non-HFF `y_age`
+bit-identical to arm A (`max|Δ| = 0.0`), `age_mask` identical everywhere. Shuffle seed **0**,
+recorded in every fold's census. The permutation runs after the deconfounder fit, so arm C's
+coefficient equals arm A's.
+
+## The result
+
+| `rank_model_dage` | N2 | N3 | O1 | O2 | Y1 | Y2 | **mean** |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **A** true labels | 0.9104 | 0.9091 | 0.9896 | 0.9701 | 0.9596 | 0.9468 | **0.9476** |
+| **B** no HFF labels | 0.8455 | 0.8753 | 0.9234 | 0.8610 | 0.8614 | 0.9065 | **0.8788** |
+| **C** shuffled labels | 0.4909 | 0.5273 | 0.8429 | 0.5455 | 0.4561 | 0.5961 | **0.5765** |
+
+| comparison | effect | SD | 95 % CI | TOST vs ±0.0344 |
+|---|---:|---:|---|---|
+| **C − A** | **−0.3711** | 0.1213 | [−0.4985, −0.2438] excludes 0 | not equivalent |
+| **C − B** | **−0.3024** | 0.1139 | [−0.4219, −0.1829] excludes 0 | not equivalent |
+| B − A *(reference)* | −0.0688 | 0.0302 | [−0.1004, −0.0371] | — |
+
+**C sits 540 % of the way from A to B — far outside the interval the pre-registration assumed.**
+
+## ⚠️ Neither pre-registered branch fired
+
+The registered table offered *"C ranks like A"* → volume effect, or *"C ranks like B"* → labels
+informative. **Both assumed C ∈ [A, B]. It is not.** Shuffled labels are **dramatically worse than no
+labels at all**. What follows is therefore an **inference beyond the registered outcomes** and is
+labelled as such — it is not a pre-registered conclusion.
+
+The equivalence bar was never usable either: achieved **SD(C−A) = 0.1213** against the ≤ 0.020 the
+bar needed. Moot, given effect sizes 10× the margin, but recorded — the equivalence branch was
+unavailable, exactly the conditional the registration warned about.
+
+## It is not a broken run — the damage is age-specific
+
+| | A | C |
+|---|---:|---:|
+| `fate_prauc` | 0.9915 | **0.9898** |
+| `fate_roc` | 0.983 | 0.979 |
+| `conformal_coverage` | 0.889 | 0.904 |
+| `dage_mae_model` | 14.29 | **28.93** |
+| `rank_ridge_dage` | 0.955 | **0.742** |
+| `level_shift_model` | −5.71 | **−20.28** |
+
+Training did not diverge: the **fate head is essentially untouched** (0.9915 → 0.9898) while every
+age metric collapses. That is precisely the signature of corrupting age labels and nothing else — and
+it also **bounds the shared-trunk coupling**: real, but modest. Ridge, refit on the same shuffled
+labels, collapses alongside the model.
+
+## What this establishes
+
+**Explanation (ii) is eliminated.** If HFF's 33 613 labels were uninformative filler whose only
+contribution was volume and trunk regularisation, permuting them would have left ranking near arm A.
+Instead ranking fell by **−0.371, 5.4× the entire A−B gap**. The labels carry **structure the model
+actively exploits**; the A−B gap is not a volume artefact.
+
+### 🔴 But this does NOT establish that the labels are *correct*
+
+Arm C destroys **any** consistent structure — real biological signal and **systematic artefact
+alike**. A consistent artefact is exactly as shuffleable as a true signal, and G-c step 1 already
+found HFF's labels carry an artefact signature.
+
+So the honest statement is: **HFF's labels contain consistent, exploitable structure — but arm C
+cannot say whether that structure is biology or a reproducible artefact.** It narrows the original
+G-c question without closing it.
+
+## Consequences
+
+1. **Discarding HFF's labels is now harder to justify, not easier.** They are demonstrably load-
+   bearing for the model, whatever their provenance.
+2. **Option 3 (promote ranking to primary) has a mechanism and a well-powered channel** — the arm C
+   effect is 12× the ranking MDE. It remains a **new** pre-registration, not a re-read.
+3. **A follow-up worth registering:** shuffle *within* donor/timepoint strata rather than globally.
+   Global shuffling destroys both biological signal and artefact; a stratified shuffle that preserves
+   the artefact's structure while destroying the within-stratum pairing would separate them. That is
+   the experiment that could close G-c.
