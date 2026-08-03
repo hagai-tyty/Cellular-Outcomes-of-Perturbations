@@ -78,10 +78,16 @@ class ChunkAux:
     # control re-centring. Using ``age_mask`` for those made ``y_age`` itself depend on the
     # training policy, which is what confounded step 6's first run -- see results/STEP6_REPORT.md.
     deconfound_mask: np.ndarray = None  # type: ignore[assignment]
+    # ARM C (step-6 follow-up). Cells whose ΔAge label is to be SHUFFLED — the label-permutation
+    # control that separates "HFF's labels carry information" from "75 labels is simply too few".
+    # Empty unless `DataConfig.age_shuffle_datasets` is set.
+    shuffle_mask: np.ndarray = None  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
         if self.deconfound_mask is None:      # pre-C-I callers keep the old meaning
             self.deconfound_mask = self.age_mask
+        if self.shuffle_mask is None:
+            self.shuffle_mask = np.zeros(len(self.cell_ids), dtype=bool)
 
 
 @dataclass
@@ -112,6 +118,12 @@ class DataConfig:
     # shipped clock's range starts at 1.0, so 30 of the 75 non-HFF training labels would go.
     # Enabling it is a pre-registered change with its own bar, never a side effect.
     enforce_clock_age_range: bool = False
+    # ARM C (step-6 follow-up): permute ΔAge labels among these datasets' cells instead of using or
+    # masking them. Same cells, same label count, same value distribution -- only the cell<->label
+    # pairing destroyed. Empty = OFF, so arms A and B are unaffected. Set to {"hff_sc"} for arm C.
+    # The seed is recorded in `dataset_summary.json`; the permutation is global across shards.
+    age_shuffle_datasets: frozenset[str] = frozenset()
+    age_shuffle_seed: int = 0
 
 
 def _clock_range(clock: AgingClock, cfg: DataConfig) -> tuple[float, float] | None:
@@ -184,6 +196,16 @@ def process_chunk(src, chunk, panel, clock: AgingClock, cfg: DataConfig, harmoni
     deconfound_mask, _ = age_label_policy(
         len(cell_ids), raw.source, raw.obs,
         masked_datasets=frozenset(), clock_age_range=_clock_range(clock, cfg))
+    # ARM C: the shuffle targets are exactly the cells arm B would MASK -- computable, but excluded
+    # by the dataset policy. Derived through the same `age_label_policy` call rather than by
+    # matching on cell_line, so arm C permutes precisely the label set arm B withholds.
+    shuffle_mask = np.zeros(len(cell_ids), dtype=bool)
+    if getattr(cfg, "age_shuffle_datasets", frozenset()):
+        kept, _ = age_label_policy(
+            len(cell_ids), raw.source, raw.obs,
+            masked_datasets=frozenset(cfg.age_shuffle_datasets),
+            clock_age_range=_clock_range(clock, cfg))
+        shuffle_mask = deconfound_mask & ~kept
     aux: ChunkAux | None = None
     # Guard on the COMPUTABLE mask: an all-HFF chunk has no trainable label under arm B, but its
     # ΔAge values are exactly what the deconfounder needs. Guarding on `age_mask` dropped those
@@ -197,6 +219,7 @@ def process_chunk(src, chunk, panel, clock: AgingClock, cfg: DataConfig, harmoni
             cc=np.asarray(cc, dtype=np.float64).copy(),
             age_mask=age_mask.copy(),
             deconfound_mask=deconfound_mask.copy(),
+            shuffle_mask=shuffle_mask.copy(),
         )
 
     smiles = raw.obs["smiles"].tolist()
@@ -445,6 +468,7 @@ def _write_cc_sidecar(paths, sid: str, aux: ChunkAux) -> None:
         cc=np.asarray(aux.cc, dtype=np.float64),
         age_mask=np.asarray(aux.age_mask, dtype=bool),
         deconfound_mask=np.asarray(aux.deconfound_mask, dtype=bool),
+        shuffle_mask=np.asarray(aux.shuffle_mask, dtype=bool),
     )
 
 
@@ -464,6 +488,8 @@ def _load_cc_sidecars(paths) -> dict[str, ChunkAux]:
             # RESUMED build -- the same lesson as `rewrite_shard_yage`'s backfill.
             deconfound_mask=(z["deconfound_mask"] if "deconfound_mask" in z.files
                              else z["age_mask"]),
+            shuffle_mask=(z["shuffle_mask"] if "shuffle_mask" in z.files
+                          else np.zeros(len(z["age_mask"]), dtype=bool)),
         )
     return out
 
@@ -516,14 +542,66 @@ def _deconfound_train_only(cfg, paths, rows, splits, aux_by_sid) -> tuple[float,
     # the control RE-CENTRING is part of computing ΔAge, so it must not narrow to the training
     # subset either. Which cells the loss uses is governed by the `age_mask` COLUMN, written
     # separately by `assemble_samples`; this function only decides the VALUE of `y_age`.
+    ys: dict[str, np.ndarray] = {}
     for sid, aux in aux_by_sid.items():
         d = deconfound_age(aux.d_age_raw, aux.cc, coef)
         m = aux.deconfound_mask
         y = np.full(d.shape[0], np.nan, dtype=np.float64)
         if m.any():
             y[m] = recenter_on_control_arrays(d[m], aux.cell_line[m], aux.is_control[m])
+        ys[sid] = y
+
+    ys = _shuffle_age_labels(cfg, aux_by_sid, ys)
+
+    for sid, y in ys.items():
         io.rewrite_shard_yage(paths.shard_file(sid), y)
     return coef
+
+
+def _shuffle_age_labels(cfg, aux_by_sid: dict, ys: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+    """ARM C — permute ΔAge labels among the targeted cells, GLOBALLY across shards. Pure-ish.
+
+    The label-permutation control for step 6's follow-up. Arm A trains on 33,688 labels, arm B on
+    75; the ranking gap between them is confounded between *"HFF's labels carry information"* and
+    *"75 labels is simply too few to learn from"*. Arm C holds label VOLUME at arm A's level and
+    destroys only the cell<->label PAIRING, so the two explanations separate:
+
+        C ranks like A -> the gain was volume / trunk regularisation; the labels are uninformative
+        C ranks like B -> the labels carry real signal despite the artefact
+
+    Three properties this must have, and why each is deliberate:
+
+      * It runs **after** the deconfounder fit and the control re-centring, so the fitted
+        coefficient and every ΔAge VALUE are bit-identical to arm A. Only the assignment moves.
+      * It permutes **globally across shards**, not within each chunk. A within-chunk shuffle would
+        leave the between-chunk structure intact -- chunks are timepoint-homogeneous, so per-chunk
+        mean ΔAge would survive and the control would be far weaker than it looks.
+      * It is **deterministic** given `age_shuffle_seed`, and the shard iteration order is sorted so
+        the permutation does not depend on dict ordering.
+
+    A no-op unless `cfg.age_shuffle_datasets` is set, so arms A and B are untouched by its presence.
+    """
+    if not getattr(cfg, "age_shuffle_datasets", frozenset()):
+        return ys
+    slots: list[tuple[str, int]] = []
+    for sid in sorted(aux_by_sid):                    # sorted: order must not depend on dict order
+        aux = aux_by_sid[sid]
+        y = ys[sid]
+        for i in np.flatnonzero(aux.shuffle_mask):
+            if not np.isnan(y[i]):                    # only real labels take part
+                slots.append((sid, int(i)))
+    if len(slots) < 2:
+        log.warning("age label shuffle requested but only %d target label(s) found; no-op",
+                    len(slots))
+        return ys
+    vals = np.array([ys[sid][i] for sid, i in slots], dtype=np.float64)
+    perm = np.random.default_rng(int(getattr(cfg, "age_shuffle_seed", 0))).permutation(len(vals))
+    for (sid, i), v in zip(slots, vals[perm], strict=True):
+        ys[sid][i] = v
+    moved = int((perm != np.arange(len(perm))).sum())
+    log_event(log, "age_labels.shuffled", n=len(slots), moved=moved,
+              seed=int(getattr(cfg, "age_shuffle_seed", 0)))
+    return ys
 
 
 def _fit_scalers(cfg, paths, panel, splits, coef) -> None:

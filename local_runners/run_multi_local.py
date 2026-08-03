@@ -59,6 +59,10 @@ AGE_MASKED: frozenset[str] = frozenset()
 # C-5 Option 2's threshold. 1 = OFF = pre-1.5.3 behaviour. Step 6 sets 4 in BOTH arms.
 AGE_WINDOW_K: int = 1
 AGE_WINDOW_MAX_BATCHES: int = 8
+# ARM C (step-6 follow-up): permute these datasets' age labels instead of using or masking them.
+# Same cells and same label COUNT as arm A; only the cell<->label pairing is destroyed. Empty = OFF.
+AGE_SHUFFLE: frozenset[str] = frozenset()
+AGE_SHUFFLE_SEED: int = 0
 
 HERE = Path(__file__).resolve().parent
 # The clock lives in the REPO ROOT `configs/`, not under `local_runners/`. This previously pointed
@@ -140,6 +144,9 @@ def main() -> None:
     _C.AGE_MASKED_DATASETS = frozenset(AGE_MASKED)
     print(f"[arm ] AGE_MASKED_DATASETS = {set(AGE_MASKED) or '(empty -> arm A, control)'} | "
           f"age_window_k = {AGE_WINDOW_K}")
+    if AGE_SHUFFLE:
+        print(f"[arm ] ARM C: SHUFFLING age labels of {set(AGE_SHUFFLE)} "
+              f"(seed {AGE_SHUFFLE_SEED}) -- same count as arm A, pairing destroyed")
 
     if os.path.isdir(ROOT):
         shutil.rmtree(ROOT)
@@ -152,7 +159,9 @@ def main() -> None:
         qc=QCConfig(min_genes=500, max_mito_frac=0.20), label_tau=0.7,
         split_fracs=(0.8, 0.1, 0.1, 0.0), split_regimes=(REGIME,), primary_regime=REGIME,
         holdout_cell_lines=(test_donor,), harmonize=HARMONIZE, harmonize_ref_dataset="gill_bulk",
-        deconfound=True, seed=0), sources=[gse, gill])
+        deconfound=True, seed=0,
+        age_shuffle_datasets=frozenset(AGE_SHUFFLE), age_shuffle_seed=AGE_SHUFFLE_SEED),
+        sources=[gse, gill])
 
     # ---- composition: how each cell line is distributed across splits ----
     paths = ArtifactPaths.of(ROOT)
@@ -227,8 +236,13 @@ def main() -> None:
                 f"\n[FATAL] arm A (control) should have essentially every train cell age-valid, "
                 f"but only {frac:.2%} are.\nSomething masked labels that step 6 did not ask to mask.")
         print("[guard] OK: arm A (control) carries its full label set")
+        if AGE_SHUFFLE:
+            print(f"[guard] arm C: {n_age_tr:,} labels retained (must match arm A's count); "
+                  f"their PAIRING is shuffled with seed {AGE_SHUFFLE_SEED}")
     with open(f"{ROOT}/step6_arm_census.json", "w", encoding="utf-8") as _f:
         json.dump({"arm": sorted(AGE_MASKED) or ["__control__"], "age_window_k": AGE_WINDOW_K,
+                   "age_shuffle_datasets": sorted(AGE_SHUFFLE),
+                   "age_shuffle_seed": AGE_SHUFFLE_SEED,
                    "n_train_cells": n_tr, "n_age_valid_train": n_age_tr,
                    "frac_age_valid_train": frac, "holdout_donor": test_donor}, _f, indent=2)
 

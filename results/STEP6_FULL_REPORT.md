@@ -281,6 +281,28 @@ degrades by nearly the same amount, so this is two learners both ranking worse o
 - **Any of the three branches of the pre-registered outcome table**, as written — the first run
   because it was confounded, the second because MDE > Δ\* once σ uncertainty is admitted.
 
+### 📌 The bounded estimate — the reportable result of step 6
+
+Reported as an **estimate with limits**, not a verdict.
+
+> **Masking HFF's 33 613 ΔAge labels changes `dage_mae_model` by**
+> ### +0.661 yr · 95 % CI [−4.384, +5.707]
+> **observed SD 4.808 · MDE 5.045 · Δ\* 3.572 · n = 6 paired donor folds**
+>
+> The point estimate is **4.6 % of the 14.29 yr baseline**. The interval is wide enough to contain
+> both a meaningful improvement and a meaningful regression, so **the sign is not established**.
+>
+> **MDE 5.045 > Δ\* 3.572: the design could not have detected the smallest effect worth acting on.**
+> This therefore **licenses nothing about discarding HFF's labels** — in either direction. It is a
+> bound on the effect's size, not a measurement of its value.
+>
+> **The confounded first run's +3.971 yr was mostly the confound, not the labels.** After C-I the
+> estimate fell six-fold and the SD halved (9.599 → 4.808). Any use of the earlier figure should be
+> replaced by this one.
+>
+> *Carry forward as:* `dage_mae_model` effect of masking HFF = **+0.66 yr [−4.38, +5.71]**,
+> undetermined at this geometry.
+
 ### ✅ Supported
 
 - **The effect on `dage_mae_model` is small.** Point estimate +0.661 yr, 4.6 % of baseline. Run 1's
@@ -295,11 +317,34 @@ degrades by nearly the same amount, so this is two learners both ranking worse o
 
 ## 9. Open anomalies
 
-1. **`fate_ece` (Platt) regressed in both runs** — +0.096 [+0.011, +0.182] after C-I. It **survived
-   the fix**, so it is not a side-effect of the moving target. The fate head consumes no ΔAge; the
-   plan says a move there is *"a finding to explain, not a trade-off."* **Unexplained.**
-2. **`ood_flag_rate` nearly doubled** (0.273 → 0.516). Arm B's model finds the held-out donor much
-   more out-of-distribution. Consistent with a weaker age head, but not established.
+> ### 🔵 Resolved 2026-08-03 — items 1 and 2 were **not** anomalies. One mechanism explains four.
+>
+> I flagged `fate_ece` (Platt) as a standing anomaly on the grounds that *"the fate head consumes no
+> ΔAge."* That is true of the **labels** and false of the **network**. `models/network.py:60-62`:
+>
+> ```python
+> self.trunk = nn.Sequential(_mlp_block(d_cell + d_u, latent_dim, p_drop),
+>                            _mlp_block(latent_dim, latent_dim, p_drop))
+> ...
+> z = self.trunk(torch.cat([self.cell(x), self.pert(u, dose_time)], dim=1))
+> return self.cls_head(z), self.age_head(z), z
+> ```
+>
+> **One shared trunk feeds both heads**, and `MultiTaskLoss` sums their losses. Masking 99.7 % of the
+> age labels changes the age loss → changes trunk gradients → changes the representation `z` that the
+> fate head reads. So **`rank_model_dage`, `rank_ridge_dage`, `fate_ece` (Platt) and `ood_flag_rate`
+> moving together is one mechanism, not four separate puzzles**: a degraded shared representation.
+>
+> This matters beyond tidiness. It gives the ranking result a **causal account** rather than a
+> correlation, which is what makes option 3 worth considering at all — and it explains why the three
+> registered fate guards (`prauc`, `roc`, raw `ece`) can hold while the *calibrated* ECE moves: the
+> calibration path is more sensitive to representation drift than the ranking metrics are.
+
+1. ~~**`fate_ece` (Platt) regressed in both runs** — unexplained.~~ **Explained above**: shared-trunk
+   coupling. It remains worth watching as a *magnitude* — +0.096 [+0.011, +0.182] — but it is no
+   longer a puzzle about how ΔAge could possibly reach the fate head.
+2. ~~**`ood_flag_rate` nearly doubled** — not established.~~ **Same mechanism.** 0.273 → 0.516 is
+   what a drifted shared representation predicts.
 3. **`scorecard.py`'s `level shift` row prints the mean without its sign.** In run 1 it read `5.713`
    when the value was **−5.713**; signed means moved −5.713 → +2.267 (looks better) while magnitudes
    moved 13.12 → 18.66 (worse). **A reader trusting that row draws the opposite conclusion.**
@@ -317,8 +362,19 @@ the clock's validated range, and no re-run touches that.
 | | option | cost | what it buys |
 |---|---|---|---|
 | **1** | **Accept and report.** State that step 6 cannot resolve Δ\* at this geometry; carry +0.661 [−4.384, +5.707] forward as a bounded estimate, not a verdict. | none | honesty, and no further spend |
-| **2** | **Fix C-II at source.** A clock validated at age 0, or drop the neonatal donors from the *design* — a 4-donor study, accepting `MDE = 1.591 × SD`. | new data or less power | removes the dominant variance source |
+| **2** | **Fix C-II at source** — **more donors, and/or a clock validated at age 0.** See the correction below: a 4-donor re-run is *not* among the options. | new data | removes the dominant variance source |
 | **3** | **Change the estimand to ranking.** `rank_model_dage` shows a consistent, detectable effect where MAE does not. If ranking is what Stage 2 needs, register it as primary. | a **new** pre-registration | an estimand this geometry can actually resolve |
+
+> ### 🔵 Correction to option 2, 2026-08-03
+>
+> The earlier wording offered *"a 4-donor study, accepting the power that implies."* **That option
+> does not exist, and this run already measured why.** The pre-registered in-range secondary **is**
+> the 4-donor design (O1, O2, Y1, Y2), and it was not powered either: σ's 95 % upper bound is
+> **4.213**, giving **MDE 6.704 > Δ\* 3.572**. Dropping the neonatal donors shrinks the *point*
+> estimate of the SD but loses two folds, and the two effects cancel.
+>
+> **Option 2 therefore reduces entirely to: more donors, and/or a clock validated at age 0.**
+> Nobody should read a 4-donor re-run as viable — it has been run.
 
 Option 3 is the most promising on the evidence, and is explicitly **not** a re-read of this run — the
 ranking result here was a secondary metric, and promoting it after seeing it would be exactly the

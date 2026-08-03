@@ -58,11 +58,19 @@ def main() -> None:
                 arm = v.upper()
             else:
                 k = v
-    if arm not in ("A", "B"):
-        raise SystemExit(f"--arm must be A or B, got {arm!r}")
+    if arm not in ("A", "B", "C"):
+        raise SystemExit(f"--arm must be A, B or C, got {arm!r}")
+    seed = 0
+    if "--shuffle-seed" in argv:
+        seed = int(argv[argv.index("--shuffle-seed") + 1])
+    # arm C is arm A's LABEL SET with the pairing destroyed: same cells, same 33,688 labels, same
+    # k, same seeds -- so AGE_MASKED stays empty and only AGE_SHUFFLE is set.
     rml.AGE_MASKED = frozenset({"hff_sc"}) if arm == "B" else frozenset()
+    rml.AGE_SHUFFLE = frozenset({"hff_sc"}) if arm == "C" else frozenset()
+    rml.AGE_SHUFFLE_SEED = seed
     rml.AGE_WINDOW_K = k
-    tag = f"gc2_{arm}_" + ("mask_hff" if arm == "B" else "keep_hff")
+    tag = {"A": "gc2_A_keep_hff", "B": "gc2_B_mask_hff",
+           "C": f"gc2_C_shuffle_hff_s{seed}"}[arm]
     print(f"\n[step6] arm {arm} | AGE_MASKED_DATASETS = {set(rml.AGE_MASKED) or '(empty)'} | "
           f"age_window_k = {k}")
     # Fold roots are arm-suffixed via CELLFATE_FOLD_SUFFIX (below), which scorecard.py honours

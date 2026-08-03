@@ -111,6 +111,52 @@ def compare_y_age(root_a: str, root_b: str) -> dict:
             "max_abs_y_age_delta": worst, "rows_whose_age_mask_differs": mask_diff}
 
 
+def compare_arm_c(root_a: str, root_c: str) -> dict:
+    """ARM C's gate. Different properties from A-vs-B, so a different check.
+
+    Arm C is arm A with HFF's cell<->label pairing destroyed. So, per row:
+      * non-HFF cells -> `y_age` BIT-IDENTICAL to arm A (only HFF is permuted)
+      * HFF cells     -> the same MULTISET of values, but a different assignment
+      * `age_mask`    -> identical everywhere (arm C withholds nothing)
+
+    A shuffle that changed the multiset, or that left the assignment alone, would not be a control.
+    """
+    from cellfate.common import io
+    sa = sorted(Path(root_a, "shards").glob("*.parquet"))
+    sc = sorted(Path(root_c, "shards").glob("*.parquet"))
+    if [p.name for p in sa] != [p.name for p in sc]:
+        return {"error": "shard filenames differ"}
+    va: list[float] = []
+    vc: list[float] = []
+    moved = rows = mask_diff = order_mis = 0
+    other_worst = 0.0
+    for pa, pc in zip(sa, sc, strict=True):
+        a = io.shard_to_numpy(io.read_shard(pa))
+        c = io.shard_to_numpy(io.read_shard(pc))
+        if [str(x) for x in a["cell_id"]] != [str(x) for x in c["cell_id"]]:
+            order_mis += 1
+            continue
+        ya, yc = np.asarray(a["y_age"], float), np.asarray(c["y_age"], float)
+        hff = np.asarray([str(x) for x in a["cell_line"]]) == "HFF"
+        va.extend(ya[hff & ~np.isnan(ya)].tolist())
+        vc.extend(yc[hff & ~np.isnan(yc)].tolist())
+        both = hff & ~np.isnan(ya) & ~np.isnan(yc)
+        moved += int((ya[both] != yc[both]).sum())
+        oth = ~hff & ~np.isnan(ya) & ~np.isnan(yc)
+        if oth.any():
+            other_worst = max(other_worst, float(np.abs(ya[oth] - yc[oth]).max()))
+        mask_diff += int((np.asarray(a["age_mask"], bool) != np.asarray(c["age_mask"], bool)).sum())
+        rows += len(ya)
+    va.sort()
+    vc.sort()
+    return {"rows_compared": rows, "cell_id_order_mismatches": order_mis,
+            "hff_labels": len(va),
+            "multiset_identical": bool(len(va) == len(vc) and np.array_equal(va, vc)),
+            "hff_cells_whose_label_moved": moved,
+            "max_abs_delta_on_non_hff": other_worst,
+            "rows_whose_age_mask_differs": mask_diff}
+
+
 def main() -> int:
     print("STAGE 1.5.3 STEP 6 PRE-FLIGHT — gating a ~10 h run\n")
     rootA, rootB = "cellfate_pf_armA", "cellfate_pf_armB"

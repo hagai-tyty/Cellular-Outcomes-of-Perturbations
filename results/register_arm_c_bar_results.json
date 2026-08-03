@@ -1,0 +1,53 @@
+{
+  "script": "register_arm_c_bar",
+  "utc": "2026-08-03T09:54:04+00:00",
+  "ab_rank_gap": -0.06875,
+  "ab_rank_sd": 0.03015843165683521,
+  "n_folds": 6,
+  "delta_eq": 0.034375,
+  "delta_eq_derivation": "half the measured A-B rank_model_dage gap",
+  "test": "TOST, 90% CI inside +/- delta_eq",
+  "resolution_floor_at_ab_sd": 0.024809533835129106,
+  "resolvability_by_sd": [
+    {
+      "sd": 0.005,
+      "pass_rate": 1.0,
+      "resolvable": true,
+      "verdict": "RESOLVABLE"
+    },
+    {
+      "sd": 0.01,
+      "pass_rate": 1.0,
+      "resolvable": true,
+      "verdict": "RESOLVABLE"
+    },
+    {
+      "sd": 0.015,
+      "pass_rate": 0.997675,
+      "resolvable": true,
+      "verdict": "RESOLVABLE"
+    },
+    {
+      "sd": 0.02,
+      "pass_rate": 0.945425,
+      "resolvable": false,
+      "verdict": "UNRESOLVABLE"
+    },
+    {
+      "sd": 0.03015843165683521,
+      "pass_rate": 0.5719,
+      "resolvable": false,
+      "verdict": "UNRESOLVABLE"
+    },
+    {
+      "sd": 0.04,
+      "pass_rate": 0.25675,
+      "resolvable": false,
+      "verdict": "UNRESOLVABLE"
+    }
+  ],
+  "smallest_resolvable_margin_at_ab_sd": 0.05227902278117835,
+  "sd_at_which_delta_eq_resolves": 0.005,
+  "false_equivalence_rate_if_C_is_really_B": 5e-05,
+  "resolvable_at_pessimistic_sd": false
+}
