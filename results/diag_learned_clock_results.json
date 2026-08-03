@@ -1,0 +1,143 @@
+{
+  "script": "diag_learned_clock",
+  "utc": "2026-08-03T10:02:54.820594+00:00",
+  "n_conditions": 68,
+  "n_genes": 35720,
+  "bar": 0.5,
+  "n_perm": 20,
+  "perm_q": 0.95,
+  "families": {
+    "full": {
+      "per_clock": {
+        "Horvath skin & blood 2018": {
+          "rho_all": 0.04863152269343818,
+          "rho_partial": 0.2773218307439783,
+          "null_q95": 0.19057525670878347,
+          "beats_null": true,
+          "clears_bar": false,
+          "alpha_per_fold": {
+            "O1": 100000.0,
+            "O2": 100000.0,
+            "O3": 100000.0
+          }
+        },
+        "Horvath multi-tissue 2013": {
+          "rho_all": 0.5033019047982593,
+          "rho_partial": 0.6270565331908233,
+          "null_q95": 0.11719280833683247,
+          "beats_null": true,
+          "clears_bar": true,
+          "alpha_per_fold": {
+            "O1": 100000.0,
+            "O2": 100000.0,
+            "O3": 100000.0
+          }
+        }
+      },
+      "verdict": "SPLIT"
+    },
+    "clockgenes": {
+      "per_clock": {
+        "Horvath skin & blood 2018": {
+          "rho_all": 0.004962400274840631,
+          "rho_partial": 0.24659312134977288,
+          "null_q95": 0.22851853265641103,
+          "beats_null": true,
+          "clears_bar": false,
+          "alpha_per_fold": {
+            "O1": 100000.0,
+            "O2": 100000.0,
+            "O3": 10000.0
+          }
+        },
+        "Horvath multi-tissue 2013": {
+          "rho_all": 0.4571515822422415,
+          "rho_partial": 0.6035423903500401,
+          "null_q95": 0.09056762224682216,
+          "beats_null": true,
+          "clears_bar": true,
+          "alpha_per_fold": {
+            "O1": 100000.0,
+            "O2": 100000.0,
+            "O3": 10000.0
+          }
+        }
+      },
+      "verdict": "SPLIT"
+    },
+    "pca": {
+      "per_clock": {
+        "Horvath skin & blood 2018": {
+          "rho_all": 0.1446730541665076,
+          "rho_partial": 0.38634194755124635,
+          "null_q95": 0.20247356567545904,
+          "beats_null": true,
+          "clears_bar": false,
+          "alpha_per_fold": {
+            "O1": 10.0,
+            "O2": 1000.0,
+            "O3": 10.0
+          }
+        },
+        "Horvath multi-tissue 2013": {
+          "rho_all": 0.459403748520823,
+          "rho_partial": 0.5789212505248693,
+          "null_q95": 0.27646677100431344,
+          "beats_null": true,
+          "clears_bar": true,
+          "alpha_per_fold": {
+            "O1": 10.0,
+            "O2": 1000000.0,
+            "O3": 10.0
+          }
+        }
+      },
+      "verdict": "SPLIT"
+    }
+  },
+  "permutation_null": {
+    "full": {
+      "Horvath skin & blood 2018": {
+        "median": -0.08697560789403366,
+        "q95": 0.19057525670878347,
+        "max_abs": 0.488872771691415
+      },
+      "Horvath multi-tissue 2013": {
+        "median": -0.0691682253693171,
+        "q95": 0.11719280833683247,
+        "max_abs": 0.5459785471618888
+      }
+    },
+    "clockgenes": {
+      "Horvath skin & blood 2018": {
+        "median": -0.062182692674733746,
+        "q95": 0.22851853265641103,
+        "max_abs": 0.42275833110661526
+      },
+      "Horvath multi-tissue 2013": {
+        "median": -0.0737679887009963,
+        "q95": 0.09056762224682216,
+        "max_abs": 0.5543001106996984
+      }
+    },
+    "pca": {
+      "Horvath skin & blood 2018": {
+        "median": -0.11318089857617285,
+        "q95": 0.20247356567545904,
+        "max_abs": 0.4624575333053403
+      },
+      "Horvath multi-tissue 2013": {
+        "median": -0.07829140741306256,
+        "q95": 0.27646677100431344,
+        "max_abs": 0.4456998893003016
+      }
+    }
+  },
+  "verdict": "SPLIT",
+  "best_family": "pca",
+  "fleischer_baseline": {
+    "skin_blood": 0.267,
+    "multi_tissue": 0.516,
+    "note": "M-2a, same metric and geometry"
+  }
+}

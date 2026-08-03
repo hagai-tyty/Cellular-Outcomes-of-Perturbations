@@ -11,6 +11,79 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-03 — STAGE 1.5.4 EXECUTED: NOT LEARNABLE. The last free route to repairing ΔAge is closed
+
+**Status:** ✅ Executed and recorded. **787 tests pass**, CI lint clean, **`src/` untouched**, no
+label moved (none could, under any outcome).
+
+M-2a asked whether the **existing Fleischer clock's output** tracks methylation age → no. That is a
+fact about one clock, not about the transcriptome. 1.5.4 asked the question nobody had: **can a model
+TRAINED on the transcriptome predict methylation age on these cells?**
+
+**Verdict: NOT LEARNABLE — SPLIT on all three model families.**
+
+| ρ_partial (pluripotency **and** donor removed) | skin & blood | multi-tissue | |
+|---|---:|---:|---|
+| **Fleischer clock** *(baseline, identical estimand)* | **0.309** | **0.517** | — |
+| learned — full transcriptome | 0.277 | **0.627** | SPLIT |
+| learned — clock genes only | 0.247 | **0.604** | SPLIT |
+| learned — PCA(10) → ridge | 0.386 | **0.579** | SPLIT |
+
+All six beat their own permutation null, so the models **do** learn something real from RNA. It is
+not age.
+
+### The finding: the asymmetry survives retraining
+
+Training improves agreement with multi-tissue (+0.06 to +0.11 over Fleischer) and **does not**
+improve agreement with skin & blood (two of three families are *worse* than the untrained clock).
+The ratio widens rather than closing — 1.67× for Fleischer, **2.26×** for the full-transcriptome
+model.
+
+**A measurement of the shared age signal cannot behave that way.** The two methylation clocks agree
+with each other, so anything tracking what they share must track both at similar strength.
+**The asymmetry is a property of the DATA, not of the Fleischer clock** — it was never "we had the
+wrong clock." RNA in these cells does not carry the shared age signal, and retraining cannot
+manufacture it.
+
+### Three method corrections, ALL made before any real ρ was read
+
+G2 exists so the method can be repaired without touching the result. It fired three times and was
+right each time.
+
+1. **The first run was VOID.** Shuffled training labels gave ρ_partial **−0.45 / −0.36**, not ≈ 0.
+   Cause: a LODO fold predicts the held-out donor with roughly the mean of the *others*, so the
+   prediction is **anti-correlated with the donor mean by construction** — a large correlation from
+   a model that learned nothing. **Fix:** partial out donor as well as pluripotency. Reproduced
+   synthetically in `test_lodo_mean_reversion_is_removed_by_partialling_donor`.
+2. **My own G2 bar was UNRESOLVABLE — the §5b failure inside my own stage.** §5 registered
+   `|ρ| ≤ 0.20` on the worst of 6 comparisons with "slack for sampling noise" **asserted and never
+   simulated**. At n = 68, SD(ρ) ≈ 0.122 ⇒ P(|ρ| > 0.20) ≈ 0.102 per comparison and **≈ 0.474 across
+   six**: it fires on a sound pipeline almost half the time. **Fix:** replaced with a self-calibrating
+   **permutation null** (20 draws per family × clock; the real value must beat its own q95).
+3. **A PCA bug** — components fitted on centred data, applied to uncentred matrices. Visible in G2
+   as a `pca`-only residual artefact.
+
+**The bar that decides the verdict — ρ_partial ≥ 0.50 on both clocks — was not touched.** It is
+M-2a's registered bar, re-used deliberately so no friendlier one could be chosen for a stage whose
+result was predicted negative in advance.
+
+### One correction to my own reporting
+
+The script initially compared against M-2a's published 0.267 / 0.516, which was **not**
+apples-to-apples: 1.5.4's estimand partials out donor and M-2a's does not. Recomputed the Fleischer
+baseline under the identical estimand (**0.309 / 0.517**) before reading anything into the gap.
+
+### What it licenses
+
+**Does:** closing the RNA route on **measurement** rather than inference. Stage 6's spend is now
+justified — the cheap alternative was tried and it failed.
+
+**Does not:** any label change; any claim about HFF (neonatal, unfixable by better instrumentation);
+anything beyond 3 donors.
+
+---
+
+
 ## 2026-08-02 — The order of work from here, written into `00_START_HERE.md`
 
 **Status:** ✅ Documentation only. Additive section; the 2026-07-22 status table is left byte-intact.
