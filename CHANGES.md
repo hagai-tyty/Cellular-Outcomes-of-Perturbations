@@ -3784,3 +3784,74 @@ treatment is entangled with a refit of the target and a 400× reweighting of ext
 *machinery* is sound: guards fired, both arms hit their predicted label counts, arm A reproduced
 baseline exactly, C-5 Option 2 cost the control nothing. What failed is the comparison's validity,
 and the plan predicted the dominant cause in writing before the run.
+
+---
+
+## 2026-08-03 — 🔬 **STEP 6 RERUN (post-C-I). C-I verified. Primary still INCONCLUSIVE — honestly this time.**
+
+Both arms rebuilt and retrained, 6 folds each, `age_window_k = 4`, arm-suffixed roots. Full report:
+`results/STEP6_REPORT.md` (rerun section).
+
+### C-I is fixed — verified three ways, not asserted
+
+| check | first run | rerun |
+|---|---|---|
+| deconfounder coef, N2 | A `−3.93,−3.42` vs B **`−24.20,+10.12`** | **identical in both arms** |
+| …all six folds | wildly different | **identical in all 6** |
+| `y_age` across arms (row-exact) | — | **`max|Δ| = 0.000e+00` over 7 062 rows** |
+| arm A vs pre-C-I arm A | — | **`max|Δ| = 0.000e+00` on all 6 folds** |
+
+C-I was a no-op on the control, as predicted, and removed the target drift in the treatment. The
+comparison is now genuinely one-change.
+
+### Primary — all 6 folds
+
+| | rerun | first run |
+|---|---|---|
+| **effect** | **+0.661 yr** | +3.971 |
+| **observed SD** | **4.808 yr** | 9.599 |
+| **MDE** | **5.045 yr** | 10.074 |
+| 95 % CI | **[−4.384, +5.707]** | [−6.102, +14.045] |
+| power for Δ\* = 3.57 | 31.5 % | 11.3 % |
+
+**The SD halved; the effect shrank six-fold to 4.6 % of baseline.** Most of the confounded run's
++3.97 was the confound, not the labels. **CI includes 0 and MDE > Δ\* → INCONCLUSIVE, licenses
+nothing.**
+
+### 🔬 C-II confirmed, and it is now the binding constraint
+
+The pre-registered 4-in-range-fold secondary: effect +0.843, **SD 1.130**, MDE 1.799,
+CI [−0.956, +2.642].
+
+**Dropping N2 and N3 collapses the SD 4.808 → 1.130 — a factor of 4.3 on 2 of 6 folds.** The two
+donors outside the clock's validated `age_range = [1.0, 96.0]` carry almost all the fold variance.
+That was a hypothesis when the first run ended; it is now measured.
+
+### ⚠️ …but the "we were powered" reading does NOT survive, and I am not taking it
+
+At face value the secondary's MDE 1.799 ≤ Δ\* 3.572, which under the registered table would read
+*"the labels are genuinely not contributing → mask them."* **That is not safe.** With n = 4 the SD is
+itself a noisy estimate; the χ² 95 % interval on σ is **[0.640, 4.213]**, and at the upper end the
+MDE is **6.704 ≫ Δ\***. Same for the primary (σ ∈ [3.001, 11.792], MDE up to 12.375).
+
+**Neither analysis is robustly powered once σ is admitted to be an estimate.** The secondary was
+pre-registered as "underpowered by construction"; it turned out *better* powered than the primary and
+still not enough. It licenses nothing either.
+
+### Guards
+
+`fate_prauc`, `fate_roc`, `fate_ece` all noise ✅. **`fate_ece` (Platt) regressed again**
+(+0.096 [+0.011, +0.182]) — it survived C-I, so it is now a **standing anomaly** needing explanation
+rather than another run. `ood_flag_rate` nearly doubled (+0.243 [+0.068, +0.419]).
+`dage_mae_ridge` and `interval_width` both fell back to noise (were REGRESSIONs).
+
+**Ranking is the one consistent cost:** `rank_model_dage` −0.069 [−0.100, −0.037], with ridge at
+−0.064 — two learners both ranking worse on 75 labels than on 33 688, no longer confounded.
+
+### Where this leaves step 6
+
+Not another 10 h of the same design. The binding limit is 6 paired folds with 2 outside the clock's
+validated range, and no re-run fixes that. The options are: accept and report a bounded estimate;
+fix C-II at source (a clock valid at age 0, or a 4-donor design with the power that implies); or
+change the estimand to ranking, where a consistent effect does show — as a **new** pre-registration,
+not a re-read of this one.

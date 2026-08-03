@@ -175,3 +175,135 @@ aggregate.
 | **2** | **Decide C-2 before, not after.** With HFF masked, 40 % of the signal is out-of-clock-range. C-2 stops being a separate later experiment and becomes part of this one's specification. | a decision |
 | **3** | **Report per-fold, and pre-register the outlier rule.** N2 carries the SD. Whatever is done about it must be fixed in advance. | a decision |
 | **4** | **Accept the power ceiling honestly.** Even perfectly de-confounded, 6 paired folds resolve Δ\* = 3.57 only if SD ≤ 1.91. Observed is 9.60. If fixing C-I does not collapse the SD, the design is under-powered whatever else is done, and that should be said rather than run repeatedly. | — |
+
+---
+---
+
+# STEP 6 RERUN (post-C-I) — full report
+
+**Run date** 2026-08-03. Both arms rebuilt from raw GEO and retrained, 6 folds each,
+`age_window_k = 4` in both, **arm-suffixed roots** so both survive. C-I fixed: `y_age` no longer
+depends on the training-label policy.
+
+## 1. The fix worked — verified three ways, not asserted
+
+| check | first run | rerun |
+|---|---|---|
+| deconfounder coef, N2 | A `−3.93, −3.42` vs B **`−24.20, +10.12`** | A `−3.9289, −3.4207` vs B **`−3.9289, −3.4207`** |
+| …all six folds | wildly different | **identical in all 6** |
+| `y_age` across arms (pre-flight, row-exact) | — | **`max|Δ| = 0.000e+00` over 7 062 rows** |
+| arm A vs pre-C-I arm A | — | **`max|Δ| = 0.000e+00` on all 6 folds** |
+
+C-I was a no-op on the control (as predicted — `deconfound_mask == age_mask` there) and removed the
+target-variable drift in the treatment. **The comparison is now genuinely one-change.**
+
+## 2. Primary — all 6 folds
+
+| fold | arm A | arm B | Δ | *(first run Δ)* |
+|---|---:|---:|---:|---:|
+| N2 | 21.79 | 29.55 | **+7.76** | *+21.37* |
+| N3 | 29.69 | 22.53 | −7.16 | *−7.22* |
+| O1 | 5.39 | 7.61 | +2.22 | *+3.63* |
+| O2 | 7.54 | 7.36 | −0.17 | *+1.84* |
+| Y1 | 7.28 | 8.59 | +1.31 | *+5.35* |
+| Y2 | 14.06 | 14.07 | +0.02 | *−1.15* |
+
+| quantity | rerun | first run |
+|---|---|---|
+| **effect** | **+0.661 yr** | +3.971 |
+| **observed SD** | **4.808 yr** | 9.599 |
+| **MDE** (1.049 × SD) | **5.045 yr** | 10.074 |
+| 95 % CI | **[−4.384, +5.707]** | [−6.102, +14.045] |
+| power for Δ\* = 3.57 | 31.5 % | 11.3 % |
+
+**The SD halved** — C-I accounted for about half the variance. The effect shrank six-fold, to
+**+0.661 yr, 4.6 % of the 14.29 yr baseline.**
+
+**Verdict: CI includes 0 and MDE 5.045 > Δ\* 3.572 → INCONCLUSIVE. Licenses nothing.**
+
+## 3. Secondary — the pre-registered 4 in-range folds
+
+Registered *before* arm B ran, on the C-II grounds that N2/N3 are donor age 0, outside the clock's
+`age_range = [1.0, 96.0]`.
+
+| | |
+|---|---|
+| per-fold Δ (O1, O2, Y1, Y2) | `+2.22, −0.17, +1.31, +0.02` |
+| effect | **+0.843 yr** |
+| **observed SD** | **1.130 yr** |
+| MDE (1.591 × SD) | 1.799 yr |
+| 95 % CI | **[−0.956, +2.642]** |
+
+### 🔬 C-II is confirmed, and it is the dominant remaining variance source
+
+**Dropping N2 and N3 collapses the SD 4.808 → 1.130 — a factor of 4.3, on 2 of 6 folds.** The two
+donors outside the clock's validated range carry almost all the fold-to-fold variance. That was a
+hypothesis when the first run ended; it is now measured.
+
+### ⚠️ But the "we were powered" reading does NOT survive scrutiny
+
+At face value MDE 1.799 ≤ Δ\* 3.572, which under the registered table would read *"the labels are
+genuinely not contributing → mask them."* **That reading is not safe**, because with n = 4 the SD is
+itself a noisy estimate. The χ² 95 % interval on the true σ:
+
+| | SD observed | 95 % CI on σ | MDE at σ_high | vs Δ\* |
+|---|---:|---:|---:|---|
+| primary (n=6) | 4.808 | [3.001, 11.792] | 12.375 | ≫ Δ\* |
+| secondary (n=4) | 1.130 | [0.640, **4.213**] | **6.704** | **> Δ\*** |
+
+**Neither analysis is robustly powered once σ is admitted to be an estimate.** So the secondary is
+INCONCLUSIVE too — for a different and more interesting reason than expected. It was pre-registered
+as "underpowered by construction"; it turned out *better* powered than the primary, and still not
+enough.
+
+## 4. Secondary and guard metrics
+
+| metric | arm A | arm B | verdict | *(first run)* |
+|---|---:|---:|---|---|
+| `rank_model_dage` | 0.948 | 0.879 | **REGRESSION** [−0.100, −0.037] | *−0.186* |
+| `rank_ridge_dage` | 0.955 | 0.891 | **REGRESSION** [−0.110, −0.018] | *−0.146* |
+| `dage_mae_ridge` | 14.05 | 17.54 | noise [−0.130, +7.099] | *REGRESSION +9.21* |
+| `interval_width` | 65.9 | 72.0 | noise [−8.48, +20.68] | *REGRESSION* |
+| `fate_prauc` | 0.992 | 0.978 | noise ✅ | noise ✅ |
+| `fate_roc` | 0.983 | 0.966 | noise ✅ | noise ✅ |
+| `fate_ece` | 0.249 | 0.320 | noise ✅ | noise ✅ |
+| `fate_ece` (Platt) | 0.140 | 0.236 | **REGRESSION** [+0.011, +0.182] ⚠️ | *REGRESSION* |
+| `ood_flag_rate` | 0.273 | 0.516 | **+0.243** [+0.068, +0.419] | *+0.162* |
+
+**Ranking still degrades detectably** (−0.069 Spearman, CI excludes 0) — and ridge degrades by
+nearly the same amount (−0.064). Since `scorecard.py:95` refits ridge on the *same* masked labels,
+that is two learners both ranking worse on 75 labels than on 33 688. Consistent, and no longer
+confounded by a moving target.
+
+**`fate_ece` (Platt) regressed again**, +0.096 [+0.011, +0.182], surviving C-I. It is now a
+**standing anomaly**: the fate head consumes no ΔAge, so a persistent move needs explaining rather
+than repeating. **`ood_flag_rate` doubled** — arm B's model finds the held-out donor much more
+out-of-distribution.
+
+## 5. Conclusion of the rerun
+
+1. **C-I is fixed and verified.** Identical deconfounders, bit-identical `y_age`, control untouched.
+   The first run's dominant confound is gone.
+2. **The primary is still INCONCLUSIVE** — but for an honest reason now (limited power), not because
+   the arms measured different things.
+3. **The effect is small.** +0.661 yr, 4.6 % of baseline, six-fold smaller than the confounded
+   estimate. Masking 99.7 % of the age labels costs little on ΔAge MAE.
+4. **C-II is real and is now the binding constraint.** Two out-of-range donors carry 4.3× the
+   variance of the other four. **No further re-running of this design will fix that.**
+5. **Ranking is the one place a consistent cost shows up** (−0.069, CI excludes 0), in both learners.
+
+## 6. What this does and does not license
+
+**Does not license:** discarding HFF's labels. Neither analysis is robustly powered for Δ\*.
+
+**Does support, weakly:** the effect on ΔAge MAE is small — the confounded run's +3.97 was mostly the
+confound, not the labels.
+
+**The honest next step is not another 10 h of the same design.** The binding limit is 6 paired folds
+with 2 of them out of the clock's validated range. Options, in order of what they cost:
+
+| | |
+|---|---|
+| **Accept and report** | State that step 6 cannot resolve Δ\* at this geometry, and carry both arms' numbers forward as a bounded estimate rather than a verdict. Costs nothing. |
+| **Fix C-II at the source** | Get a clock validated at age 0, or exclude the neonatal donors from the *design* — not just the analysis — which means a 4-donor study and accepting the power that implies. |
+| **Change the estimand** | The ranking metric shows a consistent, detectable effect where MAE does not. If ranking is what Stage 2 actually needs, register it as primary — but that is a new pre-registration, not a re-read of this one. |
