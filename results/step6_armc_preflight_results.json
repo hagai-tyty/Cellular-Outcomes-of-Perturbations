@@ -1,0 +1,46 @@
+{
+  "checks": {
+    "C1 same trainable label count as arm A": true,
+    "C2 HFF label MULTISET identical": true,
+    "C3 pairing actually destroyed": true,
+    "C4 non-HFF y_age bit-identical": true,
+    "C5 age_mask identical everywhere": true,
+    "C6 shard row order matched": true
+  },
+  "detail": {
+    "rows_compared": 7062,
+    "cell_id_order_mismatches": 0,
+    "hff_labels": 6938,
+    "multiset_identical": true,
+    "hff_cells_whose_label_moved": 6937,
+    "max_abs_delta_on_non_hff": 0.0,
+    "rows_whose_age_mask_differs": 0
+  },
+  "census_a": {
+    "arm": [
+      "__control__"
+    ],
+    "age_window_k": 4,
+    "age_shuffle_datasets": [],
+    "age_shuffle_seed": 0,
+    "n_train_cells": 5718,
+    "n_age_valid_train": 5718,
+    "frac_age_valid_train": 1.0,
+    "holdout_donor": "O1"
+  },
+  "census_c": {
+    "arm": [
+      "__control__"
+    ],
+    "age_window_k": 4,
+    "age_shuffle_datasets": [
+      "hff_sc"
+    ],
+    "age_shuffle_seed": 0,
+    "n_train_cells": 5718,
+    "n_age_valid_train": 5718,
+    "frac_age_valid_train": 1.0,
+    "holdout_donor": "O1"
+  },
+  "all_pass": true
+}
