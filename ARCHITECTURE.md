@@ -46,7 +46,7 @@ Two properties make the system unusual and drive most of its design:
    baseline is part of the label's definition, not a post-hoc adjustment.
 2. **Deployment is out-of-distribution by construction.** The tool is asked about donors it has
    never seen, so every calibrator is fitted on **cross-donor** statistics rather than on a random
-   held-out split (see [inner LODO](#l22--inner-leave-one-donor-out-calibration)).
+   held-out split (see [inner LODO](#calibration-loops--trainingxdonor_calibpy)).
 
 **Data.** Two real corpora, harmonised into one feature space:
 
@@ -318,6 +318,7 @@ Grouped by phase. **Bold** loops dominate runtime.
 | L21 | ensemble aggregation | members | `ensemble_logits` / `ensemble_probs` / `ensemble_age`. **`ensemble_probs` averages softmaxes, not logits** — averaging logits then softmaxing is a different quantity by Jensen, and mixing them was a real shipped bug |
 
 ### Calibration loops — `training/xdonor_calib.py`
+
 
 | # | loop | over | notes |
 |---|---|---|---|
