@@ -11,6 +11,77 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-03 — STAGE 1.5.5: HFF's ΔAge is NOT an identity readout, and not a depth readout either
+
+**Status:** ✅ Executed and recorded. `src/` untouched, **no label moved**, CI lint clean.
+
+Arm C established that HFF's labels carry *"consistent exploitable structure of unknown provenance"*
+and could not say what it was, because shuffling destroys real signal and systematic artefact alike.
+This measures the provenance directly.
+
+**The question:** within a single timepoint, how much of a cell's ΔAge is explained by identity?
+Between timepoints ΔAge and pluripotency move together trivially, so a pooled correlation is
+uninformative **by construction**. Holding day constant is the whole design.
+
+**Why it could resolve when nothing else has:** every dead end in this project is *donor*-limited —
+3 donors, 6 folds, MDE 1.049 × SD, M3's CI of [9 %, 100 %]. HFF is the one place that is not:
+**44,473 cells, ~5,800 per timepoint, SE(ρ) ≈ 0.013.** Two orders of magnitude more power than
+anything else in the data.
+
+### Verdict: NOT_DOMINATED — 0 of 8 timepoints reach the pre-registered 0.50 bar
+
+| day | ρ(age, pluri) | ρ(age, somatic) | R² identity | R² technical | **R² both** |
+|---|---:|---:|---:|---:|---:|
+| 0 | +0.079 | +0.171 | 0.033 | 0.086 | 0.100 |
+| 2 | −0.079 | +0.265 | 0.082 | 0.075 | 0.123 |
+| 4 | +0.036 | +0.111 | 0.034 | 0.030 | 0.054 |
+| 6 | −0.158 | +0.281 | 0.081 | 0.008 | 0.083 |
+| 8 | −0.130 | +0.133 | 0.020 | 0.007 | 0.026 |
+| 10 | −0.128 | +0.251 | 0.076 | 0.030 | 0.114 |
+| 12 | −0.270 | +0.397 | 0.162 | 0.013 | 0.167 |
+| 14 | −0.194 | +0.256 | 0.068 | 0.010 | 0.112 |
+
+**Identity and technical covariates together explain 2.6–16.7 % — so 83–97 % is neither.**
+
+**The design's own confound check, in one number:** pooled ρ = **−0.216** against within-timepoint
+values near zero. Pooling would have manufactured exactly the artefact the test exists to detect,
+which is why it is reported as descriptive and never graded.
+
+### What is now measured rather than argued
+
+| candidate explanation for HFF's ΔAge | status |
+|---|---|
+| identity artefact (+36.5 yr mechanism, `corr(age,pluri) = −0.62`) | ❌ **rejected**, R² ≤ 0.16 |
+| technical / sequencing depth | ❌ **rejected**, R² ≤ 0.09 |
+| clock noise | ⚠️ still live |
+| real biological signal | ⚠️ still live |
+
+**This does not establish the labels are age.** It is the first positive characterisation they have
+ever had, and it removes the two cheapest ways to dismiss them.
+
+### Limitations that bound the claim, recorded because they cut against it
+
+1. **Identity is proxied by 22 genes** (18 pluripotency + 4 somatic). The strong form of the identity
+   hypothesis is "position on the reprogramming manifold", which a small marker set under-measures.
+   A richer axis could explain materially more.
+2. **R² is linear on ranks** — monotone-robust, but blind to a non-monotone relationship.
+
+Both push the same direction: **the measured identity share is a floor, not a ceiling.** The honest
+reading is "identity does not dominate", not "identity is absent".
+
+### Two implementation notes
+
+* **The first run did not fail slowly, it thrashed.** `cells_per_run=None` densifies every cell into
+  one chunk — ~48,000 × 36,601 × 4 bytes ≈ **7 GB**. The source's own docstring says that parameter
+  "bounds peak RAM"; set to 4,000. Batching cannot change a result here because every statistic is
+  computed per timepoint *after* the chunks are concatenated.
+* **I reintroduced `N802`** — capitals in a test function name — the exact defect that held CI red
+  from 2026-07-26 and that I diagnosed and fixed two days ago. Caught by ruff before commit this
+  time, which is the argument for the lint gate being where it is.
+
+---
+
+
 ## 2026-08-03 — STAGE 1.5.4 EXECUTED: NOT LEARNABLE. The last free route to repairing ΔAge is closed
 
 **Status:** ✅ Executed and recorded. **787 tests pass**, CI lint clean, **`src/` untouched**, no

@@ -1,0 +1,115 @@
+{
+  "script": "diag_hff_label_identity",
+  "utc": "2026-08-05T08:49:28.804130+00:00",
+  "n_cells": 44473,
+  "rho_bar": 0.5,
+  "min_timepoints": 6,
+  "n_pluripotency_genes": 18,
+  "n_somatic_genes": 4,
+  "per_timepoint": {
+    "0": {
+      "n": 5981,
+      "rho_pluri": 0.07872279988683374,
+      "rho_somatic": 0.17146041207620688,
+      "r2_identity": 0.03329132249242106,
+      "mean_age": 78.65429372443334,
+      "rho_lib": 0.211439031033378,
+      "rho_ngene": 0.1917057781865849,
+      "rho_mito": 0.19161014601504645,
+      "r2_technical": 0.08597071389206212,
+      "r2_identity_plus_technical": 0.09978126943389187
+    },
+    "2": {
+      "n": 3947,
+      "rho_pluri": -0.07869638568440782,
+      "rho_somatic": 0.2646358687485766,
+      "r2_identity": 0.08238750247750415,
+      "mean_age": 78.13167386241349,
+      "rho_lib": 0.2013422993337879,
+      "rho_ngene": 0.2409315416706757,
+      "rho_mito": 0.17617080729300685,
+      "r2_technical": 0.07499714753133058,
+      "r2_identity_plus_technical": 0.12348044116643875
+    },
+    "4": {
+      "n": 5735,
+      "rho_pluri": 0.03604637939500699,
+      "rho_somatic": 0.11119936902499461,
+      "r2_identity": 0.03368665249657021,
+      "mean_age": 82.23036226064893,
+      "rho_lib": 0.1469496544784744,
+      "rho_ngene": 0.15925812816612797,
+      "rho_mito": 0.08540498008616819,
+      "r2_technical": 0.030257375790445185,
+      "r2_identity_plus_technical": 0.05438830020749308
+    },
+    "6": {
+      "n": 5632,
+      "rho_pluri": -0.15808633345528814,
+      "rho_somatic": 0.28087678533930527,
+      "r2_identity": 0.0809676883686874,
+      "mean_age": 78.30150567049154,
+      "rho_lib": 0.008970537902598715,
+      "rho_ngene": 0.02275840406976933,
+      "rho_mito": 0.012436378255106123,
+      "r2_technical": 0.00775353895386377,
+      "r2_identity_plus_technical": 0.08265777038793665
+    },
+    "8": {
+      "n": 5663,
+      "rho_pluri": -0.12984292582352383,
+      "rho_somatic": 0.13340675446407557,
+      "r2_identity": 0.020376158631173147,
+      "mean_age": 77.43847931920443,
+      "rho_lib": -0.001784530341174677,
+      "rho_ngene": 0.014471597689201232,
+      "rho_mito": -0.006021046602495406,
+      "r2_technical": 0.007253172774606131,
+      "r2_identity_plus_technical": 0.025662862317770818
+    },
+    "10": {
+      "n": 5903,
+      "rho_pluri": -0.1280338532784245,
+      "rho_somatic": 0.25126987878415324,
+      "r2_identity": 0.07562338477028119,
+      "mean_age": 78.12278672122106,
+      "rho_lib": 0.16752061480677216,
+      "rho_ngene": 0.1675940772799295,
+      "rho_mito": 0.010387139939954491,
+      "r2_technical": 0.03011583094087833,
+      "r2_identity_plus_technical": 0.1138396060228225
+    },
+    "12": {
+      "n": 5830,
+      "rho_pluri": -0.2702989918186958,
+      "rho_somatic": 0.39745295389721436,
+      "r2_identity": 0.16184332300298776,
+      "mean_age": 77.39883917059011,
+      "rho_lib": -0.005637107209242481,
+      "rho_ngene": 0.014111388061170817,
+      "rho_mito": 0.003218327365850644,
+      "r2_technical": 0.013243316262707916,
+      "r2_identity_plus_technical": 0.1670802717339831
+    },
+    "14": {
+      "n": 5782,
+      "rho_pluri": -0.1941989997308215,
+      "rho_somatic": 0.2561249630460368,
+      "r2_identity": 0.06814278052351419,
+      "mean_age": 68.03631386114036,
+      "rho_lib": 0.06649281243374483,
+      "rho_ngene": 0.05675516100958408,
+      "rho_mito": 0.07496688362338233,
+      "r2_technical": 0.009742120854018599,
+      "r2_identity_plus_technical": 0.11244559303674195
+    }
+  },
+  "pooled_rho_pluri_DESCRIPTIVE_ONLY": -0.2161153996985975,
+  "verdict": {
+    "verdict": "NOT_DOMINATED",
+    "n_timepoints_over_bar": 0,
+    "n_timepoints": 8,
+    "timepoints_over_bar": [],
+    "reason": "|rho(y_age, pluripotency)| >= 0.5 within timepoint in 0 of 8 timepoints (rule: >= 6)"
+  }
+}
