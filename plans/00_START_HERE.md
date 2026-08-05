@@ -84,7 +84,7 @@ The order below is how.
 | **1** | **Finish 1.5.3 — run step 6.** The only item left | Built, gated, bar registered. Its answer redirects everything downstream: *B better* ⇒ Stage 6 must **replace** HFF's labels; *A better* ⇒ it may **supplement**; *INCONCLUSIVE* ⇒ the blocker is donor count | one retrain |
 | **2** | **Stage 1.5.4** *(to be written)* — can a model **learn** age from RNA? | M-2a tested whether the **existing Fleischer clock's output** tracks methylation age → no. **Nobody asked whether a model trained on the transcriptome can.** Different question: that clock was fitted on quiescent fibroblasts against *chronological* age. ~90 paired RNA+methylation samples are already on disk | **free** |
 | **3** | **Integrate GSE165177** | 95 adult samples, donors **38 and 53**, all inside the clock's `[1, 96]`, all methylation-paired. Takes in-range labels **~45 → ~140**. Already downloaded, referenced by no training config | **free** |
-| **4** | **Rewrite Stage 6** *(to be written)* | It names **2 of the 6 datasets you now hold**. Cannot be executed as written | writing only |
+| **4** | ✅ **`STAGE_6_NEW_DATA_REV.md`** — written 2026-08-03 | The original names **2 of the 6 datasets you hold**. The rewrite carries forward its species blocker and `input_ablation` gate unchanged, adds the real inventory, and **sizes the ask in donors** | done |
 | **5** | **Execute Stage 6 — acquire** | The actual fix. Sized by #4 | 💰 real |
 
 **Steps 1–3 are free and none of them fixes ΔAge at scale. Only #5 does.** 1–4 exist so that #5 buys

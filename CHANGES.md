@@ -11,6 +11,70 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-03 — Stage 6 rewritten against the data actually held, and the ask is sized: 2 donors, not 15
+
+**Status:** ✅ Written. `plans/STAGE_6_NEW_DATA_REV.md`. The original is **byte-unmodified**; its
+species blocker and `input_ablation` gate are carried forward unchanged because both still hold.
+
+The original names **2 datasets**. Six are held, and four of the questions it was written to answer
+have since been closed by measurement — executed as written it would buy data to answer questions
+the data already answers.
+
+### The sizing nobody had done
+
+Every unresolved statistic here is **donor**-limited. Derived from measured instrument errors:
+
+| open question | measured spread | donors needed |
+|---|---|---|
+| step 6's arm comparison, σ known | SD 4.808 | 10 |
+| step 6's arm comparison, **σ-robust** | SD 4.808 | **19** |
+| contrast B retention, multi-tissue | SD 11.6 | 17 |
+| contrast B retention, skin & blood | SD 18.2 | **38** |
+| M3 — offset real or `n=1` noise? | σ CI factor 3.93 at n=6 | ~20 |
+
+σ-robust is the bar the step-6 rerun correctly **refused** to claim at n=4, where the χ² interval put
+the MDE at 6.704 against Δ\* 3.572.
+
+### 🔑 The finding that changes what to buy
+
+Dropping the two donors outside the clock's fitted range collapses the per-fold difference SD
+**4.808 → 1.130** — a factor of 4.3, on 2 of 6 folds. Re-running the sizing on that:
+
+| | σ-robust donors needed |
+|---|---|
+| all donors | **19** |
+| **in-range only** | **6** |
+
+**Four in-range donors are already held. The gap is 2, not 15.**
+
+**Fixing the instrument's domain is worth more than tripling the donor count.** C-2
+(`enforce_clock_age_range`) is already built and shipped inert; this is the arithmetic that justifies
+turning it on. That reframes the acquisition from "a cohort" to "two donors with paired methylation".
+
+### One section deliberately left open
+
+**§6 — what to acquire — is GATED on the stratified shuffle.** If HFF's residual structure is
+systematic artefact, HFF must be *replaced* and the target is volume. If it is real signal, HFF is an
+asset and the target is the 2 donors §4 sizes. Writing a target now would be guessing at the one
+number this stage exists to get right.
+
+### Ordering, and why it is not negotiable
+
+1. turn on **C-2** — free, code already written, worth more than 13 donors
+2. integrate **GSE165177** — 95 adult in-range methylation-paired samples, in no training config, free
+3. the **stratified shuffle** — settles §6's gate, free
+4. **then** acquire
+
+Steps 1–3 are free and must precede 4, because each changes what 4 should buy.
+
+Also recorded, because a plan that only lists what is buyable is dishonest: **no acquisition fixes
+HFF** (one cell line — settled by methylation *on HFF*, not cohort size), **the RNA route stays
+closed**, and **contrast B on skin & blood needs 38 donors**, which is likely out of reach and is
+stated as a limit rather than carried as a plan.
+
+---
+
+
 ## 2026-08-03 — STAGE 1.5.5: HFF's ΔAge is NOT an identity readout, and not a depth readout either
 
 **Status:** ✅ Executed and recorded. `src/` untouched, **no label moved**, CI lint clean.
