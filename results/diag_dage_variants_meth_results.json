@@ -1,0 +1,118 @@
+{
+  "script": "diag_dage_variants_meth",
+  "utc": "2026-08-06T05:53:45.221325+00:00",
+  "arms": {
+    "sendai": {
+      "n": 30,
+      "n_donors": 4,
+      "per_variant": {
+        "raw": {
+          "Horvath skin & blood 2018": -0.39443826473859844,
+          "Horvath multi-tissue 2013": -0.23959955506117908
+        },
+        "covnorm": {
+          "Horvath skin & blood 2018": -0.39443826473859844,
+          "Horvath multi-tissue 2013": -0.23959955506117908
+        },
+        "top100": {
+          "Horvath skin & blood 2018": 0.0389321468298109,
+          "Horvath multi-tissue 2013": 0.054505005561735265
+        },
+        "top500": {
+          "Horvath skin & blood 2018": -0.2565072302558398,
+          "Horvath multi-tissue 2013": -0.10967741935483871
+        },
+        "top2000": {
+          "Horvath skin & blood 2018": -0.30589543937708563,
+          "Horvath multi-tissue 2013": -0.17730812013348166
+        },
+        "ranknorm": {
+          "Horvath skin & blood 2018": -0.3303670745272525,
+          "Horvath multi-tissue 2013": -0.16173526140155728
+        },
+        "resid_pluri": {
+          "Horvath skin & blood 2018": -0.6533926585094549,
+          "Horvath multi-tissue 2013": -0.4967741935483871
+        },
+        "resid_cc": {
+          "Horvath skin & blood 2018": -0.1604004449388209,
+          "Horvath multi-tissue 2013": -0.1328142380422692
+        },
+        "resid_both": {
+          "Horvath skin & blood 2018": -0.3268075639599555,
+          "Horvath multi-tissue 2013": -0.26095661846496104
+        }
+      },
+      "ranked_by_worst_clock": [
+        "top100",
+        "resid_cc",
+        "top500",
+        "top2000",
+        "resid_both",
+        "ranknorm",
+        "raw",
+        "covnorm",
+        "resid_pluri"
+      ]
+    },
+    "transient": {
+      "n": 90,
+      "n_donors": 3,
+      "per_variant": {
+        "raw": {
+          "Horvath skin & blood 2018": 0.31723258015392847,
+          "Horvath multi-tissue 2013": 0.2842902415936124
+        },
+        "covnorm": {
+          "Horvath skin & blood 2018": 0.31723258015392847,
+          "Horvath multi-tissue 2013": 0.2842902415936124
+        },
+        "top100": {
+          "Horvath skin & blood 2018": 0.215392846853521,
+          "Horvath multi-tissue 2013": 0.4715232333209861
+        },
+        "top500": {
+          "Horvath skin & blood 2018": 0.2783635839815615,
+          "Horvath multi-tissue 2013": 0.2882907354817467
+        },
+        "top2000": {
+          "Horvath skin & blood 2018": 0.2976416841585381,
+          "Horvath multi-tissue 2013": 0.320854426472404
+        },
+        "ranknorm": {
+          "Horvath skin & blood 2018": 0.3147960653578631,
+          "Horvath multi-tissue 2013": -0.15243857266329178
+        },
+        "resid_pluri": {
+          "Horvath skin & blood 2018": 0.4002057867226407,
+          "Horvath multi-tissue 2013": 0.14405893731736427
+        },
+        "resid_cc": {
+          "Horvath skin & blood 2018": 0.30355187883277773,
+          "Horvath multi-tissue 2013": 0.2936247273325925
+        },
+        "resid_both": {
+          "Horvath skin & blood 2018": 0.4002222496604519,
+          "Horvath multi-tissue 2013": 0.14563937934724452
+        }
+      },
+      "ranked_by_worst_clock": [
+        "top2000",
+        "resid_cc",
+        "raw",
+        "covnorm",
+        "top500",
+        "top100",
+        "resid_both",
+        "resid_pluri",
+        "ranknorm"
+      ]
+    }
+  },
+  "consistency": {
+    "sendai_best": "top100",
+    "transient_best": "top2000",
+    "same_winner": false,
+    "spearman_of_rankings": 0.3
+  }
+}

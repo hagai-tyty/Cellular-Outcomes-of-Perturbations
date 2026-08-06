@@ -11,6 +11,121 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-04 — STAGE 1.5.6: the clock's DENSITY is the defect. Sparsifying it cuts ΔAge error 3x
+
+**Status:** ✅ Measured and validated leave-one-donor-out. **`src/` untouched, no label moved.**
+Falsifier (HFF) running; §5 step 1 of the plan.
+
+### The finding
+
+The Fleischer clock is a dense RidgeCV over **33,155 genes fitted from 133 samples**. Restricting it
+to its **~100 largest-|weight| genes**, changing nothing else:
+
+| | MAE vs methylation | bias | ρ | sign agreement |
+|---|---|---|---|---|
+| **full clock (33,155 genes)** | **16.61 yr** | **−14.10** | +0.703 | 0.62 |
+| **top-100 genes** | **5.36 yr** | **−1.61** | **+0.835** | **0.94** |
+
+*(68 conditions, Gill transient arm, Horvath multi-tissue as truth, ΔAge vs ΔAge, replicates averaged)*
+
+**MAE 5.36 yr is below the reference instrument's own donor-level error of ±7 yr.** The RNA clock now
+agrees with methylation about as closely as methylation agrees with itself.
+
+### The mechanism, not a tuned number
+
+| k | 20 | 50 | **100** | 150 | 300 | 1000 | all |
+|---|---|---|---|---|---|---|---|
+| MAE | 6.19 | 5.99 | **5.36** | 5.42 | 9.99 | 12.33 | **16.61** |
+| bias | +5.06 | +3.22 | **−1.61** | −1.99 | −7.69 | −10.15 | **−14.10** |
+
+**The bias crosses zero exactly where MAE bottoms out.** Thousands of near-zero weights each
+contribute a little drift; summed over 33,155 genes they become a **−14 yr systematic offset**.
+Dropping them removes the offset rather than shrinking noise.
+
+**Leave-one-donor-out:** k chosen on two donors, scored on the third — held-out MAE **6.70 / 6.84 /
+5.45** against the full clock's **16.59 / 16.48 / 16.75**. The full clock is worse than every sparse
+variant for **every donor individually**, so this is not selection. The Sendai arm independently puts
+its MAE minimum at k=50 (28.52 vs 65.63) — different protocol, partly different donors, same region.
+
+### Why nine months of correlation tests never saw it
+
+**Spearman is shift- and scale-free, so a uniform −14 yr offset is invisible to it.** M-2a, 1.5.4 and
+this stage's own first sweep all scored ρ_partial and all reported "weak but present". MAE and bias
+against a real instrument are what exposed it. The lesson generalises: **a correlation is the wrong
+summary for a quantity whose units are the claim.**
+
+### What is NOT fixed
+
+**Horvath skin & blood does not come right at any k.** MAE improves (17.84 → 6.69) but ordering stays
+poor throughout (ρ ≤ 0.43, sign 0.41–0.68, sometimes below chance). The sb/mt asymmetry from 1.5.2
+and 1.5.4 **survives**, so this does not clear M-2a's SPLIT rule. What changed is knowing *what kind*
+of failure it is: biased on one axis, mis-ordered on the other.
+
+### Two errors of my own, both found and corrected here
+
+1. **Pseudo-replication.** The first two-arm run scored 30 Sendai rows from 22 independent
+   methylation samples and 90 transient rows from 68 conditions — exp1/exp2 left unaveraged. Fixed:
+   every modality is now collapsed to one row per condition **before** scoring.
+2. **The wrong summary statistic.** I ran an entire 9-variant sweep on ρ_partial and reported "no
+   variant helps". That sweep was blind to the thing that mattered by construction.
+
+### Deliverables
+
+`results/DAGE_LEDGER.md` — 68 per-condition rows, each with **TRUTH** (methylation ΔAge),
+**EXPECTED** (what the pipeline should produce), **ACTUAL** (what it produced) and **ERROR** in
+years. Plus `results/dage_ledger.csv` (90 × 60) and the full k-sweep JSON. Plan in
+`plans/STAGE_1_5_6_SPARSE_CLOCK.md`.
+
+### Why this plausibly reaches HFF — and the falsifier now running
+
+**The −14 yr bias is a property of the clock's weights, not of any dataset**, so it is applied to
+HFF's 33,613 labels too. Pre-registered prediction: HFF's day-14 ΔAge should move from the recorded
+**−24.0 yr** to roughly **−10**, with the trajectory shape surviving (ρ ≈ −0.9). **If the shape
+collapses instead, the hypothesis is wrong and this stage stops.**
+
+### ⚠️ The falsifier ran, and it VOIDED its own prediction — plus found something larger
+
+Predicted: HFF's day-14 ΔAge moves −24.0 → ≈ −10 under the sparse clock, shape preserved.
+
+| k | ρ(day, ΔAge) | day-14 |
+|---|---|---|
+| top50 | −0.905 | −8.36 |
+| **top100** | −0.881 | **−10.72** |
+| **all 33,155** | −0.857 | **−10.62** |
+
+**The shape survived** (the actual falsification condition). **But the predicted shift did not
+happen, because the full clock in this run already reads −10.62, not −24.0.**
+
+**My script reported CONFIRMED. That was wrong**, and it is the same error class I flagged in others
+this week: it checked the result against the prediction **without checking that the baseline the
+prediction rested on still held**. Corrected to `BASELINE_NOT_REPRODUCED`.
+
+### 🔑 The 13.4-year gap — the real finding
+
+| day | pipeline `y_age` (built shards) | clock applied directly |
+|---|---|---|
+| 2 | **+3.85** | −0.52 |
+| 6 | −5.80 | −0.35 |
+| 12 | −8.23 | −1.26 |
+| **14** | **−24.02** | **−10.62** |
+
+G-c step 1 read **built shards** — the pipeline's `y_age`, which adds harmonization (Gill
+Projection), cell-cycle deconfounding and control re-centring. This run applies the clock directly.
+
+> **About half of HFF's apparent ΔAge magnitude comes from pipeline processing, not from the clock.**
+> Nobody has audited that 13.4 yr.
+
+A sparse clock addresses a −14 yr bias **in the clock**; it cannot address a +13.4 yr contribution
+from **downstream processing**. **Both are the same size, and only one has been measured** — so
+auditing the pipeline's contribution is now step 1b and outranks writing the sparse-clock config.
+
+Also unexplained: the direct route reads **+3.58 yr at day 4** — cells four days into reprogramming
+reading three and a half years OLDER, in both routes. Same class of impossibility as the +36.5 yr
+non-responder reading, surviving in HFF.
+
+---
+
+
 ## 2026-08-03 — Stage 6 rewritten against the data actually held, and the ask is sized: 2 donors, not 15
 
 **Status:** ✅ Written. `plans/STAGE_6_NEW_DATA_REV.md`. The original is **byte-unmodified**; its
