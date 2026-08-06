@@ -243,6 +243,45 @@ the effect is invisible there. **That is a real limitation of §1's result on HF
 it is why step 4's rebuild cannot be skipped.
 
 
+### 4.5 ✅ STEP 1c — the gain is MEASURED, and it is not a scale factor
+
+| | |
+|---|---|
+| HFF day-14 ΔAge, clock applied directly | **−9.96 yr** |
+| HFF day-14 ΔAge, with the harmonization gain applied | **−21.43 yr** |
+| **measured gain** | **2.152** — predicted **2.26** ✅ |
+| recorded shard `y_age` | −24.02 |
+
+The attribution holds: harmonization closes **~11.5 of the ~14 yr**. The residual ≈2.6 yr is within
+what differing cell subsets (50,241 cells here vs 37,693 in the recorded build) and a deconfounder
+refit on harmonized data would move.
+
+#### 🔴 The part that is worse than a gain
+
+**The median σ ratio is 0.608 and the mean is 0.560** — for most genes `sigma_gill < sigma_hff`,
+which would *shrink* ΔAge. The effective gain is nonetheless **2.152**.
+
+> **So harmonization is not rescaling ΔAge. It is REWEIGHTING it** — the ratio is applied per gene,
+> and the clock's heavy-weight genes happen to sit where `sigma_gill / sigma_hff` is large. A
+> majority of genes are damped while a minority are amplified, and the amplified ones carry the
+> clock.
+
+That is a stronger statement than Group B's closed form implies on its face. Group B said `sigma_d`
+survives as a per-dataset gain; measured, **it survives as a per-GENE reweighting whose net effect on
+this clock is ×2.15**, with the median gene pulling the other way.
+
+#### Why this compounds with §1's sparsification rather than adding to it
+
+Sparsifying to the top-100 weights **changes which genes carry ΔAge** — and the gain is *per gene*.
+So the two do not compose additively: **a sparse clock has a different harmonization gain from the
+dense one**, and neither §1's number (measured with Gill as reference, where the gain is ≈1) nor the
+2.152 above transfers to the combination.
+
+**Consequence for the plan, and it is not optional:** step 4's rebuild must measure the sparse
+clock's gain on HFF directly. §1's Gill-side result cannot be extrapolated to HFF at all — not
+because it is wrong, but because Gill is the reference dataset and is the one place where this effect
+is invisible by construction.
+
 ---
 
 ## 5. The plan
@@ -251,7 +290,8 @@ it is why step 4's rebuild cannot be skipped.
 |---|---|---|---|
 | **1** | ✅ **DONE.** Shape survives (ρ −0.881), but the baseline was not reproduced — see §4.1/§4.2 | — | done |
 | **1b** | ✅ **DONE.** Deconfound + re-centre = **+2.11 yr** and move ΔAge *toward* zero — **not** the source. Gap attributed to the **harmonization gain** (§4.3) | — | done |
-| **1c** | 🔴 **CONFIRM the gain.** Compute `Σ|w_g|·sigma_gill,g / sigma_hff,g` over the clock's genes; predicted ≈ **2.26** | lands within ±0.5 of 2.26, or the attribution is wrong | free, no retrain |
+| **1c** | ✅ **DONE — CONFIRMED.** Measured gain **2.152** (predicted 2.26). And it is a per-GENE reweighting, not a scale: median σ ratio 0.608 while the net effect is ×2.15 (§4.5) | — | done |
+| **1d** | 🔴 **NEW: measure the SPARSE clock's gain on HFF.** The gain is per-gene, so top-100 has a *different* gain from the dense clock; §1's Gill-side number cannot transfer | gain reported for k = 100 alongside k = all | free, no retrain |
 | **2** | **Pre-register the bar** for adopting a sparse clock: MAE ≤ 8 yr **and** sign agreement ≥ 0.80 vs methylation, on **both** arms, k fixed at 100 in advance | `bar_verdict` row in `tests/test_bars_resolvable.py` | free |
 | **3** | **Write `configs/clocks/fleischer_clock_top100.json`** — the same coefficients, 33,055 zeroed. Provenance in `meta`, original untouched | ships as a **new file**; nothing switches automatically | free |
 | **4** | **One rebuild + LOOCV under the sparse clock**, full scorecard, snapshot and rollback | every Stage 1 guard reported before/after | one retrain |

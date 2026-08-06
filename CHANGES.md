@@ -11,6 +11,55 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-04 — Step 1c: the harmonization gain is MEASURED at 2.152, and it REWEIGHTS rather than rescales
+
+**Status:** ✅ Confirmed. **843 tests pass, ruff clean, `src/` untouched, no label moved.**
+
+Step 1b eliminated the deconfounder (+2.11 yr, wrong direction). Step 1c measures the remaining
+candidate using the pipeline's own arithmetic rather than an approximation: `transform` is
+`(x − mu_d)/(sigma_d + EPS)` and `project_to_clock` is `x_scaled·sigma_ref + mu_ref`, and because
+ΔAge is a **difference** both `mu` terms cancel exactly, leaving
+`Σ_g w_g·(x_pert − x_ctrl)·sigma_gill/(sigma_hff + EPS)`. The variance floor is applied exactly as
+`harmonize.py:112` does it (σ floored at the **median**) — omitting it would manufacture the very
+gain being measured.
+
+| | |
+|---|---|
+| HFF day-14 ΔAge, direct | **−9.96 yr** |
+| HFF day-14 ΔAge, harmonized | **−21.43 yr** |
+| **measured gain** | **2.152** — predicted **2.26** ✅ |
+| recorded shard `y_age` | −24.02 |
+
+Harmonization closes **~11.5 of the ~14 yr**. The residual ≈2.6 yr is within what differing cell
+subsets (50,241 vs 37,693) and a deconfounder refit on harmonized data would move.
+
+### 🔴 The finding that is worse than "a gain"
+
+**Median σ ratio 0.608, mean 0.560** — for most genes `sigma_gill < sigma_hff`, which would *shrink*
+ΔAge. The net effect is nonetheless **×2.152**.
+
+> **Harmonization is not rescaling ΔAge — it is REWEIGHTING it.** The ratio is per gene, and the
+> clock's heavy-weight genes sit where `sigma_gill/sigma_hff` is large. **A majority of genes are
+> damped while an amplified minority carries the clock.**
+
+Stronger than Stage 1.5 Group B's closed form implies on its face: Group B said `sigma_d` survives as
+a per-dataset **gain**; measured, it survives as a per-**gene** reweighting whose net effect on this
+clock is ×2.15, with the median gene pulling the opposite way.
+
+### Consequence — 1.5.6's two effects do not compose additively
+
+Sparsifying to the top-100 weights **changes which genes carry ΔAge**, and the gain is per gene. So
+**a sparse clock has a different harmonization gain from the dense one**, and neither §1's number
+(measured with Gill as reference, where the gain is ≈1 by construction) nor the 2.152 transfers to
+the combination. Step 4's rebuild must measure the sparse clock's gain on HFF directly — added as
+step **1d**.
+
+**§1's Gill-side result cannot be extrapolated to HFF at all** — not because it is wrong, but because
+Gill is the reference dataset and is the one place this effect is invisible.
+
+---
+
+
 ## 2026-08-04 — Step 1b: the 13.4 yr is NOT the deconfounder. It is the harmonization gain
 
 **Status:** ✅ Executed. **`src/` untouched, no label moved.** It refuted my own attribution.

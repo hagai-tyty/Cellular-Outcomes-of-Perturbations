@@ -1,0 +1,17 @@
+{
+  "script": "diag_harmonization_gain",
+  "utc": "2026-08-06T12:51:48.400670+00:00",
+  "n_shared_clock_genes": 18597,
+  "sigma_ratio": {
+    "median": 0.6082281470298767,
+    "mean": 0.5595382452011108,
+    "p10": 0.2881706953048706,
+    "p90": 0.6113305687904358
+  },
+  "day14_direct": -9.958303650461648,
+  "day14_harmonized": -21.427621960851326,
+  "measured_gain": 2.1517341419748717,
+  "predicted_gain": 2.26,
+  "shard_reference": -24.02,
+  "verdict": "CONFIRMED"
+}
