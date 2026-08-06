@@ -11,6 +11,64 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-04 — Step 1b: the 13.4 yr is NOT the deconfounder. It is the harmonization gain
+
+**Status:** ✅ Executed. **`src/` untouched, no label moved.** It refuted my own attribution.
+
+### What I claimed, and what the measurement says
+
+1.5.6 §4.2 said *"about half of HFF's ΔAge magnitude is contributed by pipeline processing"*.
+**False.** Decomposing the chain step by step:
+
+| step | day-0 | day-6 | day-14 | contributes at day 14 |
+|---|---|---|---|---|
+| S1 clock, absolute age | 78.65 | 78.30 | 68.04 | — |
+| S2 control-relative (ΔAge) | −0.00 | −0.35 | **−10.62** | — |
+| S3 cell-cycle deconfounded | −0.32 | +0.04 | −8.83 | **+1.79** |
+| S4 re-centred = `y_age` | 0.00 | +0.36 | **−8.51** | +0.32 |
+
+**Deconfounding and re-centring contribute +2.11 yr, and they move ΔAge TOWARD zero.** They cannot
+explain a −24.02 shard value; the gap is still **15.51 yr**.
+
+### The real source — and I had ruled it out on bad evidence
+
+**Harmonization was ON in the actual build.** I checked `configs/data/*.yaml`, found no
+`harmonize: true`, and concluded it was off. The build is driven by the runner:
+`local_runners/run_multi_local.py:161` — `harmonize=HARMONIZE, harmonize_ref_dataset="gill_bulk"`.
+
+**And Stage 1.5 §2 Group B derived the mechanism nine days ago:**
+
+```
+ΔAge = Σ_g (x_pert,g − x_ctrl,g) · sigma_ref,g / (sigma_d,g + EPS) · w_g
+```
+
+`sigma_d` does **not** cancel — it survives as a **per-dataset multiplicative gain**, and HFF carries
+`sigma_gill / sigma_hff`. That is exactly why Group B recorded "batch-immune by construction" as an
+overstatement: ΔAge is immune to *additive* batch effects, **not to scale ones**.
+
+**Implied gain: 24.02 / 10.62 ≈ 2.26** — the shape Group B predicts.
+
+**Attribution by elimination plus a matching closed form, NOT a measurement.** The confirming test is
+one number and is now step **1c**: compute `Σ|w_g| · sigma_gill,g / sigma_hff,g` over the clock's
+genes and check it lands near 2.26.
+
+### Why this changes the sparse-clock plan
+
+| | size | status |
+|---|---|---|
+| clock density bias (Gill, ΔAge) | **−14.10 yr** | ✅ measured, LODO-validated |
+| deconfound + re-centre | **+2.11 yr** | ✅ measured — small, wrong direction |
+| **harmonization gain** | **≈ ×2.26** | ⚠️ attributed, not measured |
+
+**A gain and a bias compose differently.** Sparsifying changes the weighted sum; harmonization then
+*multiplies* it. So **the sparse clock must be evaluated with harmonization ON** — which §1's
+Gill-side work did not do, because **Gill is the reference dataset and its own gain is ≈ 1, making
+the effect invisible there.** That is a genuine limitation of §1's result as applied to HFF, and it
+is why step 4's rebuild cannot be skipped.
+
+---
+
+
 ## 2026-08-04 — Plans 1 → 1.5.5 CLOSED, and a self-audit of 1.5.6 found three errors in it
 
 **Status:** ✅ Closures applied; 1.5.6 corrected. **835 tests pass, ruff clean, `src/` untouched.**

@@ -188,30 +188,60 @@ already reads −10.62, not the −24.0 the prediction was built on.**
 prediction without checking that the baseline the prediction was predicated on still held. Verdict
 logic corrected to `BASELINE_NOT_REPRODUCED`.
 
-### 4.2 🔑 The 13.4-year gap, which is the real finding here
+### 4.2 ✅ STEP 1b RAN — and it REFUTED my own attribution
 
-| day | pipeline `y_age` (built shards) | clock applied directly to counts |
-|---:|---:|---:|
-| 2 | **+3.85** | −0.52 |
-| 4 | +3.54 | +3.58 |
-| 6 | −5.80 | −0.35 |
-| 12 | −8.23 | −1.26 |
-| **14** | **−24.02** | **−10.62** |
+**I wrote that "about half of HFF's ΔAge magnitude is contributed by pipeline processing". That is
+false.** Decomposing the chain measured each step:
 
-G-c step 1 read **built shards** — the pipeline's `y_age`, which adds **harmonization (Gill
-Projection), cell-cycle deconfounding and control re-centring**. This script applies the clock
-directly and does none of that.
+| step | day-0 | day-6 | day-14 | contributes at day 14 |
+|---|---:|---:|---:|---:|
+| S1 clock, absolute age | 78.65 | 78.30 | 68.04 | — |
+| S2 control-relative (ΔAge) | −0.00 | −0.35 | **−10.62** | — |
+| S3 cell-cycle deconfounded | −0.32 | +0.04 | −8.83 | **+1.79** |
+| S4 re-centred = `y_age` | 0.00 | +0.36 | **−8.51** | +0.32 |
 
-> **About half of HFF's apparent ΔAge magnitude is contributed by pipeline processing, not by the
-> clock.** −10.62 becomes −24.02. Nobody has audited that 13.4 yr.
+**Deconfounding and re-centring contribute +2.11 yr in total, and they move ΔAge TOWARD zero.** They
+are not the source of the gap. The recorded shard value of **−24.02** remains **15.51 yr** away.
 
-That reorders the plan. A sparse clock addresses a −14 yr bias *in the clock*; it cannot address a
-+13.4 yr contribution from *downstream processing*. **Both are the same size, and only one of them
-has been measured.**
+### 4.3 🔑 The actual source — and Stage 1.5 derived it in closed form nine days ago
 
-**Note also the direct route's day-4 = +3.58** — cells reading 3.6 years OLDER four days into
-reprogramming, in both routes. That is the same class of impossibility as the +36.5 yr
-non-responder reading, surviving in HFF and unexplained.
+**Harmonization was ON in the real build**, and I had ruled it out on bad evidence: no
+`configs/data/*.yaml` sets `harmonize: true`, but the build is driven by the runner —
+`local_runners/run_multi_local.py:161`, `harmonize=HARMONIZE, harmonize_ref_dataset="gill_bulk"`.
+
+`STAGE_1_5_HARMONIZATION_AUDIT.md` §2 **Group B** already proved what that does:
+
+```
+ΔAge = Σ_g (x_pert,g − x_ctrl,g) · sigma_ref,g / (sigma_d,g + EPS) · w_g
+```
+
+> **`sigma_d` does not cancel. It survives as a per-dataset multiplicative GAIN, and HFF carries
+> `sigma_gill / sigma_hff`.** That is why "batch-immune by construction" was recorded as an
+> overstatement: ΔAge is immune to *additive* batch effects, not to *scale* ones.
+
+**Implied gain: 24.02 / 10.62 ≈ 2.26.** A ~2.3× scale factor on HFF is exactly the shape Group B
+predicts, and it is consistent with the direct route's SD being about half the pipeline's.
+
+**Not yet confirmed — this is attribution by elimination plus a matching closed form**, not a
+measurement of the gain itself. The confirming test is one number: compute
+`Σ_g |w_g| · sigma_gill,g / sigma_hff,g` over the clock's genes and check it lands near 2.26.
+
+### 4.4 What this does to the sparse-clock plan
+
+**The two effects are not the same size after all, and they are not independent.**
+
+| | size at day 14 | status |
+|---|---|---|
+| clock density bias (Gill, ΔAge) | **−14.10 yr** | ✅ measured, LODO-validated |
+| deconfound + re-centre | **+2.11 yr** | ✅ measured — small, and the *wrong direction* to explain anything |
+| **harmonization gain** | **≈ ×2.26** | ⚠️ attributed, closed form known, **not yet measured** |
+
+A **gain** and a **bias** compose differently: sparsifying the clock changes the weighted sum, and
+harmonization then *multiplies* it. **So the sparse clock must be evaluated with harmonization ON**,
+which the Gill-side work in §1 did not do — Gill is the reference dataset, so its own gain is ≈ 1 and
+the effect is invisible there. **That is a real limitation of §1's result on HFF specifically**, and
+it is why step 4's rebuild cannot be skipped.
+
 
 ---
 
@@ -220,7 +250,8 @@ non-responder reading, surviving in HFF and unexplained.
 | # | step | gate | cost |
 |---|---|---|---|
 | **1** | ✅ **DONE.** Shape survives (ρ −0.881), but the baseline was not reproduced — see §4.1/§4.2 | — | done |
-| **1b** | 🔴 **NEW, and now the priority: audit the 13.4 yr the pipeline adds.** Decompose `y_age` into clock → harmonize → deconfound → re-centre, and report each step's contribution on HFF | each step's ΔAge contribution reported in years | free, no retrain |
+| **1b** | ✅ **DONE.** Deconfound + re-centre = **+2.11 yr** and move ΔAge *toward* zero — **not** the source. Gap attributed to the **harmonization gain** (§4.3) | — | done |
+| **1c** | 🔴 **CONFIRM the gain.** Compute `Σ|w_g|·sigma_gill,g / sigma_hff,g` over the clock's genes; predicted ≈ **2.26** | lands within ±0.5 of 2.26, or the attribution is wrong | free, no retrain |
 | **2** | **Pre-register the bar** for adopting a sparse clock: MAE ≤ 8 yr **and** sign agreement ≥ 0.80 vs methylation, on **both** arms, k fixed at 100 in advance | `bar_verdict` row in `tests/test_bars_resolvable.py` | free |
 | **3** | **Write `configs/clocks/fleischer_clock_top100.json`** — the same coefficients, 33,055 zeroed. Provenance in `meta`, original untouched | ships as a **new file**; nothing switches automatically | free |
 | **4** | **One rebuild + LOOCV under the sparse clock**, full scorecard, snapshot and rollback | every Stage 1 guard reported before/after | one retrain |
