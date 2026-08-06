@@ -59,6 +59,15 @@ The clock is **Fleischer 2018** (`configs/clocks/fleischer_clock.json`), a froze
 with `cv_mae_years = 12.27` and a validated `age_range = [1.0, 96.0]`. It is **validated, never
 refitted** — refitting it to improve our own numbers would be fitting the test.
 
+> ⚠️ **The clock is under active scrutiny, and two findings bear on every ΔAge number in this repo.**
+> It is a *dense* ridge over 33 155 genes fitted from 133 samples, and (Stage 1.5.6) restricting it
+> to its ~100 largest-weight genes cuts MAE against methylation from **16.61 → 5.36 yr** on the Gill
+> transient arm — thousands of near-zero weights each drift slightly and sum to a −14 yr offset.
+> Separately (Stage 1.5.6 step 1c) **harmonization applies a per-*gene* reweighting, not a rescaling**,
+> worth a ×2.15 gain on HFF's ΔAge. The two interact: sparsifying concentrates the clock onto exactly
+> the genes harmonization amplifies most, so the sparse clock **improves Gill and degrades HFF**.
+> Nothing has been adopted. See `plans/STAGE_1_5_6_SPARSE_CLOCK.md`.
+
 ---
 
 ## 2. The 30-second picture
@@ -121,10 +130,10 @@ refitted** — refitting it to improve our own numbers would be fitting the test
 | **`scripts/`** | Thin Hydra CLIs: `build_dataset.py`, `train.py`, `evaluate.py`, `fit_clock.py`, `serve.py` |
 | **`local_runners/`** | The drivers actually used day to day. **`run_multi_local.py`** = one full fold (build → train → evaluate → bundle). **`run_loocv.py`** = rotates all 6 donors. Plus `run_local.py`, `run_fate_local.py`, `evaluate_only.py`, `diag_harmonize.py`, `show_ui.py` |
 | **`plans/`** | The project's decision record. `00_START_HERE.md`, `MASTER_PLAN.md`, `REF_GROUND_RULES.md` (the rules everything is graded against), `REF_ARCHITECTURE.md`, `REF_DATA_STRATEGY.md`, and one file per stage. `plans/archive/` holds superseded drafts — kept, never rewritten |
-| **`tests/`** | 45 files, ~780 tests. Unit tests plus **registered-bar tests** (`test_bars_resolvable.py`) and invariance guards (`test_ci_deconfounder_arm_invariance.py`, `test_c5c_age_accumulation.py`, `test_arm_c_label_shuffle.py`, `test_results_paths.py`) |
+| **`tests/`** | 47 files, **843 tests**. Unit tests plus **registered-bar tests** (`test_bars_resolvable.py`) and invariance guards (`test_ci_deconfounder_arm_invariance.py`, `test_c5c_age_accumulation.py`, `test_arm_c_label_shuffle.py`, `test_results_paths.py`) |
 | **`plan_tests/`** | Scripts a *plan* requires: pre-registered bars (`register_*_bar.py`), pre-flight gates (`step6_preflight.py`), bit-identity verifiers (`verify_age_mask_identical.py`, `verify_stage1_5.py`, `verify_1a.py`), smoke tests |
-| **`experiments/`** | Read-only diagnostics, one per scientific question (`diag_*.py`), plus `DELTAAGE_LAB_NOTEBOOK.md`. Historical: they are not on the forward path |
-| **`results/`** | Every diagnostic's JSON output, plus the written reports (`STEP6_FULL_REPORT.md`, `STEP6_REPORT.md`) |
+| **`experiments/`** | **The active research frontier** — 49 read-only diagnostics, one per scientific question (`diag_*.py`), plus `DELTAAGE_LAB_NOTEBOOK.md`. Nothing here touches `src/`; each answers a question and writes JSON to `results/`. *(Corrected 2026-08-03: an earlier revision called this "historical, not on the forward path." That was wrong — the clock-density, label-provenance and harmonization-gain work all lives here, and it is where the open questions are currently being resolved.)* |
+| **`results/`** | Every diagnostic's JSON output, plus the written reports (`STEP6_FULL_REPORT.md`, `STEP6_REPORT.md`, `DAGE_LEDGER.md` + `dage_ledger.csv`) |
 | **`scorecard/`** | Metric snapshots — `baseline.json`, `A_xdonor.json`, `gc2_A_keep_hff.json`, … Each is one 6-fold measurement; comparisons are always snapshot-vs-snapshot |
 | repo root | `scorecard.py` (the grading tool), `audit_metrics.py` (`MIN_PASS_RATE`, `bar_verdict`, `sensitivity_multiplier`), `retrain_stage1.py` (retrain-only path — **reuses shards, cannot see a data-config change**), `run_step6_arm.sh`, `CHANGES.md` (the append-only log) |
 
