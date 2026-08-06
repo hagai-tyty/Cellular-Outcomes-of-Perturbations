@@ -484,3 +484,58 @@ G-c question without closing it.
    Global shuffling destroys both biological signal and artefact; a stratified shuffle that preserves
    the artefact's structure while destroying the within-stratum pairing would separate them. That is
    the experiment that could close G-c.
+
+---
+---
+
+# ARM D — the stratified shuffle (PRE-REGISTERED 2026-08-04, before the run)
+
+The follow-up arm C ended by proposing. It permutes HFF's ΔAge labels **within each
+`(cell_line, time_h)` stratum** instead of globally, so the between-timepoint trajectory
+(ρ(day, ΔAge) = −0.905) survives intact and only the within-stratum cell-level pairing is destroyed.
+
+## Why it can separate what arm C could not
+
+Arm C's global permutation destroyed two things at once:
+
+| component | what carries it | destroyed by arm C? | destroyed by arm D? |
+|---|---|---|---|
+| **between-timepoint trajectory** | a *day-level* effect — real rejuvenation **or** a systematic artefact | ✅ | ❌ **preserved** |
+| **within-timepoint pairing** | only *real per-cell* signal | ✅ | ✅ |
+
+Stage 1.5.5 already removed the two mundane candidates for the within-timepoint component (identity
+2–16 %, technical ~0–9 %, so 83–97 % is neither). Arm D asks the one remaining question directly.
+
+## Pre-registered outcomes — INCLUDING outside the bracket
+
+Registered via `plan_tests/register_arm_d_bar.py` → `results/register_arm_d_bar_results.json`.
+Bracket A→C on `rank_model_dage` is **+0.3711 (SD 0.1213)**; **Δ_eq = |bracket|/2 = 0.1856**.
+
+| # | if | reading |
+|---|---|---|
+| 1 | **D equivalent to A** (TOST, 90 % CI ⊂ ±Δ_eq) | the exploitable structure is the between-timepoint **trajectory**; cell-level pairing carries little — consistent with a **day-level systematic artefact** |
+| 2 | **D−C not detectable, D−A detectable** | the structure is **within-timepoint, cell-level** — a day-level artefact cannot produce it; **real per-cell signal** stays live |
+| 3 | **both detectable (D strictly between)** | both components contribute; report the split as a proportion, claim neither pure account. **Not a null** |
+| 4 | **neither detectable** | INCONCLUSIVE — underpowered, licenses nothing (the step-6 rule) |
+| 5 | **D outside [A, C]** | **registered because arm C landed outside its own table.** Not a graded branch: report the position, state no pre-registered reading applies, treat any interpretation as beyond-registration. A D *worse* than C would mean stratification destroys **more** than the global shuffle — which no current account predicts and would need its own investigation |
+
+### Two registration lessons from arm C, applied
+
+- **The outside-bracket outcome (#5) is registered in advance.** Arm C's table offered only "like A"
+  or "like B"; C landed 540 % of the way to B and no branch fitted. That will not recur.
+- **"D is like A" is treated as an equivalence claim** — TOST with a margin fixed before the run,
+  not a CI that merely contains zero. Its resolvability depends on SD(D−A), unknown until the run, so
+  it was swept in advance: **the equivalence branch resolves for any SD(D−A) ≤ ~0.107**, and the
+  pessimistic A→C SD is 0.1213, so equivalence is *conditionally* resolvable and the achieved SD will
+  be reported alongside the verdict. The **difference** branch ("D like C") is fully powered — P = 100 %
+  at the A→C SD. False-equivalence (a D truly at C read as "like A") is **0.0 %**.
+
+## Validity — what makes arm D a control and not arm C with extra steps
+
+Ten unit tests (`tests/test_arm_d_stratified_shuffle.py`), pinning: every stratum's label **multiset**
+is unchanged (so each day's mean ΔAge — the trajectory — is preserved exactly); **no label crosses a
+stratum boundary** (that would re-introduce arm C); strata are respected **across shards** (a stratum
+spans chunks); singleton strata are left alone, not dropped; the shuffle is deterministic under its
+seed; and arm C's global path is **unchanged** by arm D's existence. A contrast test confirms the
+*global* shuffle does **not** preserve the stratum means, which is the property that distinguishes the
+two arms.

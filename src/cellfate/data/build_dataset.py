@@ -82,12 +82,18 @@ class ChunkAux:
     # control that separates "HFF's labels carry information" from "75 labels is simply too few".
     # Empty unless `DataConfig.age_shuffle_datasets` is set.
     shuffle_mask: np.ndarray = None  # type: ignore[assignment]
+    # ARM D. The stratum a cell belongs to, `f"{cell_line}|{time_h}"`. With
+    # `age_shuffle_strata=True` the permutation runs WITHIN each stratum, so the between-stratum
+    # trajectory (day -> ΔAge, rho = -0.905) survives while cell-level pairing is destroyed.
+    stratum: np.ndarray = None  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
         if self.deconfound_mask is None:      # pre-C-I callers keep the old meaning
             self.deconfound_mask = self.age_mask
         if self.shuffle_mask is None:
             self.shuffle_mask = np.zeros(len(self.cell_ids), dtype=bool)
+        if self.stratum is None:      # one global stratum == arm C's unstratified permutation
+            self.stratum = np.full(len(self.cell_ids), "__all__", dtype=object)
 
 
 @dataclass
@@ -124,6 +130,11 @@ class DataConfig:
     # The seed is recorded in `dataset_summary.json`; the permutation is global across shards.
     age_shuffle_datasets: frozenset[str] = frozenset()
     age_shuffle_seed: int = 0
+    # ARM D: permute WITHIN (cell_line, time_h) strata instead of globally. Arm C's global shuffle
+    # destroys the between-timepoint trajectory as well as cell-level pairing, so it cannot tell
+    # real per-cell signal from a day-level artefact. Stratifying preserves the trajectory and
+    # destroys only the within-stratum pairing, which is what separates them.
+    age_shuffle_strata: bool = False
 
 
 def _clock_range(clock: AgingClock, cfg: DataConfig) -> tuple[float, float] | None:
@@ -220,6 +231,13 @@ def process_chunk(src, chunk, panel, clock: AgingClock, cfg: DataConfig, harmoni
             age_mask=age_mask.copy(),
             deconfound_mask=deconfound_mask.copy(),
             shuffle_mask=shuffle_mask.copy(),
+            # ARM D's stratum key. `time_h` is the reprogramming timepoint axis
+            # (`sources.py:292`); pairing it with `cell_line` keeps the key correct if a future
+            # source contributes more than one line to the shuffled set.
+            stratum=np.array(
+                [f"{cl}|{th}" for cl, th in zip(raw.obs["cell_line"].to_numpy(),
+                                                raw.obs["time_h"].to_numpy(), strict=True)],
+                dtype=object),
         )
 
     smiles = raw.obs["smiles"].tolist()
@@ -469,6 +487,7 @@ def _write_cc_sidecar(paths, sid: str, aux: ChunkAux) -> None:
         age_mask=np.asarray(aux.age_mask, dtype=bool),
         deconfound_mask=np.asarray(aux.deconfound_mask, dtype=bool),
         shuffle_mask=np.asarray(aux.shuffle_mask, dtype=bool),
+        stratum=np.asarray(aux.stratum).astype("U"),
     )
 
 
@@ -490,6 +509,8 @@ def _load_cc_sidecars(paths) -> dict[str, ChunkAux]:
                              else z["age_mask"]),
             shuffle_mask=(z["shuffle_mask"] if "shuffle_mask" in z.files
                           else np.zeros(len(z["age_mask"]), dtype=bool)),
+            stratum=(z["stratum"].astype(object) if "stratum" in z.files
+                     else np.full(len(z["age_mask"]), "__all__", dtype=object)),
         )
     return out
 
@@ -583,24 +604,39 @@ def _shuffle_age_labels(cfg, aux_by_sid: dict, ys: dict[str, np.ndarray]) -> dic
     """
     if not getattr(cfg, "age_shuffle_datasets", frozenset()):
         return ys
-    slots: list[tuple[str, int]] = []
+    stratified = bool(getattr(cfg, "age_shuffle_strata", False))
+    # Group the target slots by stratum. Unstratified (arm C) is the same code with every slot in
+    # one group, so the two arms cannot drift apart through duplicated logic.
+    groups: dict[str, list[tuple[str, int]]] = {}
     for sid in sorted(aux_by_sid):                    # sorted: order must not depend on dict order
         aux = aux_by_sid[sid]
         y = ys[sid]
         for i in np.flatnonzero(aux.shuffle_mask):
             if not np.isnan(y[i]):                    # only real labels take part
-                slots.append((sid, int(i)))
-    if len(slots) < 2:
-        log.warning("age label shuffle requested but only %d target label(s) found; no-op",
-                    len(slots))
+                key = str(aux.stratum[i]) if stratified else "__all__"
+                groups.setdefault(key, []).append((sid, int(i)))
+
+    seed = int(getattr(cfg, "age_shuffle_seed", 0))
+    total = moved = singleton = 0
+    # One generator, consumed in sorted-key order, so the whole permutation is reproducible from
+    # the seed alone and does not depend on dict insertion order.
+    rng = np.random.default_rng(seed)
+    for key in sorted(groups):
+        slots = groups[key]
+        total += len(slots)
+        if len(slots) < 2:
+            singleton += len(slots)     # nothing to permute against; label stays put
+            continue
+        vals = np.array([ys[sid][i] for sid, i in slots], dtype=np.float64)
+        perm = rng.permutation(len(vals))
+        for (sid, i), v in zip(slots, vals[perm], strict=True):
+            ys[sid][i] = v
+        moved += int((perm != np.arange(len(perm))).sum())
+    if total < 2:
+        log.warning("age label shuffle requested but only %d target label(s) found; no-op", total)
         return ys
-    vals = np.array([ys[sid][i] for sid, i in slots], dtype=np.float64)
-    perm = np.random.default_rng(int(getattr(cfg, "age_shuffle_seed", 0))).permutation(len(vals))
-    for (sid, i), v in zip(slots, vals[perm], strict=True):
-        ys[sid][i] = v
-    moved = int((perm != np.arange(len(perm))).sum())
-    log_event(log, "age_labels.shuffled", n=len(slots), moved=moved,
-              seed=int(getattr(cfg, "age_shuffle_seed", 0)))
+    log_event(log, "age_labels.shuffled", n=total, moved=moved, seed=seed,
+              stratified=stratified, n_strata=len(groups), singleton_strata=singleton)
     return ys
 
 

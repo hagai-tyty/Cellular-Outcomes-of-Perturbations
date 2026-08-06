@@ -4384,3 +4384,41 @@ validated range, and no re-run fixes that. The options are: accept and report a 
 fix C-II at source (a clock valid at age 0, or a 4-donor design with the power that implies); or
 change the estimand to ranking, where a consistent effect does show — as a **new** pre-registration,
 not a re-read of this one.
+
+---
+
+## 2026-08-04 — ARM D built and pre-registered: the stratified shuffle (step-6 follow-up)
+
+The experiment arm C proposed and that Stage 6 (REV) gates its acquisition target on. It was
+referenced in two plans as the pending gate but had **never been built or run** — confirmed by
+search before implementing.
+
+**What it does.** Permutes HFF's ΔAge labels **within each `(cell_line, time_h)` stratum** instead of
+globally (arm C). The between-timepoint trajectory (ρ(day, ΔAge) = −0.905) survives exactly; only the
+within-stratum cell-level pairing is destroyed. That separates a *day-level* effect (real
+rejuvenation **or** systematic artefact — both produce the trajectory) from *within-timepoint*
+cell-level signal (only real per-cell signal produces it). Stage 1.5.5 already removed identity and
+sequencing depth as the within-timepoint candidates.
+
+**Implementation** — one code path for both arms, so they cannot drift:
+- `DataConfig.age_shuffle_strata: bool = False`; `ChunkAux.stratum` (`f"{cell_line}|{time_h}"`,
+  defaulting to one global group so pre-arm-D callers and old sidecars get arm C's behaviour).
+- `_shuffle_age_labels` now groups target slots by stratum and permutes within each group with one
+  seeded generator consumed in sorted-key order. Unstratified = every slot in one group = arm C,
+  byte-for-byte.
+- Runners: `run_loocv.py --arm D`, `run_step6_arm.sh D <seed>`, tag `gc2_D_stratshuffle_hff_s<seed>`.
+
+**Bar registered BEFORE the run** (`plan_tests/register_arm_d_bar.py`), with both lessons from arm C
+applied: a **pre-registered outcome for D landing outside [A, C]** (arm C's table had none and C
+landed 540 % of the way to B), and **"D is like A" treated as an equivalence claim** — TOST, margin
+Δ_eq = 0.1856 fixed in advance, not a CI containing zero. Difference branch ("D like C") is fully
+powered (P = 100 % at the A→C SD 0.1213); equivalence branch resolves for any SD(D−A) ≤ ~0.107
+(solved by bisection, not read off the sweep — the gridpoint bug from the Δ\* bar); false-equivalence
+0.0 %. The achieved SD(D−A) will be reported alongside the verdict.
+
+**Validity guards** — 10 tests (`tests/test_arm_d_stratified_shuffle.py`): stratum multisets
+preserved (so each day's mean ΔAge is untouched), no label crosses a stratum boundary, strata
+respected across shards, singleton strata left alone, deterministic under seed, arm C path unchanged.
+A contrast test confirms the global shuffle does **not** preserve stratum means.
+
+857 tests pass, ruff clean, no label moved by this commit (arm D is inert until a run sets it).

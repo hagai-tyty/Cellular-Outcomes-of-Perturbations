@@ -1,0 +1,76 @@
+{
+  "script": "register_arm_d_bar",
+  "utc": "2026-08-06T17:16:05+00:00",
+  "arm_a_mean": 0.9475999999999999,
+  "arm_c_mean": 0.5764666666666667,
+  "bracket_a_to_c": 0.3711333333333333,
+  "bracket_sd": 0.12134296298783323,
+  "delta_eq": 0.18556666666666666,
+  "delta_eq_derivation": "half the measured A->C rank bracket",
+  "test_equivalence": "TOST, 90 % CI inside +/- delta_eq",
+  "test_difference": "paired 95 % CI excludes 0",
+  "difference_branch_power_at_ac_sd": 0.999925,
+  "equivalence_resolvability_by_sd": [
+    {
+      "sd": 0.01,
+      "pass_rate": 1.0,
+      "resolvable": true,
+      "verdict": "RESOLVABLE"
+    },
+    {
+      "sd": 0.02,
+      "pass_rate": 1.0,
+      "resolvable": true,
+      "verdict": "RESOLVABLE"
+    },
+    {
+      "sd": 0.03,
+      "pass_rate": 1.0,
+      "resolvable": true,
+      "verdict": "RESOLVABLE"
+    },
+    {
+      "sd": 0.05,
+      "pass_rate": 1.0,
+      "resolvable": true,
+      "verdict": "RESOLVABLE"
+    },
+    {
+      "sd": 0.08,
+      "pass_rate": 0.998125,
+      "resolvable": true,
+      "verdict": "RESOLVABLE"
+    },
+    {
+      "sd": 0.12134296298783323,
+      "pass_rate": 0.877475,
+      "resolvable": false,
+      "verdict": "UNRESOLVABLE"
+    }
+  ],
+  "sd_at_which_equivalence_resolves": 0.1068907870389521,
+  "false_equivalence_rate_if_D_is_really_C": 0.0,
+  "outcomes": [
+    {
+      "condition": "D equivalent to A by TOST",
+      "reading": "the exploitable structure is the BETWEEN-timepoint trajectory; cell-level pairing carries little. Consistent with a day-level systematic artefact."
+    },
+    {
+      "condition": "D - C not detectable AND D - A detectable",
+      "reading": "the structure is WITHIN-timepoint and cell-level. A day-level artefact cannot produce it; real per-cell signal remains the live explanation."
+    },
+    {
+      "condition": "both differences detectable (D strictly between)",
+      "reading": "both components contribute. Report the split as a proportion; claim neither pure account. This is NOT a null."
+    },
+    {
+      "condition": "neither difference detectable",
+      "reading": "INCONCLUSIVE. Underpowered, licenses nothing -- the same rule that governed step 6."
+    },
+    {
+      "condition": "D OUTSIDE [A, C] -- better than A, or worse than C",
+      "reading": "REGISTERED BECAUSE ARM C LANDED OUTSIDE ITS OWN TABLE. Not a graded branch: report the position, state that no pre-registered reading applies, and treat any interpretation as beyond-registration. A D worse than C would mean stratification destroys MORE than the global shuffle, which no current account predicts and would need its own investigation."
+    }
+  ],
+  "registers_outside_bracket_outcome": true
+}

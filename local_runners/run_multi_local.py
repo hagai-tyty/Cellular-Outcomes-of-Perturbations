@@ -63,6 +63,10 @@ AGE_WINDOW_MAX_BATCHES: int = 8
 # Same cells and same label COUNT as arm A; only the cell<->label pairing is destroyed. Empty = OFF.
 AGE_SHUFFLE: frozenset[str] = frozenset()
 AGE_SHUFFLE_SEED: int = 0
+# ARM D: permute WITHIN (cell_line, time_h) strata. Preserves the between-timepoint trajectory
+# (rho(day, dAge) = -0.905) and destroys only within-stratum pairing, which is what separates a
+# day-level artefact from real per-cell signal. False = arm C's global permutation.
+AGE_SHUFFLE_STRATA: bool = False
 
 HERE = Path(__file__).resolve().parent
 # The clock lives in the REPO ROOT `configs/`, not under `local_runners/`. This previously pointed
@@ -145,8 +149,13 @@ def main() -> None:
     print(f"[arm ] AGE_MASKED_DATASETS = {set(AGE_MASKED) or '(empty -> arm A, control)'} | "
           f"age_window_k = {AGE_WINDOW_K}")
     if AGE_SHUFFLE:
-        print(f"[arm ] ARM C: SHUFFLING age labels of {set(AGE_SHUFFLE)} "
-              f"(seed {AGE_SHUFFLE_SEED}) -- same count as arm A, pairing destroyed")
+        _kind = ("ARM D: STRATIFIED shuffle within (cell_line, time_h)"
+                 if AGE_SHUFFLE_STRATA else "ARM C: GLOBAL shuffle")
+        print(f"[arm ] {_kind} of {set(AGE_SHUFFLE)} (seed {AGE_SHUFFLE_SEED}) "
+              "-- same count as arm A, pairing destroyed")
+        if AGE_SHUFFLE_STRATA:
+            print("[arm ] the between-timepoint trajectory SURVIVES; only within-stratum "
+                  "pairing is destroyed")
 
     if os.path.isdir(ROOT):
         shutil.rmtree(ROOT)
@@ -160,7 +169,8 @@ def main() -> None:
         split_fracs=(0.8, 0.1, 0.1, 0.0), split_regimes=(REGIME,), primary_regime=REGIME,
         holdout_cell_lines=(test_donor,), harmonize=HARMONIZE, harmonize_ref_dataset="gill_bulk",
         deconfound=True, seed=0,
-        age_shuffle_datasets=frozenset(AGE_SHUFFLE), age_shuffle_seed=AGE_SHUFFLE_SEED),
+        age_shuffle_datasets=frozenset(AGE_SHUFFLE), age_shuffle_seed=AGE_SHUFFLE_SEED,
+        age_shuffle_strata=AGE_SHUFFLE_STRATA),
         sources=[gse, gill])
 
     # ---- composition: how each cell line is distributed across splits ----

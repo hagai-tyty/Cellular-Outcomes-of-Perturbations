@@ -14,8 +14,9 @@ SEED="${2:-0}"
 case "$ARM" in
   A) TAG=gc2_A_keep_hff ;;
   B) TAG=gc2_B_mask_hff ;;
-  C) TAG="gc2_C_shuffle_hff_s${SEED}" ;;   # label-permutation control; seed goes in the tag
-  *) echo "arm must be A, B or C" >&2; exit 2 ;;
+  C) TAG="gc2_C_shuffle_hff_s${SEED}" ;;      # GLOBAL label permutation
+  D) TAG="gc2_D_stratshuffle_hff_s${SEED}" ;; # STRATIFIED within (cell_line, time_h)
+  *) echo "arm must be A, B, C or D" >&2; exit 2 ;;
 esac
 PY=/d/.venv-cellfate/Scripts/python.exe
 export PYTHONUTF8=1
