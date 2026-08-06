@@ -1,0 +1,77 @@
+{
+  "n_strata": 9,
+  "total_labels": 6938,
+  "worst_stratum_mean_delta": 1.0658141036401503e-14,
+  "strata": [
+    {
+      "stratum": "HFF|0.0",
+      "n": 799,
+      "multiset_eq": true,
+      "mean": -2.445547588661171e-16,
+      "dmean": 6.669675241803195e-17
+    },
+    {
+      "stratum": "HFF|144.0",
+      "n": 749,
+      "multiset_eq": true,
+      "mean": -7.924250116119417,
+      "dmean": 0.0
+    },
+    {
+      "stratum": "HFF|192.0",
+      "n": 759,
+      "multiset_eq": true,
+      "mean": -4.111003846223397,
+      "dmean": 0.0
+    },
+    {
+      "stratum": "HFF|240.0",
+      "n": 785,
+      "multiset_eq": true,
+      "mean": -6.10472530907524,
+      "dmean": 0.0
+    },
+    {
+      "stratum": "HFF|288.0",
+      "n": 778,
+      "multiset_eq": true,
+      "mean": -9.898568307358776,
+      "dmean": 0.0
+    },
+    {
+      "stratum": "HFF|336.0",
+      "n": 766,
+      "multiset_eq": true,
+      "mean": -25.310781722362865,
+      "dmean": 1.0658141036401503e-14
+    },
+    {
+      "stratum": "HFF|48.0",
+      "n": 769,
+      "multiset_eq": true,
+      "mean": 3.2811707529325185,
+      "dmean": 8.881784197001252e-16
+    },
+    {
+      "stratum": "HFF|504.0",
+      "n": 766,
+      "multiset_eq": true,
+      "mean": -33.172197589025544,
+      "dmean": 0.0
+    },
+    {
+      "stratum": "HFF|96.0",
+      "n": 767,
+      "multiset_eq": true,
+      "mean": 4.117490478191981,
+      "dmean": 1.7763568394002505e-15
+    }
+  ],
+  "checks": {
+    "per_stratum_multiset_preserved": true,
+    "trajectory_means_preserved": true,
+    "stratified_into_multiple_timepoints": true,
+    "labels_present": true
+  },
+  "all_pass": true
+}

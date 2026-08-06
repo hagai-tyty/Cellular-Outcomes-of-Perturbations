@@ -4422,3 +4422,42 @@ respected across shards, singleton strata left alone, deterministic under seed, 
 A contrast test confirms the global shuffle does **not** preserve stratum means.
 
 857 tests pass, ruff clean, no label moved by this commit (arm D is inert until a run sets it).
+
+---
+
+## 2026-08-07 — Arm D pre-flight: a false alarm, traced to ground, and a better gate
+
+Before launching arm D's ~5 h run I built it at smoke scale and compared against an arm-A build.
+**It failed** — the per-stratum ΔAge multiset was not preserved (4.58 yr mean shift). The shuffle is
+the whole experiment, so I stopped and traced it rather than launch.
+
+**It was not arm D.** Three isolated measurements:
+
+1. **Determinism** — two in-process arm-A builds are bit-identical (`max |Δ| = 0.0`). So the ETL is
+   reproducible; the discrepancy was not run-to-run noise.
+2. **The shuffle is a pure permutation** — instrumenting `_shuffle_age_labels` inside one real build:
+   6938 target labels in, 6938 out, global ΔAge multiset preserved **exactly** (`max sorted diff
+   0.0`), pre mean/sd == post mean/sd.
+3. **Per-stratum, intrinsic** — within one build, all **9 timepoint strata** preserve their ΔAge
+   multiset, so **each timepoint's mean ΔAge is preserved to machine precision** (worst
+   `|Δmean| = 1.07e-14`). The trajectory is intact: +4.1 yr at day 4 → −33.2 at day 21.
+
+**The failure was in the harness, not the code.** Comparing HFF *training-label values* across two
+separate smoke builds is unreliable (the builds even differed in HFF cell count, 900 vs 6938, at the
+same `MAX_CELLS`), and it is the wrong thing to check anyway: arm A and arm D differ only in HFF
+*training* labels, while `rank_model_dage` — the metric — is scored on the **never-shuffled held-out
+Gill donor**, which is deconfounded identically in both arms. So the cross-build comparison is both
+flaky and irrelevant.
+
+**Fix:** replaced the cross-build check with `plan_tests/armd_intrinsic_preflight.py` — a
+single-build gate that captures the ΔAge pool immediately before and after the shuffle and asserts
+per-stratum multiset preservation. No second build, no confound. Result recorded in
+`results/armd_intrinsic_preflight_results.json`.
+
+The unit tests (`tests/test_arm_d_stratified_shuffle.py`, 10/10) already proved the permutation logic
+on synthetic data; the intrinsic pre-flight confirms the real stratum keys are built correctly from
+`raw.obs` end to end. **Arm D is validated. The full run is clear to launch.**
+
+Lesson, recorded because it will recur: **validate a data transform intrinsically within one build**,
+not by diffing two builds — build-to-build value comparison at reduced scale carries confounds that
+have nothing to do with the transform under test.
