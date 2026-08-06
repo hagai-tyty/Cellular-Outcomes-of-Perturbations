@@ -11,6 +11,52 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-04 — Plans 1 → 1.5.5 CLOSED, and a self-audit of 1.5.6 found three errors in it
+
+**Status:** ✅ Closures applied; 1.5.6 corrected. **835 tests pass, ruff clean, `src/` untouched.**
+
+### Closures — two were stale in ways that mattered
+
+| plan | was | now |
+|---|---|---|
+| **Stage 1** | carried as **PARTIAL / open**, "Change A″ awaiting a third LOOCV run" | ✅ **CLOSED.** A″ **is** in `src/` (`platt_safe`, `fit_platt_binary`) and **was** scored — `scorecard/B_fatecal.json`, 2026-07-22 22:08: `conformal_coverage` 0.4006 → **0.8889**, `fate_ece` 0.2806 → **0.2491**, `fate_ece_platt` 0.1535 → **0.1399**. The regression that made it PARTIAL came from `A_xdonor` = **run 1, recorded INVALID** (HFF rotated as a donor) |
+| **Stage 1.5** | EXECUTED, three findings | ✅ **CLOSED.** D1 measured and downgraded; D2 measured **INDETERMINATE** (56 %, CI [9 %, 100 %]) and data-blocked with a sized owner, its **code half shipped as G-a**; D3 answered (M1 FAIL) with the **wiring shipped as G-b** |
+| **Stage 1.5.1** | §11 gave three items owners | ✅ **CLOSED.** Two are data-blocked and sized; the third (**HFF's `age_mask`**) was **delivered** by 1.5.3 step 6 |
+| **Stage 1.5.2** | already closed | ✅ unchanged |
+| **Stage 1.5.3** | **"steps 5–7 open"** and step 6 marked **"🛑 BLOCKED — STOPPED before running"** | ✅ **CLOSED.** Step 6 **ran three times** (confounded, clean rerun, arm C) — `results/STEP6_REPORT.md` and three `scorecard/gc2_*.json` snapshots prove it. The table had been wrong for two days |
+| **Stage 1.5.4 / 1.5.5** | executed | ✅ unchanged |
+
+### The 1.5.6 self-audit — I checked my own headline before letting it stand
+
+**The core result survives the hardest test available.** A MAE gain is fake if the predictor merely
+shrinks toward zero. It does not:
+
+* `top100` SD **11.82** vs truth's **11.41** — ratio **1.04**, spread *matched*, not collapsed
+* raw SD **22.99** — the dense clock **over-disperses 2.02×** on top of its −14 yr bias
+* **a constant-zero predictor scores MAE 8.45. `top100` scores 5.36. The full clock scores 16.61 —
+  worse than predicting nothing at all.**
+
+That last line is *stronger* than what §1 originally claimed.
+
+**Three errors found and corrected:**
+
+1. **§1.3 "the Sendai arm agrees independently" — WITHDRAWN.** Sendai is scored on *absolute* age
+   where the intercept does not cancel. Sparsifying drags every prediction toward **b0 = 72.43**:
+   raw mean 98.86 → top100 **67.71** (4.73 from the intercept), while truth sits at **28.29**, and
+   top100's SD collapses to **6.50** against truth's 14.75. It moved toward the intercept, not toward
+   truth. **Not corroboration.**
+2. **"below methylation's own ±7 yr error" — WITHDRAWN.** The ±7 is a **donor-level absolute-age**
+   error; MAE 5.36 is a **condition-level ΔAge** error. Not like-for-like.
+3. **Skin & blood was understated.** §3 said ordering "stays poor". Measured: `top100` scores MAE
+   **8.79** against a constant-zero floor of **6.83** — **it loses to predicting nothing.** The spread
+   is right and the ordering is wrong, which is worse than abstaining.
+
+**Net: the finding is real but confined** — multi-tissue ΔAge, transient arm, one estimand. Not the
+two-arm agreement the document originally claimed.
+
+---
+
+
 ## 2026-08-04 — STAGE 1.5.6: the clock's DENSITY is the defect. Sparsifying it cuts ΔAge error 3x
 
 **Status:** ✅ Measured and validated leave-one-donor-out. **`src/` untouched, no label moved.**

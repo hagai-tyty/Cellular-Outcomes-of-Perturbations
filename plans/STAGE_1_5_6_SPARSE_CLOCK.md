@@ -5,6 +5,86 @@
 **Scope of what has run:** 3 new read-only scripts, **0 lines changed in `src/`**, **no label moved.**
 **Scope of what this proposes:** one config change, gated, with a pre-registered bar.
 
+
+---
+
+## 0. ⚠️ SELF-AUDIT 2026-08-04 — three errors in this document, and one thing that got stronger
+
+*Run before anything here is acted on. Read this before §1.*
+
+### ✅ The core result SURVIVES the hardest test I could put to it
+
+The obvious way a MAE gain can be fake is **shrinkage** — a predictor that collapses toward zero
+scores well on MAE while carrying no information. It does not happen here:
+
+| | mean | SD | ratio to truth |
+|---|---:|---:|---:|
+| TRUTH (methylation ΔAge) | −6.57 | 11.41 | — |
+| raw (full clock) | −20.67 | 22.99 | **2.02× over-dispersed** |
+| **top100** | −8.19 | **11.82** | **1.04× — matched** |
+
+And the decisive control:
+
+> **A constant-zero predictor scores MAE 8.45. `top100` scores 5.36 — it beats the shrinkage floor.
+> The full clock scores 16.61 — it is WORSE THAN PREDICTING NOTHING AT ALL.**
+
+That last line is stronger than anything §1 originally claimed, and it is the honest headline: the
+dense clock is not merely imprecise on this data, it is **actively worse than a constant**.
+
+### ❌ ERROR 1 — §1.3's "the Sendai arm agrees, independently" is WRONG
+
+Sendai is scored on **absolute** age, where the intercept does **not** cancel. Sparsifying shrinks
+the weighted sum, so every prediction slides toward the clock's intercept **b0 = 72.43**:
+
+| | mean prediction | distance from b0 | SD |
+|---|---:|---:|---:|
+| raw | 98.86 | 26.42 | 24.83 |
+| top100 | 67.71 | **4.73** | **6.50** |
+| truth | 28.29 | 44.14 | 14.75 |
+
+`top100` did not move toward truth — it **collapsed onto the intercept**, and its SD fell to 6.50
+against truth's 14.75. The MAE "improvement" is that artefact. **This is not independent
+corroboration and §1.3 must not be read as such.** The transient arm is unaffected: it scores ΔAge,
+where the intercept cancels exactly.
+
+### ❌ ERROR 2 — the "below methylation's own ±7 yr error" comparison is not like-for-like
+
+The **±7 yr** figure (1.5.2 §12-R) is a **donor-level ABSOLUTE-age** error — two donors of true age
+53 reading 44.0 and 58.5. **MAE 5.36 is a condition-level ΔAge error.** Different quantities.
+It is suggestive of the right order of magnitude; it is **not** a demonstration that the RNA clock
+now matches methylation's precision.
+
+### ❌ ERROR 3 — on skin & blood, `top100` is worse than predicting zero
+
+§3 said ordering "stays poor". The sharper and more damning statement:
+
+| skin & blood, transient | SD | ratio | MAE |
+|---|---:|---:|---:|
+| truth | 11.46 | — | — |
+| raw | 22.99 | 2.01 | 17.84 |
+| top100 | 11.82 | 1.03 | **8.79** |
+| **constant zero** | — | — | **6.83** |
+
+**`top100` (8.79) loses to a constant-zero predictor (6.83) on skin & blood.** The spread is right;
+the *ordering* is wrong, and getting the spread right without the ordering is worse than abstaining.
+So the sb/mt split is not "one clock is weaker" — **on one clock the sparse ΔAge is harmful.**
+
+### What survives, precisely
+
+| claim | status |
+|---|---|
+| dense clock carries a −14.10 yr bias, removed at k ≈ 100 | ✅ **holds** (transient, ΔAge, intercept cancels) |
+| MAE 16.61 → 5.36 on multi-tissue | ✅ **holds**, and beats the 8.45 zero-floor |
+| spread is preserved, not shrunk (ratio 1.04) | ✅ **holds** |
+| leave-one-donor-out generalisation | ✅ **holds** (6.70 / 6.84 / 5.45 vs 16.6) |
+| the full clock is worse than a constant | ✅ **new, and stronger than the original claim** |
+| Sendai corroborates | ❌ **withdrawn** — intercept artefact |
+| beats methylation's ±7 yr | ❌ **withdrawn** — not like-for-like |
+| skin & blood merely "poor" | ❌ **understated** — it loses to a constant |
+
+**Net: the finding is real and confined to multi-tissue ΔAge on the transient arm.** It is one clock,
+one arm, one estimand — not the two-arm agreement §1.3 claimed.
+
 ---
 
 ## 1. The finding

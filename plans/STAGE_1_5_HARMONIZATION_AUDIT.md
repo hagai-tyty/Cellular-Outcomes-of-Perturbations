@@ -274,6 +274,27 @@ clock read age on this data at all?** At `cv_mae ≈ 12.3 yr` the test is well p
 (0 vs 53 ≈ 4× the error) and deliberately underpowered in the middle (29 vs 35 is half the error) —
 only the extreme contrast may be claimed.
 
+
+> ## ✅ CLOSED 2026-08-04 — all three findings owned; nothing here is still actionable
+>
+> *Additive; nothing below is modified.*
+>
+> | | finding | disposition |
+> |---|---|---|
+> | **D1** | cross-batch zero-point | ✅ **MEASURED and DOWNGRADED** — paired Exp1−Exp2 offset **−2.99 yr, 95 % CI [−13.12, +7.14]**, `NO_BATCH_EFFECT`. Structurally true, not demonstrated to drive the ±12.7 yr offset. *Not over-read:* the ~10 yr CI half-width excludes a **large** effect, not a meaningful one |
+> | **D2** | baselines rest on **one unreplicated control** | ⚠️ **MEASURED, INDETERMINATE** — M3: the baseline explains **56 % of the offset variance, 95 % CI [9 %, 100 %]**. Unresolvable at n = 6; **more donors, not more analysis**. Owner: `STAGE_6_NEW_DATA_REV.md` §3 (sizing: ~20 donors). **The code half IS shipped** — gate G-a in 1.5.3 makes `n = 1` and cross-batch baselines visible in `dataset_summary.json` |
+> | **D3** | donor age parsed nowhere in `src/` | ✅ **ANSWERED and WIRED** — the question (M1: does the clock read age here?) came back **FAIL** (11.8 yr contrast against a 20.2 yr bar, power 0.996). The wiring shipped as gate **G-b** in 1.5.3 (`sources.py`, `_AGE_KEYS`, `_maybe_float`) |
+>
+> **The stage's own verdict — ESCALATE — was correct and has been acted on.** *"The clock does not
+> separate the age extremes on this data"* is what 1.5.1, 1.5.2 and 1.5.4 then chased to its
+> conclusion, and what 1.5.6 finally attributed to the clock's **density** (a −14.10 yr bias removed
+> by sparsifying to ~100 genes).
+>
+> **Nothing in this document requires further work.** Its one open item, D2, is data-blocked and has
+> an owner.
+
+---
+
 ## 5.4 THE FIX PLAN — plan only, nothing executed
 
 Sequenced so the **cheap measurements decide whether the expensive change is needed at all.** It is

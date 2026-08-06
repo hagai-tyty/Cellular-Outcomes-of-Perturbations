@@ -12,6 +12,30 @@
 > | **§6.5 — how approximate are absolute methylation ages?** | ✅ **QUANTIFIED:** ±7 yr donor-level error (§11.5) |
 > | **Genuinely still open** | **three items, all with owners** — §5's retention and HFF's labels need **Stage 6** (more donors / new data); HFF's `age_mask` needs **1.5.2 G-c step 2** (§11.6) |
 
+
+> ## ✅ CLOSED 2026-08-04 — §11.6's three open items, revisited
+>
+> *Additive; nothing below is modified. §11.6 gave each open item an owner. Two owners have since
+> reported, so the ledger is updated rather than left implying work is pending here.*
+>
+> | §11.6 item | owner then | status now |
+> |---|---|---|
+> | **§5 retention** (needs ≈16 pairs, has 9) | Stage 6 | 🔒 **data-blocked, sized**: `STAGE_6_NEW_DATA_REV.md` §3 puts it at **17 donors** on multi-tissue and **38** on skin & blood — the latter is recorded there as likely out of reach rather than carried as a plan |
+> | **HFF's labels** | Stage 6 | 🔒 **data-blocked** — no methylation exists for HFF in any of the six datasets. But **1.5.5** since measured what those labels *are*: **not** an identity readout (R² ≤ 0.16) and **not** a depth readout (R² ≤ 0.09) |
+> | **HFF's `age_mask`** | 1.5.2 G-c step 2 | ✅ **DELIVERED** — ran 2026-08-02/03 as 1.5.3 step 6, plus arm C. Primary **INCONCLUSIVE** (+0.661 yr, MDE 5.045 > Δ\* 3.572), but arm C killed the volume explanation: shuffling collapsed ranking **5.4× the A–B gap** |
+>
+> **Nothing in this document is actionable.** Its two remaining items are data-blocked with a sized
+> owner; the third is answered.
+>
+> **One later finding bears on §1 and is recorded here so a reader does not have to reconstruct it:**
+> **1.5.6** attributes a large part of the clock's failure to its **density** — restricting it to
+> ~100 genes removes a **−14.10 yr systematic bias** (MAE 16.61 → 5.36 against methylation,
+> leave-one-donor-out validated). §1's diagnosis — *"correctly built and correctly applied, but out
+> of domain"* — is **narrowed, not overturned**: the ordering failure on skin & blood survives at
+> every sparsity.
+
+---
+
 **Status:** ✅ **EXECUTED and VALIDATED** (2026-07-26). This document is the clean, self-contained
 statement of the method, the results, and the one question that remains open. It is written to be
 read cold. **§10 validates every claim in it and states how** — including three errors that validation

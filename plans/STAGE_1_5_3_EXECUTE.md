@@ -23,7 +23,7 @@
 > C-6 and in `CHANGES.md`. Steps **5–7 remain open by design**, and both policy flags are still
 > off.
 
-**Status:** 🔵 **PRE-REGISTERED — steps 1–4 now EXECUTED (see the box above); steps 5–7 open.**
+**Status:** ✅ **CLOSED 2026-08-04. Every step 1–6 has executed**, including step 6 twice (once confounded, once clean) plus the arm-C control. See the closure box below.
 **Depends on:** `STAGE_1_5_2_LABEL_ANCHOR.md` (✅ closed) and `STAGE_1_5_1_REV_FINAL.md` §11 (✅ closed).
 **Blocking for:** Stage 2's premise, Stage 3's recommendation rule, Stage 5's claims.
 **Not blocking for:** the fate/safety head, which consumes no ΔAge and is untouched throughout.
@@ -1617,7 +1617,7 @@ did not**.
 | **5** ✅ | C-5 design + its bar — **DONE 2026-08-02, and it chose Option 2 over Option 1** | bar RESOLVABLE on the dense regime, DISCRIMINATES between options, 6 rows in `tests/test_bars_resolvable.py` | ❌ no | ❌ no |
 | **5b** ✅ | deeper tests D1–D7 before committing — **DONE 2026-08-02: Option 2 CONFIRMED, W = 8 pinned** | ranking stable on 7 axes, not 1; W chosen for margin against a shrinking label set, not for the minimum | ❌ no | ❌ no |
 | **5c** ✅ | **C-5 Option 2 IMPLEMENTED — DONE 2026-08-02, ships inert (`age_window_k = 1`)** — `training/train.py`, threshold on accumulated age cells with `W_max = 8`. Added 2026-08-02: no step previously scheduled it, and a fixed W biases arm A. See the readiness audit in C-5 | `k` registered via `bar_verdict`; **arm-A behaviour bit-identical to today**; window loss is `Σloss/Σcells` not a mean of means; fate term still steps every batch; determinism asserted | ❌ no | ❌ no |
-| **6** 🛑 **BLOCKED** | **G-c step 2** (PART C) — *attempted 2026-08-02, STOPPED before running; see the pre-flight box below* | snapshot first; **rollback exercised, not assumed**; **5c must have shipped**; **`age_window_k = 4` set in BOTH arms** (see 🆕 below); **the arm-comparison bar registered and its MDE reported** | ✅ **yes** | ✅ yes, ×2 arms |
+| **6** ✅ **RAN TWICE** | **G-c step 2** — first run 2026-08-02 (confounded by C-I), rerun 2026-08-03 clean, plus **arm C** (shuffled labels) as a control. `results/STEP6_REPORT.md`; snapshots `scorecard/gc2_A_keep_hff.json`, `gc2_B_mask_hff.json`, `gc2_C_shuffle_hff_s0.json` | all gates met: snapshot taken, `age_window_k = 4` in both arms, arm-comparison bar registered and its MDE reported | ✅ yes | ✅ yes, ×3 arms |
 
 > ### 🆕 ADDED 2026-08-02 — two things step 6 was missing, found on review
 >
@@ -1906,3 +1906,48 @@ struck **before** arm B's numbers are read, not after.
 * **The overwrite** — `CELLFATE_FOLD_SUFFIX` gives each arm its own fold roots, so arm A's
   `scalers.json` (and its deconfounder coefficient) survives arm B this time. Both coefficients will
   be reported from the runs themselves, not from a proxy.
+
+---
+
+## ✅ CLOSURE 2026-08-04 — what this stage actually delivered
+
+*Additive. Nothing above is modified; the step table's step-6 row and the status line were corrected
+because both still described the run as blocked after it had executed three times.*
+
+### The steps
+
+| step | | outcome |
+|---|---|---|
+| 1 | C-6 `age_mask_reason` + C-3 HFF metadata | ✅ shipped, rebuild done, `y_age` bit-identical |
+| 2 | C-1 `AGE_MASKED_DATASETS` | ✅ shipped **empty** — inert |
+| 3 | C-2 `enforce_clock_age_range` | ✅ shipped **off** — inert |
+| 4 | C-4 option (a) `age_validated` | ✅ shipped, defaults to **False** (conservative) |
+| 5 / 5b / 5c | C-5 → Option 2 `_AgeWindow` | ✅ shipped **inert** (`age_window_k = 1`) |
+| **6** | **G-c step 2 + arm C** | ✅ **ran; primary INCONCLUSIVE** |
+
+### The result, stated at its true strength
+
+**Primary: INCONCLUSIVE.** effect **+0.661 yr**, 95 % CI [−4.384, +5.707], observed SD 4.808,
+**MDE 5.045 > Δ\* 3.572**. Under the registered reading rule that licenses **nothing** — in
+particular it does not license discarding HFF's labels.
+
+**Arm C decided the question the primary could not.** Shuffling HFF's labels collapsed
+`rank_model_dage` **0.9476 → 0.5765**, *5.4× the entire A–B gap* — so the labels carry structure the
+model exploits, and the "it is only data volume" explanation is dead. **Not** established: that the
+labels are *correct*; shuffling destroys real signal and systematic artefact alike.
+
+**C-I was a genuine confound, found and fixed mid-stage.** `y_age` depended on the training-label
+policy, so masking HFF changed the labels for *everyone* and the two arms were measuring different
+things. Fixed, then verified three ways including `max|Δ| = 0.000e+00` over 7,062 rows.
+
+### What remains, and where it lives now
+
+| | owner |
+|---|---|
+| is HFF's structure real signal or systematic artefact? | the **stratified shuffle** (permute within donor/timepoint) — narrowed further by **1.5.5** (not identity, not depth) |
+| C-2's activation | **1.5.6** — it is worth more than tripling the donor count (`STAGE_6_NEW_DATA_REV.md` §4) |
+| the clock itself | **1.5.6** — the −14.10 yr density bias |
+
+**Everything this stage built ships inert by design.** No label has moved, and turning any switch on
+is a separate pre-registered change.
+

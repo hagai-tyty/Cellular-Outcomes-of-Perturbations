@@ -6,6 +6,35 @@
 
 ---
 
+
+> ## ✅ CLOSED 2026-08-04 — Change A″ is implemented and its run is scored
+>
+> *Additive; nothing below is modified. This stage was carried as **PARTIAL / open** on the strength
+> of a `fate_ece` regression and a pending third run. Both are resolved in the artefacts, and nobody
+> had updated the status.*
+>
+> **A″ is in `src/`**, not merely designed: `platt_safe` (`common/calibration.py:36`) and
+> `fit_platt_binary` (`training/calibrate.py:64`) — the binary `P(safe)` recalibration that replaced
+> the multi-class NLL temperature refit.
+>
+> **Scored** in `scorecard/B_fatecal.json`, snapshotted **2026-07-22 22:08**, six folds:
+>
+> | metric | role | baseline (07-19) | B_fatecal | |
+> |---|---|---:|---:|---|
+> | `conformal_coverage` | **TARGET** | 0.4006 | **0.8889** | ✅ in the [0.85, 0.95] band |
+> | `fate_ece` | GUARD | 0.2806 | **0.2491** | ✅ improved on baseline |
+> | `fate_ece_platt` | GUARD | 0.1535 | **0.1399** | ✅ improved on baseline |
+>
+> **The regression that made this stage PARTIAL is gone.** It came from `A_xdonor` (07-21), which is
+> **run 1 — recorded as INVALID** because a bulk corpus (HFF) was rotated as a donor and supplied
+> 99.8 % of the residuals. The valid run does not regress on any guard.
+>
+> **Not over-read:** `conformal_coverage` 0.8889 is measured against a *nominal* 0.90 and the band
+> was pre-registered; it is not a claim that intervals are well-calibrated on out-of-range donors —
+> N2/N3 still read **0.000** individually, which is Stage 1.5.3's C-2 and is owned there.
+
+---
+
 ## 0. READ THIS FIRST — a prerequisite the earlier draft missed
 
 Stage 1 requires an **inner leave-one-donor-out** over the training donors. Writing that as a loop
