@@ -1,6 +1,6 @@
 # STAGE 1.5.6 — The clock's density IS the defect. Sparsify it.
 
-**Status:** ✅ **MEASURED 2026-08-04, validated leave-one-donor-out. Not yet applied to any label.**
+**Status:** ⚠️ **MEASURED 2026-08-04 and CONFINED. The Gill-side result is validated leave-one-donor-out; it does NOT transfer to HFF — on HFF it inverts (§4.6). Not applied to any label, and it must not be until step 4.**
 
 **Scope of what has run:** 3 new read-only scripts, **0 lines changed in `src/`**, **no label moved.**
 **Scope of what this proposes:** one config change, gated, with a pre-registered bar.
@@ -282,6 +282,47 @@ clock's gain on HFF directly. §1's Gill-side result cannot be extrapolated to H
 because it is wrong, but because Gill is the reference dataset and is the one place where this effect
 is invisible by construction.
 
+### 4.6 🔴 STEP 1d — the sparse clock and harmonization interact ADVERSARIALLY on HFF
+
+| k | direct | harmonized | **gain** | median σ-ratio on kept genes |
+|---:|---:|---:|---:|---:|
+| 50 | −8.22 | −28.17 | **3.429** | 0.838 |
+| **100** | −10.73 | **−29.70** | **2.769** | 0.836 |
+| 150 | −11.68 | −30.97 | 2.651 | 0.780 |
+| 300 | −15.45 | −32.99 | 2.135 | 0.690 |
+| 1000 | −12.78 | −24.83 | 1.944 | 0.608 |
+| **all 33,155** | −9.96 | **−21.43** | **2.152** | 0.608 |
+
+**The sparse clock's gain is HIGHER than the dense clock's — 2.769 against 2.152 — and the gain rises
+monotonically as k falls.** The reason is visible in the last column: the clock's largest-|weight|
+genes sit precisely where `sigma_gill / sigma_hff` is largest (**0.836** among the top 100 against
+**0.608** over all genes). **Sparsification concentrates the clock onto exactly the genes
+harmonization amplifies most.**
+
+#### What that does to §1's conclusion, on HFF specifically
+
+Under the pipeline as it actually runs, `top100` gives HFF day-14 **−29.70 yr** — **further from
+plausible than the dense clock's −21.43.**
+
+> **§1's finding does not transfer to HFF. It inverts.** Sparsifying removes a −14 yr bias on Gill
+> and *increases* the magnitude on HFF, because Gill is the harmonization reference (gain ≈ 1) and
+> HFF is not. The two effects do not compose — they compound in opposite directions on the two
+> datasets.
+
+#### The plan consequence, and it is a real constraint
+
+**A single clock cannot be adopted globally on this evidence.** The same change improves Gill and
+degrades HFF, and HFF is 99.8 % of the age labels. The options are now:
+
+| | |
+|---|---|
+| adopt `top100` **and** disable harmonization | harmonization exists to align bulk with single-cell; removing it is its own pre-registered change with its own guards, not a side effect |
+| adopt `top100` **and** re-fit the harmonizer on the sparse gene space | the σ ratio is computed over the *admissible* gene set; restricting that set changes the variance floor and therefore every ratio |
+| keep the dense clock for HFF | asymmetric labels across datasets — a new confound of exactly the kind C-I was fixed to remove |
+| do neither yet | ✅ **the honest position until step 4 measures the combination end-to-end** |
+
+**This is why step 4's rebuild was never optional, and it is now the gate rather than a formality.**
+
 ---
 
 ## 5. The plan
@@ -291,7 +332,7 @@ is invisible by construction.
 | **1** | ✅ **DONE.** Shape survives (ρ −0.881), but the baseline was not reproduced — see §4.1/§4.2 | — | done |
 | **1b** | ✅ **DONE.** Deconfound + re-centre = **+2.11 yr** and move ΔAge *toward* zero — **not** the source. Gap attributed to the **harmonization gain** (§4.3) | — | done |
 | **1c** | ✅ **DONE — CONFIRMED.** Measured gain **2.152** (predicted 2.26). And it is a per-GENE reweighting, not a scale: median σ ratio 0.608 while the net effect is ×2.15 (§4.5) | — | done |
-| **1d** | 🔴 **NEW: measure the SPARSE clock's gain on HFF.** The gain is per-gene, so top-100 has a *different* gain from the dense clock; §1's Gill-side number cannot transfer | gain reported for k = 100 alongside k = all | free, no retrain |
+| **1d** | ✅ **DONE — and it INVERTS §1 on HFF.** top-100 gain **2.769** vs dense **2.152**; harmonized day-14 **−29.70** vs dense **−21.43**. The clock's heavy genes sit where the σ ratio is largest (0.836 vs 0.608). See §4.6 | — | done |
 | **2** | **Pre-register the bar** for adopting a sparse clock: MAE ≤ 8 yr **and** sign agreement ≥ 0.80 vs methylation, on **both** arms, k fixed at 100 in advance | `bar_verdict` row in `tests/test_bars_resolvable.py` | free |
 | **3** | **Write `configs/clocks/fleischer_clock_top100.json`** — the same coefficients, 33,055 zeroed. Provenance in `meta`, original untouched | ships as a **new file**; nothing switches automatically | free |
 | **4** | **One rebuild + LOOCV under the sparse clock**, full scorecard, snapshot and rollback | every Stage 1 guard reported before/after | one retrain |

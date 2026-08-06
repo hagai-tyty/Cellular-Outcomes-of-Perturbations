@@ -59,6 +59,8 @@ _RESULTS.mkdir(exist_ok=True)
 
 IPSC_DAY = 21.0
 PREDICTED_GAIN = 2.26
+# Step 1d: the gain multiplies each gene separately, so every sparsity has its own.
+KS = (50, 100, 150, 300, 1000, None)
 DIRECT_DAY14 = -10.62      # results/diag_pipeline_decompose_results.json (S2)
 SHARD_DAY14 = -24.02       # results/diag_gc_hff_signature_results.json
 
@@ -156,11 +158,31 @@ def main() -> int:
     base = Xh[hd == 0.0].mean(axis=0)
     delta = Xh - base                                     # per-gene deviation from the control mean
 
-    d_direct = delta @ w
-    d_harm = delta @ (w * ratio)
-    d14_direct = float(d_direct[hd == 14.0].mean())
-    d14_harm = float(d_harm[hd == 14.0].mean())
-    gain = d14_harm / d14_direct if d14_direct else float("nan")
+    # STEP 1d: the ratio multiplies each gene SEPARATELY, so a sparse clock -- which changes WHICH
+    # genes carry ΔAge -- has its own gain. Sweeping k is the only way to know whether §1's
+    # sparsification and this gain compose, and neither number can be assumed from the other.
+    order = np.argsort(-np.abs(w))
+    per_k = {}
+    print(f"\n  {'k':>6} {'direct':>10} {'harmonized':>12} {'gain':>8}   median σ-ratio on kept genes")
+    for k in KS:
+        wk = w.copy()
+        if k is not None:
+            wk = np.zeros_like(w)
+            wk[order[:k]] = w[order[:k]]
+        kept = order[:k] if k is not None else order
+        dd = float((delta @ wk)[hd == 14.0].mean())
+        dh = float((delta @ (wk * ratio))[hd == 14.0].mean())
+        g = dh / dd if dd else float("nan")
+        per_k[str(k)] = {"day14_direct": dd, "day14_harmonized": dh, "gain": g,
+                         "median_sigma_ratio_kept": float(np.median(ratio[kept]))}
+        print(f"  {str(k):>6} {dd:10.2f} {dh:12.2f} {g:8.3f}   {np.median(ratio[kept]):.3f}")
+
+    d14_direct = per_k["None"]["day14_direct"]
+    d14_harm = per_k["None"]["day14_harmonized"]
+    gain = per_k["None"]["gain"]
+    g100 = per_k["100"]["gain"]
+    print(f"\n  top100 gain {g100:.3f} vs dense {gain:.3f} -> "
+          f"{'DIFFERENT' if abs(g100 - gain) > 0.3 else 'similar'}")
 
     print(f"\n  sigma ratio (gill/hff) over {len(shared)} clock genes: "
           f"median {np.median(ratio):.3f}, mean {ratio.mean():.3f}")
@@ -175,6 +197,7 @@ def main() -> int:
            "sigma_ratio": {"median": float(np.median(ratio)), "mean": float(ratio.mean()),
                            "p10": float(np.percentile(ratio, 10)),
                            "p90": float(np.percentile(ratio, 90))},
+           "per_k": per_k,
            "day14_direct": d14_direct, "day14_harmonized": d14_harm,
            "measured_gain": float(gain), "predicted_gain": PREDICTED_GAIN,
            "shard_reference": SHARD_DAY14,

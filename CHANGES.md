@@ -11,6 +11,59 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-06 - Step 1d: the sparse clock and harmonization INTERACT ADVERSARIALLY on HFF
+
+**Status:** MEASURED, and it runs AGAINST the sparse clock. **`src/` untouched, no label moved.**
+
+Step 1c closed with a warning rather than a result: the gain is applied **per gene**, so a clock that
+changes *which* genes carry ΔAge has its own gain, and neither §1's Gill-side number nor 1c's 2.152
+transfers to the combination. Step 1d measures it instead of assuming it, sweeping k over the same
+cells with the pipeline's own arithmetic and the same median variance floor.
+
+| k | direct | harmonized | **gain** | median sigma-ratio on kept genes |
+|---:|---:|---:|---:|---:|
+| 50 | -8.22 | -28.17 | **3.429** | 0.838 |
+| **100** | -10.73 | **-29.70** | **2.769** | 0.836 |
+| 150 | -11.68 | -30.97 | 2.651 | 0.780 |
+| 300 | -15.45 | -32.99 | 2.135 | 0.690 |
+| 1000 | -12.78 | -24.83 | 1.944 | 0.608 |
+| **all 33,155** | -9.96 | **-21.43** | **2.152** | 0.608 |
+
+### The finding
+
+**The sparse clock's gain is HIGHER than the dense clock's - 2.769 against 2.152 - and it rises
+monotonically as k falls.** The mechanism is in the last column: the clock's largest-|weight| genes
+sit precisely where `sigma_gill / sigma_hff` is largest (**0.836** among the top 100 against **0.608**
+over all genes). **Sparsification concentrates the clock onto exactly the genes harmonization
+amplifies most.**
+
+Under the pipeline as it actually runs, `top100` gives HFF day-14 **-29.70 yr** - **further from
+plausible than the dense clock's -21.43.**
+
+### What this does to §1
+
+> **§1's finding does not transfer to HFF. It inverts.** Sparsifying removes a -14 yr bias on Gill
+> and *increases* the magnitude on HFF. Gill is the harmonization reference, so its gain is ~1 by
+> construction and this effect is invisible there. The two changes do not compose - they compound in
+> opposite directions on the two datasets.
+
+§1's status is downgraded from "MEASURED, validated leave-one-donor-out" to **"MEASURED and
+CONFINED"**. The leave-one-donor-out validation stands exactly as measured; what does not stand is
+the extrapolation from it to HFF.
+
+### The plan consequence
+
+**A single clock cannot be adopted globally on this evidence.** The same change improves Gill and
+degrades HFF, and **HFF is 99.8 % of the age labels.** Recorded in §4.6 with the four options and
+why the honest position is to adopt nothing until step 4 measures the combination end-to-end.
+**Step 4's rebuild was never optional; it is now the gate rather than a formality.**
+
+This is why 1d was registered before it was run - it could only ever have confirmed or overturned
+§1, and it overturned it for the dataset that carries the labels.
+
+---
+
+
 ## 2026-08-04 — Step 1c: the harmonization gain is MEASURED at 2.152, and it REWEIGHTS rather than rescales
 
 **Status:** ✅ Confirmed. **843 tests pass, ruff clean, `src/` untouched, no label moved.**
