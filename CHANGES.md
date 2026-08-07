@@ -11,6 +11,64 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-07 (later) - Stage 1.5.6: step 3b added, and it GATES step 4
+
+**Status:** PLAN ONLY. Nothing executed. **`src/` untouched, no build touched, no label moved.**
+
+Written after the matched HFF reproduction (entry above) found that HFF's day-14 dAge swings
+**16.67 yr across the six LOOCV folds** - N2 reads -7.35 against a median of -22.51, a 3.1x
+compression - even though HFF is never the held-out line and supplies 99.7% of the age-labelled
+corpus.
+
+### Why it belongs in 1.5.6 and NOT in a new stage
+
+An earlier draft of this proposed a new Stage 1.5.7. That was wrong and is withdrawn. The check
+belongs inside 1.5.6 for a concrete reason: **step 4 is a rebuild + LOOCV comparing sparse vs dense
+clock across those same six folds.** Run as written, its paired CI carries a 16.67 yr nuisance term
+and the retrain would be spent on a confounded comparison. So 3b is not a new question - it is a
+gate step 4 already needed and nobody knew it. It is also the same subject: steps 1c and 1d already
+measure the harmonization gain (2.152 dense, 2.769 sparse).
+
+### The mechanism is predicted by this project's own closed form
+
+Stage 1.5's audit replaced the false "batch-immune by construction" claim with
+`dAge = sum_g delta_g * sigma_ref,g / (sigma_d,g + EPS) * w_g`. `Harmonizer.fit` takes training
+control cells only -- "already excludes the held-out donor" (harmonize.py:59-60) -- with
+`ref_dataset = "gill_bulk"`, and every Gill donor's zero-point is ONE unreplicated control (audit
+section 5.2). So `sigma_ref` is estimated from **five single control samples**, and which five
+changes every fold. HFF's entire label scale is multiplied by a factor estimated from five cells.
+
+A mean-of-ratios does NOT explain it (N2 0.425 and Y1 0.410 are similar; only N2 collapses), which
+is expected from section 4.5 - the gain is per-GENE. The right statistic is the **clock-weighted**
+gain, and nobody has computed it per fold. That is step 3b.
+
+### Added to plans/STAGE_1_5_6_SPARSE_CLOCK.md (140 insertions, 0 deletions)
+
+- a dated pointer box above section 0
+- **section 4.7** - the measured fold instability and its consequence for step 4
+- a **3b** row in the section 5 plan table, between steps 3 and 4
+- **section 5.1** - the full pre-registration: statistic `G_f` (clock-weighted gain), primary metric
+  `R` (residual spread ratio), bar **R <= 0.35** graded through `bar_verdict` with a resolvability
+  simulation required BEFORE the run, three fixed decision branches, an explicit
+  what-this-does-not-license list, and a falsifiability self-test (the verify_1a lesson)
+- two artefact rows in section 7
+
+### The decision branches, fixed in advance
+
+ATTRIBUTED -> step 4 is BLOCKED; fixing the fit protocol becomes its own Change with its own bar.
+NOT ATTRIBUTED -> step 4 proceeds, the spread carried as a stated nuisance term, new owner needed.
+UNRESOLVABLE -> step 4 proceeds, instability handed to STAGE_6_NEW_DATA_REV section 3 beside D2 -
+the same n=1 control problem, already donor-blocked.
+
+### Correction carried in the same breath
+
+G-c step 2 is **not** an open retrain. It ran as step 6 - the snapshots are literally
+`gc2_A_keep_hff.json` / `gc2_B_mask_hff.json` - and returned INCONCLUSIVE (MDE 5.045 vs delta*
+3.572). It does not need a retrain; it needs lower variance, which is the same question 3b asks.
+Step 3b explicitly does NOT re-open step 6; that would need its own pre-registration.
+
+---
+
 ## 2026-08-07 (later) - Matched HFF reproduction: EXACT bit-for-bit; and HFF's labels are NOT fold-stable
 
 **Status:** RUN and VERIFIED. **`src/` untouched, no build touched, read-only.** The July reference

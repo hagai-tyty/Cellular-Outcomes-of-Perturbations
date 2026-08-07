@@ -6,6 +6,22 @@
 **Scope of what this proposes:** one config change, gated, with a pre-registered bar.
 
 
+> ## 🆕 2026-08-07 — **STEP 3b ADDED, and it GATES step 4**
+>
+> *Additive. The status line above and every section below are unmodified.*
+>
+> Reproducing July's HFF result on arm A found that **HFF's day-14 ΔAge swings 16.67 yr across the
+> six LOOCV folds** — N2 reads −7.35 where the median is −22.51, a **3.1× compression** — even
+> though HFF is never the held-out line and is 99.7% of the age-labelled corpus. §4.3–§4.5's own
+> closed form predicts this: `σ_ref` is refit per fold from **five single Gill control cells**.
+>
+> **Step 4 compares sparse vs dense clock across those same six folds.** Run as written, its paired
+> CI would carry a 16.67 yr nuisance term. **Step 3b measures whether the clock-weighted gain
+> accounts for that spread, and step 4 does not start until it answers.** Free, read-only.
+>
+> New: **§4.7** (the finding) and **§5.1** (step 3b's full pre-registration, bar, and decision
+> branches). Steps 2 and 3 are unaffected and remain free to run now.
+
 ---
 
 ## 0. ⚠️ SELF-AUDIT 2026-08-04 — three errors in this document, and one thing that got stronger
@@ -325,6 +341,58 @@ degrades HFF, and HFF is 99.8 % of the age labels. The options are now:
 
 ---
 
+## 4.7 🆕 2026-08-07 — the gain is NOT STABLE ACROSS FOLDS, and that changes what step 4 measures
+
+*Additive. Nothing in §4.1–§4.6 is modified. Measured while reproducing July's HFF result on arm A
+(`experiments/repro_hff_signature_armA.py`; notebook section "MATCHED-DATA HFF REPRODUCTION").*
+
+Same script, same build family, **only the held-out Gill donor differs**:
+
+| fold | N2 | N3 | O1 | O2 | Y1 | Y2 |
+|---|---|---|---|---|---|---|
+| HFF day-14 ΔAge | **−7.35** | −22.12 | −24.02 | −22.89 | −22.05 | −23.87 |
+| slope yr/day | **−0.49** | −1.26 | −1.53 | −1.44 | −1.40 | −1.47 |
+| harmonized genes | 5026 | 5258 | 5328 | 5304 | 5402 | 5305 |
+
+**day-14 spread 16.67 yr. N2 is a 3.1× compression off a median of −22.51.**
+
+### Why §4.3–§4.5's own closed form predicts this
+
+Stage 1.5's audit replaced the false "batch-immune by construction" claim with
+
+```
+ΔAge = Σ_g δ_g · σ_ref,g / (σ_d,g + EPS) · w_g
+```
+
+and §4.5 confirmed the gain is a **per-gene reweighting**, not a scale. Two facts make that
+fold-dependent:
+
+* `Harmonizer.fit` takes **training control cells only** — *"already excludes the held-out donor"*
+  ([harmonize.py:59-60](src/cellfate/data/harmonize.py)) — and `ref_dataset = "gill_bulk"`.
+* Every Gill donor's zero-point is **one unreplicated control** (Stage 1.5 audit §5.2).
+
+So `σ_ref` is estimated from **five single control samples**, and *which* five changes every fold.
+**HFF's entire label scale is multiplied by a factor estimated from five control cells.** HFF is
+42481 of 42605 age-labelled cells in the arm-A build (99.7%; the 99.8% quoted elsewhere in this
+document is the earlier 33,688-cell corpus).
+
+A mean-of-ratios does **not** explain it — N2 (σ ratio 0.425) and Y1 (0.410) are similar and only
+N2 collapses. That is expected from §4.5: the gain is per-gene and §4.6 showed it concentrates on
+the clock's heavy genes. **The right statistic is the clock-weighted gain, which nobody has
+computed per fold.** That is step 3b.
+
+### The consequence for step 4, and it is the reason 3b comes first
+
+Step 4 compares **sparse vs dense clock** across a 6-fold LOOCV. If HFF's labels already swing 3×
+between those folds for reasons unrelated to the clock, step 4's paired CI is built on differences
+contaminated by a 16.67 yr nuisance term. **The retrain would be spent on a confounded comparison.**
+
+It also sharpens §4.6's option table: *"re-fit the harmonizer on the sparse gene space"* was listed
+as one of four ways forward. 3b measures whether the harmonizer's **fit protocol** — not its gene
+space — is the live problem.
+
+---
+
 ## 5. The plan
 
 | # | step | gate | cost |
@@ -335,10 +403,80 @@ degrades HFF, and HFF is 99.8 % of the age labels. The options are now:
 | **1d** | ✅ **DONE — and it INVERTS §1 on HFF.** top-100 gain **2.769** vs dense **2.152**; harmonized day-14 **−29.70** vs dense **−21.43**. The clock's heavy genes sit where the σ ratio is largest (0.836 vs 0.608). See §4.6 | — | done |
 | **2** | **Pre-register the bar** for adopting a sparse clock: MAE ≤ 8 yr **and** sign agreement ≥ 0.80 vs methylation, on **both** arms, k fixed at 100 in advance | `bar_verdict` row in `tests/test_bars_resolvable.py` | free |
 | **3** | **Write `configs/clocks/fleischer_clock_top100.json`** — the same coefficients, 33,055 zeroed. Provenance in `meta`, original untouched | ships as a **new file**; nothing switches automatically | free |
+| **3b** | 🆕 **GATE ON STEP 4 — is the harmonization gain stable across folds?** Compute the clock-weighted gain per fold and test whether it accounts for the 16.67 yr day-14 spread (§4.7). Read-only, **0 lines in `src/`** | `bar_verdict` row in `tests/test_bars_resolvable.py`; pre-registration in §5.1 | free |
 | **4** | **One rebuild + LOOCV under the sparse clock**, full scorecard, snapshot and rollback | every Stage 1 guard reported before/after | one retrain |
 | **5** | Only then decide on the label change | — | — |
 
 **Step 1 is the falsifier and it costs nothing. Do it first.**
+
+---
+
+## 5.1 🆕 STEP 3b — PRE-REGISTRATION (written 2026-08-07, before the measurement)
+
+**Owner:** this stage. **Cost:** free, read-only. **Scope:** 1 new script, 1 test row,
+**0 lines changed in `src/`**, **no label moves under any outcome.**
+**Blocking for:** step 4 only. It does not gate steps 2 or 3, which are independent and free.
+
+### The question
+
+> Does the **clock-weighted harmonization gain** account for the 16.67 yr fold-to-fold spread in
+> HFF's day-14 ΔAge (§4.7)?
+
+### The statistic
+
+Per fold `f`, over the genes admissible in that fold, with `w_g` the clock's coefficients:
+
+```
+G_f  =  Σ_g |w_g| · σ_gill,g^(f) / (σ_hff,g^(f) + EPS)   /   Σ_g |w_g|
+```
+
+`G_f` is the closed form of §4.3 restricted to what the clock actually reads — deliberately **not**
+the mean σ ratio, which §4.7 already showed does not discriminate.
+
+**Primary metric — residual spread ratio.** Let `d_f` be HFF's day-14 mean ΔAge in fold `f`, and
+`spread(x) = (max x − min x) / |median x|`:
+
+```
+R  =  spread( d_f / G_f )  /  spread( d_f )
+```
+
+`R → 0` the gain explains the instability; `R → 1` it explains none of it.
+
+### The bar
+
+| | |
+|---|---|
+| **B1 ATTRIBUTED** | `R ≤ 0.35` — the gain removes ≥ 65% of the relative spread |
+| **direction** | lower is better |
+| **resolvability** | `bar_verdict` **must be run before the measurement**, on a null simulated at this geometry: 6 folds, gains drawn to match the observed `G_f` dispersion, `d_f = G_f × constant + N(0, s)` with `s` the observed per-fold SEM (0.19–0.24 yr). RESOLVABLE requires a correct system to clear `R ≤ 0.35` at `MIN_PASS_RATE = 0.95`. **If the simulation returns UNRESOLVABLE, the bar moves to `usable_bar` BEFORE the run and the move is recorded** — `REF_GROUND_RULES.md` §5b |
+
+**Secondary, reported not graded:** Spearman ρ(`G_f`, `d_f`) across the 6 folds, and the correlation
+between `G_f` and the **per-fold arm A − arm B differences already in
+`scorecard/gc2_A_keep_hff.json` / `gc2_B_mask_hff.json`.** Reported to bound how much of step 6's
+SD 4.808 this could carry. **Not graded, and it cannot settle that question** — settling it needs a
+rebuild, which step 3b deliberately does not do.
+
+### Decision branches, fixed in advance
+
+| outcome | what it means | what happens to step 4 |
+|---|---|---|
+| **ATTRIBUTED** (`R ≤ bar`) | the fit protocol — `σ_ref` from five single controls, refit per fold — is the instability | **Step 4 is BLOCKED.** Fixing the protocol (fit-once-and-freeze vs refit-per-fold) becomes its own pre-registered Change with its own bar and snapshot, per the one-change rule. Only then is a sparse-vs-dense comparison interpretable |
+| **NOT ATTRIBUTED** (`R > bar`) | the gain is not the mechanism | **Step 4 proceeds as written**, and §4.7's spread is carried into its interpretation as a stated nuisance term. A new owner is needed for the instability; it is not this stage's |
+| **UNRESOLVABLE** even at `usable_bar` | 6 folds cannot decide it | Step 4 proceeds, §4.7 is recorded as an unexplained confound, and the item is handed to `STAGE_6_NEW_DATA_REV.md` §3 beside D2 — the same n = 1 control problem, which is already donor-blocked |
+
+### What step 3b does NOT license
+
+* **It is not a fix.** It measures attribution. Changing `Harmonizer.fit`'s protocol is a separate
+  Change with its own bar — this step only decides whether that Change is needed.
+* **It does not re-open step 6.** Step 6 (= G-c step 2, snapshots `gc2_A`/`gc2_B`) ran and returned
+  INCONCLUSIVE. Re-running it requires its own pre-registration and is **not** authorised here.
+* **It does not touch the clock.** `k = 100` stays frozen per §6.
+* **It says nothing about whether HFF's labels are CORRECT age** — still open after arms C and D.
+
+### Falsifiability check (the `verify_1a` lesson)
+
+The script must **self-test that it can fail**: fed synthetic folds whose `d_f` is constant while
+`G_f` varies, it must return NOT ATTRIBUTED. A branch that never executes is not a check.
 
 ---
 
@@ -363,5 +501,7 @@ degrades HFF, and HFF is 99.8 % of the age labels. The options are now:
 | `experiments/diag_dage_ledger.py` | the per-condition ledger: truth / expected / actual / error |
 | `experiments/diag_dage_ksweep.py` | the k-sweep that located the optimum |
 | `results/DAGE_LEDGER.md` | the readable record, 68 per-condition rows |
+| 🆕 `experiments/repro_hff_signature_armA.py` | the 2026-08-07 measurement that found §4.7's fold instability (matched-fold reproduction is EXACT; R2 fold-stability FAILS) |
+| 🆕 `results/repro_hff_signature_armA_results.json` | its per-fold output — the `d_f` values step 3b consumes |
 | `results/dage_ledger.csv` | full table, 90 rows × 60 columns |
 | `results/diag_dage_ksweep_results.json` | every k, both clocks, both arms |
