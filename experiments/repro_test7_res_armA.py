@@ -87,11 +87,12 @@ from pathlib import Path
 import numpy as np
 
 REPO = Path(__file__).resolve().parent.parent
+_RESULTS = Path(__file__).resolve().parents[1] / "results"
 sys.path.insert(0, str(REPO / "experiments"))
 
 ARM = "armA"
 DONORS = ["N2", "N3", "O1", "O2", "Y1", "Y2"]
-OUT = REPO / "results" / "repro_test7_res_armA_results.json"
+OUT = _RESULTS / "repro_test7_res_armA_results.json"
 
 # ---------------------------------------------------------------------------
 # July reference, transcribed from experiments/DELTAAGE_LAB_NOTEBOOK.md.

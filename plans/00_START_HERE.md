@@ -179,6 +179,84 @@ Full detail: `experiments/DELTAAGE_LAB_NOTEBOOK.md` (last two sections) and `CHA
 
 ---
 
+## 🆕 2026-08-07 — C-2 IS NOT FREE. It masks 99.8% of the age labels.
+
+> *Additive. No ordering above is edited. This records a measurement and states its consequence for
+> the order; the order itself is a decision, not a finding.*
+
+The standing shortlist has carried, for weeks:
+
+> *"1. Turn on C-2 — free, code written, worth more than 13 donors"*
+
+**Verified against the data and the code — it is not free, and "worth more than 13 donors" is
+backwards.**
+
+| fact | source | value |
+|---|---|---|
+| the clock's declared validity range | `fleischer_clock.json` -> `meta.age_range`, lifted by `aging.py:80` | **[1.0, 96.0]** |
+| Gill donor ages | `GSE165176_series_matrix.txt.gz`, `!Sample_characteristics_ch1` | **N2 = 0, N3 = 0**, O1 = 53, O2 = 53, Y1 = 29, Y2 = 35 |
+| HFF donor age | `sources.py:557` `DONOR_AGE_YEARS` | **0.0** |
+| is HFF's age stamped? | `sources.py:731` — **C-3 shipped** | **yes** |
+| what rule 3 does | `aging.py:200` `_exclude((a < lo) | (a > hi), "donor_out_of_clock_range")` | masks on `donor_age` |
+
+**HFF is a neonatal foreskin line at donor age 0, below the clock's lower bound of 1.0, and C-3
+already stamps that age. So enabling `enforce_clock_age_range` masks every HFF cell** — 42,481 of
+42,605 age-labelled cells in the arm-A build — **plus N2 and N3.**
+
+### The comment that justified "free" excludes the dataset that dominates
+
+`build_dataset.py:123`:
+
+> *"OFF by default because turning it on MOVES LABELS -- N2 and N3 are donor_age 0 and the shipped
+> clock's range starts at 1.0, so 30 of the **75 non-HFF** training labels would go."*
+
+That count is correct **and scoped to non-HFF**. It was written before C-3 stamped HFF's age. With
+C-3 shipped, the rule reaches HFF, and the true cost is ~99.8% of the corpus rather than 30 labels.
+**Nothing here is a bug — the flag is off, the guard held, and the comment was true when written.
+What is wrong is the shortlist's cost estimate.**
+
+### The uncomfortable part: C-2 firing on HFF may be CORRECT
+
+Every HFF age label is the Fleischer clock extrapolated **below its own fitted range**. That is a
+validity problem, not a tuning problem, and it is a candidate explanation for why HFF's ΔAge has
+resisted every fix attempted in 1.5.2 through 1.5.6. **The rule is not wrong for wanting to mask
+them.**
+
+But acting on it before in-range donors exist would end ΔAge as a trainable target on the current
+corpus. **So C-2 is not an early free win — it is DOWNSTREAM of acquisition.** That inverts its
+position in the shortlist, where it sat first and acquisition sat last.
+
+### It also touches §4.7's fold instability, without explaining it
+
+**The fold that collapses — N2, day-14 ΔAge −7.35 against a median of −22.51 — is a donor-age-0
+donor.** N3 is also age 0 and does **not** collapse, so age alone is not the mechanism and this is
+**not** an explanation. What N2 additionally has is the **fewest admissible genes (5026)**, which is
+the variance-floor lever recorded in `STAGE_1_5_6_SPARSE_CLOCK.md` §5.2 A4. Recorded as a lead, not
+a finding.
+
+### Where the shortlist stands, item by item
+
+| # | item | status |
+|---|---|---|
+| 1 | Turn on C-2 | 🔴 **not free** — masks 99.8% of labels; belongs **after** acquisition, not before |
+| 2 | Integrate GSE165177 | ✅ still free, still correct, already in the 2026-08-07 order |
+| 3 | Stratified shuffle | ✅ **DONE** — arm D landed 2026-08-07 (`scorecard/gc2_D_stratshuffle_hff_s0.json`) |
+| 4 | Acquire | ✅ = Stage 6, in the order — **and now C-2's prerequisite, not its successor** |
+
+### Proposed amendment to the 2026-08-07 order — a PROPOSAL, not an edit
+
+*Recorded here for decision. The order above is unchanged until that decision is taken.*
+
+1. **Merge 1.5.6 step 3b with §4.6 option 2** — §5.2 U2 shows they are the same variance-floor
+   question. One read-only measurement, not two.
+2. **Re-instrument 3b as a per-fold reconstruction** rather than the spread ratio `R` (§5.2 A1/A2),
+   and replace the ATTRIBUTED branch's leaky remedy (§5.2 A3).
+3. Steps 2 and 3 of 1.5.6 are unaffected and remain free to run now.
+4. **Insert C-2 explicitly into the order, positioned after Stage 6**, carrying the 99.8% figure —
+   so a switch this destructive can never be flipped as a tidy-up.
+
+---
+
 ## 🆕 Where things live (repo tidied 2026-08-01)
 
 Root now holds **only** the tools you run constantly and the libraries other code imports.

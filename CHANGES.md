@@ -11,6 +11,75 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-07 - Audit of the incoming step 3b, and C-2 is not free
+
+**Status:** Recorded. **`src/` untouched, no label moved, no existing plan section edited.**
+
+Pulled 9 commits from the other machine (arm D, the cross-machine reproduction, and 1.5.6 step 3b).
+Audited step 3b and re-checked the standing shortlist against the code and the raw data.
+
+### Step 3b - 4 defects and 1 inconsistency (`STAGE_1_5_6_SPARSE_CLOCK.md` §5.2)
+
+| | |
+|---|---|
+| **A1** | `G_f` is a |w|-weighted mean of ratios - the family §4.5 disproved, because it drops `δ_g`. And the exact gain makes `d_f/G_f` fold-invariant **by algebra**, so `R = 0` always. Proxy measures the proxy; exact measures nothing |
+| **A2** | The question is settled by **elimination** - only `σ_gill`, the gene set, and the deconfounder can move across folds, and step 1b bounded the deconfounder at +2.11 yr. The right instrument is a per-fold **reconstruction**, which cannot return "six folds cannot decide it" |
+| **A3** | The ATTRIBUTED branch's remedy - *"fit-once-and-freeze"* - **reintroduces donor leakage**, the exact thing `harmonize.py:59-60` and Group C exist to prevent. Four non-leaking candidates recorded instead |
+| **A4** | §4.7's own table lists 5026-5402 admissible genes per fold, then attributes everything to `σ_ref`. But `harmonize.py:112` floors σ at `median(sigma)` - a **set-level** statistic - so the gene set moves the floor for **every gene at once**. N2 has the fewest genes and is the fold that collapses. Untested |
+| **A5** | §4 says 33,613 HFF labels; §4.7 says 33,688. One is wrong |
+
+Verified and **correct**: five-single-controls (confirmed from the raw matrix - exactly 6 `_Fib_`
+day-0 baselines among 124 columns), the 16.67 yr arithmetic, and `_clock_range`, which looks like a
+fail-open but is not - `LinearClock.from_json` lifts `meta.age_range` and returns (1.0, 96.0).
+
+### Two items our own 1b-1d work left unrecorded
+
+* **U1** - `diag_harmonization_gain.py` picks Gill's controls with a regex whose failure mode is
+  *unparseable -> control*. 118 of 124 names carry `_dNN_`, **none** carry `_d0_`, and the 6 that do
+  not parse are the fibroblast baselines. **1c/1d used the right rows by accident.** The script is
+  left **unmodified** so those results stay reproducible; the defect is recorded in the plan.
+* **U2** - §4.6's option 2 can only move the **variance floor** and the **admissible mask**; `mu_g`
+  and `sigma_g` are per-gene and do not move. **So option 2 and step 3b are the same lever**, and
+  running them separately spends two efforts on one question.
+
+### C-2 is not free - it masks 99.8% of the age labels (`00_START_HERE.md`)
+
+The shortlist has carried *"Turn on C-2 - free, worth more than 13 donors"* for weeks. Checked:
+
+* clock `meta.age_range` = **[1.0, 96.0]**
+* Gill donors **N2 = 0, N3 = 0**, O1 53, O2 53, Y1 29, Y2 35
+* **HFF `DONOR_AGE_YEARS = 0.0`** (`sources.py:557`), and **C-3 shipped**, so it is stamped
+  (`sources.py:731`)
+* rule 3 excludes on `donor_age < lo` (`aging.py:200`)
+
+**Enabling it masks all 42,481 HFF cells plus N2 and N3.** The justifying comment at
+`build_dataset.py:123` counts *"30 of the 75 non-HFF labels"* - correct when written, before C-3
+reached HFF. **No bug: the flag is off and the guard held. The shortlist's cost estimate is what is
+wrong.**
+
+C-2 firing on HFF may well be **correct** - every HFF label is the clock extrapolated below its own
+fitted range, which is a candidate explanation for why HFF has resisted 1.5.2 through 1.5.6. But
+that makes C-2 **downstream of acquisition**, inverting its position in the shortlist. Recorded with
+a proposed amendment to the order; **the order itself is left unedited pending that decision.**
+
+Also noted: the fold that collapses (N2, -7.35) is a donor-age-0 donor - but N3 is age 0 and does
+not collapse, so this is a **lead, not an explanation**.
+
+### Shortlist status
+
+| # | item | status |
+|---|---|---|
+| 1 | C-2 | 🔴 not free - after acquisition, not before |
+| 2 | GSE165177 | ✅ free, already ordered |
+| 3 | Stratified shuffle | ✅ **DONE** - arm D landed |
+| 4 | Acquire | ✅ Stage 6 - and now C-2's prerequisite |
+
+Not audited line by line: arm D's result and the reproduction claims. Plan text and the C-2 /
+harmonizer facts only.
+
+---
+
+
 ## 2026-08-07 (later) - Stage 1.5.6: step 3b added, and it GATES step 4
 
 **Status:** PLAN ONLY. Nothing executed. **`src/` untouched, no build touched, no label moved.**

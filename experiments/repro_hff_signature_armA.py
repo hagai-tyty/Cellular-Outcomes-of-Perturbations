@@ -68,13 +68,14 @@ from pathlib import Path
 import numpy as np
 
 REPO = Path(__file__).resolve().parent.parent
+_RESULTS = Path(__file__).resolve().parents[1] / "results"
 sys.path.insert(0, str(REPO))
 sys.path.insert(0, str(REPO / "src"))
 
 DONORS = ["N2", "N3", "O1", "O2", "Y1", "Y2"]
 JULY_FOLD = "O1"                     # diag_gc_hff_signature.py defaults to runs/cellfate_loocv_O1
 JULY_REF = REPO / "results" / "diag_gc_hff_signature_results.json"
-OUT = REPO / "results" / "repro_hff_signature_armA_results.json"
+OUT = _RESULTS / "repro_hff_signature_armA_results.json"
 
 EXACT_FIELDS = ["n_cells", "n_timepoints", "rho_timepoint", "slope_yr_per_day",
                 "rho_percell", "slope_percell", "n_descending_steps", "n_steps"]

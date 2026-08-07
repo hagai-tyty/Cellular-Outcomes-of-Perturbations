@@ -56,6 +56,7 @@ from pathlib import Path
 import numpy as np
 
 REPO = Path(__file__).resolve().parent.parent
+_RESULTS = Path(__file__).resolve().parents[1] / "results"
 sys.path.insert(0, str(REPO / "experiments"))
 
 from cellfate.common.io import ArtifactPaths  # noqa: E402
@@ -68,7 +69,7 @@ REGIME = "holdout"
 ARM = "armA"
 # folds whose RES came back nan in the reproduction test
 DEGENERATE = {"N3", "O2", "Y1"}
-OUT = REPO / "results" / "diag_res_degenerate_armA_results.json"
+OUT = _RESULTS / "diag_res_degenerate_armA_results.json"
 
 
 def one_fold(donor: str) -> dict | None:

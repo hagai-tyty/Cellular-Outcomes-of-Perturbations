@@ -404,6 +404,7 @@ space — is the live problem.
 | **2** | **Pre-register the bar** for adopting a sparse clock: MAE ≤ 8 yr **and** sign agreement ≥ 0.80 vs methylation, on **both** arms, k fixed at 100 in advance | `bar_verdict` row in `tests/test_bars_resolvable.py` | free |
 | **3** | **Write `configs/clocks/fleischer_clock_top100.json`** — the same coefficients, 33,055 zeroed. Provenance in `meta`, original untouched | ships as a **new file**; nothing switches automatically | free |
 | **3b** | 🆕 **GATE ON STEP 4 — is the harmonization gain stable across folds?** Compute the clock-weighted gain per fold and test whether it accounts for the 16.67 yr day-14 spread (§4.7). Read-only, **0 lines in `src/`** | `bar_verdict` row in `tests/test_bars_resolvable.py`; pre-registration in §5.1 | free |
+| **3b-audit** | 🆕 **Independent audit of 3b — 4 defects + 1 inconsistency (§5.2).** `G_f` is the statistic §4.5 disproved and its exact form is a tautology; the question is settled by elimination so the instrument should be a per-fold RECONSTRUCTION; the ATTRIBUTED branch's remedy reintroduces donor leakage; the gene-set/variance-floor mechanism in §4.7's own table is untested — **and it is the same lever as §4.6's option 2** | — | free, done |
 | **4** | **One rebuild + LOOCV under the sparse clock**, full scorecard, snapshot and rollback | every Stage 1 guard reported before/after | one retrain |
 | **5** | Only then decide on the label change | — | — |
 
@@ -477,6 +478,145 @@ rebuild, which step 3b deliberately does not do.
 
 The script must **self-test that it can fail**: fed synthetic folds whose `d_f` is constant while
 `G_f` varies, it must return NOT ATTRIBUTED. A branch that never executes is not a check.
+
+---
+
+## 5.2 🆕 2026-08-07 — AUDIT OF STEP 3b (second machine), and two items our own work left unrecorded
+
+*Additive. §5.1 is unmodified — this records what an independent check of it found. Every claim
+below was verified against the code or the raw data, not against the document.*
+
+### ✅ What checks out
+
+* **`σ_ref` really is estimated from five single control samples.** Independently confirmed from the
+  raw matrix: `GSE165176_Log2_RPM_Sendai_reprogramming` carries **124 sample columns**, and exactly
+  **6** are day-0 dermal fibroblasts — `N2/N3/O1/O2/Y1/Y2_Fib_Sendai_Exp2`, one per donor, matching
+  `sources.py:417`'s definition of `is_control`. Leave-one-donor-out leaves five.
+* **The spread is arithmetically right.** −7.35 against −24.02 is **16.67 yr**.
+* **`_clock_range` is NOT the fail-open it looks like.** It reads `getattr(clock, "age_range", None)`
+  while the JSON stores the range under `meta`. Checked directly: `LinearClock.from_json` lifts
+  `meta.age_range` into a real attribute (`aging.py:80`) and returns **(1.0, 96.0)**. The wiring is
+  correct.
+
+### 🔴 A1 — `G_f` is the statistic §4.5 disproved, and its exact form is a tautology
+
+§5.1 defines `G_f = Σ_g |w_g|·σ_gill,g/σ_hff,g ÷ Σ_g |w_g|`. §4.7 is right to reject the plain
+mean-of-ratios — but this is the same family with different weights. **§4.5's finding was that the
+median ratio is 0.608 while the net effect is ×2.152**, and the reason is `δ_g`, the per-gene
+perturbation deltas, which `G_f` drops entirely. It also drops the *sign* of `w_g`.
+
+And substituting the exact gain does not repair it. The exact gain is
+
+```
+G_f = Σ_g δ_g·ratio_g·w_g  /  Σ_g δ_g·w_g
+```
+
+so `d_f / G_f ≡ Σ_g δ_g·w_g`, which is **fold-invariant by algebra** — `R = 0` for any data
+whatsoever. The statistic is caught between a proxy that measures the proxy and an exact form that
+measures nothing.
+
+### 🔴 A2 — the question is already settled by elimination; a 6-point spread ratio is the wrong instrument
+
+Across folds the clock is frozen and HFF's cells are fixed. The only inputs to HFF's ΔAge that can
+change are:
+
+| input | can it move across folds? |
+|---|---|
+| `σ_gill` (5 of 6 donors) | **yes** |
+| the admissible gene set (5026–5402) | **yes** |
+| the deconfounder coefficients `(a, b)` | yes — **but step 1b bounded the whole S3+S4 contribution at +2.11 yr** |
+| `w_g` (clock), HFF `δ_g`, `μ` terms | no — frozen, or cancel in a difference |
+
+**By elimination, harmonization is the only remaining candidate that can move 16.67 yr, and no
+statistic is needed to reach that.** What is actually unknown is not *whether* but *by what path*.
+
+> **The decisive test is a reconstruction, not a correlation:** recompute `d_f` from each fold's own
+> harmonizer (`σ_gill^(f)`, `σ_hff`, gene set, floor) and check it reproduces the recorded `d_f`.
+> Deterministic, read-only, and it cannot return "six folds cannot decide it". Where the
+> reconstruction *fails* to track is the informative residue.
+
+### 🔴 A3 — the ATTRIBUTED branch's remedy would reintroduce donor leakage
+
+§5.1's ATTRIBUTED branch names the fix as *"fit-once-and-freeze vs refit-per-fold"*. **Fit-once
+means the harmonizer has seen the held-out donor's control sample before that donor's cells are
+transformed as test data.** That is precisely what `harmonize.py:59-60` (*"already excludes the
+held-out donor"*) and Stage 1.5's Group C leak-safety test exist to prevent. There is no subset of
+Gill controls that is in-train for every fold, because every donor is held out in one of them.
+
+**So the branch as written points at a fix that cannot be adopted.** Candidates that do not leak,
+none of them named in §5.1:
+
+| | |
+|---|---|
+| shrink `σ_ref` toward a pooled/global estimate | keeps the per-fold refit, damps a 5-sample estimator |
+| change `ref_dataset` away from `gill_bulk` | HFF has thousands of control cells; Gill has six samples. But the clock was fit on bulk, which is why the reference is bulk — this is a real trade, not a free swap |
+| more control replicates per Gill donor | correct, and **donor-blocked** — this is Stage 6's D2 |
+| accept and report it as a nuisance term | the NOT-ATTRIBUTED branch, applied honestly |
+
+### 🔴 A4 — the gene-space mechanism is in §4.7's own table and goes untested
+
+§4.7 records **harmonized genes 5026–5402 per fold**, then attributes the instability to `σ_ref`
+alone. But `harmonize.py:112` computes
+
+```
+floor = float(np.median(sigma))      # median over the ADMISSIBLE genes
+sigma = np.maximum(sigma, floor)
+```
+
+`median(sigma)` is a **set-level** statistic. Change the admissible set and the floor moves for
+**every gene at once**, including genes whose own σ did not change. **N2 has the fewest admissible
+genes (5026) and is the fold that collapses.** That correlation is sitting in §4.7's table untested,
+and it is a different mechanism from "σ_ref estimated from five samples" — it would survive even if
+σ_ref were perfectly stable.
+
+### ⚠️ A5 — factual inconsistency
+
+§4 states HFF carries **33,613** labels; §4.7 refers to *"the earlier **33,688**-cell corpus"*. One
+of the two is wrong.
+
+---
+
+### 📌 Two items our own 1b–1d work left unrecorded
+
+**U1 — `diag_harmonization_gain.py` (the script behind 1c and 1d) has a fail-open control selector.**
+
+```python
+g_day = [float(m.group(1)) if (m := re.search(r"_d(\d+)_", s)) else 0.0 for s in samples]
+g_ctrl = g_norm[g_day == 0.0]        # anything UNPARSEABLE silently becomes a control
+```
+
+Checked: **118 of 124** sample names carry `_dNN_`, and **not one carries `_d0_`**. The 6 that do not
+parse are exactly the fibroblast baselines. **So 1c/1d used the right six rows — but by accident, not
+by design.** The recorded numbers stand and the script is deliberately **left unmodified** so those
+results stay reproducible; the defect is recorded here instead, and
+`experiments/diag_harmonizer_refit_sparse.py` selects on `sources.py:417`'s definition and refuses to
+guess.
+
+**U2 — §4.6's option 2 is mechanically narrower than the option table states, and it is the SAME
+question as step 3b.**
+
+§4.6 offered *"re-fit the harmonizer on the sparse gene space"* on the reasoning that *"restricting
+that set changes the variance floor and therefore every ratio"*. Reading `Harmonizer.fit` pins what
+re-fitting can and cannot do:
+
+| quantity | does restricting the gene set move it? |
+|---|---|
+| `mu_g` (`harmonize.py:110`) | **no** — per-gene |
+| `sigma_g` (`harmonize.py:111`) | **no** — per-gene |
+| `floor = median(sigma)` (`harmonize.py:112`) | **yes** — set-level |
+| the admissible mask (`harmonize.py:88, 91`) | **yes** — drops genes entirely |
+
+> **Option 2 is, mechanically, a change to the variance floor and the admissible mask, and nothing
+> else.** If the top-100 clock genes already sit above both floors, re-fitting is a **no-op** and
+> option 2 cannot work at all.
+
+**And that is the identical lever as A4.** Option 2 varies the gene set deliberately; 3b's folds vary
+it incidentally (5026–5402). **They are one measurement, and running them as two spends two efforts
+on one question.**
+
+`experiments/diag_harmonizer_refit_sparse.py` is written to answer it — three floor regimes
+(pipeline / clock-space / sparse-refit) with the reconciliation to 1c and 1d built in — and is
+**NOT YET RUN.**
 
 ---
 

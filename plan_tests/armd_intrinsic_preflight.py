@@ -36,7 +36,7 @@ for _p in (ROOT, ROOT / "src"):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-_RESULTS = ROOT / "results"
+_RESULTS = Path(__file__).resolve().parents[1] / "results"
 _RESULTS.mkdir(exist_ok=True)
 
 from cellfate.data import build_dataset as bd  # noqa: E402
