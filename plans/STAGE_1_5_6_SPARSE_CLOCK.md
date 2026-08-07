@@ -403,7 +403,7 @@ space — is the live problem.
 | **1d** | ✅ **DONE — and it INVERTS §1 on HFF.** top-100 gain **2.769** vs dense **2.152**; harmonized day-14 **−29.70** vs dense **−21.43**. The clock's heavy genes sit where the σ ratio is largest (0.836 vs 0.608). See §4.6 | — | done |
 | **2** | **Pre-register the bar** for adopting a sparse clock: MAE ≤ 8 yr **and** sign agreement ≥ 0.80 vs methylation, on **both** arms, k fixed at 100 in advance | `bar_verdict` row in `tests/test_bars_resolvable.py` | free |
 | **3** | **Write `configs/clocks/fleischer_clock_top100.json`** — the same coefficients, 33,055 zeroed. Provenance in `meta`, original untouched | ships as a **new file**; nothing switches automatically | free |
-| **3b** | 🆕 **GATE ON STEP 4 — is the harmonization gain stable across folds?** Compute the clock-weighted gain per fold and test whether it accounts for the 16.67 yr day-14 spread (§4.7). Read-only, **0 lines in `src/`** | `bar_verdict` row in `tests/test_bars_resolvable.py`; pre-registration in §5.1 | free |
+| **3b** | 🆕 **GATE ON STEP 4 — what carries the 16.67 yr fold spread in HFF's labels (§4.7)?** RECONSTRUCT `d_f` from each fold's own harmonizer inputs and decompose the residual across three named terms — **T1 mask, T2 variance floor, T3 σ_gill** — which also answers §4.6 **option 2** (same lever). Read-only, **0 lines in `src/`** | `bar_verdict` row in `tests/test_bars_resolvable.py`; pre-registration in **§5.3** (§5.1 superseded by A1, left visible) | free |
 | **3b-audit** | 🆕 **Independent audit of 3b — 3 defects stand; A5 withdrawn and A2 downgraded after review (§5.2).** `G_f` is the statistic §4.5 disproved and its exact form is a tautology; the question is settled by elimination so the instrument should be a per-fold RECONSTRUCTION; the ATTRIBUTED branch's remedy reintroduces donor leakage; the gene-set/variance-floor mechanism in §4.7's own table is untested — **and it is the same lever as §4.6's option 2** | — | free, done |
 | **4** | **One rebuild + LOOCV under the sparse clock**, full scorecard, snapshot and rollback | every Stage 1 guard reported before/after | one retrain |
 | **5** | Only then decide on the label change | — | — |
@@ -413,6 +413,30 @@ space — is the live problem.
 ---
 
 ## 5.1 🆕 STEP 3b — PRE-REGISTRATION (written 2026-08-07, before the measurement)
+
+> ## ⛔ **2026-08-08 — SUPERSEDED BY §5.3. Do not run the metric below.**
+>
+> *Left visible on purpose. §5.2's A1 showed this section's primary metric is broken, and the
+> broken bar stays in the record rather than being edited away — the same convention §5.2 applies
+> to its own withdrawn A5.*
+>
+> **What is wrong (A1, verified independently):** `G_f` here is a `|w|`-weighted **mean of
+> ratios**, which drops the per-gene deltas `δ_g`. §4.5 established that exact failure — median σ
+> ratio **0.608** against a net gain of **×2.152**. And substituting the *exact* gain does not
+> rescue it: with `G_f = Σδ·r·w / Σδ·w`, then `d_f/G_f ≡ Σδ·w`, **fold-invariant by algebra**, so
+> `R = 0` for any data whatsoever. The proxy measures the proxy; the exact form measures nothing.
+>
+> **What else is wrong:** the ATTRIBUTED branch below prescribes *"fit-once-and-freeze"*, which
+> **reintroduces leakage** (A3) — every Gill donor has exactly one control, so no subset is
+> in-train for all six folds, and fitting once means the held-out donor's control is in the fit.
+> That is precisely what [harmonize.py:59-60](src/cellfate/data/harmonize.py) exists to prevent.
+>
+> **What was missed:** §4.7 attributed the spread to `σ_ref` alone and never mentioned the
+> **variance floor** (A4) — see §5.3's T2 term.
+>
+> §5.3 replaces the metric with a **reconstruction**. Everything below is the record of the first
+> attempt, not an instruction.
+
 
 **Owner:** this stage. **Cost:** free, read-only. **Scope:** 1 new script, 1 test row,
 **0 lines changed in `src/`**, **no label moves under any outcome.**
@@ -672,6 +696,167 @@ on one question.**
 `experiments/diag_harmonizer_refit_sparse.py` is written to answer it — three floor regimes
 (pipeline / clock-space / sparse-refit) with the reconciliation to 1c and 1d built in — and is
 **NOT YET RUN.**
+
+---
+
+## 5.3 🆕 STEP 3b — PRE-REGISTRATION v2, THE RECONSTRUCTION (written 2026-08-08, supersedes §5.1)
+
+**Owner:** this stage. **Cost:** free, read-only. **Scope:** 1 script, 1 test row, **0 lines
+changed in `src/`**, **no label moves under any outcome.** **Blocking for:** step 4 only.
+**Supersedes:** §5.1, which stays visible and must not be run.
+**Merges in:** §4.6 **option 2** — see "one lever, not two" below.
+
+### Why a reconstruction and not a statistic
+
+§5.2's A1 killed the scalar-gain metric, and A2's downgrade removed the ground for *assuming*
+harmonization is the mechanism: step 1b's +2.11 yr bound was measured on the **unharmonized** path
+(`diag_pipeline_decompose.py`'s docstring opens *"Harmonization is OFF"*, written before §4.3
+established `HARMONIZE = True` at `run_multi_local.py:45`), so it cannot bound the deconfounder's
+fold-to-fold behaviour in the real build.
+
+Those two together decide the instrument. If the deconfounder's fold behaviour is **unknown**
+rather than bounded, any statistic that presumes harmonization is the mechanism is the wrong tool.
+**A reconstruction separates them by construction:** recompute `d_f` from each fold's own
+harmonizer inputs; where it tracks the recorded `d_f`, harmonization is attributed, and **the
+residue where it fails to track is where the deconfounder — or anything else — lives.**
+
+### The structural fact that makes the decomposition sharp
+
+**HFF's control cells are fold-invariant.** Every LOOCV fold holds out a *Gill* donor; HFF's
+day-0 controls are identical in all six. So `σ_raw^(hff)` is **the same number, per gene, in every
+fold**. HFF's side of the ratio can therefore move through exactly two channels — which genes are
+in the admissible set, and the floor applied to them — and through nothing else. Any HFF-side
+variation **is** the mask or the floor, not σ estimation. That is not an assumption; it follows
+from `Harmonizer.fit` taking controls per dataset.
+
+### What is reconstructed
+
+Per fold `f`, from `harmonize.py`'s own chain, with `w_g` the frozen clock coefficients:
+
+```
+d̂_f  =  Σ_{g ∈ G^(f)}  δ_g · ( σ_gill,g^(f) / σ_hff,g^(f) ) · w_g
+
+  G^(f)      admissible set: intersection of per-dataset {mean control expr ≥ 0.1}   (:88, :91)
+  σ_raw      per-gene std over that dataset's control observations                    (:111)
+  floor^(ds,f) = median( σ_raw^(ds,f) ) over G^(f)          ← SET-LEVEL                (:112)
+  σ         = max( σ_raw, floor )                            ← clamps ~half the genes  (:113)
+  δ_g        mean_day14(x_hff,g) − mean_control(x_hff,g)     ← fold-INVARIANT
+```
+
+`d̂_f` reconstructs **S1+S2 only** (harmonized, control-relative). The recorded `d_f` is post-S3+S4.
+The difference is therefore the deconfounder-and-re-centring contribution plus reconstruction error
+— which is exactly the residue we want named, not a nuisance to be explained away.
+
+### One lever, not two — §4.6 option 2 is folded in here
+
+`mu_g` (:110) and `σ_g` (:111) are **per-gene**: restricting the gene set moves neither. The gene
+set enters in exactly two places — the **variance floor** (a set-level median) and the
+**admissible mask**. So §4.6's option 2, *"re-fit the harmonizer on the sparse gene space"*, is
+**mechanically a change to the variance floor and nothing else** — the same lever the folds vary
+*incidentally* (5026–5402 genes) and option 2 varies *deliberately*. Carrying the floor as its own
+term answers both in one measurement.
+
+### The three terms, carried explicitly
+
+| term | what varies across folds | mechanism | whose claim |
+|---|---|---|---|
+| **T1 mask** | `G^(f)` — which genes enter the sum at all | admissible intersection moves with the Gill controls | A4 / §4.6 option 2 |
+| **T2 floor** | `floor^(gill,f)`, `floor^(hff,f)` | `median(σ)` is set-level, so it moves for **every** gene at once — including genes whose own σ did not move | **A4** |
+| **T3 σ_gill** | `σ_raw^(gill,f)` | estimated from **five single control samples**, and which five changes per fold | §4.7's original claim |
+
+**Ablation ladder:** hold two terms at the `O1` reference and vary one; then all three. Report the
+`d̂` spread each induces. **T1 and T2 are not orthogonal** — the mask determines the floor — so the
+individual effects need not sum to the total, and the write-up must say so rather than presenting a
+clean variance decomposition it does not have. The single-term runs are well-defined counterfactuals
+(apply `O1`'s floor to fold `f`'s gene set), and they are labelled as counterfactuals.
+
+### Gate, metric and bar
+
+**G0 — FIDELITY GATE, must pass before `F` is read.** The reconstruction at fold `O1` must agree
+with `experiments/diag_harmonizer_refit_sparse.py`'s **regime A (pipeline floor)** to **≤ 0.5 yr**.
+Two independent implementations of the same quantity. *Deliberately not* a check against `d_O1`
+itself — that would bake in an assumed S3+S4 magnitude, which A2's downgrade says is unknown.
+**G0 fails ⇒ the reconstruction is wrong and nothing downstream is read.**
+
+**Primary metric — residual spread ratio.** Over the six folds, `spread(x) = max(x) − min(x)` in
+years:
+
+```
+F  =  spread( d_f − d̂_f )  /  spread( d_f )                 spread(d_f) = 16.671 yr
+```
+
+Not algebraically degenerate: `d̂` is computed from raw harmonizer inputs, never from `d`.
+
+| | bar |
+|---|---|
+| **ATTRIBUTED** | `F ≤ 0.25` — the reconstruction removes ≥ 75 % of the spread (residual ≤ 4.2 yr) |
+| **direction** | lower is better |
+| **resolvability** | `bar_verdict` **run before the measurement**, on a correct system simulated at this geometry: 6 folds, `d̂` reproducing `d` up to per-fold noise at the observed SEM (0.19–0.24 yr). If UNRESOLVABLE, the bar moves to `usable_bar` **before** the run and the move is recorded — `REF_GROUND_RULES.md` §5b |
+
+**Secondary, reported not graded:** the T1/T2/T3 ladder; Spearman(`d̂_f`, `d_f`); and the
+correlation of `d̂_f` with the per-fold arm A − arm B differences already in
+`scorecard/gc2_A_keep_hff.json` / `gc2_B_mask_hff.json`, to **bound** how much of step 6's SD 4.808
+this could carry. **It cannot settle that** — settling it needs a rebuild, which 3b does not do.
+
+### Decision branches, fixed in advance
+
+| outcome | reading | step 4 |
+|---|---|---|
+| **ATTRIBUTED** `F ≤ 0.25` | harmonization carries the spread; the ladder names which term | **BLOCKED.** The fix targets the named term and ships as its own Change with its own bar |
+| **PARTIAL** `0.25 < F ≤ 0.60` | harmonization is a major but not sole contributor | **BLOCKED.** The residue gets an owner before step 4 is interpretable |
+| **NOT ATTRIBUTED** `F > 0.60` | harmonization is **not** the mechanism | Step 4 proceeds with the spread carried as a **stated nuisance term**. The residue is now the target: the S1→S2→S3→S4 decomposition, for which `experiments/diag_pipeline_decompose.py` already has the machinery and needs only repointing at built shards per fold |
+
+### The remedies, corrected for A3's leakage constraint
+
+**"Fit-once-and-freeze" is struck** — it leaks. Non-leaking candidates, in the order the ladder
+would motivate them:
+
+| if the ladder names | candidate remedy | leakage-safe? |
+|---|---|---|
+| **T2 floor** | a floor that is not a function of the current fold's gene set — a fixed reference set, or a fixed quantile of a pooled estimate | ✅ **yes** — the floor never touches the held-out donor's values |
+| **T1 mask** | freeze `G` on a fold-independent admissibility rule | ✅ yes, same reason |
+| **T3 σ_gill** | shrink `σ_ref` toward a pooled estimate; or move `ref_dataset` off `gill_bulk` (a real trade — the clock was fitted on bulk); or more control replicates per donor | shrinkage/ref-change ✅; replicates ⛔ **donor-blocked**, `STAGE_6_NEW_DATA_REV.md` §3 / D2 |
+| any | accept it as a stated nuisance term and size step 4 around it | ✅ |
+
+**This asymmetry is itself a reason to run the ladder.** A4's mechanisms (T1, T2) have
+**leakage-free fixes**; §4.7's original mechanism (T3) largely does not. Which term carries the
+variance therefore decides whether this is cheap to fix or donor-blocked.
+
+### Reuse, and one defect inherited with it
+
+**Reuse `experiments/diag_harmonizer_refit_sparse.py`** (304 lines, in the repo, **NOT YET RUN**).
+It already selects Gill's controls by `sources.py:417`'s own definition with an asserted count, and
+already computes the three floor regimes (A pipeline / B clock-space / C sparse-refit) with
+reconciliation back to 1c and 1d. 3b extends it **per fold**; it does not replace it.
+
+> **U1 — carried forward, not fixed.** `diag_harmonization_gain.py` selected Gill's controls with a
+> regex whose `else 0.0` default makes any **unparseable** name a control. It happened to be right:
+> 118 of 124 names carry `_dNN_`, none carries `_d0_`, and the 6 that fail to parse are exactly the
+> day-0 dermal fibroblasts. **1c/1d got the right 6 rows by accident.** That script is left
+> unmodified so 1c/1d stay reproducible; the defect is recorded, and 3b must not inherit the
+> pattern.
+>
+> **Consequence for §4.5/§4.6's numbers:** 1c/1d floored at the median over the **clock genes**,
+> while the pipeline floors over the **full admissible space** `genes_G` and applies an expression
+> floor the clock-gene set never had. So **2.152 and 2.769 are near-pipeline gains, not the
+> pipeline's own.** Regime A is what reconciles them. Nothing in §4.5/§4.6 is withdrawn on this —
+> it is a stated precision limit on those two numbers, and 3b reports the reconciliation.
+
+### Falsifiability self-test (mandatory, the `verify_1a` lesson)
+
+Fed synthetic folds whose harmonizer inputs vary while `d_f` is held **constant**, the script must
+return **NOT ATTRIBUTED** (`F ≈ 1`). And fed folds where `d_f` is generated *from* the reconstruction,
+it must return **ATTRIBUTED**. Both branches must execute in the test suite. A branch that never
+runs is not a check.
+
+### What §5.3 does NOT license
+
+* **It is not a fix.** It names a term. Changing `Harmonizer.fit` is a separate Change with its own
+  bar and snapshot, per the one-change rule.
+* **It does not re-open step 6.** Step 6 (= G-c step 2, snapshots `gc2_A`/`gc2_B`) ran and returned
+  INCONCLUSIVE. Re-running it needs its own pre-registration and is **not** authorised here.
+* **It does not touch the clock.** `k = 100` stays frozen per §6.
+* **It says nothing about whether HFF's labels are CORRECT age** — still open after arms C and D.
 
 ---
 

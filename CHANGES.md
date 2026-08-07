@@ -124,6 +124,91 @@ harmonizer facts only.
 ---
 
 
+## 2026-08-08 - Step 3b rewritten as a RECONSTRUCTION (section 5.3 supersedes 5.1)
+
+**Status:** PLAN ONLY. Nothing executed. **`src/` untouched, no build touched, no label moved.**
+186 insertions / 1 deletion in the plan doc - the single deletion is the step-3b table row being
+repointed and re-described. **Section 5.1 is left fully visible** under a supersession banner, the
+same convention section 5.2 applied to its own withdrawn A5.
+
+Written after the second machine's audit (section 5.2) and the correction round on it. Three of its
+five findings stand and are acted on here; A5 was withdrawn by its author as a misreading and A2 was
+downgraded from "settled by elimination" to "recommends the instrument".
+
+### What was wrong with 5.1, verified independently before acting
+
+- **A1 (fatal).** `G_f` was a |w|-weighted MEAN OF RATIOS, dropping the per-gene deltas - exactly
+  the statistic section 4.5 disproved (median ratio 0.608 against net gain x2.152). And the exact
+  gain does not rescue it: with `G_f = sum(d*r*w)/sum(d*w)`, `d_f/G_f == sum(d*w)`, fold-invariant
+  BY ALGEBRA, so R = 0 for any data. Proxy measures the proxy; exact form measures nothing.
+- **A3.** 5.1's ATTRIBUTED remedy was "fit-once-and-freeze", which REINTRODUCES LEAKAGE - every Gill
+  donor has exactly one control, so no subset is in-train for all six folds. Struck.
+- **A4.** 4.7 attributed the spread to sigma_ref alone and never mentioned the VARIANCE FLOOR.
+  Verified at harmonize.py:112-113: `floor = median(sigma)` over the ADMISSIBLE genes - a set-level
+  statistic - then `sigma = max(sigma, floor)`, which clamps roughly HALF the genes. Changing the
+  gene set moves sigma for genes whose own sigma did not move. N2 has the fewest genes (5026) and is
+  the fold that collapses.
+
+### What section 5.3 replaces it with
+
+A **reconstruction**: recompute `d_f` from each fold's own harmonizer inputs and check it reproduces
+the recorded `d_f`. Where it tracks, harmonization is attributed; the residue where it fails to
+track is where the deconfounder, or anything else, lives. Not algebraically degenerate - `d_hat` is
+computed from raw inputs, never from `d`.
+
+**The structural fact that sharpens it:** HFF's control cells are FOLD-INVARIANT (every fold holds
+out a Gill donor). So `sigma_raw^hff` is the same number per gene in all six folds, and HFF's side
+of the ratio can move through exactly two channels - the admissible mask and the floor. Any
+HFF-side variation IS the mask or the floor.
+
+**Three named terms, carried explicitly:** T1 mask (which genes enter), T2 variance floor (A4's
+set-level median), T3 sigma_gill (the five-single-controls mechanism, 4.7's original claim).
+Reported as an ablation ladder, with T1 and T2 stated as NON-ORTHOGONAL so the write-up cannot
+present a clean variance decomposition it does not have.
+
+**Gate G0 (fidelity):** the reconstruction at fold O1 must agree with
+`diag_harmonizer_refit_sparse.py` regime A to <= 0.5 yr - two independent implementations of the
+same quantity. Deliberately NOT a check against `d_O1`, which would bake in an assumed S3+S4
+magnitude that A2's downgrade says is unknown.
+
+**Primary metric:** `F = spread(d_f - d_hat_f) / spread(d_f)`, spread(d_f) = 16.671 yr.
+Bar **F <= 0.25**, lower-is-better, `bar_verdict` resolvability run BEFORE the measurement.
+Branches: ATTRIBUTED / PARTIAL / NOT ATTRIBUTED, with step 4 blocked on the first two and
+proceeding with a stated nuisance term on the third.
+
+### Two things folded in, as requested
+
+1. **Section 4.6 option 2 is the same lever as A4.** `mu_g` (:110) and `sigma_g` (:111) are
+   per-gene, so restricting the gene set moves neither; only the floor (:112) and the admissible
+   mask (:88, :91) move. So "re-fit on the sparse gene space" is mechanically a change to the
+   variance floor and nothing else - the lever the folds vary incidentally and option 2 varies
+   deliberately. Carried as term T2. One measurement, not two.
+2. **`experiments/diag_harmonizer_refit_sparse.py` is REUSED, not discarded** (304 lines, NOT YET
+   RUN). It already selects Gill's controls by sources.py:417's definition with an asserted count
+   and computes the three floor regimes with reconciliation to 1c/1d. 3b extends it per fold.
+
+### The remedy table is now leakage-aware, and the asymmetry matters
+
+T1 and T2 have **leakage-free** fixes (a floor or mask that is not a function of the current fold's
+gene set never touches the held-out donor). T3 largely does not - shrinkage or a ref_dataset change
+are the only non-leaking options, and more replicates is donor-blocked (STAGE_6_NEW_DATA_REV
+section 3 / D2). **Which term carries the variance therefore decides whether this is cheap to fix or
+data-blocked.** That is itself a reason to run the ladder.
+
+### U1 carried forward, and a precision limit it implies
+
+`diag_harmonization_gain.py` selected Gill's controls with a regex whose `else 0.0` default makes any
+UNPARSEABLE name a control. It happened to be right - 118 of 124 names carry `_dNN_`, none carries
+`_d0_`, and the 6 that fail to parse are exactly the day-0 dermal fibroblasts. **1c/1d got the right
+6 rows by accident.** The script is left unmodified so 1c/1d stay reproducible.
+
+Consequence recorded, nothing withdrawn: 1c/1d floored at the median over the CLOCK genes while the
+pipeline floors over the full admissible space and applies an expression floor the clock-gene set
+never had. **So 2.152 and 2.769 are near-pipeline gains, not the pipeline's own.** Regime A
+reconciles them; 3b reports it.
+
+---
+
 ## 2026-08-07 (later) - Stage 1.5.6: step 3b added, and it GATES step 4
 
 **Status:** PLAN ONLY. Nothing executed. **`src/` untouched, no build touched, no label moved.**
