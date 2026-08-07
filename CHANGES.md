@@ -4461,3 +4461,31 @@ on synthetic data; the intrinsic pre-flight confirms the real stratum keys are b
 Lesson, recorded because it will recur: **validate a data transform intrinsically within one build**,
 not by diffing two builds — build-to-build value comparison at reduced scale carries confounds that
 have nothing to do with the transform under test.
+
+---
+
+## 2026-08-07 — ARM D RESULT: HFF structure is WITHIN-timepoint, not the day trajectory
+
+Stratified shuffle ran, 6 folds, snapshot gc2_D_stratshuffle_hff_s0. Fate guards held
+(fate_prauc 0.992->0.993), so the age-ranking collapse is label-specific.
+
+rank_model_dage means: A 0.948  C 0.577  D 0.610.
+  D - A  -0.338  95%% CI [-0.551,-0.125]  EXCLUDES 0  -> D differs from A
+  D - C  +0.033  95%% CI [-0.221,+0.287]  INCLUDES 0  -> D not distinguishable from C
+D sits 91%% of the way from A to C.
+
+PRE-REGISTERED OUTCOME #2 fires (D-A detectable AND D-C not detectable): the exploitable structure
+is WITHIN-timepoint and cell-level, not the between-timepoint trajectory. Arm D preserved the
+trajectory (rho -0.905, intact to 1e-14) and destroyed only within-timepoint pairing; ranking still
+collapsed 91%% of the way to the fully-shuffled control. A day-level systematic artefact cannot
+produce that and is REJECTED.
+
+The mundane-explanation space is now largely closed: volume (arm C), identity and depth (1.5.5),
+and now the day-level artefact (arm D) are all rejected. NOT established -- same limit as arm C --
+is that the labels are CORRECT age: real per-cell signal vs clock noise vs an untested
+within-timepoint artefact remain. Arm D narrows hard but does not separate real signal from clock
+noise; that is the remaining open question (1.5.6 clock density bears on it).
+
+Caveat recorded: 'D like C' is a wide-CI non-detection (SD 0.24), and the equivalence branch was
+NOT resolvable (achieved SD(D-A) 0.203 vs the <=0.107 needed). The load-bearing facts are the two
+that do not need equivalence: D differs from A decisively, and D lands 91%% of the way to C.

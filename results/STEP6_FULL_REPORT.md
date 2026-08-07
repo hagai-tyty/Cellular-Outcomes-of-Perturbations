@@ -539,3 +539,64 @@ spans chunks); singleton strata are left alone, not dropped; the shuffle is dete
 seed; and arm C's global path is **unchanged** by arm D's existence. A contrast test confirms the
 *global* shuffle does **not** preserve the stratum means, which is the property that distinguishes the
 two arms.
+
+## Arm D RESULT (2026-08-07) — the structure is WITHIN-timepoint, not the trajectory
+
+Ran, 6 folds, `stratified=True n_strata=9`, snapshot `gc2_D_stratshuffle_hff_s0`. Fate guards held
+(`fate_prauc` 0.992→0.993, `fate_roc` 0.983→0.988), so the age-ranking collapse below is
+label-specific, not a broken run.
+
+| `rank_model_dage` | N2 | N3 | O1 | O2 | Y1 | Y2 | **mean** |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **A** true | 0.910 | 0.909 | 0.990 | 0.970 | 0.960 | 0.947 | **0.948** |
+| **C** global shuffle | 0.491 | 0.527 | 0.843 | 0.546 | 0.456 | 0.596 | **0.577** |
+| **D** stratified shuffle | 0.764 | 0.207 | 0.625 | 0.704 | 0.579 | 0.779 | **0.610** |
+
+| comparison | effect | SD | 95 % CI | verdict |
+|---|---:|---:|---|---|
+| **D − A** | −0.338 | 0.203 | [−0.551, −0.125] | **excludes 0 — D ≠ A** |
+| **D − C** | +0.033 | 0.242 | [−0.221, +0.287] | includes 0 — **D not distinguishable from C** |
+| D − B | −0.269 | 0.214 | [−0.494, −0.045] | excludes 0 |
+
+**D sits 91 % of the way from A to C.**
+
+### Pre-registered outcome #2 fires
+
+Registered before the run: *"D−C not detectable AND D−A detectable → the structure is
+WITHIN-timepoint and cell-level. A day-level artefact cannot produce it; real per-cell signal
+remains the live explanation."* Both conditions hold, so this is the graded reading, not a post-hoc
+one.
+
+**What it means.** Arm D preserves the between-timepoint trajectory (ρ(day, ΔAge) = −0.905, verified
+intact to 1e-14 in the pre-flight) and destroys only within-timepoint cell-level pairing. Ranking
+collapsed **91 % of the way to the fully-shuffled control**. So the structure the model exploits is
+**not the day-level trajectory** — it is the finer, within-timepoint, cell-to-cell label structure.
+A systematic artefact that assigns ΔAge from reprogramming day alone **cannot** produce it and is
+rejected.
+
+### What this establishes, and what it does not
+
+**Established.** Combined with the earlier results, the space of mundane explanations for HFF's labels
+is now substantially closed:
+
+| candidate explanation | verdict |
+|---|---|
+| volume / trunk regularisation | rejected — arm C (permuting collapses ranking 5.4× the A−B gap) |
+| identity (pluripotency) readout | rejected — 1.5.5, within-timepoint R² 2–16 % |
+| sequencing-depth readout | rejected — 1.5.5, R² ~0–9 % |
+| **day-level systematic artefact** | **rejected — arm D (structure is within-timepoint, not the trajectory)** |
+
+**NOT established — the same honest limit as arm C.** This does not prove the labels are *correct*
+age. What survives is: **real per-cell rejuvenation signal, or clock noise, or a within-timepoint
+artefact not among the three already rejected.** Arm D narrows the question hard — the structure is
+cell-level and not identity/depth/day — but it cannot, alone, distinguish real signal from clock
+noise. That separation is the remaining open question (1.5.6's clock-density work bears on it).
+
+### A caveat on the strength of "D like C"
+
+"D not distinguishable from C" is a wide-CI non-detection (SD 0.24), not a tight equivalence — and
+the pre-registered equivalence branch was **not** resolvable here (achieved SD(D−A) = 0.203 against
+the ≤ 0.107 the bar needed). The robust, load-bearing facts are the two that do not depend on
+equivalence: **D differs from A decisively** (CI excludes 0) and **D lands 91 % of the way to C**.
+Those alone reject the trajectory-artefact hypothesis; the "≈ C" framing is corroborating, not
+required.
