@@ -11,6 +11,72 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-08 - Audit of 5.3, and the variance floor turns out to BE the transform's centre
+
+**Status:** Recorded. **`src/` untouched, no label moved, §5.3 unmodified.** Nothing here required a
+run - every number comes from the code or from `runs/cellfate_multi/harmonization.json`, already on
+disk.
+
+### 5.3's structural fact is right, and stronger than its own citation
+
+§5.3 credits `Harmonizer.fit`. The real guarantee is `fit_harmonizer` (`build_dataset.py:352-354`):
+controls are selected by `is_ctrl & ~cell_line.isin(heldout)` - *"decidable from cell_line alone,
+**before the full split**"*. The train/val/calib split never reaches the harmonizer, so HFF's
+control set is **bit-identical** across folds, not merely "the same donors".
+
+**Sharpening:** HFF's *admissible set* is fold-invariant too, and `genes_G` is the intersection. So
+`G^(f)` moves through Gill's side alone - **T1, T2 and T3 are three channels out of one five-sample
+estimate**, not three independent sources.
+
+`F` is well-conditioned - §5.3 redefines `spread` as max-min in years, so §5.1's divide-by-median
+degeneracy does not carry over. Checked, no issue.
+
+### G0 compares two different quantities
+
+`diag_harmonizer_refit_sparse.py` selects **all six** `_Fib_` controls with no fold exclusion, so its
+regime A is an all-six-donor fit, **not fold O1** (which uses five). A 0.5 yr gate between them can
+fail for reasons unrelated to fidelity. Extending it per fold fixes the quantity but forfeits
+independence - both sides then run one code path.
+
+**The independent reference already exists.** `runs/cellfate_multi/harmonization.json` **is the O1
+fold's shipped harmonizer** - confirmed twice: 5328 genes matches §4.7's O1 column, and the held-out
+donor has 21 split entries where Y1 has 19. It carries the pipeline's own per-gene mu and post-floor
+sigma, so reconstructing against it validates T1/T2/T3 **gene by gene against ground truth**.
+
+### THE MEASUREMENT - the floor is not a second-order term
+
+| | |
+|---|---|
+| floor, gill_bulk / hff_sc | **0.15821** / **0.42388** |
+| **floor ratio** | **0.3732** |
+| clamped at the floor | **2664/5328 = 50.0%** in each dataset (mechanical - floor = median sigma) |
+| clamped in **BOTH** | **1848 = 34.7%**, ratio **exactly 0.3732**, min = max |
+| **median ratio, all 5328 genes** | **0.3732 - the median gene's ratio IS the floor constant** |
+| median ratio, clamped in neither | 0.5335 |
+
+**More than a third of the genes carry one identical ratio, and it is the median of the whole
+distribution.** The floor sets the transform's central tendency rather than trimming its tail.
+
+### Why this reorders 5.3's ladder before it runs
+
+A shift in `floor_gill/floor_hff` between folds moves **1848 genes in lockstep** - coherent and
+non-averaging. T3's per-gene sigma noise is large but *independent across genes*, so it largely
+averages out in a weighted sum over thousands. **Predicts T2 > T3, and it is checkable from each
+fold's two floor scalars alone, before any reconstruction is written.**
+
+That raises the stakes on §5.3's asymmetry point: T1/T2 have leakage-free fixes, T3 largely does
+not. If T2 also dominates, the instability is **the cheapest to fix and not donor-blocked** - moving
+it off Stage 6's critical path. **Stated as a prediction with a mechanism, not a result.**
+
+### Checked and clean
+
+`split_sizes = {852, 115, 117, 21}` against `n_samples = 42605` reads like 41,500 unassigned cells.
+It is not - those are **split-map entries** (1105: HFF 981, ~21 per Gill donor, Y1 19). No defect.
+Recorded so nobody re-checks it.
+
+---
+
+
 ## 2026-08-08 - CORRECTION: A5 withdrawn, A2 downgraded
 
 **Status:** Corrected after review by the second machine. **`src/` untouched, no label moved. A1-A5
