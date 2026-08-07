@@ -3674,6 +3674,17 @@ different quantities; arm A's ≈ −10 is not evidence either way without a mat
 
 The RES half has no such confound, which is why it is the half that ran.
 
+> **[2026-08-07 annotation, added later the same day — nothing above is changed.]**
+> The withdrawal was right; **the reason given for it was not the operative cause.** There are
+> TWO HFF references. `diag_pipeline_decompose` is raw single-dataset and the paragraph above
+> applies to it. But `diag_gc_hff_signature` — the source of the −24.02 actually being
+> compared against — reads BUILT SHARDS of a two-dataset harmonized build, so it was never
+> single-dataset. The real cause was a FOLD mismatch: arm A's `N2` fold read against a
+> reference built from the `O1` fold. Run matched, it reproduces BIT-FOR-BIT. See
+> "MATCHED-DATA HFF REPRODUCTION" at the end of this notebook, which also records the new
+> finding that came out of it — HFF's labels are not stable across LOOCV folds.
+
+
 ### Like-for-like verified BEFORE running (the July builds were deleted, so read from git at `f353526^`)
 
 | field | July `runs/cellfate_loocv_N2` | arm A `cellfate_loocv_N2_armA` |
@@ -3816,3 +3827,110 @@ close. It also does not close the HFF half of the user's ask, which needs a data
 |---|---|
 | HFF ΔAge reproduction on a **matched** dataset configuration (1-vs-1 or 2-vs-2) | unassigned — the withdrawn comparison |
 | `test7_ranking.paired_ci` does not NaN-filter, unlike 7.1/7.2 | cosmetic; do NOT edit the July record scripts |
+
+---
+
+## MATCHED-DATA HFF REPRODUCTION — reproduces EXACTLY; and the labels are NOT fold-stable (2026-08-07, later)
+
+**Status:** ✅ RUN. `src/` untouched, no build touched, read-only. The July reference
+`results/diag_gc_hff_signature_results.json` was preserved byte-exact (verified via `git diff`).
+**Artefacts:** `experiments/repro_hff_signature_armA.py`,
+`results/repro_hff_signature_armA_results.json`,
+`results/diag_gc_hff_signature_armA_O1_results.json`.
+
+**The ask (user).** "now run the HFF one on matched data" — the item left open by the previous
+section.
+
+### CORRECTION to the previous section's withdrawal reasoning
+
+The section above withdrew the HFF comparison as "1-dataset reference vs 2-dataset build". **That
+reasoning was not the operative cause, and this section corrects it.** Nothing above is rewritten.
+
+There are two HFF references and they are different kinds of measurement:
+
+| reference | data | harmonization | day-14 ΔAge |
+|---|---|---|---|
+| `diag_pipeline_decompose_results.json` | **raw GSE242423, ONE dataset** | off | −8.5 to −10.6 |
+| `diag_gc_hff_signature_results.json` | **built shards, TWO-dataset harmonized LOOCV build** | on | **−24.02** |
+
+The user's point is correct **for the first reference** — comparing a raw single-dataset clock run
+to a harmonized two-dataset build is invalid, and that comparison stays withdrawn. But the −24.02 I
+was actually comparing against comes from the **second**, which was a two-dataset harmonized build
+all along. So the dataset count was never the discrepancy there.
+
+**The real cause was mine and simpler: I read arm A's `N2` fold and compared it to a reference
+produced from the `O1` fold** — `diag_gc_hff_signature.py` defaults to `runs/cellfate_loocv_O1`.
+Which fold is read turns out to matter enormously, which is the finding below.
+
+### Method
+
+`load_hff` and `trajectory_stats` are imported from the July script **unmodified**, so the
+arithmetic is identical on both sides; only the run directory changes. Pre-registered before
+reading any arm-A number: **R1** the matched (O1) fold reproduces July exactly on every field;
+**R2** the six folds agree within |Δ day-14| ≤ 2.0 yr and |Δ slope| ≤ 0.30 yr/day, on the grounds
+that holding out one Gill donor removes ~21 of 42605 cells (0.05%).
+
+### R1 — PASS. The matched fold reproduces July BIT-FOR-BIT
+
+| field | arm A (O1) | July |
+|---|---|---|
+| n_cells | 37693 | 37693 |
+| rho_timepoint | −0.9047619047619048 | −0.9047619047619048 |
+| slope_yr_per_day | −1.5255573306808494 | −1.5255573306808494 |
+| rho_percell | −0.4160726187605165 | −0.4160726187605165 |
+| slope_percell | −1.5055164919911033 | −1.5055164919911033 |
+| n_descending_steps / n_steps | 5 / 7 | 5 / 7 |
+| days, mean_dage, sem_dage, n_per_day | elementwise EXACT | elementwise EXACT |
+
+Also exact: `label_volume`, the `verdict` block (RUN_STEP_2, same detail string), and **all eight
+leave-one-timepoint-out folds**. Full float64 equality, not rounding agreement.
+
+**The G-c step-1 verdict is therefore unchanged and re-confirmed on the current build:**
+rho_timepoint −0.905 PASSES the ≤ −0.50 bar; slope −1.526 yr/day FAILS the [−6.45, −1.61] band;
+ambiguous ⇒ RUN_STEP_2. That is the same open item already assigned to G-c step 2.
+
+### R2 — FAIL. HFF's ΔAge labels are NOT stable across LOOCV folds
+
+| fold | day-14 ΔAge | rho_timepoint | slope yr/day | descending | harmonized genes | HFF cells |
+|---|---|---|---|---|---|---|
+| **N2** | **−7.352** | −0.8095 | **−0.4885** | 3/7 | 5026 | 42481 |
+| N3 | −22.121 | −0.7857 | −1.2649 | 4/7 | 5258 | 42481 |
+| O1 | −24.023 | −0.9048 | −1.5256 | 5/7 | 5328 | 42481 |
+| O2 | −22.891 | −0.9048 | −1.4351 | 5/7 | 5304 | 42481 |
+| Y1 | −22.049 | −0.9048 | −1.3995 | 5/7 | 5402 | 42481 |
+| Y2 | −23.869 | −0.9048 | −1.4737 | 5/7 | 5305 | 42481 |
+| *July (O1)* | *−24.023* | *−0.9048* | *−1.5256* | *5/7* | — | — |
+
+**day-14 spread 16.671 yr against a 2.0 yr tolerance; slope spread 1.037 yr/day against 0.30.**
+N2 is the outlier: −7.352 against a median of −22.506, a **3.1× compression**, with the slope
+falling to a third and only 3/7 descending steps.
+
+**Why this is a defect and not a curiosity.** HFF supplies **42481 of 42605** age-labelled cells
+(99.7%). HFF is never the held-out line in any fold — only a Gill donor is, and that donor is ~21
+cells. The training target for 99.7% of the corpus should not move when 0.05% of the cells are
+withheld. It moves by 3×.
+
+**Candidate mechanism — NOT established here.** Harmonization is refit per fold and the fitted gene
+set varies (5026–5402 genes; N2 has the fewest). The reference side is `gill_bulk`, which is small
+enough that dropping one donor may perturb its per-gene μ/σ, and step 1c/1d already established that
+the gain is applied **per gene** and is largest exactly where the clock's weights sit. But N2 and Y1
+have similar `gill_bulk` profiles while only N2's labels collapse, so a single-variable story does
+not fit and the mechanism is **open**.
+
+**Consequence for what is already recorded.** Arms A/B/C/D all aggregate across these six folds, so
+this instability is inside every step-6 number. It is a **candidate** source of the between-fold
+variance that made step 6 inconclusive (observed SD 4.808, MDE 5.045 against Δ\* 3.572) — stated as
+a hypothesis, not a claim; nothing here measures the contribution. **No previously recorded result
+is withdrawn on the strength of this.**
+
+**What it does NOT touch.** The RES/ranking reproduction in the previous section stands: per-fold
+`model_dAge` and `ridge_dAge` were identical to July on all six folds, so the *ranking* is robust to
+this label instability even though the label *magnitudes* are not.
+
+### Still open from this section
+
+| item | owner |
+|---|---|
+| Why does the N2 fold compress HFF's ΔAge 3×? Per-fold harmonization refit is the suspect | **unassigned — new** |
+| Does the fold instability explain step 6's SD 4.808? | **unassigned — new** |
+| G-c step 2 (`age_mask` retrain comparison) — re-confirmed as still the right next step | Stage 1.5.2 G-c step 2 |

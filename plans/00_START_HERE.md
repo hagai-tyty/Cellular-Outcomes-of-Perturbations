@@ -131,6 +131,54 @@ and why "B better" is the *expected* outcome of step 6 rather than a surprise.
 
 ---
 
+## 🆕 2026-08-07 — REPRODUCTION STATUS: the pipeline is the same system it was in July
+
+> *Additive. Nothing above is edited. This records what was executed, not a change of plan.*
+
+The other machine's July results were re-run against arm A, the current true-label build. Both
+sides are the same two-dataset harmonized build (42605 cells, 51 shards, panel
+`783f269a214aa972`), verified from metadata before running.
+
+| what was re-run | result |
+|---|---|
+| Test 7 / 7.1 / 7.2 — ranking by ΔAge | **EXACT** on 6/6 folds. `model_dAge` 0.948, `ridge_dAge` 0.955, Δ = −0.000, per-fold identical to three decimals |
+| G-c step 1 — HFF ΔAge trajectory | **BIT-FOR-BIT** on the matched fold. ρ −0.9047619047619048, slope −1.5255573306808494, day-14 −24.023, all 8 leave-one-timepoint-out folds identical |
+| Change A's two invariance guards | **BOTH HELD** — `rank_model_dage` exactly 0.948, `ood_rate` exactly 0.2732 against a pre-registered 0.273 |
+| RES | **degenerate, as pre-registered.** Constant (all-zero) on 3/6 folds; `R_eff = 0` for 100% of cells because σ_age is now ~37 yr. This is `sigma_scale` working, not a regression — it confirms the `res_median` **0.000 on every fold** line in the table above and supplies its mechanism |
+
+**So the July record and the current build describe the same system.** Nothing in the notebook
+needs re-deriving on that account.
+
+### The one NEW problem this surfaced
+
+**HFF's ΔAge labels are not stable across LOOCV folds.** Same script, same build family, only the
+held-out Gill donor differs:
+
+| fold | N2 | N3 | O1 | O2 | Y1 | Y2 |
+|---|---|---|---|---|---|---|
+| day-14 ΔAge | **−7.35** | −22.12 | −24.02 | −22.89 | −22.05 | −23.87 |
+
+Spread **16.7 yr** against a pre-registered 2.0 yr tolerance; N2 is a **3.1× compression**. HFF is
+42481 of 42605 age-labelled cells (99.7%) and is never the held-out line — the withheld donor is
+~21 cells, 0.05% of the corpus. The training target for 99.7% of the data should not move 3× when
+0.05% is withheld.
+
+**Why this matters for the order of work above.** Step 6 was INCONCLUSIVE because its per-fold SD
+was 4.808, giving MDE 5.045 against Δ* = 3.572 — and the section above already names that SD as
+the thing gating everything: *"Δ* = 3.57 yr is detectable only if that SD is ≤ ~1 yr."* A 3×
+label swing in one of six folds is a **candidate** source of exactly that variance. If it is, this
+is a bug to fix rather than donors to buy — and that would be the cheapest thing on this page.
+**Stated as a hypothesis. Nothing here measures its contribution, and no recorded result is
+withdrawn on the strength of it.**
+
+Suspect: harmonization is refit per fold (gene set varies 5026–5402, N2 fewest) against the small
+`gill_bulk` reference. Not established — Y1 has a similar `gill_bulk` profile and does not
+collapse.
+
+Full detail: `experiments/DELTAAGE_LAB_NOTEBOOK.md` (last two sections) and `CHANGES.md`.
+
+---
+
 ## 🆕 Where things live (repo tidied 2026-08-01)
 
 Root now holds **only** the tools you run constantly and the libraries other code imports.
