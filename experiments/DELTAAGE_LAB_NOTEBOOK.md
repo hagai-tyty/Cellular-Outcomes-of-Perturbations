@@ -536,6 +536,13 @@ includes 0).
 
 ### Test 7 RESULT (user ran it)
 
+> **[2026-08-07 annotation — nothing below is changed.]** Reproduced on arm A:
+> `model_dAge` and `ridge_dAge` come back IDENTICAL to three decimals on all six folds.
+> `model_RES` does NOT — it is a CONSTANT on N3/O2/Y1 (Spearman undefined), which
+> Stage 1 Change A pre-registered as the correct outcome of `sigma_scale`.
+> See "CROSS-MACHINE REPRODUCTION" at the end of this notebook.
+
+
 | fold | model_RES | model_dAge | ridge_dAge |
 |---|---|---|---|
 | N2 | +0.742 | +0.910 | +0.957 |
@@ -591,6 +598,12 @@ Try a couple of reasonable safe-rejuvenation definitions to avoid gaming one.
   honest finding: rank by ΔAge, reconsider/redesign or drop RES.
 
 ### Test 7.1 RESULT (user ran it)
+
+> **[2026-08-07 annotation — nothing below is changed.]** Reproduced on arm A exactly:
+> gated 0.292 / 0.295, penalized 0.414 / 0.414, precision@5 0.27 / 0.30, and the same
+> per-fold unsafe counts (N2 0, N3 3, O1 4, O2 5, Y1 8, Y2 5).
+> See "CROSS-MACHINE REPRODUCTION" at the end of this notebook.
+
 
 Fate composition of held-out age-valid cells (unsafe = loss/death): N2 0/21, N3 3/21,
 O1 4/21, O2 5/21, Y1 8/19, Y2 5/21 — so most folds DO have unsafe cells (safety can matter).
@@ -657,6 +670,12 @@ per-fold + aggregate Spearman + paired (B − A) 95% CI. Same cells, same ΔAge,
   worse ΔAge, not RES → pair RES with the better ΔAge and re-evaluate. (Would flip the verdict.)
 
 ### Test 7.2 RESULT (user ran it)
+
+> **[2026-08-07 annotation — nothing below is changed.]** Reproduced on arm A, and the
+> effect is LARGER there: paired (B − A) vs true ΔAge = −0.529 [−0.812, −0.246],
+> against −0.300 [−0.473, −0.128] recorded here. A arm identical at 0.955.
+> See "CROSS-MACHINE REPRODUCTION" at the end of this notebook.
+
 
 Same ΔAge (ridge) fed to both; only the RES transform differs.
 
@@ -3628,3 +3647,172 @@ be genotype-driven and cell-state-invariant. That is independent corroboration o
 | §5 retention (−6 to −9 yr) | **Stage 6** — needs ≈16 pairs, and must size for the ±7 yr between-donor instrument error, not just for n |
 | HFF's age labels | **Stage 6** — no methylation exists for HFF anywhere |
 | HFF's `age_mask` | **Stage 1.5.2 G-c step 2** — one retrain, no new data |
+
+---
+
+## CROSS-MACHINE REPRODUCTION — do July's Test 7 / 7.1 / 7.2 reproduce on arm A? (2026-08-07)
+
+**Status:** ✅ RUN. `src/` untouched, no build touched, read-only.
+**Artefacts:** `experiments/repro_test7_res_armA.py`, `experiments/diag_res_degenerate_armA.py`,
+`results/repro_test7_res_armA_results.json`, `results/diag_res_degenerate_armA_results.json`.
+
+**The ask (user).** "we have data from the other machine which was tested on raw GSE data before
+stage 1.5.6 and we got its results — now we need to run same experiments on arm A to see if they
+match… a simple test that will tell us if it's actually working or not." Scoped by the user to
+**ΔAge HFF and RES**.
+
+### First: which half of that ask was even answerable — the user's correction, applied
+
+An earlier attempt compared arm A's HFF ΔAge trajectory (latest day ≈ −9.9, ρ −0.867) against
+`diag_gc_hff_signature_results.json` (day-14 −24.02, ρ −0.9048) and started to flag a ~2.4×
+mismatch. **The user stopped it:** *"arm A is from 2 data sets while the tests run on 1 data set —
+of course it would be different results."* That is right, and the comparison was invalid: the HFF
+diagnostics run the clock on **raw single-dataset** input, arm A is a **two-dataset harmonized**
+build. **That comparison is withdrawn. It measured nothing.** The 1-dataset value (−8.5 to −10.6,
+`diag_pipeline_decompose`) and the 2-dataset shard value (−24.02) are both on record and are
+different quantities; arm A's ≈ −10 is not evidence either way without a matched re-run.
+
+The RES half has no such confound, which is why it is the half that ran.
+
+### Like-for-like verified BEFORE running (the July builds were deleted, so read from git at `f353526^`)
+
+| field | July `runs/cellfate_loocv_N2` | arm A `cellfate_loocv_N2_armA` |
+|---|---|---|
+| n_samples | 42605 | 42605 |
+| n_shards | 51 | 51 |
+| n_age_labeled | 42605 | 42605 |
+| split_sizes | 852 / 115 / 117 / 21 | 852 / 115 / 117 / 21 |
+| gene_panel_hash | `783f269a214aa972` | `783f269a214aa972` |
+| label_distribution | 22635 / 1095 / 18875 | 22635 / 1095 / 18875 |
+| cell lines | HFF + N2 N3 O1 O2 Y1 Y2 | HFF + N2 N3 O1 O2 Y1 Y2 |
+
+Same cells, same panel, same splits, **both two-dataset harmonized builds**. The only metadata
+difference is `baseline_census`, which did not exist in July (added by G-a). So any difference in
+the numbers below is the **model/pipeline**, not the data. Provenance of the July side confirmed:
+`b1c97b6` / `ae0dc11` / `7aa4152`, 2026-07-11/12, author `hagai-tyty` (the other machine).
+
+**Method.** The three July scripts are imported **unmodified**; only `resolve_root` is redirected at
+the `_armA` roots. Nothing in `experiments/test7*.py` was edited.
+
+### Pre-registered bar (written before any arm-A number was read)
+
+PRIMARY — P1-a `model_dAge` and `ridge_dAge` ≥ 0.85 · P1-b paired (RES − ridge) 95% CI entirely
+below 0 · P1-c Test 7.2 paired (B − A) 95% CI entirely below 0.
+SECONDARY — P2-a |Δ| ≤ 0.10 for the two ΔAge sorts · P2-b |Δ| ≤ 0.15 for RES · P2-c Test 7.1 sign.
+Outcomes O1 reproduces / O2 reproduces qualitatively / O3 escalate / O4 inconclusive.
+
+### RESULT — the ΔAge half reproduces EXACTLY, 6/6 folds, to three decimals
+
+| fold | model_dAge armA | July | ridge_dAge armA | July |
+|---|---|---|---|---|
+| N2 | +0.910 | +0.910 | +0.957 | +0.957 |
+| N3 | +0.909 | +0.909 | +0.925 | +0.925 |
+| O1 | +0.990 | +0.990 | +0.960 | +0.960 |
+| O2 | +0.970 | +0.970 | +0.952 | +0.952 |
+| Y1 | +0.960 | +0.960 | +0.951 | +0.951 |
+| Y2 | +0.947 | +0.947 | +0.983 | +0.983 |
+
+Aggregates **0.948 / 0.955**, Δ = **−0.000** on both. Test 7.1 also exact — gated 0.292 / 0.295,
+penalized 0.414 / 0.414, precision@5 0.27 / 0.30, and per-fold unsafe counts identical
+(N2 0, N3 3, O1 4, O2 5, Y1 8, Y2 5). Test 7.2's A arm: 0.955, exact.
+
+### RESULT — RES is the only thing that moved, and it went DEGENERATE
+
+| fold | model_RES armA | July |
+|---|---|---|
+| N2 | +0.222 | +0.742 |
+| N3 | **nan — constant** | +0.804 |
+| O1 | +0.369 | +0.684 |
+| O2 | **nan — constant** | +0.507 |
+| Y1 | **nan — constant** | +0.706 |
+| Y2 | +0.609 | +0.674 |
+
+`nan` is `ranking_metrics` reporting **zero variance**: RES is not ranking badly, it is a CONSTANT
+and carries no ranking at all. Restricted to the three folds where RES is even defined, the July
+direction holds and is stronger: paired (RES − ridge) **−0.567, 95% CI [−1.019, −0.115]**, excludes
+0 (July −0.268 [−0.381, −0.155]). Test 7.2, which isolates the RES *formula* with ΔAge held
+constant, passed P1-c with a **larger** effect than July: **−0.529 [−0.812, −0.246]** vs −0.300
+[−0.473, −0.128].
+
+**The bar fired O3 — DOES NOT REPRODUCE.** Recorded as it fired, and left standing.
+
+### Why O3 fired, and why the escalation RESOLVES — this was PRE-REGISTERED
+
+Two separate things, and they must not be conflated:
+
+1. **P1-b's FAIL is a NaN artefact, not a reversal.** `test7_ranking.paired_ci` does not filter NaN
+   (7.1 and 7.2 do), so the CI came back undefined and the `hi < 0` test evaluated False. The
+   statistic was **undefined**, not "includes 0". *(Defect noted; the July script was deliberately
+   NOT edited — it is the record being reproduced.)*
+2. **The underlying change is real, and Stage 1 Change A predicted it in writing.** From the
+   Stage 1 section above, under *"The RES prediction, stated in advance so it cannot be read as a
+   regression"*: `sigma_scale` widens `sigma_age`, `R_eff = max(0, −(mu + z·σ))` consumes σ, so
+   per-cell RES *"should therefore approve nothing, and that is the correct result."*
+
+`diag_res_degenerate_armA.py` confirms the mechanism is exactly the predicted one (M2, not the OOD
+gate): on the constant folds `R_eff = 0` for **100%** of cells, `mu + z·σ ≥ 0` throughout.
+
+| fold | mean μ | mean σ_age | mean μ+z·σ | % ≥ 0 | mean g | %OOD |
+|---|---|---|---|---|---|---|
+| N2 | +4.21 | 48.93 | +53.14 | 95% | 0.009 | 48% |
+| N3 | +0.37 | 30.66 | +31.04 | **100%** | 0.000 | 19% |
+| O1 | +16.95 | 46.03 | +62.98 | 95% | 0.015 | 19% |
+| O2 | +21.88 | 34.56 | +56.44 | **100%** | 0.000 | 24% |
+| Y1 | +10.06 | 34.53 | +44.59 | **100%** | 0.000 | 21% |
+| Y2 | +18.46 | 29.39 | +47.85 | 86% | 0.066 | 33% |
+
+σ_age went **~2.4 yr (July, uncalibrated ensemble spread) → 37.35 yr (arm A)**. That is
+`sigma_scale` from Stage 1 Change A doing precisely what it was built to do.
+
+### The two Change-A guards that had to hold — BOTH HELD, exactly
+
+Change A pre-registered: *"Any movement at all in these — even in the third decimal — means the
+change reached something it must not."*
+
+| guard | predicted | measured here | |
+|---|---|---|---|
+| `rank_model_dage` | **exactly 0.948** | **0.948**, and identical per-fold on all 6 | ✅ |
+| `ood_rate` | **exactly 0.273** | **0.2732** (mean of 0.476/0.190/0.190/0.238/0.211/0.333) | ✅ |
+
+Independent confirmation from a test written for a different purpose.
+
+### One number came in OFF-prediction — recorded, not smoothed over
+
+`sigma_scale` was predicted **~5–6**; measured **9.89 – 18.64, mean 13.33**. Cause: the prediction
+divided *mean* error by *mean* spread (14 / 2.4 ≈ 5.8), but `sigma_scale_factor`
+(`xdonor_calib.py:399-403`) computes **P90(|residual|) / median(spread)**. P90/mean ≈ 2.3 on this
+residual distribution, and 5.8 × 2.3 ≈ 13. **The implementation matches its own documented
+arithmetic; the prediction was computed against a different target definition.** Not a defect — a
+prediction/implementation target mismatch, worth knowing before the next such prediction is written.
+Corollary: with σ scaled to a P90 half-width and `z_conf = 1.0`, `mu ± 1·σ` is a **90%** interval,
+not a 68% one — σ_age is not a 1σ and should not be read as one.
+
+### What I got wrong
+
+**I wrote the pre-registered bar without first checking Stage 1 Change A's own RES prediction**,
+which is in this same notebook and says in terms that RES should approve nothing. Had I read it,
+P1-b and P2-b would have been registered as *expected to fail*, and the outcome would have been O1
+on a correctly-specified bar. The bar and its O3 verdict stay exactly as they fired — the error was
+mine in specifying it, and the fix is the annotation above, not a rewrite.
+
+### Verdict
+
+**Arm A reproduces July on everything that was supposed to be invariant, and differs only where a
+pre-registered change said it would differ, by the mechanism it named.** The ΔAge ranking survived a
+different machine, a full rebuild, and Stages 1.5.3–1.5.6 with byte-level stability of the held-out
+ordering on 6/6 folds. The RES collapse is Change A's honest-uncertainty arithmetic playing out:
+per-cell confident rejuvenation is unreachable at this data scale, because σ_age (~37 yr) exceeds
+the real effect (~11–14 yr) several times over.
+
+**SCOPE — what this does NOT establish.** This is REPRODUCTION, not validation. It shows arm A
+ranks by ΔAge as well as July did and that RES still degrades that ranking. It says **nothing**
+about whether the ΔAge labels are *correct age* — the question arms C and D narrowed and did not
+close. It also does not close the HFF half of the user's ask, which needs a dataset-matched re-run
+(see the withdrawal at the top of this section).
+
+### Still open from this section
+
+| item | owner |
+|---|---|
+| HFF ΔAge reproduction on a **matched** dataset configuration (1-vs-1 or 2-vs-2) | unassigned — the withdrawn comparison |
+| `test7_ranking.paired_ci` does not NaN-filter, unlike 7.1/7.2 | cosmetic; do NOT edit the July record scripts |

@@ -11,6 +11,93 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-07 - Cross-machine reproduction: arm A reproduces July's ranking EXACTLY; RES differs exactly as pre-registered
+
+**Status:** RUN and VERIFIED on the data machine. **`src/` untouched, no build touched, read-only.**
+
+The user asked for a direct check: the other machine ran ΔAge/RES experiments in July, before Stage
+1.5.6; re-run them on arm A and see whether they match. "A simple test that will tell us if it's
+actually working or not."
+
+### Half the ask was withdrawn before it ran - the user caught the flaw
+
+An earlier attempt compared arm A's HFF ΔAge trajectory against `diag_gc_hff_signature`. The user
+stopped it: *"arm A is from 2 data sets while the tests run on 1 data set - of course it would be
+different results."* Correct. Those diagnostics run the clock on **raw single-dataset** input; arm A
+is a **two-dataset harmonized** build. **The comparison is withdrawn as invalid - it measured
+nothing**, and is recorded that way in the notebook rather than quietly dropped. The HFF half now
+needs a dataset-matched re-run and is logged as open.
+
+The RES/ranking half has no such confound: it runs on the **built** LOOCV artefacts, and both sides
+are the same build. Verified from metadata first, reading the deleted July builds out of git at
+`f353526^`: n_samples 42605, n_shards 51, splits 852/115/117/21, `gene_panel_hash`
+`783f269a214aa972`, label_distribution 22635/1095/18875 - **identical on both sides**. Only
+`baseline_census` differs, because it did not exist in July (added by G-a).
+
+### Added
+
+- `experiments/repro_test7_res_armA.py` - imports the three July scripts **unmodified** and only
+  redirects `resolve_root` at the `_armA` roots. Pre-registered bar (P1-a/b/c primary, P2-a/b/c
+  secondary, outcomes O1-O4) written into the header before any arm-A number was read.
+- `experiments/diag_res_degenerate_armA.py` - separates the two mechanisms that can make RES a
+  constant: the OOD gate zeroing every cell, versus `R_eff = max(0, -(mu + z*sigma))` flooring to 0.
+- `results/repro_test7_res_armA_results.json`, `results/diag_res_degenerate_armA_results.json`.
+
+### Result 1 - the ΔAge ranking reproduces EXACTLY, 6/6 folds, three decimals
+
+`model_dAge` +0.910 / +0.909 / +0.990 / +0.970 / +0.960 / +0.947 and `ridge_dAge` +0.957 / +0.925 /
++0.960 / +0.952 / +0.951 / +0.983 - **every value identical to July**. Aggregates 0.948 / 0.955,
+delta -0.000 on both. Test 7.1 exact too (gated 0.292/0.295, penalized 0.414/0.414, precision@5
+0.27/0.30, same unsafe counts). Test 7.2's A arm exact at 0.955.
+
+**This survived a different machine, a full rebuild, and Stages 1.5.3-1.5.6.**
+
+### Result 2 - RES went degenerate, and Stage 1 Change A predicted it in writing
+
+`model_RES` is a **constant** (zero variance, Spearman undefined) on N3/O2/Y1, and lower on the
+other three (N2 0.742->0.222, O1 0.684->0.369, Y2 0.674->0.609). The diagnostic pins the mechanism:
+on the constant folds `R_eff = 0` for **100%** of cells because `mu + z*sigma >= 0` throughout -
+**not** the OOD gate. `sigma_age` went ~2.4 yr (July) -> **37.35 yr** (arm A), which is `sigma_scale`
+from Stage 1 Change A doing exactly what it was built to do. Change A's own pre-registration says
+per-cell RES *"should therefore approve nothing, and that is the correct result."*
+
+Both Change-A invariance guards held exactly: `rank_model_dage` **0.948** (predicted "exactly
+0.948"), `ood_rate` **0.2732** (predicted "exactly 0.273") - independent confirmation from a test
+written for another purpose.
+
+Direction of the July finding is intact and stronger. On the three folds where RES is defined,
+paired (RES - ridge) = **-0.567 [-1.019, -0.115]**, excludes 0. Test 7.2, which isolates the RES
+*formula* with ΔAge held constant, gives **-0.529 [-0.812, -0.246]** against July's -0.300 [-0.473,
+-0.128].
+
+### Two things recorded against myself
+
+1. **The bar fired O3 "DOES NOT REPRODUCE" and that verdict is left standing as it fired.** I wrote
+   it without first checking Stage 1 Change A's own RES prediction, which lives in the same notebook
+   and says RES should approve nothing. Had I read it, P1-b/P2-b would have been registered as
+   *expected to fail* and the outcome would have been O1. The record is annotated, not rewritten.
+2. **`sigma_scale` came in off-prediction:** predicted ~5-6, measured 9.89-18.64 (mean 13.33). The
+   prediction used mean-error / mean-spread (14/2.4); `sigma_scale_factor`
+   (`xdonor_calib.py:399-403`) uses **P90(|residual|) / median(spread)**. The implementation matches
+   its own documented arithmetic. Corollary worth carrying forward: with sigma scaled to a P90
+   half-width and `z_conf = 1.0`, `mu +- 1*sigma` is a **90%** interval - `sigma_age` is not a 1-sigma
+   and must not be read as one.
+
+Also noted, deliberately not fixed: `test7_ranking.paired_ci` does not NaN-filter while 7.1 and 7.2
+do, which is why P1-b's CI came back undefined rather than signed. The July scripts are the record
+being reproduced and were not edited.
+
+### Scope - what this does NOT establish
+
+REPRODUCTION, not validation. It shows arm A ranks by ΔAge as well as July did and that RES still
+degrades that ranking. It says **nothing** about whether the ΔAge labels are *correct age* - the
+question arms C and D narrowed and did not close.
+
+The July entries in `DELTAAGE_LAB_NOTEBOOK.md` were annotated with forward pointers and otherwise
+left byte-for-byte intact (188 insertions, **0 deletions**).
+
+---
+
 ## 2026-08-06 - Step 1d: the sparse clock and harmonization INTERACT ADVERSARIALLY on HFF
 
 **Status:** MEASURED, and it runs AGAINST the sparse clock. **`src/` untouched, no label moved.**

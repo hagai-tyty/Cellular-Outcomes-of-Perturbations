@@ -1,0 +1,406 @@
+{
+  "arm": "armA",
+  "bar": {
+    "P1a_min_dage_spearman": 0.85,
+    "P2a_tol_dage": 0.1,
+    "P2b_tol_res": 0.15
+  },
+  "july_source": "DELTAAGE_LAB_NOTEBOOK.md",
+  "test7": {
+    "per_fold": {
+      "N2": {
+        "model_RES": 0.22156468376279892,
+        "model_dAge": 0.9103896103896105,
+        "ridge_dAge": 0.9571428571428571
+      },
+      "N3": {
+        "model_RES": NaN,
+        "model_dAge": 0.9090909090909091,
+        "ridge_dAge": 0.9246753246753248
+      },
+      "O1": {
+        "model_RES": 0.3692744729379982,
+        "model_dAge": 0.9896103896103896,
+        "ridge_dAge": 0.9597402597402598
+      },
+      "O2": {
+        "model_RES": NaN,
+        "model_dAge": 0.9701298701298702,
+        "ridge_dAge": 0.9519480519480519
+      },
+      "Y1": {
+        "model_RES": NaN,
+        "model_dAge": 0.9596491228070174,
+        "ridge_dAge": 0.9508771929824561
+      },
+      "Y2": {
+        "model_RES": 0.6089164316876501,
+        "model_dAge": 0.9467532467532468,
+        "ridge_dAge": 0.9831168831168832
+      }
+    },
+    "agg": {
+      "model_RES": 0.39991852946281575,
+      "model_dAge": 0.9476038581301739,
+      "ridge_dAge": 0.9545834282676388
+    },
+    "std": {
+      "model_RES": 0.15961336160721115,
+      "model_dAge": 0.029681445728085253,
+      "ridge_dAge": 0.017139027984212636
+    },
+    "paired_res_minus_ridge": {
+      "mean": NaN,
+      "lo": NaN,
+      "hi": NaN
+    },
+    "res_wins": 0
+  },
+  "test7_1": {
+    "gated": {
+      "agg": {
+        "model_RES": 0.0170173877246661,
+        "model_dAge": 0.29219521008945387,
+        "ridge_dAge": 0.29490749510827224
+      },
+      "paired": {
+        "mean": -0.38043653510756675,
+        "lo": -1.5377700512861348,
+        "hi": 0.7768969810710014,
+        "n": 3
+      }
+    },
+    "pen": {
+      "agg": {
+        "model_RES": 0.0640014086543923,
+        "model_dAge": 0.4136439583808005,
+        "ridge_dAge": 0.41383382699172166
+      },
+      "paired": {
+        "mean": -0.3948730502200665,
+        "lo": -1.4135013503286993,
+        "hi": 0.6237552498885661,
+        "n": 3
+      }
+    },
+    "p_at_k": {
+      "k": 5,
+      "agg": {
+        "model_RES": 0.2333333333333333,
+        "model_dAge": 0.26666666666666666,
+        "ridge_dAge": 0.3
+      }
+    },
+    "unsafe_vs_res_corr": NaN,
+    "per_fold": {
+      "N2": {
+        "n": 21,
+        "n_safe": 21,
+        "n_unsafe": 0,
+        "model_RES|gated": 0.22156468376279892,
+        "model_RES|pen": 0.22156468376279892,
+        "model_RES|p@5": 0.8,
+        "model_dAge|gated": 0.9103896103896105,
+        "model_dAge|pen": 0.9103896103896105,
+        "model_dAge|p@5": 1.0,
+        "ridge_dAge|gated": 0.9571428571428571,
+        "ridge_dAge|pen": 0.9571428571428571,
+        "ridge_dAge|p@5": 1.0
+      },
+      "N3": {
+        "n": 21,
+        "n_safe": 18,
+        "n_unsafe": 3,
+        "model_RES|gated": NaN,
+        "model_RES|pen": NaN,
+        "model_RES|p@5": 0.0,
+        "model_dAge|gated": 0.41092362442213654,
+        "model_dAge|pen": 0.42727272727272725,
+        "model_dAge|p@5": 0.0,
+        "ridge_dAge|gated": 0.5422631372912371,
+        "ridge_dAge|pen": 0.5506493506493506,
+        "ridge_dAge|p@5": 0.0
+      },
+      "O1": {
+        "n": 21,
+        "n_safe": 17,
+        "n_unsafe": 4,
+        "model_RES|gated": 0.3704792868174742,
+        "model_RES|pen": 0.3692744729379982,
+        "model_RES|p@5": 0.2,
+        "model_dAge|gated": 0.2534215398689222,
+        "model_dAge|pen": 0.33896103896103896,
+        "model_dAge|p@5": 0.2,
+        "ridge_dAge|gated": 0.2234539541774815,
+        "ridge_dAge|pen": 0.3090909090909091,
+        "ridge_dAge|p@5": 0.2
+      },
+      "O2": {
+        "n": 21,
+        "n_safe": 16,
+        "n_unsafe": 5,
+        "model_RES|gated": NaN,
+        "model_RES|pen": NaN,
+        "model_RES|p@5": 0.2,
+        "model_dAge|gated": 0.2941239294090012,
+        "model_dAge|pen": 0.4909090909090909,
+        "model_dAge|p@5": 0.4,
+        "ridge_dAge|gated": 0.1451011385084406,
+        "ridge_dAge|pen": 0.3311688311688311,
+        "ridge_dAge|p@5": 0.6
+      },
+      "Y1": {
+        "n": 19,
+        "n_safe": 11,
+        "n_unsafe": 8,
+        "model_RES|gated": NaN,
+        "model_RES|pen": NaN,
+        "model_RES|p@5": 0.2,
+        "model_dAge|gated": -0.16405448972242767,
+        "model_dAge|pen": 0.1701754385964912,
+        "model_dAge|p@5": 0.0,
+        "ridge_dAge|gated": -0.11028107364674303,
+        "ridge_dAge|pen": 0.22456140350877193,
+        "ridge_dAge|p@5": 0.0
+      },
+      "Y2": {
+        "n": 21,
+        "n_safe": 16,
+        "n_unsafe": 5,
+        "model_RES|gated": -0.5409918074062748,
+        "model_RES|pen": -0.3988349307376202,
+        "model_RES|p@5": 0.0,
+        "model_dAge|gated": 0.048367046169480205,
+        "model_dAge|pen": 0.14415584415584418,
+        "model_dAge|p@5": 0.0,
+        "ridge_dAge|gated": 0.01176495717636005,
+        "ridge_dAge|pen": 0.11038961038961038,
+        "ridge_dAge|p@5": 0.0
+      }
+    }
+  },
+  "test7_2": {
+    "true": {
+      "A": 0.9545834282676388,
+      "B": 0.4273506949565182,
+      "paired": {
+        "mean": -0.528818136212313,
+        "lo": -0.8119503392716649,
+        "hi": -0.245685933152961,
+        "n": 4
+      }
+    },
+    "safe": {
+      "A": 0.29490749510827224,
+      "B": 0.1927104597038552,
+      "paired": {
+        "mean": -0.24094576674312873,
+        "lo": -0.9102905682539602,
+        "hi": 0.4283990347677027,
+        "n": 4
+      }
+    },
+    "per_fold": {
+      "N2": {
+        "A_true": 0.9571428571428571,
+        "B_true": 0.22156468376279892,
+        "A_safe": 0.9571428571428571,
+        "B_safe": 0.22156468376279892
+      },
+      "N3": {
+        "A_true": 0.9246753246753248,
+        "B_true": 0.6089164316876501,
+        "A_safe": 0.5422631372912371,
+        "B_safe": 0.6097087761109123
+      },
+      "O1": {
+        "A_true": 0.9597402597402598,
+        "B_true": 0.3692744729379982,
+        "A_safe": 0.2234539541774815,
+        "B_safe": 0.3704792868174742
+      },
+      "O2": {
+        "A_true": 0.9519480519480519,
+        "B_true": NaN,
+        "A_safe": 0.1451011385084406,
+        "B_safe": NaN
+      },
+      "Y1": {
+        "A_true": 0.9508771929824561,
+        "B_true": NaN,
+        "A_safe": -0.11028107364674303,
+        "B_safe": NaN
+      },
+      "Y2": {
+        "A_true": 0.9831168831168832,
+        "B_true": 0.5096471914376255,
+        "A_safe": 0.01176495717636005,
+        "B_safe": -0.43091090787576475
+      }
+    }
+  },
+  "checks": [
+    {
+      "name": "P1-a  model_dAge & ridge_dAge >= 0.85",
+      "pass": true,
+      "observed": "model_dAge=0.948  ridge_dAge=0.955"
+    },
+    {
+      "name": "P1-b  (RES \u2212 ridge) 95% CI entirely below 0",
+      "pass": false,
+      "observed": "+nan [+nan,+nan]"
+    },
+    {
+      "name": "P2-a  |\u0394model_dAge| <= 0.10",
+      "pass": true,
+      "observed": "\u0394=-0.000  (armA 0.948 vs July 0.948)"
+    },
+    {
+      "name": "P2-a  |\u0394ridge_dAge| <= 0.10",
+      "pass": true,
+      "observed": "\u0394=-0.000  (armA 0.955 vs July 0.955)"
+    },
+    {
+      "name": "P2-b  |\u0394model_RES| <= 0.15",
+      "pass": false,
+      "observed": "\u0394=-0.286  (armA 0.400 vs July 0.686)"
+    },
+    {
+      "name": "P2-c  gated: RES worse than ridge_dAge (sign)",
+      "pass": true,
+      "observed": "RES=+0.017 < ridge=+0.295"
+    },
+    {
+      "name": "P2-c  pen: RES worse than ridge_dAge (sign)",
+      "pass": true,
+      "observed": "RES=+0.064 < ridge=+0.414"
+    },
+    {
+      "name": "P1-c  Test 7.2 (B\u2212A) 95% CI entirely below 0",
+      "pass": true,
+      "observed": "-0.529 [-0.812,-0.246]"
+    }
+  ],
+  "primary_pass": false,
+  "secondary_pass": false,
+  "outcome": "O3",
+  "verdict": "DOES NOT REPRODUCE",
+  "july": {
+    "test7": {
+      "per_fold": {
+        "N2": {
+          "model_RES": 0.742,
+          "model_dAge": 0.91,
+          "ridge_dAge": 0.957
+        },
+        "N3": {
+          "model_RES": 0.804,
+          "model_dAge": 0.909,
+          "ridge_dAge": 0.925
+        },
+        "O1": {
+          "model_RES": 0.684,
+          "model_dAge": 0.99,
+          "ridge_dAge": 0.96
+        },
+        "O2": {
+          "model_RES": 0.507,
+          "model_dAge": 0.97,
+          "ridge_dAge": 0.952
+        },
+        "Y1": {
+          "model_RES": 0.706,
+          "model_dAge": 0.96,
+          "ridge_dAge": 0.951
+        },
+        "Y2": {
+          "model_RES": 0.674,
+          "model_dAge": 0.947,
+          "ridge_dAge": 0.983
+        }
+      },
+      "agg": {
+        "model_RES": 0.686,
+        "model_dAge": 0.948,
+        "ridge_dAge": 0.955
+      },
+      "std": {
+        "model_RES": 0.091,
+        "model_dAge": 0.03,
+        "ridge_dAge": 0.017
+      },
+      "paired_res_minus_ridge": {
+        "mean": -0.268,
+        "lo": -0.381,
+        "hi": -0.155
+      },
+      "res_wins": 0
+    },
+    "test7_1": {
+      "n_unsafe": {
+        "N2": 0,
+        "N3": 3,
+        "O1": 4,
+        "O2": 5,
+        "Y1": 8,
+        "Y2": 5
+      },
+      "n_cells": {
+        "N2": 21,
+        "N3": 21,
+        "O1": 21,
+        "O2": 21,
+        "Y1": 19,
+        "Y2": 21
+      },
+      "gated": {
+        "model_RES": -0.005,
+        "model_dAge": 0.292,
+        "ridge_dAge": 0.295
+      },
+      "pen": {
+        "model_RES": 0.137,
+        "model_dAge": 0.414,
+        "ridge_dAge": 0.414
+      },
+      "p@5": {
+        "model_RES": 0.2,
+        "model_dAge": 0.27,
+        "ridge_dAge": 0.3
+      },
+      "paired_gated": {
+        "mean": -0.3,
+        "lo": -0.567,
+        "hi": -0.034
+      },
+      "paired_pen": {
+        "mean": -0.277,
+        "lo": -0.525,
+        "hi": -0.03
+      },
+      "res_gated_per_fold": {
+        "N2": 0.742,
+        "N3": 0.676,
+        "O1": -0.257,
+        "O2": -0.431,
+        "Y1": -0.534
+      }
+    },
+    "test7_2": {
+      "true": {
+        "A": 0.955,
+        "B": 0.654,
+        "mean": -0.3,
+        "lo": -0.473,
+        "hi": -0.128
+      },
+      "safe": {
+        "A": 0.295,
+        "B": 0.116,
+        "mean": -0.179,
+        "lo": -0.42,
+        "hi": 0.061
+      }
+    }
+  }
+}
