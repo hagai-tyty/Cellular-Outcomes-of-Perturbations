@@ -1,7 +1,8 @@
 # CellFate-Rx — Architecture
 
-**A map of the system as it actually is**, read from the code on 2026-08-03. Where this document
-and `README.md` disagree, this one is right — the README predates most of the pipeline.
+**A map of the system as it actually is**, read from the code on 2026-08-03 (step-6 arm experiment
+and arm D added 2026-08-07). Where this document and `README.md` disagree, this one is right — the
+README predates most of the pipeline.
 
 ---
 
@@ -15,6 +16,7 @@ and `README.md` disagree, this one is right — the README predates most of the 
 - [6. Every loop in the system](#6-every-loop-in-the-system)
 - [7. On-disk artefacts](#7-on-disk-artefacts)
 - [8. The scientific-method layer](#8-the-scientific-method-layer)
+- [8a. Step 6 — the arm experiment](#8a-step-6-the-arm-experiment)
 - [9. Entry points](#9-entry-points)
 - [10. Cross-cutting invariants](#10-cross-cutting-invariants)
 
@@ -130,11 +132,11 @@ refitted** — refitting it to improve our own numbers would be fitting the test
 | **`scripts/`** | Thin Hydra CLIs: `build_dataset.py`, `train.py`, `evaluate.py`, `fit_clock.py`, `serve.py` |
 | **`local_runners/`** | The drivers actually used day to day. **`run_multi_local.py`** = one full fold (build → train → evaluate → bundle). **`run_loocv.py`** = rotates all 6 donors. Plus `run_local.py`, `run_fate_local.py`, `evaluate_only.py`, `diag_harmonize.py`, `show_ui.py` |
 | **`plans/`** | The project's decision record. `00_START_HERE.md`, `MASTER_PLAN.md`, `REF_GROUND_RULES.md` (the rules everything is graded against), `REF_ARCHITECTURE.md`, `REF_DATA_STRATEGY.md`, and one file per stage. `plans/archive/` holds superseded drafts — kept, never rewritten |
-| **`tests/`** | 47 files, **843 tests**. Unit tests plus **registered-bar tests** (`test_bars_resolvable.py`) and invariance guards (`test_ci_deconfounder_arm_invariance.py`, `test_c5c_age_accumulation.py`, `test_arm_c_label_shuffle.py`, `test_results_paths.py`) |
-| **`plan_tests/`** | Scripts a *plan* requires: pre-registered bars (`register_*_bar.py`), pre-flight gates (`step6_preflight.py`), bit-identity verifiers (`verify_age_mask_identical.py`, `verify_stage1_5.py`, `verify_1a.py`), smoke tests |
+| **`tests/`** | 48 files, **857 tests**. Unit tests plus **registered-bar tests** (`test_bars_resolvable.py`) and invariance guards (`test_ci_deconfounder_arm_invariance.py`, `test_c5c_age_accumulation.py`, `test_arm_c_label_shuffle.py`, `test_arm_d_stratified_shuffle.py`, `test_results_paths.py`) |
+| **`plan_tests/`** | Scripts a *plan* requires: pre-registered bars (`register_*_bar.py`, incl. `register_arm_c_bar.py` / `register_arm_d_bar.py` / `register_gc_step2_bar.py`), pre-flight gates (`step6_preflight.py`, `armd_intrinsic_preflight.py`), bit-identity verifiers (`verify_age_mask_identical.py`, `verify_stage1_5.py`, `verify_1a.py`), smoke tests |
 | **`experiments/`** | **The active research frontier** — 49 read-only diagnostics, one per scientific question (`diag_*.py`), plus `DELTAAGE_LAB_NOTEBOOK.md`. Nothing here touches `src/`; each answers a question and writes JSON to `results/`. *(Corrected 2026-08-03: an earlier revision called this "historical, not on the forward path." That was wrong — the clock-density, label-provenance and harmonization-gain work all lives here, and it is where the open questions are currently being resolved.)* |
 | **`results/`** | Every diagnostic's JSON output, plus the written reports (`STEP6_FULL_REPORT.md`, `STEP6_REPORT.md`, `DAGE_LEDGER.md` + `dage_ledger.csv`) |
-| **`scorecard/`** | Metric snapshots — `baseline.json`, `A_xdonor.json`, `gc2_A_keep_hff.json`, … Each is one 6-fold measurement; comparisons are always snapshot-vs-snapshot |
+| **`scorecard/`** | Metric snapshots — `baseline.json`, `A_xdonor.json`, and the step-6 arms `gc2_A_keep_hff` / `gc2_B_mask_hff` / `gc2_C_shuffle_hff_s0` / `gc2_D_stratshuffle_hff_s0`. Each is one 6-fold measurement; comparisons are always snapshot-vs-snapshot |
 | repo root | `scorecard.py` (the grading tool), `audit_metrics.py` (`MIN_PASS_RATE`, `bar_verdict`, `sensitivity_multiplier`), `retrain_stage1.py` (retrain-only path — **reuses shards, cannot see a data-config change**), `run_step6_arm.sh`, `CHANGES.md` (the append-only log) |
 
 ### Generated, not tracked
@@ -172,7 +174,7 @@ sources.plan()  →  work list of CellChunks
       ▼  TWO-PASS deconfounder (needs splits, so it cannot run per-chunk)
    pass 1: fit ΔAge ~ a·cc + b on the primary regime's TRAIN cells
    pass 2: apply that one transform to EVERY shard, re-centre on controls,
-           [arm C only: permute labels], rewrite y_age
+           [arm C: global label permute | arm D: within-(line,time) permute], rewrite y_age
       │
       ▼
    fit scalers on TRAIN only  →  scalers.json  →  dataset_summary.json
@@ -308,7 +310,7 @@ Grouped by phase. **Bold** loops dominate runtime.
 | L7 | split write | each regime | `scaffold`, `cell_line`, `both`, `holdout`, `line_holdout` |
 | **L8** | **deconfounder pass 1** | sidecars × cells | fits `ΔAge ~ a·cc + b` on TRAIN cells with `deconfound_mask` |
 | **L9** | **deconfounder pass 2** | every sidecar | applies the single transform + control re-centring |
-| L10 | arm-C shuffle | sorted sidecars → target cells → scatter | **global across shards**, never per chunk (chunks are timepoint-homogeneous, so a within-chunk shuffle would leave between-timepoint structure intact) |
+| L10 | age-label shuffle (arm C/D) | sorted sidecars → target cells grouped by stratum → permute within each | **global across shards**, never per chunk. Arm C = one global stratum; arm D = one stratum per `(cell_line, time_h)`, so the between-timepoint trajectory survives and only within-timepoint pairing dies |
 | L11 | shard write-back | each `y_age` array | `rewrite_shard_yage` |
 | L12 | scaler fit | every shard | TRAIN rows only |
 | L13 | sidecar load | `_cc_cache/*.npz` | sorted, so order never depends on dict ordering |
@@ -343,7 +345,7 @@ Grouped by phase. **Bold** loops dominate runtime.
 | L26 | scorecard folds | 6 donors | loads each bundle, measures, writes one snapshot |
 | L27 | baselines | 6 estimators | mean, ridge, x-only, u-only, kNN, predict-control |
 | L28 | pooled-ECE bootstrap | 4000 trials | |
-| L29 | **arm loop** | A → B → C | sequential; each arm is a full LOOCV. Arms write suffixed roots (`CELLFATE_FOLD_SUFFIX`) so they do not overwrite each other |
+| L29 | **step-6 arm loop** | A → B → C → D | sequential; each arm is a full LOOCV (~5 h). Arms write suffixed roots (`CELLFATE_FOLD_SUFFIX`) so they do not overwrite each other. See [§8a](#8a-step-6-the-arm-experiment) |
 | L30 | bar resolvability | 20 000–40 000 simulations | Monte-Carlo under the null, *before* the real run |
 
 ### Inference loops — `inference/`
@@ -430,9 +432,59 @@ widened until it passes.
 - **Bit-identity gates** — a change that should record and not compute must leave `y_age`
   bit-identical (`max|Δ| = 0.00e+00`), asserted row-exact.
 - **Pre-flight gates** — `plan_tests/step6_preflight.py` builds both arms at reduced scale and
-  refuses the real run unless the arms differ in the intended way **and only** in that way.
+  refuses the real run unless the arms differ in the intended way **and only** in that way. Arm D
+  adds `plan_tests/armd_intrinsic_preflight.py`, an *intrinsic* single-build gate (see §8a).
 - **Arm census** — every fold writes what arm it ran, its label counts, and any shuffle seed.
 - **Mutation testing** — guards are validated by re-injecting the exact bug they exist to catch.
+
+---
+
+## 8a. Step 6 — the arm experiment
+
+Step 6 (a.k.a. Stage 1.5.2 "G-c step 2") is the largest experiment the system runs, and much of the
+recent `data/` and `training/` machinery exists to serve it. **The question:** HFF supplies 33 613 of
+the project's 33 688 ΔAge training labels (99.7 %) and they carry an artefact signature — do they
+*help* the age head, or is the model learning artefact from them? It is answered not by one run but by
+a family of **arms**, each a full 6-fold LOOCV that changes exactly one thing about HFF's labels and
+is graded by `scorecard.py compare` on the held-out donor.
+
+| arm | what it does to HFF's labels | isolates | driver |
+|---|---|---|---|
+| **A** — control | nothing (all 33 688 age-valid) | the baseline | `run_step6_arm.sh A` |
+| **B** — mask | withhold all HFF labels (75 remain) | *does removing them change ΔAge MAE?* | `run_step6_arm.sh B` |
+| **C** — global shuffle | permute HFF's labels across all cells | *volume/regularisation vs information* | `run_step6_arm.sh C <seed>` |
+| **D** — stratified shuffle | permute HFF's labels **within `(cell_line, time_h)`** | *between-timepoint trajectory vs within-timepoint cell signal* | `run_step6_arm.sh D <seed>` |
+
+Each arm is one line in `DataConfig` — `AGE_MASKED_DATASETS` (B), `age_shuffle_datasets` (C/D),
+`age_shuffle_strata` (D). Arms A/C/D all keep the full label **count** (`age_window_k = 4` in every
+arm so the mechanism is constant); only what the labels *mean* changes. The metric that discriminates
+is **`rank_model_dage`** — can the age head still *order* perturbations?
+
+**Why the arms are a ladder.** Each rules out one mundane explanation that the previous could not:
+
+```
+A 0.95  ── true labels
+   │  B: mask 99.7% → MAE inconclusive (underpowered), but ranking drops
+C 0.58  ── global shuffle: ranking collapses ⇒ labels are INFORMATIVE, not just volume
+D 0.61  ── stratified shuffle: still collapses (91% of the way to C)
+   ⇒ the exploitable structure is WITHIN-timepoint & cell-level, NOT the day trajectory
+      ⇒ a day-level systematic artefact is rejected
+```
+
+Combined with Stage 1.5.5 (the within-timepoint signal is **not** identity or sequencing depth), the
+mundane-explanation space is largely closed. **What remains open** — and is *not* settled by any arm —
+is whether the surviving cell-level signal is real rejuvenation or clock noise; that is the
+clock-density thread (Stage 1.5.6), not another shuffle. Full write-up: `results/STEP6_FULL_REPORT.md`.
+
+**Two design rules the arm experiment forced into the code**, both now load-bearing invariants:
+
+1. **`age_mask` vs `deconfound_mask`** (§4). Arm B's first run was void because withholding labels
+   also moved `y_age` itself — the deconfounder fit on `age_mask`. Now it fits on `deconfound_mask`,
+   so the arms differ in exactly one thing.
+2. **Intrinsic validation, not cross-build.** Arm D's shuffle must permute *within* each timepoint so
+   the trajectory survives. This is checked inside **one** build (`armd_intrinsic_preflight.py`:
+   per-stratum ΔAge multiset preserved to ~1e-14) rather than by diffing two builds — build-to-build
+   value comparison at reduced scale carries confounds unrelated to the transform under test.
 
 ---
 
@@ -442,7 +494,8 @@ widened until it passes.
 # Full LOOCV, one arm, build + train + snapshot           (~5 h)
 ./run_step6_arm.sh A                 # control
 ./run_step6_arm.sh B                 # HFF age labels masked
-./run_step6_arm.sh C 0               # HFF age labels shuffled, seed 0
+./run_step6_arm.sh C 0               # HFF age labels globally shuffled, seed 0
+./run_step6_arm.sh D 0               # HFF age labels shuffled WITHIN (line,time), seed 0
 
 # One fold only
 python local_runners/run_multi_local.py "D:\GSE242423" "D:\Gill"
