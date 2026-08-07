@@ -11,6 +11,50 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-08 - CORRECTION: A5 withdrawn, A2 downgraded
+
+**Status:** Corrected after review by the second machine. **`src/` untouched, no label moved. A1-A5
+are left in place and marked, not deleted** - the wrong version stays visible as the record, per the
+same convention being applied to §5.1.
+
+### A5 - WITHDRAWN. My misreading.
+
+§4.7 says *"the 99.8% quoted elsewhere in this document is the earlier **33,688-cell corpus**"*.
+33,688 is the **corpus** size; §4's 33,613 is **HFF's** count. Checked: 33,613 / 33,688 =
+**99.777% = 99.8%**. Consistent. I read a sentence about a corpus as a second claim about HFF's
+count. There was no contradiction.
+
+### A2 - DOWNGRADED. The elimination claim was an extrapolation.
+
+A2 argued the deconfounder cannot carry the fold spread because step 1b bounded S3+S4 at +2.11 yr.
+**Step 1b ran on the unharmonized path** - its own docstring opens *"Harmonization is OFF (no config
+sets `harmonize: true`)"*, written before §4.3 established `HARMONIZE = True` in the real build. So
++2.11 yr is the deconfounder's contribution to a ΔAge ~2.15x smaller than the one it actually sees,
+and S3's real inputs are harmonized values. Using it to bound **fold-to-fold variance** in a
+harmonized build is an extrapolation, not a proof.
+
+**It is the same species of error as ruling out harmonization from the absence of `harmonize: true`
+in the YAML - committed against the very measurement that corrected it.**
+
+### What survives, and why the correction strengthens it
+
+The elimination framing falls; the **instrument** does not, and it is now better motivated. If the
+deconfounder's fold behaviour is **unknown** rather than bounded, a statistic that presumes
+harmonization is the mechanism is the wrong tool, while a **reconstruction** separates them by
+construction: where harmonization-only reconstruction tracks `d_f`, harmonization is attributed;
+**the residue where it fails to track is where the deconfounder or anything else lives.** A
+measurement, not an assumption that the answer is known.
+
+A1 (the statistic), A3 (the leaky remedy), A4 (the variance floor / gene set) stand unchanged.
+
+### Repo state
+
+`HEAD == origin/main == acf6ef0`, 0 ahead / 0 behind - **nothing to pull.** The second machine has
+not pulled `acf6ef0` yet; that is his side, not a divergence.
+
+---
+
+
 ## 2026-08-07 - Audit of the incoming step 3b, and C-2 is not free
 
 **Status:** Recorded. **`src/` untouched, no label moved, no existing plan section edited.**

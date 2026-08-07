@@ -404,7 +404,7 @@ space — is the live problem.
 | **2** | **Pre-register the bar** for adopting a sparse clock: MAE ≤ 8 yr **and** sign agreement ≥ 0.80 vs methylation, on **both** arms, k fixed at 100 in advance | `bar_verdict` row in `tests/test_bars_resolvable.py` | free |
 | **3** | **Write `configs/clocks/fleischer_clock_top100.json`** — the same coefficients, 33,055 zeroed. Provenance in `meta`, original untouched | ships as a **new file**; nothing switches automatically | free |
 | **3b** | 🆕 **GATE ON STEP 4 — is the harmonization gain stable across folds?** Compute the clock-weighted gain per fold and test whether it accounts for the 16.67 yr day-14 spread (§4.7). Read-only, **0 lines in `src/`** | `bar_verdict` row in `tests/test_bars_resolvable.py`; pre-registration in §5.1 | free |
-| **3b-audit** | 🆕 **Independent audit of 3b — 4 defects + 1 inconsistency (§5.2).** `G_f` is the statistic §4.5 disproved and its exact form is a tautology; the question is settled by elimination so the instrument should be a per-fold RECONSTRUCTION; the ATTRIBUTED branch's remedy reintroduces donor leakage; the gene-set/variance-floor mechanism in §4.7's own table is untested — **and it is the same lever as §4.6's option 2** | — | free, done |
+| **3b-audit** | 🆕 **Independent audit of 3b — 3 defects stand; A5 withdrawn and A2 downgraded after review (§5.2).** `G_f` is the statistic §4.5 disproved and its exact form is a tautology; the question is settled by elimination so the instrument should be a per-fold RECONSTRUCTION; the ATTRIBUTED branch's remedy reintroduces donor leakage; the gene-set/variance-floor mechanism in §4.7's own table is untested — **and it is the same lever as §4.6's option 2** | — | free, done |
 | **4** | **One rebuild + LOOCV under the sparse clock**, full scorecard, snapshot and rollback | every Stage 1 guard reported before/after | one retrain |
 | **5** | Only then decide on the label change | — | — |
 
@@ -486,6 +486,61 @@ The script must **self-test that it can fail**: fed synthetic folds whose `d_f` 
 *Additive. §5.1 is unmodified — this records what an independent check of it found. Every claim
 below was verified against the code or the raw data, not against the document.*
 
+### ⚠️ 2026-08-08 — CORRECTION to this section, after review by the second machine
+
+*Additive. A1–A5 below are left **exactly as written**; two of them are wrong or overstated and are
+marked here rather than deleted, so the record stays visible.*
+
+| finding | status after review |
+|---|---|
+| A1, A3, A4 | ✅ **stand** |
+| **A5** | ❌ **WITHDRAWN — my misreading, not an inconsistency in §4.7** |
+| **A2** | ⚠️ **DOWNGRADED — the instrument it recommends stands; "settled by elimination" does not** |
+
+#### A5 — withdrawn
+
+§4.7 reads *"the 99.8% quoted elsewhere in this document is the earlier **33,688-cell corpus**"*.
+**33,688 is the CORPUS size, not HFF's label count.** §4's 33,613 is HFF's count, and
+
+```
+33,613 / 33,688 = 99.777 %  ≈  99.8 %
+```
+
+Consistent, and checked. There was no contradiction — I read a sentence about a corpus as a second
+claim about HFF's count. The sentence invites the misreading and is worth tightening, but the
+document was right and A5 was wrong.
+
+#### A2 — downgraded, and the reason is a repeat of this arc's signature error
+
+A2 argued the deconfounder cannot carry the fold spread *"because step 1b bounded S3+S4 at
++2.11 yr"*. **Step 1b ran on the UNHARMONIZED path.** Its own docstring opens:
+
+> *"Harmonization is OFF (no config sets `harmonize: true`), so for HFF the chain is exactly:"*
+> — `experiments/diag_pipeline_decompose.py`
+
+That line was written **before §4.3 established the real build has harmonization ON**
+(`run_multi_local.py:45`, `HARMONIZE = True`). So +2.11 yr is the deconfounder's contribution to a
+ΔAge roughly **2.15× smaller** than the one it actually sees, and S3's inputs in the real build are
+harmonized values. **Using it to bound fold-to-fold variance in a harmonized build is an
+extrapolation, not a proof** — the same species of error as ruling out harmonization from the
+absence of `harmonize: true` in the YAML (§4.3), committed against the very measurement that
+corrected it.
+
+**What survives is the part that matters, and the correction STRENGTHENS it.** The elimination
+framing falls. The **instrument** does not — and it is now better motivated, not worse:
+
+> If the deconfounder's fold-to-fold behaviour is **unknown** rather than bounded, then a statistic
+> that presumes harmonization is the mechanism is exactly the wrong tool. A **reconstruction**
+> separates them by construction: recompute `d_f` from each fold's own harmonizer and check it
+> reproduces the recorded `d_f`. Where the harmonization-only reconstruction **tracks** `d_f`,
+> harmonization is attributed; **the residue where it fails to track is where the deconfounder — or
+> anything else — lives.**
+
+It is a **measurement**, not an assumption that the answer is already known. A2 should be read as
+recommending the reconstruction, and **not** as having pre-decided its outcome.
+
+---
+
 ### ✅ What checks out
 
 * **`σ_ref` really is estimated from five single control samples.** Independently confirmed from the
@@ -515,7 +570,7 @@ so `d_f / G_f ≡ Σ_g δ_g·w_g`, which is **fold-invariant by algebra** — `R
 whatsoever. The statistic is caught between a proxy that measures the proxy and an exact form that
 measures nothing.
 
-### 🔴 A2 — the question is already settled by elimination; a 6-point spread ratio is the wrong instrument
+### ⚠️ A2 — ~~the question is already settled by elimination~~ — **DOWNGRADED 2026-08-08. The reconstruction instrument stands; the elimination claim does not (see the correction box above)**
 
 Across folds the clock is frozen and HFF's cells are fixed. The only inputs to HFF's ΔAge that can
 change are:
@@ -569,7 +624,7 @@ genes (5026) and is the fold that collapses.** That correlation is sitting in §
 and it is a different mechanism from "σ_ref estimated from five samples" — it would survive even if
 σ_ref were perfectly stable.
 
-### ⚠️ A5 — factual inconsistency
+### ❌ A5 — factual inconsistency — **WITHDRAWN 2026-08-08, I MISREAD §4.7 (see the correction box above)**
 
 §4 states HFF carries **33,613** labels; §4.7 refers to *"the earlier **33,688**-cell corpus"*. One
 of the two is wrong.
