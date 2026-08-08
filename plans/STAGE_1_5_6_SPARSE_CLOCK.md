@@ -1835,9 +1835,9 @@ Pre-registration §5.8, unchanged and unedited before the run.
 
 The five-control fit reproduces the shipped `sigma_gill` on all 2664 unclamped genes at **median
 relative error 6.14e-09**. The reconstruction's scale is confirmed too: baseline `d̂ = −26.755`
-against the recorded shard `d_O1 = −24.023`, a **+2.73 yr** difference — which is the S3+S4
-deconfound-and-re-centre contribution, in the direction and near the magnitude step 1b measured
-(+2.11 yr). **HFF stream: 5782 day-14 cells, 5981 day-0.**
+against the recorded shard `d_O1 = −24.023`, a **+2.73 yr** difference.
+
+> ⚠️ **CORRECTED 2026-08-08 (§5.16).** This originally read *"which is the S3+S4 deconfound-and-re-centre contribution, in the direction and near the magnitude step 1b measured (+2.11 yr)"*. **Step 1b was measured UNHARMONIZED** — invoking it here is the same extrapolation A2 was downgraded for, committed again. The +2.73 yr is the gap between an S1+S2 reconstruction and a recorded post-S4 value; S3+S4 is the natural candidate and 1b is **indicative corroboration, not an identification.** Nothing downstream depends on it: it is a scale sanity-check, and the verdict rests on the Δ column. **HFF stream: 5782 day-14 cells, 5981 day-0.**
 
 ### The result
 
@@ -1946,6 +1946,93 @@ substantially **not a property of the transform**; it is one degenerate control 
 
 **No retrain was spent to close this stage.** Every decision above rests on measurements already
 recorded plus two free read-only runs (§5.5, §5.14).
+
+---
+
+## 5.16 🆕 2026-08-08 — POST-CLOSURE: one correction, one reconciliation, and the ORDER changes
+
+*Additive. §5.13–§5.15 stand; §5.14's one overreach is flagged in place above and explained here.
+Raised by the second machine; each item verified before acceptance.*
+
+### 1. My overreach, accepted
+
+§5.14 attributed the +2.73 yr baseline gap to S3+S4 *"near the magnitude step 1b measured
+(+2.11 yr)"*. **Step 1b ran on the unharmonized path** — invoking it as corroboration is the same
+extrapolation §5.2's A2 was downgraded for, and I repeated it two sections after recording why it
+was wrong. Corrected in place. **Nothing downstream moves**: the +2.73 is a scale sanity-check; the
+verdict rests on the Δ column, where the four healthy drops span 0.32–2.98 yr and N2's is +18.558.
+
+### 2. The scalar-vs-reconstruction discrepancy — RESOLVED, and it confirms A1
+
+The second machine ran the O1-fold leave-one-control-out on the **Gill side alone**, no HFF stream,
+on the `|w|`-weighted ratio: **N2 0.904, Y1 0.795, N3/O2/Y2 1.006/1.009/1.030.** That reproduces
+§5.7's −11.8 % / −20.1 % and puts **Y1 ahead of N2** — the opposite order to 3c's answer.
+
+**Not tension: A1 confirming itself.** The scalar drops `δ`, and ΔAge is a **near-cancelling signed
+sum** (2648 positive clock weights, 2589 negative), so a ~10 % per-gene ratio change can produce a
+69 % swing in the sum. The scalar cannot see it; the reconstruction can. **§5.10's mixed-sign
+argument and this are the same fact**, arrived at from opposite directions.
+
+**And the sensitivity is not generic — which is what makes 3c's verdict survive it.** If the swing
+were merely numerical fragility, *every* control drop would swing. Four of five move by 0.32–2.98 yr.
+Only N2's moves 18.558. **The near-cancellation amplifies a real, specific perturbation; it does not
+manufacture one.**
+
+### 3. 🔴 The ORDER CHANGES: **C-7 before Stage 3a**
+
+I proposed going to Stage 3a next, with 3a run twice — six donors, and again with N2 excluded — so
+the defect could not decide the verdict. **That proposal is withdrawn. It was wrong, and worse than
+I understood.**
+
+`test18_forward_gate.py` targets *"mean TRUE ΔAge at t_j"*, read from fold folders and pooled across
+folds. That is the quantity §5.14 proved is inflated ~3× **in five of six folds**. And **3a's STOP
+branch is terminal**: *"do not write tool code. Ship the scoring model; go to Stage 5."*
+
+> **A genuine Δt signal could sit under a 16.67 yr between-fold label artefact and read as STOP —
+> a terminal decision taken on labels we have just proven contaminated.**
+
+**And my two-arm design does not fix it; it makes it worse.** Excluding donor **N2** removes N2's
+*rows*, but N2's *control* still sits inside the harmonizer of every fold that does not hold N2 out.
+So excluding N2 drops the **N2 fold — the only fold whose harmonizer is clean** — and keeps the five
+contaminated ones. Exactly backwards.
+
+**C-7's blocker has cleared.** §3 reads *"C-7 is WRITTEN now and ADOPTED after 3b and 3c report"*.
+3c reported **ATTRIBUTED** (§5.14) and 3b is **unnecessary** (§5.14), so the condition is met. §5.13
+cancelled step 4, which frees the retrain budget C-7's adoption needs.
+
+> **Order: C-7 (adopt) → then Stage 3a, on clean labels.**
+
+### 4. The donor decision — a THIRD option neither side has costed
+
+C-7 §3 poses two: **(a)** drop donor N2, **(b)** re-quantify `N2_Fib` from SRA `SRP302546`. Option
+(a) conflates three separable decisions:
+
+| decision | answer | why |
+|---|---|---|
+| should N2's degenerate **control** enter the harmonizer? | **no** — definitively | it is the contaminant, and it reaches HFF's labels in five of six folds |
+| should N2's own 21 **ΔAge labels** survive? | **no** | its zero-point reads **98.65 yr** from a constant vector — highest of six, for a donor of age **0** — an unrecoverable **+35.12 yr** offset |
+| should N2's **cells** survive at all? | **not obviously** | the fate head consumes **no ΔAge**, works (ROC 0.983 / PR-AUC 0.992), and donors are *the* binding constraint (`STAGE_6_NEW_DATA_REV` §3). Dropping the donor also removes one of only **two** age-0 donors |
+
+**Option (c): reject the control and mask N2's ΔAge labels, but keep the donor and the fold.** It
+removes the contaminant everywhere, discards only labels already known to be garbage, and keeps six
+folds — so C-7's guard re-report stays at **6** rather than dropping to the **5** its §5 currently
+assumes.
+
+**Cost, stated honestly:** `age_label_policy` keys on `source`, `masked_datasets` and `donor_age`
+(`aging.py:135-176`) — **none can address a single donor by `cell_line`**. Option (c) needs a fourth
+rule (`masked_cell_lines`), which is small and follows C-1's own precedent (C-1 exists precisely
+because no policy could separate two lines sharing a `source`) but **is a `src/` change and
+therefore its own Change**.
+
+**It also collides with B2, and that collision is the design question.** Rejecting N2's control
+leaves cell-line N2 with **zero** controls, and `_control_baseline` *"falls back to the line's own
+mean when a line has no controls in this chunk"* — the silent self-centring **B2 exists to forbid**.
+So under (c), B2 must fire *unless* masking N2's labels also prevents the baseline from being
+requested for that line. **Whether it does is an implementation question that must be settled before
+(c) is chosen, not after** — C-7 §5 already routes a B2 failure to *"blocking. The donor-level
+decision is not optional; fix that first."*
+
+**Recorded as an option to cost, not adopted.** The choice among (a), (b) and (c) belongs to C-7.
 
 ---
 

@@ -475,6 +475,78 @@ harmonizer facts only.
 ---
 
 
+## 2026-08-08 (later) - POST-CLOSURE: order changes to C-7 BEFORE Stage 3a; one overreach corrected
+
+**Status:** RECORDED. No run. `src/` untouched, no build touched, no label moved. Section 5.16
+added; section 5.14's one overreach flagged in place (3 lines changed, not deleted).
+
+### 1. My overreach, accepted
+
+5.14 attributed the +2.73 yr baseline gap to S3+S4 "near the magnitude step 1b measured (+2.11 yr)".
+**Step 1b ran on the UNHARMONIZED path** - invoking it is the same extrapolation A2 was downgraded
+for, repeated two sections after recording why it was wrong. Corrected in place. Nothing downstream
+moves: the +2.73 is a scale sanity-check and the verdict rests on the Delta column.
+
+### 2. Scalar-vs-reconstruction discrepancy RESOLVED, and it confirms A1
+
+The second machine ran the O1-fold leave-one-control-out on the Gill side alone: |w|-weighted ratio
+N2 0.904, Y1 0.795, N3/O2/Y2 1.006/1.009/1.030. That reproduces 5.7's -11.8%/-20.1% and puts Y1
+AHEAD of N2 - the opposite order to 3c. **Not tension: A1 confirming itself.** The scalar drops
+delta, and dAge is a near-cancelling signed sum (2648 positive weights, 2589 negative), so a ~10%
+per-gene ratio change yields a 69% swing in the sum. 5.10's mixed-sign argument and this are the
+same fact from opposite directions.
+
+**And the sensitivity is not generic, which is why 3c survives it:** if it were mere numerical
+fragility every drop would swing. Four of five move 0.32-2.98 yr; only N2's moves 18.558. The
+near-cancellation AMPLIFIES a real specific perturbation; it does not manufacture one.
+
+### 3. THE ORDER CHANGES: C-7 before Stage 3a. My proposal is withdrawn.
+
+I proposed Stage 3a next, run twice (six donors, and again with N2 excluded) so the defect could not
+decide it. **Withdrawn - it was wrong, and worse than I understood.**
+
+test18_forward_gate.py targets "mean TRUE dAge at t_j", read from fold folders and POOLED ACROSS
+FOLDS - the quantity 5.14 proved is inflated ~3x in five of six folds. And 3a's STOP branch is
+TERMINAL: "do not write tool code. Ship the scoring model; go to Stage 5." A genuine Dt signal could
+sit under a 16.67 yr between-fold label artefact and read as STOP.
+
+**And the two-arm design makes it worse, not better.** Excluding donor N2 removes N2's ROWS, but
+N2's CONTROL still sits in the harmonizer of every fold that does not hold N2 out. So it drops the
+N2 fold - THE ONLY FOLD WHOSE HARMONIZER IS CLEAN - and keeps the five contaminated ones. Backwards.
+
+C-7's blocker has cleared: its section 3 reads "C-7 is WRITTEN now and ADOPTED after 3b and 3c
+report"; 3c reported ATTRIBUTED and 3b is unnecessary (5.14). And 5.13 cancelled step 4, freeing the
+retrain budget adoption needs. **Order: C-7 (adopt) -> then Stage 3a on clean labels.**
+
+### 4. A THIRD donor option, neither side had costed
+
+C-7 section 3 poses two: (a) drop donor N2, (b) re-quantify N2_Fib from SRA SRP302546. Option (a)
+conflates three separable decisions - should the degenerate CONTROL enter the harmonizer (no,
+definitively), should N2's own 21 dAge LABELS survive (no - its zero-point reads 98.65 yr from a
+constant vector, highest of six for a donor of age 0, an unrecoverable +35.12 yr offset), and should
+N2's CELLS survive at all (not obviously - the fate head consumes no dAge, works at ROC 0.983, and
+donors are THE binding constraint; dropping N2 also removes one of only two age-0 donors).
+
+**Option (c): reject the control and mask N2's dAge labels, keep the donor and the fold.** Removes
+the contaminant everywhere, discards only labels already known garbage, keeps SIX folds - so C-7's
+guard re-report stays at 6 rather than the 5 its section 5 currently assumes.
+
+Cost stated honestly: age_label_policy keys on source, masked_datasets and donor_age
+(aging.py:135-176) - none can address a single donor by cell_line. Option (c) needs a fourth rule
+(masked_cell_lines), small and following C-1's own precedent, but it IS a src/ change and therefore
+its own Change.
+
+**And it collides with B2 - which is the design question.** Rejecting N2's control leaves cell-line
+N2 with ZERO controls, and _control_baseline "falls back to the line's own mean when a line has no
+controls in this chunk" - the silent self-centring B2 exists to forbid. So under (c) B2 must fire
+unless masking also prevents the baseline being requested for that line. Whether it does is an
+implementation question to settle BEFORE (c) is chosen; C-7 section 5 already routes a B2 failure to
+"blocking. The donor-level decision is not optional; fix that first."
+
+Recorded as an option to cost, not adopted. The choice among (a), (b), (c) belongs to C-7.
+
+---
+
 ## 2026-08-08 (later) - STAGE 1.5.6 CLOSED: step 3c ATTRIBUTED, step 4 cancelled, no retrain spent
 
 **Status:** CLOSED. **No retrain spent.** `src/` untouched, no build touched, no label moved,
