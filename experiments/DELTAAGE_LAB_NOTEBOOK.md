@@ -4195,7 +4195,7 @@ sample.**
 > | donor age | **0** | 0 | 53 | 53 | 29 | 35 |
 >
 > **N2 reads 98.65 — the HIGHEST of the six — from a constant vector, while being a donor of age 0
-> that should read lowest.** Offset against the other five: **+35.12 yr**. So  in EVERY fold, pushing N2 entire series ~35 yr too negative. This is Stage 1.5 audit
+> that should read lowest.** Offset against the other five: **+35.12 yr**. So `N2 ΔAge = clock(sample) − 98.65` in EVERY fold, pushing N2's entire series ~35 yr too negative. This is Stage 1.5 audit
 > D2 (*"any error in that single day-0 measurement propagates 1:1 into every dAge for that donor"*)
 > with a measured instance.
 >
@@ -4203,7 +4203,7 @@ sample.**
 > donor biology. At least one donor's offset is a corrupted sample, not biology — which is exactly
 > what D2 could not resolve (baseline explains 56% of the offset variance, 95% CI [9%, 100%]).
 >
-> **And it reaches Stage 3a.**  targets the held-out Gill donor's mean
+> **And it reaches Stage 3a.** `test18_forward_gate.py` targets the held-out Gill donor's mean
 >  under leave-one-donor-out, so one donor of six carries a +35 yr artificial offset. The two
 > GO clauses move in OPPOSITE directions under the defect — the gain contamination inflates |dAge|
 > and so makes *"sweep moves > 2 yr"* easier, while N2 offset adds LODO error and makes *"Dt beats
