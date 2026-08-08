@@ -1,0 +1,156 @@
+{
+  "script": "diag_fold_floor_precheck",
+  "ref_fold": "O1",
+  "per_fold": [
+    {
+      "donor": "N2",
+      "n_genes": 5026,
+      "floor_gill": 0.16327899422671796,
+      "floor_hff": 0.4315426759984868,
+      "R_floor_ratio": 0.37836117563327737,
+      "frac_clamped_gill": 0.5,
+      "frac_clamped_hff": 0.5,
+      "frac_clamped_both": 0.3334659769200159,
+      "n_clamped_both": 1676,
+      "ratio_spread_within_both": 0.0,
+      "median_ratio_all": 0.37836117563327737,
+      "median_ratio_clamped_neither": 0.43681603780754696,
+      "C_clock_weight_coverage": 0.46813415410247927
+    },
+    {
+      "donor": "N3",
+      "n_genes": 5258,
+      "floor_gill": 0.15610686907442223,
+      "floor_hff": 0.42492325430806915,
+      "R_floor_ratio": 0.36737662034670576,
+      "frac_clamped_gill": 0.5,
+      "frac_clamped_hff": 0.5,
+      "frac_clamped_both": 0.3482312666413085,
+      "n_clamped_both": 1831,
+      "ratio_spread_within_both": 0.0,
+      "median_ratio_all": 0.36737662034670576,
+      "median_ratio_clamped_neither": 0.5221623946314822,
+      "C_clock_weight_coverage": 0.4777853802925208
+    },
+    {
+      "donor": "O1",
+      "n_genes": 5328,
+      "floor_gill": 0.1582063055405625,
+      "floor_hff": 0.4238770086619448,
+      "R_floor_ratio": 0.37323634523130506,
+      "frac_clamped_gill": 0.5,
+      "frac_clamped_hff": 0.5001876876876877,
+      "frac_clamped_both": 0.34684684684684686,
+      "n_clamped_both": 1848,
+      "ratio_spread_within_both": 0.0,
+      "median_ratio_all": 0.37323634523130506,
+      "median_ratio_clamped_neither": 0.5335635173411598,
+      "C_clock_weight_coverage": 0.4824865225797853
+    },
+    {
+      "donor": "O2",
+      "n_genes": 5304,
+      "floor_gill": 0.15603302179331552,
+      "floor_hff": 0.42443262081403843,
+      "R_floor_ratio": 0.367627307943609,
+      "frac_clamped_gill": 0.5,
+      "frac_clamped_hff": 0.5,
+      "frac_clamped_both": 0.34615384615384615,
+      "n_clamped_both": 1836,
+      "ratio_spread_within_both": 0.0,
+      "median_ratio_all": 0.367627307943609,
+      "median_ratio_clamped_neither": 0.5218692947574546,
+      "C_clock_weight_coverage": 0.4833959392860332
+    },
+    {
+      "donor": "Y1",
+      "n_genes": 5402,
+      "floor_gill": 0.10333704651205253,
+      "floor_hff": 0.422336185337283,
+      "R_floor_ratio": 0.24467959436041753,
+      "frac_clamped_gill": 0.5001851166234728,
+      "frac_clamped_hff": 0.5,
+      "frac_clamped_both": 0.34727878563495,
+      "n_clamped_both": 1876,
+      "ratio_spread_within_both": 0.0,
+      "median_ratio_all": 0.24467959436041753,
+      "median_ratio_clamped_neither": 0.4305961160114124,
+      "C_clock_weight_coverage": 0.4877922673552748
+    },
+    {
+      "donor": "Y2",
+      "n_genes": 5305,
+      "floor_gill": 0.15795973180814243,
+      "floor_hff": 0.42407781532362315,
+      "R_floor_ratio": 0.3724781775901196,
+      "frac_clamped_gill": 0.5000942507068803,
+      "frac_clamped_hff": 0.5000942507068803,
+      "frac_clamped_both": 0.3532516493873704,
+      "n_clamped_both": 1874,
+      "ratio_spread_within_both": 0.0,
+      "median_ratio_all": 0.3724781775901196,
+      "median_ratio_clamped_neither": 0.5266703151075728,
+      "C_clock_weight_coverage": 0.4826802247210621
+    }
+  ],
+  "day14": {
+    "N2": -7.352220707800248,
+    "N3": -22.12121437179869,
+    "O1": -24.02299906646359,
+    "O2": -22.89099295440868,
+    "Y1": -22.049247172483554,
+    "Y2": -23.86901424461074
+  },
+  "T2_floor": {
+    "predicted": [
+      -24.352853855621568,
+      -23.64584349940534,
+      -24.02299906646359,
+      -23.661978765928346,
+      -15.74856720681979,
+      -23.974200334054146
+    ],
+    "residual": [
+      17.00063314782132,
+      1.5246291276066515,
+      0.0,
+      0.7709858115196653,
+      -6.300679965663765,
+      0.10518608944340713
+    ],
+    "spread_d": 16.67077835866334,
+    "spread_residual": 23.301313113485083,
+    "F": 1.3977339637159796,
+    "worst_miss_yr": 17.00063314782132,
+    "spearman_with_day14": -0.14285714285714288,
+    "state": "ELIMINATED",
+    "explains_frac_at_max_leverage": -0.3977339637159796
+  },
+  "T1_mask": {
+    "predicted": [
+      -23.308394785522562,
+      -23.788929239653886,
+      -24.02299906646359,
+      -24.06827891504549,
+      -24.287172045030886,
+      -24.032643494113476
+    ],
+    "residual": [
+      15.956174077722315,
+      1.6677148678551958,
+      0.0,
+      1.1772859606368087,
+      2.2379248725473317,
+      0.16362924950273694
+    ],
+    "spread_d": 16.67077835866334,
+    "spread_residual": 15.956174077722315,
+    "F": 0.9571343181723926,
+    "worst_miss_yr": 15.956174077722315,
+    "spearman_with_day14": -0.2,
+    "state": "NOT A CARRIER",
+    "explains_frac_at_max_leverage": 0.042865681827607416
+  },
+  "surviving_scalar_terms": [],
+  "verdict": "NO_SCALAR_TERM_IS_A_CARRIER"
+}

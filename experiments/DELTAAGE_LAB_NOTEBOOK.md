@@ -3934,3 +3934,83 @@ this label instability even though the label *magnitudes* are not.
 | Why does the N2 fold compress HFF's ΔAge 3×? Per-fold harmonization refit is the suspect | **unassigned — new** |
 | Does the fold instability explain step 6's SD 4.808? | **unassigned — new** |
 | G-c step 2 (`age_mask` retrain comparison) — re-confirmed as still the right next step | Stage 1.5.2 G-c step 2 |
+
+---
+
+## PRECHECK RUN — the variance floor is NOT the carrier of the fold spread (2026-08-08)
+
+**Status:** ✅ RUN. `src/` untouched, no build touched, read-only.
+**Artefacts:** `experiments/diag_fold_floor_precheck.py`,
+`results/diag_fold_floor_precheck_results.json`. Full pre-registration and corrections in
+`plans/STAGE_1_5_6_SPARSE_CLOCK.md` §5.5.
+
+**Origin.** The second machine's §5.4 measured, on the O1 fold's shipped harmonizer, that the
+variance floor is not a tail-trim but the transform's **centre**: floor_gill 0.15821, floor_hff
+0.42388, ratio **0.3732**, and **1848 of 5328 genes (34.7 %) clamped in BOTH datasets** carry that
+one ratio to 12 decimal places — which is also the median ratio of the entire distribution. It
+predicted **T2 > T3**: a shift in the floor ratio moves 1848 gene ratios in lockstep, a coherent
+non-averaging perturbation, where T3's per-gene noise should cancel. And it noted the prediction is
+checkable from **two scalars per fold**.
+
+Reproduced that measurement exactly on this machine before testing the prediction.
+
+### RESULT — the prediction is NOT supported
+
+| fold | floor_gill | floor_hff | **R** | \|w\|-cover | day-14 |
+|---|---|---|---|---|---|
+| **N2** | 0.16328 | 0.43154 | **0.3784** | 0.4681 | **−7.352** |
+| N3 | 0.15611 | 0.42492 | 0.3674 | 0.4778 | −22.121 |
+| O1 | 0.15821 | 0.42388 | 0.3732 | 0.4825 | −24.023 |
+| O2 | 0.15603 | 0.42443 | 0.3676 | 0.4834 | −22.891 |
+| **Y1** | 0.10334 | 0.42234 | **0.2447** | 0.4878 | −22.049 |
+| Y2 | 0.15796 | 0.42408 | 0.3725 | 0.4827 | −23.869 |
+
+**Anti-aligned.** N2 — the fold that collapses — has a floor ratio 1.4 % off O1's. Y1 — the fold
+whose floor ratio *is* anomalous (34 % low) — has entirely normal labels. Spearman(R, day-14)
+= **−0.14**.
+
+**Maximum-leverage bound.** `d = Σ δ·r·w` is affine in `R_f` with slope `Σ_B δw` over the
+clamped-both set, so `d_f = d_O1·R_f/R_O1` is T2's ceiling:
+
+| term | F (spread surviving) | explains at ceiling | worst miss | state |
+|---|---|---|---|---|
+| **T2 floor** | **1.398** | −39.8 % | 17.00 yr | ⛔ **ELIMINATED** |
+| **T1 mask** | **0.957** | +4.3 % | 15.96 yr | ⚠️ **NOT A CARRIER** |
+
+For N2 the ceiling predicts −24.35 against an actual −7.35. **T2 cannot produce it at any leverage
+fraction.** N2 also carries *more* top-100 clock genes than O1 (49 vs 48), so T1 is not it either.
+
+### Scope — what a negative here does not buy
+
+`R_f` and `C_f` are **scalars**. This eliminates the lockstep-constant channel and the
+total-coverage channel. Floor effects acting through *which* genes clamp, and mask effects acting
+through gene **identity**, are not scalar and are **not tested**. The ladder is narrowed, not
+closed.
+
+### The inversion this creates
+
+Within harmonization only **T3** (per-gene σ_gill) survives — and T3 is the term §5.4's own
+averaging argument says should largely cancel over ~5000 weighted genes. If T1 and T2 are out by
+measurement and T3 is expected to average out, the residue points **outside harmonization**, at the
+deconfounder, which A2's downgrade left unbounded because step 1b measured it on the **unharmonized**
+path. Stated as an argument, not a result: dropping 1 of 5 samples can move a per-gene σ a long way,
+and those moves are not independent of gene identity. **T3 must be measured, not reasoned away.**
+
+### What I got wrong, and what the other machine got wrong
+
+* **Mine:** §5.3's G0 gated against `diag_harmonizer_refit_sparse.py` regime A — which selects
+  every `_Fib_` sample across **all six** donors while fold O1 fits on five. Two different
+  quantities. Corrected in §5.5 to `runs/cellfate_multi/harmonization.json`, the O1 fold's shipped
+  harmonizer, which validates inputs **gene by gene** instead of one scalar. §5.3 also cited
+  `Harmonizer.fit` where `fit_harmonizer` (`build_dataset.py`) is the real guarantee, and missed
+  that HFF's admissible set is fold-invariant too — so the three terms are three channels out of
+  **one** estimate, not three sources.
+* **Theirs:** the T2 > T3 prediction, falsified by the very precheck they designed. The precheck
+  was the right call; the prediction was not.
+
+### Still open
+
+| item | owner |
+|---|---|
+| T3 (per-gene σ_gill) and the residue — the reconstruction | Stage 1.5.6 step 3b, §5.3 as corrected by §5.5 |
+| the deconfounder's fold-to-fold behaviour, unbounded since A2's downgrade | same; `diag_pipeline_decompose.py`'s S1→S4 machinery repointed at built shards per fold |

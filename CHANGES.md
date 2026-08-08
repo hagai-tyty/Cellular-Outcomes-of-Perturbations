@@ -190,6 +190,72 @@ harmonizer facts only.
 ---
 
 
+## 2026-08-08 - Precheck RUN: the variance floor is NOT the carrier (section 5.5)
+
+**Status:** RUN. **`src/` untouched, no build touched, read-only.** Added
+`experiments/diag_fold_floor_precheck.py` + its results JSON; section 5.5 added to
+STAGE_1_5_6_SPARSE_CLOCK.md (108 insertions, 0 deletions - 5.3 and 5.4 both untouched).
+
+The second machine's section 5.4 measured that the variance floor is the transform's CENTRE, not a
+tail-trim: floor_gill 0.15821, floor_hff 0.42388, ratio 0.3732, and 1848 of 5328 genes (34.7%)
+clamped in BOTH datasets carry that one ratio to 12 dp - which is also the median ratio of the whole
+distribution. From that it predicted **T2 > T3**, and noted the prediction is checkable from two
+scalars per fold. Reproduced their measurement exactly, then ran the check.
+
+### The prediction is NOT supported
+
+Floor ratio by fold: N2 0.3784, N3 0.3674, O1 0.3732, O2 0.3676, Y1 0.2447, Y2 0.3725.
+**Anti-aligned with the anomaly.** N2 - the fold that collapses to -7.35 - has a floor ratio 1.4%
+off O1's. Y1 - whose floor ratio IS anomalous, 34% low - has entirely normal labels (-22.05).
+Spearman(R, day-14) = -0.14.
+
+Maximum-leverage bound: `d = sum(delta*r*w)` is affine in R_f with slope sum_B(delta*w) over the
+clamped-both set, so `d_f = d_O1 * R_f/R_O1` is T2's ceiling. T2: F = 1.398, explains -39.8%, worst
+miss 17.00 yr on a 16.671 yr spread -> **ELIMINATED at any leverage fraction**. T1 (clock-weight
+coverage): F = 0.957, explains +4.3% -> **NOT A CARRIER**; N2 in fact carries more top-100 clock
+genes than O1 (49 vs 48).
+
+**Scope, stated in the script and the section:** R_f and C_f are SCALARS. This eliminates the
+lockstep-constant and total-coverage channels. Floor effects acting through WHICH genes clamp, and
+mask effects acting through gene IDENTITY, are not scalar and are NOT tested. The ladder is
+narrowed, not closed.
+
+### The inversion
+
+Within harmonization only T3 (per-gene sigma_gill) survives - and T3 is the term section 5.4's own
+averaging argument says should largely cancel over ~5000 weighted genes. If T1 and T2 are out by
+measurement and T3 is expected to average out, the residue points OUTSIDE harmonization, at the
+deconfounder, which A2's downgrade left unbounded. Argued, not shown: dropping 1 of 5 samples can
+move a per-gene sigma a long way and those moves are not independent of gene identity. T3 must be
+measured, not reasoned away. The reconstruction is now more necessary, not less.
+
+### Corrections to 5.3, carried in 5.5 rather than by editing it
+
+- **G0 replaced.** It gated against `diag_harmonizer_refit_sparse.py` regime A, which selects every
+  `_Fib_` sample across ALL SIX donors while fold O1 fits on five - two different quantities. Now
+  gates against `runs/cellfate_multi/harmonization.json`, the O1 fold's SHIPPED harmonizer
+  (confirmed independently: its 5328 genes are unique to O1 among the six folds). Validates inputs
+  gene by gene against ground truth instead of one scalar to 0.5 yr.
+- **Citation corrected** to `fit_harmonizer` in build_dataset.py - `keep = is_ctrl & not_test`,
+  decidable from cell_line alone before the split, so HFF's control set is BIT-IDENTICAL across
+  folds, not merely the same donors.
+- **Sharpening added:** `admissible[ds]` is per dataset from that dataset's own pooled controls
+  (harmonize.py:87-88), so HFF's admissible set is fold-invariant too and G^(f) moves through Gill
+  alone. T1/T2/T3 are three channels out of ONE five-sample estimate, not three sources.
+- **Ladder reordered:** the reconstruction should spend its effort on T3 and the residue.
+  NOT ATTRIBUTED is now the expected branch on current evidence.
+
+### Housekeeping verified, recorded so nobody re-checks it
+
+`split_sizes {852,115,117,21}` against `n_samples 42605` is not 41,500 unassigned cells - those are
+split-map ENTRIES (1105 total: HFF 981, ~21 per Gill donor, Y1 19); every fold's holdout.json has a
+1105-entry map. No defect. And `loocv_results/{folds,summary}.json` are tracked and committed on
+main; the locally modified copies are run output, not a missing commit.
+
+Ran ruff (clean) and tests/test_results_paths.py (171 pass) on the new script.
+
+---
+
 ## 2026-08-08 - Step 3b rewritten as a RECONSTRUCTION (section 5.3 supersedes 5.1)
 
 **Status:** PLAN ONLY. Nothing executed. **`src/` untouched, no build touched, no label moved.**

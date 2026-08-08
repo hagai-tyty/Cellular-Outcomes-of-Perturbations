@@ -964,6 +964,112 @@ entries**, not cells — 1105 of them, `HFF 981` plus ~21 per Gill donor (`Y1` 1
 
 ---
 
+## 5.5 🆕 2026-08-08 — §5.4's PRECHECK RUN. Its prediction is NOT supported, and §5.3 is corrected
+
+*Additive. §5.3 and §5.4 are unmodified. This section RAN a measurement; §5.4 proposed it.*
+**Artefacts:** `experiments/diag_fold_floor_precheck.py`,
+`results/diag_fold_floor_precheck_results.json`. Read-only, `src/` untouched, no label moved.
+
+### First, §5.4's three code findings — all verified independently, all correct
+
+| finding | verified how | verdict |
+|---|---|---|
+| `fit_harmonizer` is the real guarantee, not `Harmonizer.fit`'s docstring | read `build_dataset.py`: `not_test = ~obs["cell_line"].isin(heldout)`, `keep = is_ctrl & not_test` — decidable from `cell_line` alone, before the split | ✅ **stronger than §5.3's citation.** HFF's control set is **bit-identical**, not merely the same donors |
+| HFF's admissible set is fold-invariant too, so `G^(f)` moves through Gill alone | `admissible[ds]` is computed inside the per-dataset loop from that dataset's own pooled controls (`harmonize.py:87-88`) | ✅ **correct, and §5.3 missed it.** T1/T2/T3 are three channels out of **one** five-sample estimate |
+| **G0 compares two different quantities** | `diag_harmonizer_refit_sparse.py` selects controls as `no _dNN_ and "_Fib_" in name` — **all six donors, no fold exclusion** | ✅ **a real defect in §5.3**, corrected below |
+| §5.4's floor measurement | recomputed from `runs/cellfate_multi/harmonization.json` on this machine | ✅ **reproduces exactly** — floor_gill 0.15821, floor_hff 0.42388, R 0.3732, 1848/5328 = 34.7 % clamped in both with ratio min = max to 12 dp, median ratio over all genes = 0.3732 |
+
+`runs/cellfate_multi` is confirmed as the O1 fold independently of §5.4's split-map argument: its
+**5328 genes are unique to O1** among the six folds (N2 5026, N3 5258, O1 5328, O2 5304, Y1 5402,
+Y2 5305).
+
+### §5.4's prediction — and the two-scalar test it proposed
+
+> *"if `floor_gill/floor_hff` shifts between folds, 1848 genes' ratios move IN LOCKSTEP … That
+> predicts **T2 > T3** … checkable from each fold's two floor scalars alone, before any
+> reconstruction is written. I'd do that first — it is two numbers per fold."*
+
+Run:
+
+| fold | genes | floor_gill | floor_hff | **R = ratio** | both % | \|w\|-cover | day-14 |
+|---|---|---|---|---|---|---|---|
+| **N2** | 5026 | 0.16328 | 0.43154 | **0.3784** | 33.3 % | 0.4681 | **−7.352** |
+| N3 | 5258 | 0.15611 | 0.42492 | 0.3674 | 34.8 % | 0.4778 | −22.121 |
+| O1 | 5328 | 0.15821 | 0.42388 | 0.3732 | 34.7 % | 0.4825 | −24.023 |
+| O2 | 5304 | 0.15603 | 0.42443 | 0.3676 | 34.6 % | 0.4834 | −22.891 |
+| **Y1** | 5402 | 0.10334 | 0.42234 | **0.2447** | 34.7 % | 0.4878 | −22.049 |
+| Y2 | 5305 | 0.15796 | 0.42408 | 0.3725 | 35.3 % | 0.4827 | −23.869 |
+
+**They are anti-aligned.** The fold that collapses (**N2**) has a floor ratio **1.4 % off O1's**.
+The fold with the genuinely anomalous floor ratio (**Y1**, 34 % low) has **completely normal
+labels**. Spearman(R, day-14) = **−0.14**.
+
+### The maximum-leverage bound — why two scalars can falsify a mechanism
+
+`d = Σ_g δ_g r_g w_g`. Split into the set `B` clamped in both datasets, whose ratio is exactly `R_f`:
+
+```
+d_f  =  R_f · Σ_{g∈B} δ_g w_g   +   Σ_{g∉B} δ_g r_g w_g
+```
+
+`d` is affine in `R_f`. Zeroing the second term gives T2 its **largest possible** leverage, and then
+`d_f = d_O1 · R_f/R_O1`. Under that ceiling:
+
+| term | Spearman | F (spread surviving) | explains at MAX leverage | worst miss | state |
+|---|---|---|---|---|---|
+| **T2 variance floor** | −0.14 | **1.398** | **−39.8 %** (worse than not correcting) | 17.00 yr | ⛔ **ELIMINATED** |
+| **T1 mask** (clock-weight coverage) | −0.20 | **0.957** | **+4.3 %** | 15.96 yr | ⚠️ **NOT A CARRIER** |
+
+For N2 the max-leverage T2 prediction is **−24.35** against an actual **−7.35** — a 17.00 yr miss on
+a 16.671 yr spread. **T2 cannot produce N2's collapse at any leverage fraction.** T1 is not formally
+eliminated but removes 4.3 % of the spread at its ceiling; N2 in fact carries *more* top-100 clock
+genes than O1 (49 vs 48).
+
+**Verdict: `NO_SCALAR_TERM_IS_A_CARRIER`. §5.4's T2 > T3 prediction is not supported.** The
+precheck was exactly the right instrument and it cost two numbers per fold — the prediction it was
+built to test simply did not survive it.
+
+### What this does NOT establish — the scope limit is the point
+
+`R_f` and `C_f` are **scalars**. This eliminates the **lockstep-constant** channel and the
+**total-coverage** channel. Floor effects acting through *which* genes clamp, and mask effects
+acting through gene **identity** rather than summed weight, are **not scalar and are not tested
+here**. They live inside the reconstruction. **This narrows the ladder; it does not close it.**
+
+### Where it leaves the ladder — and an inversion worth stating
+
+Within harmonization only **T3** (per-gene `σ_gill`) survives as a scalar-inaccessible channel. But
+**T3 is the term §5.4's own averaging argument says should largely cancel** — independent per-gene
+noise summed over ~5000 weighted genes. If T1 and T2 are out by measurement and T3 is expected to
+average out, the residue points **outside harmonization**, at the deconfounder — which **A2's
+downgrade left unbounded** precisely because step 1b measured it on the unharmonized path.
+
+That is an argument, not a result: dropping 1 of 5 samples can move a per-gene σ a long way, and
+those moves are **not** independent of gene identity — they are driven by *which* donor is dropped.
+So T3 must be measured, not reasoned away. **The reconstruction is now more necessary, not less: it
+is the only instrument that separates the surviving harmonization channel from the deconfounder.**
+
+### Corrections to §5.3, carried here rather than by editing it
+
+| §5.3 item | correction |
+|---|---|
+| **G0** | **Replaced.** Do NOT gate against `diag_harmonizer_refit_sparse.py` regime A — it is an all-six-donor fit and fold O1 fits on five, so a ≤ 0.5 yr gate can fail for reasons unrelated to fidelity. **Use `runs/cellfate_multi/harmonization.json`** — the O1 fold's *shipped* harmonizer, carrying the pipeline's own per-gene `mu` and post-floor `sigma` per dataset. It validates the reconstruction's inputs **gene by gene against ground truth** instead of one scalar, and it is genuinely independent because it was produced by the pipeline, not by the diagnostic |
+| **the structural-fact citation** | cite `fit_harmonizer` (`build_dataset.py`), not `Harmonizer.fit`'s docstring; and add that **HFF's admissible set is fold-invariant too**, so `G^(f)` moves through Gill's side alone |
+| **the three terms** | they are **not independent sources** — three channels out of one five-sample Gill estimate |
+| **the ladder order** | T2 **eliminated**, T1 **not a carrier**, both by this precheck. The reconstruction should spend its effort on **T3 and the residue**, and report T1/T2 only to confirm the precheck at gene level |
+| **the branch table** | unchanged in structure. NOT ATTRIBUTED is now the *expected* branch on current evidence, which makes `diag_pipeline_decompose.py`'s S1→S4 machinery — repointed at built shards per fold — the likely next step rather than a fallback |
+
+### Housekeeping, verified and recorded so nobody re-checks it
+
+* `dataset_summary.json`'s `split_sizes {852, 115, 117, 21}` against `n_samples 42605` is **not**
+  41,500 unassigned cells — those are split-map **entries** (1105 total: HFF 981, ~21 per Gill
+  donor, Y1 19). Confirmed: every fold's `splits/holdout.json` has `map` of length 1105.
+  **No defect.**
+* `loocv_results/{folds,summary}.json` are **tracked and committed on main.** The copies modified
+  on this machine are local run output, not a missing commit.
+
+---
+
 ## 6. What this does not license
 
 * **It is not yet a label change.** Nothing in `src/` or `configs/` has moved.
@@ -987,5 +1093,7 @@ entries**, not cells — 1105 of them, `HFF 981` plus ~21 per Gill donor (`Y1` 1
 | `results/DAGE_LEDGER.md` | the readable record, 68 per-condition rows |
 | 🆕 `experiments/repro_hff_signature_armA.py` | the 2026-08-07 measurement that found §4.7's fold instability (matched-fold reproduction is EXACT; R2 fold-stability FAILS) |
 | 🆕 `results/repro_hff_signature_armA_results.json` | its per-fold output — the `d_f` values step 3b consumes |
+| 🆕 `experiments/diag_fold_floor_precheck.py` | §5.5's two-scalar falsifier: T2 ELIMINATED, T1 not a carrier |
+| 🆕 `results/diag_fold_floor_precheck_results.json` | its output |
 | `results/dage_ledger.csv` | full table, 90 rows × 60 columns |
 | `results/diag_dage_ksweep_results.json` | every k, both clocks, both arms |
