@@ -401,13 +401,13 @@ space — is the live problem.
 | **1b** | ✅ **DONE.** Deconfound + re-centre = **+2.11 yr** and move ΔAge *toward* zero — **not** the source. Gap attributed to the **harmonization gain** (§4.3) | — | done |
 | **1c** | ✅ **DONE — CONFIRMED.** Measured gain **2.152** (predicted 2.26). And it is a per-GENE reweighting, not a scale: median σ ratio 0.608 while the net effect is ×2.15 (§4.5) | — | done |
 | **1d** | ✅ **DONE — and it INVERTS §1 on HFF.** top-100 gain **2.769** vs dense **2.152**; harmonized day-14 **−29.70** vs dense **−21.43**. The clock's heavy genes sit where the σ ratio is largest (0.836 vs 0.608). See §4.6 | — | done |
-| **2** | **Pre-register the bar** for adopting a sparse clock: MAE ≤ 8 yr **and** sign agreement ≥ 0.80 vs methylation, on **both** arms, k fixed at 100 in advance. ⛔ **DO NOT REGISTER AS WRITTEN — this bar is already MEASURED TO FAIL; see §5.12** | `bar_verdict` row in `tests/test_bars_resolvable.py` | free |
-| **3** | **Write `configs/clocks/fleischer_clock_top100.json`** — the same coefficients, 33,055 zeroed. Provenance in `meta`, original untouched | ships as a **new file**; nothing switches automatically | free |
-| **3b** | 🆕 **GATE ON STEP 4 — what carries the 16.67 yr fold spread in HFF's labels (§4.7)?** RECONSTRUCT `d_f` from each fold's own harmonizer inputs and decompose the residual across three named terms — **T1 mask, T2 variance floor, T3 σ_gill** — which also answers §4.6 **option 2** (same lever). Read-only, **0 lines in `src/`** | `bar_verdict` row in `tests/test_bars_resolvable.py`; pre-registration in **§5.3** (§5.1 superseded by A1, left visible). **Runs only if 3c does not settle it** — §5.8 | free |
+| **2** | **Pre-register the bar** for adopting a sparse clock: MAE ≤ 8 yr **and** sign agreement ≥ 0.80 vs methylation, on **both** arms, k fixed at 100 in advance. ✅ **DECIDED §5.13 — estimand stays BOTH clocks, the sparse clock FAILS, bar NOT registered (§5.12)** | — | done |
+| **3** | ~~Write `configs/clocks/fleischer_clock_top100.json`~~ ⛔ **NOT DONE — §5.13 rejected the candidate at step 2; shipping the artefact would be building for a rejected clock** | — | n/a |
+| **3b** | 🆕 **What carries the 16.67 yr fold spread in HFF's labels (§4.7)?** RECONSTRUCT `d_f` from each fold's own harmonizer inputs and decompose the residual across three named terms — **T1 mask, T2 variance floor, T3 σ_gill** — which also answers §4.6 **option 2** (same lever). Read-only, **0 lines in `src/`** | `bar_verdict` row in `tests/test_bars_resolvable.py`; pre-registration in **§5.3** (§5.1 superseded by A1, left visible). **Runs only if 3c does not settle it** — §5.8 | free |
 | **3b-audit** | 🆕 **Independent audit of 3b — 3 defects stand; A5 withdrawn and A2 downgraded after review (§5.2).** `G_f` is the statistic §4.5 disproved and its exact form is a tautology; the question is settled by elimination so the instrument should be a per-fold RECONSTRUCTION; the ATTRIBUTED branch's remedy reintroduces donor leakage; the gene-set/variance-floor mechanism in §4.7's own table is untested — **and it is the same lever as §4.6's option 2** | — | free, done |
-| **3c** | 🆕 **RUNS BEFORE 3b — is the DEGENERATE CONTROL the carrier (§5.7)?** Leave-one-CONTROL-out on the O1 fold's harmonizer, all five, recomputing HFF's day-14 each time, with the four healthy controls as the built-in negative control. Read-only, **0 lines in `src/`** | `bar_verdict` row in `tests/test_bars_resolvable.py`; pre-registration in **§5.8** | free |
-| **4** | **One rebuild + LOOCV under the sparse clock**, full scorecard, snapshot and rollback | every Stage 1 guard reported before/after | one retrain |
-| **5** | Only then decide on the label change | — | — |
+| **3c** | 🆕 **RUNS BEFORE 3b — is the DEGENERATE CONTROL the carrier (§5.7)?** *(§5.13 cancelled step 4, so 3b/3c are no longer gates on it — they stand on their own, because the 16.67 yr label instability reaches arms A–D, step 6 and July's reference regardless of the clock.)* Leave-one-CONTROL-out on the O1 fold's harmonizer, all five, recomputing HFF's day-14 each time, with the four healthy controls as the built-in negative control. Read-only, **0 lines in `src/`** | `bar_verdict` row in `tests/test_bars_resolvable.py`; pre-registration in **§5.8** | free |
+| **4** | ~~One rebuild + LOOCV under the sparse clock~~ ⛔ **CANCELLED — §5.13. Nothing left for it to decide; one retrain not spent** | — | n/a |
+| **5** | ~~Only then decide on the label change~~ ⛔ **MOOT — §5.13. No label change to decide** | — | n/a |
 
 **Step 1 is the falsifier and it costs nothing. Do it first.**
 
@@ -1738,6 +1738,88 @@ Steps 2 and 3 were listed as *"free and independent"* of 3b/3c. **Step 3 still i
 `fleischer_clock_top100.json` ships a new file and switches nothing. **Step 2 is not free**: it
 carries a scope decision that reaches into Stage 1.5.2, and its bar must not be registered in its
 current form. The order **3c → 3b** is unaffected; step 4 stays blocked on both.
+
+---
+
+## 5.13 ✅ 2026-08-08 — **STEP 2 DECIDED: the estimand stays BOTH CLOCKS, and the sparse clock FAILS**
+
+*Additive. No run — this is a decision taken on evidence already recorded here and in Stage 1.5.2.*
+**Decides the scope question §5.12 raised and left open.**
+
+### The decision
+
+> **The estimand is ΔAge agreement with BOTH methylation references. The sparse clock does not meet
+> it, and is NOT adopted. Steps 3, 4 and 5 do not run.**
+
+### Why the estimand cannot narrow to multi-tissue
+
+§5.12 established that step 2's bar fails on skin & blood by both clauses at every `k`, and that the
+only escape would be to narrow the estimand to multi-tissue ΔAge. **Stage 1.5.2 already examined that
+exact move and rejected it on cross-review, with arithmetic** (`STAGE_1_5_2_LABEL_ANCHOR.md`, added
+2026-08-01):
+
+| pairing | ρ_partial |
+|---|---|
+| Horvath-mt ↔ Horvath-sb — *the two references, to each other* | **+0.568** |
+| Fleischer RNA ↔ Horvath-mt | +0.516 |
+| Fleischer RNA ↔ Horvath-sb | **+0.267** |
+
+If one shared age factor were all three instruments measured, each correlation would be a product of
+loadings, `ρ(i,j) = λᵢλⱼ`. Solving:
+
+```
+λ_RNA = sqrt(0.267 × 0.516 / 0.568) = 0.493
+λ_sb  = 0.267 / 0.493               = 0.542
+λ_mt  = 0.516 / 0.493               = 1.048   ← a correlation loading CANNOT exceed 1
+```
+
+**The three numbers are not jointly consistent with one common factor.** 1.5.2's conclusion, in its
+own words: *"RNA↔multi-tissue reaching 91 % of the ceiling is not evidence the RNA clock nearly
+works; paired with RNA↔skin-&-blood at 47 %, it is evidence it does not."* And its standing rule,
+unchanged: *"both clocks must agree or it is SPLIT."*
+
+**So narrowing to multi-tissue is not an available option here.** It is the reading 1.5.2 considered
+and refuted, and adopting it inside 1.5.6 would overturn a closed verdict by convenience rather than
+by evidence.
+
+### Why no further data can change this
+
+The inventory (`STAGE_6_NEW_DATA_REV.md` §2) holds **two** methylation instruments and no third:
+GSE165178 (joins the Sendai arm 22/22) and GSE165179 (joins the transient arm, 68 conditions). Both
+are already used — §1's headline is measured against multi-tissue on the transient arm, §3's failure
+against skin & blood on the same. **There is no unused reference clock and no in-range donor set that
+would re-open the question.** The evidence base for this decision is complete.
+
+### What this decision does NOT do
+
+* **It does not withdraw §1's finding.** The −14.10 yr density bias is real, and removing it at
+  k ≈ 100 takes MAE from **16.61 → 5.36** with the spread preserved (ratio 1.04) and leave-one-
+  donor-out generalisation intact. §0's *"the dense clock is worse than predicting a constant"*
+  (16.61 vs an 8.45 zero-floor) stands and remains the honest headline.
+* **It confines that finding**, exactly as §0's "what survives, precisely" table already did: real,
+  and **confined to multi-tissue ΔAge on the transient arm** — one clock, one arm, one estimand.
+* **It does not touch the dense clock's status.** Nothing switches; `configs/clocks/` is untouched.
+
+### Consequences for the remaining steps
+
+| step | disposition |
+|---|---|
+| **2** | ✅ **DECIDED.** The bar is not registered, because the candidate is already measured to fail it and a bar no correct system can clear is UNRESOLVABLE under §5b |
+| **3** | ⛔ **NOT DONE, deliberately.** Writing `fleischer_clock_top100.json` would ship an artefact for a candidate rejected at step 2. "Free" is not the same as "warranted" |
+| **3c / 3b** | **unaffected by this decision** — they were never about the clock. They measure why HFF's labels move 16.67 yr across folds, which reaches arms A–D, step 6 and July's reference regardless of what happens to the sparse clock |
+| **4** | ⛔ **CANCELLED, not deferred.** The rebuild existed to measure the sparse clock end-to-end. With the candidate rejected there is nothing for it to decide. **One retrain not spent** |
+| **5** | ⛔ **Moot.** "Only then decide on the label change" — there is no label change to decide |
+
+§4.6's four-way option table (adopt + disable harmonization / adopt + re-fit / keep dense for HFF /
+do neither) resolves permanently to **"do neither"** — its own listed honest position — because the
+option it was choosing among is not adopted.
+
+### Re-homed on closure
+
+| item 1.5.6 was carrying | new owner |
+|---|---|
+| **C-2's activation** (`STAGE_1_5_3_EXECUTE.md` §1948 assigns it to 1.5.6) | **after Stage 6.** `00_START_HERE.md` records that enabling it masks ~99.8 % of the corpus; it is downstream of acquisition, not an early free win |
+| **the clock's −14.10 yr density bias** | **recorded and closed as a measured property of the Fleischer clock.** Not fixed here, and not fixable without changing the estimand |
 
 ---
 

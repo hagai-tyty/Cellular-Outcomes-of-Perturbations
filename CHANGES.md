@@ -475,6 +475,71 @@ harmonizer facts only.
 ---
 
 
+## 2026-08-08 (later) - STEP 2 DECIDED: estimand stays BOTH clocks, sparse clock FAILS, step 4 CANCELLED
+
+**Status:** DECIDED on recorded evidence. No run, no retrain. **`src/` untouched, no build touched,
+no label moved, `configs/clocks/` untouched.** Section 5.13 added; the step 2/3/4/5 rows marked.
+
+### The decision
+
+**The estimand is dAge agreement with BOTH methylation references. The sparse clock does not meet it
+and is NOT adopted. Steps 3, 4 and 5 do not run.**
+
+### Why it cannot narrow to multi-tissue
+
+Section 5.12 showed step 2's bar fails on skin & blood by both clauses at every k, leaving only one
+escape: narrow the estimand. **Stage 1.5.2 already examined that move and refuted it with
+arithmetic** (added 2026-08-01). If one shared age factor were all three instruments measured, each
+correlation is a product of loadings:
+
+  lambda_RNA = sqrt(0.267 x 0.516 / 0.568) = 0.493
+  lambda_sb  = 0.267 / 0.493               = 0.542
+  lambda_mt  = 0.516 / 0.493               = 1.048   <- a correlation loading CANNOT exceed 1
+
+The three numbers are not jointly consistent with one common factor. 1.5.2's own words: "RNA<->
+multi-tissue reaching 91% of the ceiling is not evidence the RNA clock nearly works; paired with
+RNA<->skin-and-blood at 47%, it is evidence it does not." And its standing rule: "both clocks must
+agree or it is SPLIT." Adopting the narrow reading inside 1.5.6 would overturn a closed verdict by
+convenience rather than evidence.
+
+### Why no further data can change it
+
+The inventory (STAGE_6_NEW_DATA_REV section 2) holds TWO methylation instruments and no third -
+GSE165178 (Sendai, 22/22) and GSE165179 (transient, 68 conditions). Both are already used: section
+1's headline is multi-tissue on the transient arm, section 3's failure is skin & blood on the same.
+There is no unused reference clock and no in-range donor set that re-opens the question.
+
+### What it does NOT do
+
+Does not withdraw section 1's finding. The -14.10 yr density bias is real; removing it at k~100
+takes MAE 16.61 -> 5.36 with spread preserved (ratio 1.04) and LODO generalisation intact, and
+section 0's "the dense clock is worse than predicting a constant" (16.61 vs an 8.45 zero-floor)
+stands. It CONFINES that finding to multi-tissue dAge on the transient arm - one clock, one arm, one
+estimand - which is what section 0's "what survives, precisely" table already said.
+
+### Step dispositions
+
+- 2 DECIDED. Bar not registered: a bar no correct system can clear is UNRESOLVABLE under 5b.
+- 3 NOT DONE deliberately. Shipping fleischer_clock_top100.json would build an artefact for a
+  candidate rejected at step 2. "Free" is not "warranted".
+- 4 **CANCELLED, not deferred.** The rebuild existed to measure the sparse clock end to end; with
+  the candidate rejected there is nothing for it to decide. **One retrain not spent.**
+- 5 MOOT - no label change to decide.
+- 3b / 3c UNAFFECTED, and reframed: they were never about the clock. They measure why HFF's labels
+  move 16.67 yr across folds, which reaches arms A-D, step 6 and July's reference regardless.
+
+Section 4.6's four-way option table resolves permanently to "do neither" - its own listed honest
+position - because the option it was choosing among is not adopted.
+
+### Re-homed on closure
+
+- C-2's activation (STAGE_1_5_3_EXECUTE assigns it to 1.5.6) -> AFTER Stage 6. 00_START_HERE records
+  that enabling it masks ~99.8% of the corpus; it is downstream of acquisition.
+- The clock's -14.10 yr density bias -> recorded and closed as a measured property of the Fleischer
+  clock. Not fixed here, and not fixable without changing the estimand.
+
+---
+
 ## 2026-08-08 (later) - Step 2's bar is already measured to FAIL; the "both arms" ambiguity resolves itself
 
 **Status:** RECORDED, no run. **`src/` untouched, no build touched, no label moved.** Section 5.12
