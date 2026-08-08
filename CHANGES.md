@@ -11,6 +11,56 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-08 - GEO checked: the defect IS in the deposit. C-7 is needed.
+
+**Status:** C-7's one open question, resolved. **`src/` untouched, no label moved, no gate
+implemented.**
+
+C-7 §6 flagged one thing worth checking before implementation - whether the degeneracy is GEO's
+deposit or our read. Checked.
+
+### The file we hold is the file GEO serves
+
+GEO lists exactly one supplementary file for GSE165176: `GSE165176_Log2_RPM_Sendai_reprogramming
+.txt.gz`, **8.0 Mb**, and **124 samples** (GSM5027507-GSM5027630). Ours is 8 337 920 B = 7.95 MiB
+with 124 columns. The `(1)` in our filename is the browser's, not a different file.
+
+### Not damaged, and not our parse
+
+`gzip -t` intact; 35 806 lines; **136 fields on every single line** (12 annotation + 124 samples),
+so no column can shift. Values below were pulled with **awk**, not pandas.
+
+### What the raw text contains
+
+`N2_Fib_Sendai_Exp2` (column 33) takes **four distinct strings** across 35 805 genes: `11.489547`
+x **35 690 (99.7%)**, `11.64155` x 106, `12.64155` x 8, `13.226513` x 1. The first eight rows read
+11.489547 every time while sound `O1_Fib` varies normally. **`Y1_d7_CD13_Sendai_Exp1` has TWO
+distinct values, the modal one covering 100.0%.**
+
+**Not a transcriptome, not a parsing artefact. It is what was deposited. C-7 is needed, not
+redundant.**
+
+### A route that does not cost a donor
+
+The GEO record points at **SRA SRP302546** for raw reads, so **`N2_Fib` could be re-quantified
+rather than dropped.** That matters: C-7 §3's recommendation costs a whole LOOCV fold, reaches C-2
+(N2 is donor age 0) and reaches §4.7 (whose 16.67 yr spread is defined over six folds including
+N2's). One FASTQ restores N2's zero-point at no cost in donors, folds or guard re-reports - and it
+is far cheaper than Stage 6 acquisition. **Recorded as an option, not adopted:** re-quantifying one
+sample through a different pipeline than the other 123 introduces a batch term to be checked, not
+assumed. The gate is unaffected either way.
+
+### One gate candidate tried and REJECTED
+
+**Distinct-value count does not reproduce the five.** The five flags carry 2, 4, 5, 5 and **27**
+distinct values; the other 119 carry **22**-693. `N2_d21_CD13` (flagged) has 27 while sound
+`O2_d40` has 22 and `O2_d34` has 26 - **the populations overlap**, so distinct-count would flag two
+sound columns before reaching the fifth degenerate one. G1 and G2 separate cleanly; this does not.
+Recorded so it is not retried.
+
+---
+
+
 ## 2026-08-08 - C-7 pre-registered: bulk sample integrity gate (NOT implemented)
 
 **Status:** Pre-registered only. **`src/` untouched, no label moved, no existing plan edited.**

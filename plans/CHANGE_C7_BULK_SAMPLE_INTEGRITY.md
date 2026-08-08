@@ -159,9 +159,8 @@ would trade a known-bad control for a silent fallback, which is worse: the first
 * **It is not a re-analysis.** §§4.5, 4.6, 1c and 1d were computed on a contaminated `σ_gill`
   (§5.11) and **C-7 does not re-measure them.** That costs one HFF stream and belongs to 3b/3c.
 * **It does not withdraw anything.** No recorded result is retracted on the strength of this.
-* **It does not decide whether the defect is GEO's deposit or our read of it.** Either way the
-  pipeline consumes it. If it is our read, C-7 becomes redundant rather than wrong — **and that is
-  worth ten minutes against the GEO supplementary file before the gate is implemented.**
+* ~~**It does not decide whether the defect is GEO's deposit or our read of it.**~~ ✅ **RESOLVED
+  2026-08-08 — it is GEO's deposit. C-7 is needed, not redundant. See §8.**
 * **It does not touch HFF.** The gate is for bulk columns; the single-cell path has `apply_qc`.
 
 ---
@@ -174,3 +173,81 @@ would trade a known-bad control for a silent fallback, which is worse: the first
 | `plans/STAGE_1_5_6_SPARSE_CLOCK.md` §5.9 / §5.10 / §5.11 | the census, its correction, and the contamination reach |
 | *(to be written)* `src/cellfate/data/qc.py` or the Gill source | where G1/G2 live |
 | *(to be written)* `tests/test_bulk_sample_integrity.py` | B1–B4 |
+
+---
+
+## 8. ✅ 2026-08-08 — RESOLVED: the defect is in GEO's deposit, not our read
+
+*§6 flagged this as the one thing worth checking before implementation. It was checked. C-7 is
+needed.*
+
+### The file we hold is the file GEO serves
+
+| | ours | GEO's listing |
+|---|---|---|
+| filename | `GSE165176_Log2_RPM_Sendai_reprogramming (1).txt.gz` *(the `(1)` is the browser's)* | `GSE165176_Log2_RPM_Sendai_reprogramming.txt.gz` |
+| size | 8 337 920 B = **7.95 MiB** | **8.0 Mb** |
+| samples | **124** columns | **124** (GSM5027507 – GSM5027630) |
+
+Series: *"Multi-omic rejuvenation of human cells by maturation phase transient reprogramming
+[Sendai_RNAseq]"*. It is the **only** supplementary file on the record.
+
+### The file is not damaged, and our parse is not at fault
+
+| check | result |
+|---|---|
+| `gzip -t` | ✅ intact |
+| line count | 35 806 (1 header + 35 805 genes) |
+| fields per line | **136 on every single line** — 12 annotation + 124 samples. No ragged rows, so no column can shift |
+| read path | values below were pulled with **`awk`**, not pandas. The defect is in the text |
+
+### What the raw text actually contains
+
+`N2_Fib_Sendai_Exp2` is **column 33**, and across 35 805 genes it takes **four distinct strings**:
+
+| value | genes |
+|---|---:|
+| `11.489547` | **35 690** — 99.7 % |
+| `11.64155` | 106 |
+| `12.64155` | 8 |
+| `13.226513` | 1 |
+
+The first eight data rows read `MIR1302-11, FAM138A, OR4F5, RP11-34P13.7 …` → **`11.489547`** every
+time, while sound `O1_Fib` in the same rows varies normally.
+
+**`Y1_d7_CD13_Sendai_Exp1` is worse: TWO distinct values, the modal one covering 100.0 %** (to one
+decimal) of 35 805 genes.
+
+> **This is not a transcriptome and it is not a parsing artefact. It is what was deposited.**
+
+### 🔵 A route that does not cost a donor — and it changes §3's recommendation
+
+The GEO record points at **SRA `SRP302546`** for raw reads. **`N2_Fib` could be re-quantified from
+raw rather than dropped.**
+
+That matters because §3's recommendation — reject the sample *and* the donor — costs **a whole
+LOOCV fold**, reaches **C-2** (N2 is donor age 0) and reaches **§4.7** (whose 16.67 yr spread is
+defined over the six folds including N2's). **Re-quantifying one FASTQ restores N2's zero-point and
+costs no donor, no fold and no guard re-report.**
+
+**It is a data-acquisition task, not a code change**, and it is **far** cheaper than Stage 6's donor
+acquisition — one sample from a public archive. **Recorded as an option, not adopted:** it needs its
+own sizing, and re-quantifying one sample with a different pipeline than the other 123 introduces a
+batch term that would have to be checked rather than assumed.
+
+**C-7's gate is unaffected either way** — a column this degenerate must be rejected whether or not a
+replacement is later obtained.
+
+### ⚪ One gate candidate tried and REJECTED, recorded so it is not retried
+
+**Distinct-value count does not reproduce the five.** Over all 124 columns:
+
+| | distinct values |
+|---|---|
+| the five C-7 flags | 2, 4, 5, 5, **27** |
+| the other 119 | **22** – 693 |
+
+`N2_d21_CD13` (a C-7 flag) carries **27** distinct values while sound `O2_d40` carries **22** and
+`O2_d34` **26**. **The populations overlap, so distinct-count would flag two sound columns before it
+reached the fifth degenerate one.** G1 (library) and G2 (dynamic range) separate cleanly; this does
+not. Do not substitute it.
