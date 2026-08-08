@@ -357,3 +357,86 @@ rule 4 to it costs nothing extra and removes a state the system must never be in
 | the global-vs-per-chunk predicate | ✅ named; **implementation must honour it** |
 | drop vs **re-quantify** from SRA `SRP302546` | ⚠️ **still open, and now optional rather than urgent** — under (c) the donor and the fold survive either way, so re-quantification becomes an *upgrade* (it would restore N2's ΔAge labels) rather than a rescue |
 | the ten degenerate non-control columns | ⚠️ still C-7's scope, unresolved |
+
+---
+
+## 10. 🆕 2026-08-08 — §9 VERIFIED, with one bar-discipline note and one blocking correction
+
+*Additive. §9 is unmodified. Every number and every code claim below was checked here before
+agreement.*
+
+### ✅ Verified, and agreed
+
+| §9 claim | check |
+|---|---|
+| the donor error table | **exact.** N2 +98.65, N3 +36.44, Y1 +35.92, O2 +26.50, O1 +26.12, Y2 +22.66 — recomputed from the clock on each day-0 control |
+| N2 is the outlier, not just "the clock is bad" | the clock is biased **high on every donor** (+22.66 to +36.44), and **N2 is 2.71× the next worst**. That is the right reading and it is stronger than "+35.12 above the mean" |
+| `fate_roc` 0.983, *"untouched by every ΔAge problem"* | `00_START_HERE.md`. Dropping the donor destroys working fate data to fix a broken age label |
+| **option (c)** | **agreed.** §3's option (a) answered three separable questions with the harshest available answer |
+| **rule 4 should be GENERAL, not donor-named** | **agreed, and §9's version is better than the one §5.16 proposed.** Mine keyed on *identity* (`masked_cell_lines`); §9's keys on the *condition* — zero admissible controls ⇒ no zero-point ⇒ ΔAge undefined. It fires exactly where the fallback fires, works for every future dataset, and closes Stage 1.5 Group D generally |
+| **two different fallbacks** (no controls at all vs none in *this chunk*) | **correct and sharp.** `_control_baseline` falls back *"when a line has no controls **in this chunk**"*, and Stage 1.5's Group E is the chunk-local case. B2′ must test the **global** predicate or it fires on Group E and blocks C-7 for the wrong reason |
+| **rule 4 ships WITH C-7** | **agreed.** The gate alone creates the orphaned line — control rejected, no zero-point, no mask — which is precisely the window B2 forbids |
+| SRA `SRP302546` becomes an optional upgrade under (c) | **agreed.** Donor and fold survive either way; re-quantification would only restore N2's ΔAge labels |
+
+### ⚠️ Bar discipline — B2′ is an AMENDMENT, and should be labelled one
+
+§9 says the B2 collision *"dissolves rather than blocks"*. **The substance is right; the framing
+understates what is happening.** B2 as pre-registered reads:
+
+> *"after rejection, **no `cell_line` reaches `_control_baseline` with zero controls.** Asserted,
+> not logged: a donor losing its last control must **raise**"*
+
+B2′ replaces *"must raise"* with *"may fall back if masked"*. That is a **change to the bar's test**,
+not a reading of it — even though it is faithful to the bar's own **title** (*"no silent fallback"*),
+which is about silence rather than about reaching. Under `REF_GROUND_RULES.md` §5b a bar may be
+amended, **before the run, with the reason recorded** — which is exactly the situation. So the
+amendment is legitimate and I agree with it.
+
+**It should simply be recorded as `B2 → B2′, amended 2026-08-08, reason: the original conflated the
+mechanism (raise) with the invariant (no unmasked fallback label)`** — not as the bar having
+dissolved. This project has been bitten four times by bars that moved without the move being
+labelled; the fix is cheap and it is the discipline, not a formality.
+
+### 🔴 BLOCKING CORRECTION — the predicate CANNOT live in `fit_harmonizer`'s pre-pass
+
+§9 states the global predicate is *"decidable in the pre-pass `fit_harmonizer` already runs"*.
+**It is not, for two independent reasons, and both are in the code:**
+
+**1. The pre-pass does not always run.**
+
+```python
+harmonizer = fit_harmonizer(cfg, work) if cfg.harmonize else None   # build_dataset.py:383
+```
+
+`fit_harmonizer` runs **only when `cfg.harmonize` is True.** A rule-4 predicate hosted there would
+**silently not exist** in any `harmonize=False` build — and those are real: the arm B/C/D probes and
+any single-dataset build. **A data-integrity invariant that evaporates when a config flag is off is
+a guard that cannot fire**, which is the exact defect class this project has caught repeatedly
+(`verify_1a` grading PASS on its own warning; `age_label_policy`'s fail-open; C-2's comment being
+true only when written).
+
+**2. Even inside the pre-pass, the tally is the wrong shape.**
+
+```python
+controls.setdefault(str(ds), []).append((norm[m], raw.genes))      # keyed on dataset_id
+```
+
+Controls are pooled **per `dataset_id`**, not per `cell_line`. The loop has `obs["cell_line"]` in
+hand, so a per-line tally is easy to add — but *"already runs"* overstates it: **the loop runs, the
+tally does not.**
+
+**Where it should live instead.** `work = plan_all(sources)` and `load_or_fit_panel(cfg, work)` both
+run **unconditionally** (`build_dataset.py:379-382`). The global per-`cell_line` control census
+belongs in an **unconditional pass over `work`**, before and independent of `fit_harmonizer` — which
+also makes it available to `harmonize=False` builds and to G-a's existing `baseline_census`, whose
+job is already *"what each ΔAge zero-point actually rests on"*.
+
+**This is blocking for the implementation, not for the decision.** Option (c), rule 4's general
+form, the two-fallback distinction and the ship-together sequencing all stand exactly as §9 has
+them. Only the predicate's **host** changes.
+
+### Net
+
+(c) is adopted. Rule 4 is general and ships with C-7. B2 becomes B2′ **as a recorded amendment**.
+The global-vs-chunk-local distinction is correct and load-bearing. The predicate moves out of
+`fit_harmonizer` into an unconditional pass. **Nothing here re-opens the decision.**

@@ -540,6 +540,65 @@ harmonizer facts only.
 ---
 
 
+## 2026-08-08 (later) - C-7 section 9 verified: (c) agreed, B2' is an AMENDMENT, and the predicate's host is wrong
+
+**Status:** VERIFIED and RECORDED. No run. `src/` untouched, no build touched, no label moved.
+C-7 section 10 appended (83 insertions, 0 deletions; section 9 unmodified).
+
+### Verified and agreed
+
+The donor error table is exact - recomputed here from the clock on each day-0 control: N2 +98.65,
+N3 +36.44, Y1 +35.92, O2 +26.50, O1 +26.12, Y2 +22.66. And the framing is stronger than my
+"+35.12 above the mean": the clock is biased HIGH on every donor (+22.66 to +36.44), and **N2 is
+2.71x the next worst**. fate_roc 0.983 "untouched by every dAge problem" confirmed.
+
+**Option (c) agreed.** **Rule 4 general rather than donor-named agreed - and their version is better
+than mine.** I keyed on IDENTITY (masked_cell_lines); they key on the CONDITION (zero admissible
+controls => no zero-point => dAge undefined), which fires exactly where the fallback fires, works
+for every future dataset, and closes Stage 1.5 Group D generally.
+
+**The two-fallback distinction is correct and sharp:** _control_baseline falls back "when a line has
+no controls IN THIS CHUNK", and Stage 1.5 Group E is the chunk-local case, so B2' must test the
+GLOBAL predicate or it fires on Group E and blocks C-7 for the wrong reason. **Rule 4 ships WITH
+C-7** - the gate alone creates the orphaned line. **SRA becomes an optional upgrade** under (c).
+
+### Bar discipline: B2' is an AMENDMENT and should be labelled one
+
+Section 9 says the B2 collision "dissolves rather than blocks". The substance is right; the framing
+understates it. B2 as pre-registered says a donor losing its last control "must RAISE". B2' replaces
+that with "may fall back if masked" - a change to the bar's TEST, not a reading of it, though
+faithful to the bar's own TITLE ("no silent fallback"). Under 5b a bar may be amended before the run
+with the reason recorded, which is exactly this situation, so the amendment is legitimate and
+agreed. It should be recorded as "B2 -> B2', amended 2026-08-08, reason: the original conflated the
+mechanism (raise) with the invariant (no unmasked fallback label)". This project has been bitten
+four times by bars that moved without the move being labelled.
+
+### BLOCKING CORRECTION: the predicate cannot live in fit_harmonizer's pre-pass
+
+Section 9 says the global predicate is "decidable in the pre-pass fit_harmonizer already runs". It
+is not, for two independent reasons, both in the code:
+
+1. `harmonizer = fit_harmonizer(cfg, work) if cfg.harmonize else None` (build_dataset.py:383). The
+   pre-pass runs ONLY when harmonization is on. A rule-4 predicate hosted there would silently not
+   exist in any harmonize=False build - and those are real (arm B/C/D probes, any single-dataset
+   build). A data-integrity invariant that evaporates when a flag is off is a guard that cannot
+   fire, which is the exact defect class this project keeps catching.
+2. `controls.setdefault(str(ds), ...)` pools per DATASET_ID, not per cell_line. The loop has
+   obs["cell_line"] in hand so the tally is easy to add, but "already runs" overstates it: the loop
+   runs, the tally does not.
+
+Where it belongs: `work = plan_all(sources)` and `load_or_fit_panel(cfg, work)` both run
+UNCONDITIONALLY (build_dataset.py:379-382). The global per-cell_line control census belongs in an
+unconditional pass over `work`, independent of fit_harmonizer - which also makes it available to
+harmonize=False builds and to G-a's existing baseline_census, whose job is already "what each dAge
+zero-point actually rests on".
+
+**Blocking for the implementation, not for the decision.** Option (c), rule 4's general form, the
+two-fallback distinction and the ship-together sequencing all stand. Only the predicate's HOST
+changes.
+
+---
+
 ## 2026-08-08 (later) - POST-CLOSURE: order changes to C-7 BEFORE Stage 3a; one overreach corrected
 
 **Status:** RECORDED. No run. `src/` untouched, no build touched, no label moved. Section 5.16
