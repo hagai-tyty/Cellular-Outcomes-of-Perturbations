@@ -1369,6 +1369,112 @@ branches must execute in the test suite.
 
 ---
 
+## 5.8 🆕 2026-08-08 — §5.7 CONFIRMED, and the defect is LARGER: 12 columns, and TWO controls
+
+*Additive. §5.7 unmodified. Census over the raw `GSE165176_Log2_RPM_Sendai_reprogramming` matrix,
+before any transform. No run, no HFF stream.*
+
+### ✅ First, a correction I owe on §5.6
+
+§5.7 is right that **the containment interval cannot falsify.** `d̂_f/d̂_O1 = Σ c_g·ρ_g / Σ c_g` with
+`c_g = δ_g·r_g·w_g`, and the clock's weights are near-balanced in sign (2648 +, 2589 −), so `c` is
+mixed-sign and the average is **not** bounded by `[min ρ, max ρ]`. T2's bound was valid because `d`
+is affine in **one scalar**; T3's is not.
+
+`diag_t3_sigma_gill_leverage.py`'s docstring says exactly this — and then its output table prints an
+**"inside?"** column reading `YES`, and a verdict reading `T3_STILL_LIVE`. **A stated limit that the
+output contradicts is a defect, not a caveat.** "T3 not eliminated" is true only in the sense that
+nothing eliminated it, and the summary implied a test had been passed. **The Spearman +1.000 is the
+real evidence in §5.6; the interval is not evidence at all.**
+
+### ✅ §5.7's root cause reproduces here exactly
+
+Raw Log2 RPM, the six controls, sorted by `mean − min`:
+
+| control | `mean − min` | range | % of genes at the column min | linear RPM sum |
+|---|---:|---:|---:|---:|
+| **N2_Fib_Sendai_Exp2** | **0.0008** | **1.74** | **99.7 %** | **1.03e+08** |
+| **Y1_Fib_Sendai_Exp2** | **0.2745** | 14.43 | **88.5 %** | 1.51e+06 |
+| O1_Fib_Sendai_Exp2 | 0.9639 | 13.10 | 68.6 % | 1.66e+06 |
+| O2_Fib_Sendai_Exp2 | 1.4155 | 13.29 | 62.8 % | 1.51e+06 |
+| Y2_Fib_Sendai_Exp2 | 1.5625 | 13.67 | 60.6 % | 1.48e+06 |
+| N3_Fib_Sendai_Exp2 | 1.5628 | 14.46 | 60.7 % | 1.52e+06 |
+
+**N2_Fib confirmed to the digit.** A library **68×** the cohort is the mechanical tell: these are
+*reads per million*, so linear RPM must sum to ≈1e6, and every sound column does (1.48–1.66e6).
+
+**One screen that does NOT work, recorded so it is not tried again:** "fraction of genes at the
+column min" flags **all 124 columns** at >50 %, because ~60 % zero-inflation is normal for this
+assay and every zero-count gene lands on the log2 floor. `mean − min` is the discriminating
+statistic; `%at-min` alone is not.
+
+### 🔴 The defect is larger than §5.7 states — 12 columns, and TWO controls
+
+Screening all 124 at `mean − min < ⅕ × cohort median` (cohort median **1.4196**):
+
+| sample | `mean − min` | range | role |
+|---|---:|---:|---|
+| **Y1_d7_CD13_Sendai_Exp1** | **0.0000** | **0.15** | ⚠️ **entirely constant**, library 2.15e+09 |
+| N3_d21_SSEA4_Sendai_Exp2 | 0.0004 | 2.47 | |
+| O2_d9_SSEA4_Sendai_Exp1 | 0.0005 | 2.15 | |
+| **N2_Fib_Sendai_Exp2** | **0.0008** | 1.74 | 🔴 **CONTROL** — §5.7's finding |
+| N2_d21_CD13_Sendai_Exp2 | 0.0142 | 7.26 | |
+| O2_d40_SSEA4_Sendai_Exp2 | 0.0254 | 9.13 | |
+| O2_d34_SSEA4_Sendai_Exp2 | 0.0799 | 9.69 | |
+| O1_d34_SSEA4_Sendai_Exp2 | 0.0902 | 9.79 | |
+| N2_d11_CD13_Sendai_Exp2 | 0.0965 | 9.02 | |
+| Y2_d34_SSEA4_Sendai_Exp2 | 0.0995 | 10.05 | |
+| O1_d11_CD13_Sendai_Exp2 | 0.1034 | 9.00 | |
+| **Y1_Fib_Sendai_Exp2** | **0.2745** | 14.43 | 🔴 **CONTROL** — a second one |
+
+**Clean separation, no overlap:** every flagged column is below **0.284**; the next sound column is
+**0.964**. A 3.4× gap.
+
+### 🔑 The second control explains what §5.5 left dangling
+
+§5.5 flagged Y1's floor ratio as *"genuinely anomalous — 34 % low"* with entirely normal labels, and
+left it unexplained. **Y1_Fib is the second defective control.** Removing it (the Y1 fold) deflates
+`σ_gill` for the same reason removing N2_Fib does.
+
+And §5.6's own table already carried the signature without my seeing it:
+
+| fold | `|w|`-weighted ρ | removes a defective control? |
+|---|---:|---|
+| **N2** | **0.870** ← lowest | ✅ N2_Fib (`mean−min` 0.0008) |
+| **Y1** | **0.915** ← 2nd lowest | ✅ Y1_Fib (`mean−min` 0.2745) |
+| N3 | 0.987 | — |
+| O2 | 0.995 | — |
+| Y2 | 0.999 | — |
+
+> **The two folds whose clock-weighted `σ_gill` drops most are exactly the two folds that remove a
+> defective control, ranked in the same order as the severity of the defect.** That is a mechanism,
+> not a coincidence — and it means §5.6's Spearman +1.000 was reading the contamination, not
+> donor biology. **§5.6's "N2 is the atypical donor" reading is superseded: it was never the donor,
+> and it was never donor age 0. It is the sample.**
+
+### 🔴 Ten degenerate NON-control columns are in the build as Gill training labels
+
+The other ten are perturbation samples, and `gill_bulk` is a **training source** — its 124 columns
+carry age labels into the corpus. `Y1_d7_CD13_Sendai_Exp1` is **entirely constant** (range 0.15
+across ~20k genes). **`apply_qc` passes all of them**: its gates are `min_genes` and
+`max_mito_frac`, designed for single cells, and a constant bulk column clears both trivially.
+
+**This does not reach §1's headline.** §1's MAE 16.61 → 5.36 is the **transient** arm
+(GSE165177/165178/165179), a different matrix. It does reach anything scored on the Sendai arm.
+
+### The gate this argues for — one statistic, already validated on this cohort
+
+> **`mean − min` in log2 space, per bulk sample, with a floor at ⅕ of the cohort median.** On this
+> matrix it flags 12/124 with a 3.4× margin and no false positives. Equivalently: **linear RPM must
+> sum to ≈1e6** — sound columns land at 1.48–1.66e6, the four worst at 1.0e8–2.1e9.
+
+Stage 1.5.2's gate G-a made `n = 1` **visible**; nothing checks whether that `n = 1` is **sound**.
+That is the hole, and it is one assertion wide.
+
+**Not established here:** that removing these columns reproduces `d/d_O1 = 0.306`. That is step 3c.
+
+---
+
 ## 6. What this does not license
 
 * **It is not yet a label change.** Nothing in `src/` or `configs/` has moved.

@@ -11,6 +11,79 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-08 - 5.7 confirmed, and the defect is larger: 12 columns and TWO controls
+
+**Status:** Verified independently. **`src/` untouched, no label moved, §5.7 unmodified.** Census
+over the raw GSE165176 matrix before any transform - no run, no HFF stream.
+
+### A correction I owe on 5.6
+
+§5.7 is right that **the containment interval cannot falsify.** `d_hat_f/d_hat_O1` is a
+`delta*r*w`-weighted average of rho, the clock's weights are near-balanced in sign (2648 +,
+2589 -), so the average is **not** bounded by [min rho, max rho]. T2's bound was valid because d is
+affine in one scalar; T3's is not. `diag_t3_sigma_gill_leverage.py`'s docstring says exactly this -
+and its output then prints an "inside?" column reading YES and a verdict reading T3_STILL_LIVE. **A
+stated limit that the output contradicts is a defect, not a caveat.** The Spearman +1.000 is the
+real evidence in §5.6; the interval is not evidence at all.
+
+### 5.7's root cause reproduces exactly
+
+N2_Fib_Sendai_Exp2: mean-min **0.0008**, range **1.74**, **99.7%** of genes at the column min,
+linear RPM sum **1.03e+08**. Sound controls: mean-min 0.96-1.56, range 13.1-14.5, RPM sum
+1.48-1.66e+06. These are reads per million, so a sound column must sum to ~1e6 - the 68x library is
+the mechanical tell.
+
+**A screen that does NOT work, recorded so nobody retries it:** "fraction of genes at the column
+min" flags **all 124 columns** at >50%, because ~60% zero-inflation is normal here and every
+zero-count gene lands on the log2 floor. `mean - min` discriminates; %at-min alone does not.
+
+### The defect is larger than 5.7 states
+
+Screening all 124 at `mean-min < 1/5 x cohort median` (median 1.4196) flags **12 columns**, and
+**two are controls**:
+
+| sample | mean-min | range | role |
+|---|---:|---:|---|
+| **Y1_d7_CD13_Sendai_Exp1** | **0.0000** | **0.15** | entirely constant, library 2.15e+09 |
+| N3_d21_SSEA4_Sendai_Exp2 | 0.0004 | 2.47 | |
+| O2_d9_SSEA4_Sendai_Exp1 | 0.0005 | 2.15 | |
+| **N2_Fib_Sendai_Exp2** | **0.0008** | 1.74 | **CONTROL** - 5.7's finding |
+| N2_d21_CD13_Sendai_Exp2 | 0.0142 | 7.26 | |
+| O2_d40 / O2_d34 / O1_d34 | 0.025-0.090 | 9.1-9.8 | |
+| N2_d11_CD13_Exp2 / Y2_d34 / O1_d11_CD13_Exp2 | 0.097-0.103 | 9.0-10.1 | |
+| **Y1_Fib_Sendai_Exp2** | **0.2745** | 14.43 | **CONTROL - a second one** |
+
+Clean separation: every flagged column is below 0.284, the next sound one is 0.964 - a 3.4x gap.
+
+### The second control explains what 5.5 left dangling
+
+§5.5 flagged Y1's floor ratio as "genuinely anomalous, 34% low" with normal labels and left it
+unexplained. **Y1_Fib is the second defective control.** And §5.6's own table carried the signature:
+the two folds with the lowest |w|-weighted rho are **N2 (0.870)** and **Y1 (0.915)** - exactly the
+two folds that REMOVE a defective control, ranked in the same order as the severity of the defect.
+
+**So §5.6's "N2 is the atypical donor" reading is superseded. It was never the donor, and never
+donor age 0 - it is the sample.** Spearman +1.000 was reading contamination, not biology.
+
+### Ten degenerate NON-control columns are in the build as Gill training labels
+
+`gill_bulk` is a training source; its 124 columns carry age labels into the corpus.
+`Y1_d7_CD13_Sendai_Exp1` is entirely constant across ~20k genes. **`apply_qc` passes all of them** -
+its gates are `min_genes` and `max_mito_frac`, designed for single cells, and a constant bulk column
+clears both trivially. **This does not reach §1's headline** (MAE 16.61 -> 5.36 is the *transient*
+arm, a different matrix); it reaches anything scored on the Sendai arm.
+
+### The gate this argues for
+
+**`mean - min` in log2 space per bulk sample, floored at 1/5 of the cohort median.** Flags 12/124
+with a 3.4x margin and no false positives. Equivalently: linear RPM must sum to ~1e6. Stage 1.5.2's
+G-a made `n = 1` **visible**; nothing checks whether that `n = 1` is **sound**. One assertion wide.
+
+**Not established:** that removing these columns reproduces d/d_O1 = 0.306. That is step 3c.
+
+---
+
+
 ## 2026-08-08 - T3 survives the test that killed T2; my averaging argument is dead
 
 **Status:** Measured. **`src/` untouched, no label moved, §5.3/§5.5 unmodified.** New read-only
