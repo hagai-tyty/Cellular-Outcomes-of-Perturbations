@@ -11,6 +11,71 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-08 - C-7 decides: option (c), and B2 does not have to block it
+
+**Status:** Decision recorded. **Still NOT implemented. `src/` untouched, no label moved.**
+
+### Option (c) adopted; (a) superseded
+
+**Reject the degenerate control, MASK N2's dAge, keep the donor and the fold.** §3's (a) conflated
+three separable decisions and answered all three with the harshest available answer:
+
+* should the degenerate control enter the harmonizer? **no**, definitively (§5.14)
+* should N2's 21 dAge labels survive? **no** - zero-point **98.65 yr** for a donor of true age **0**
+* should N2's **cells** survive? **yes** - the fate head consumes no dAge and runs at `fate_roc`
+  **0.983**, *"untouched by every dAge problem"*. Dropping the donor destroys working fate data to
+  fix a broken age label
+
+Verified independently - the clock on each day-0 fibroblast: N2 **98.65** (true 0), O2 79.50, O1
+79.12, Y1 64.92, Y2 57.66, N3 36.44. N2 sits **+35.12** above the other five's mean of 63.53.
+
+*Context, not a new defect:* the clock over-predicts **every** donor by +22 to +36 yr, and **N3 is
+also age 0 yet reads 36.44** - it cannot separate a neonate from a 35-year-old. Absolute age, where
+the intercept does not cancel (§0 ERROR 1), so known behaviour. Recorded because it bears on C-2.
+
+**(c) keeps LOOCV at SIX folds** - §5's "re-report every guard over 5 folds" does not apply, §4.7's
+record stays comparable, and donors are not spent.
+
+### The B2 collision dissolves
+
+The objection is real: rejecting N2's control leaves line N2 with zero controls and
+`_control_baseline` self-centres. **But B2's purpose was never to forbid reaching the fallback - it
+was to forbid the fallback producing a label that is KEPT**, the `age_label_policy` fail-open. So:
+
+> **B2' - no line may reach the fallback AND retain its dAge label.**
+> `assert not (fell_back and not masked)`.
+
+### Rule 4 should be GENERAL, not a donor special case
+
+> **Rule 4 - a `cell_line` with zero admissible controls has no zero-point, so its dAge is
+> undefined and is masked.**
+
+Keyed on **data integrity**, not identity. No donor name. And it fires on **exactly** the condition
+that triggers the fallback, which makes B2' automatic rather than colliding. It also closes Stage
+1.5's **Group D** defect properly for every future dataset, not just N2.
+
+### The subtlety that decides implementability
+
+`_control_baseline` falls back when a line has no controls **in this chunk**, and dAge is computed
+per chunk. Two distinguishable cases: **no controls at all** (rule 4 / B2' - mask) versus **controls
+exist but none in this chunk** (Stage 1.5 **Group E**, separately owned). **B2' must test the first
+and not the second**, or it fires on Group E's case and blocks C-7 for the wrong reason. The
+predicate is global per `cell_line`, evaluated in the same pre-pass `fit_harmonizer` already runs.
+
+### Sequencing
+
+**Rule 4 ships WITH C-7, not after.** The gate alone creates the orphaned line - reject the control
+without rule 4 and line N2 has no zero-point and no mask, the exact window B2 forbids. C-7 is
+already a `src/` change, so adding rule 4 costs nothing extra and removes a state the system must
+never be in.
+
+**Still open:** drop vs **re-quantify** from SRA SRP302546 - now *optional* rather than urgent, since
+under (c) the donor and fold survive either way and re-quantification becomes an upgrade that would
+restore N2's dAge labels. And the ten degenerate non-control columns remain in scope, unresolved.
+
+---
+
+
 ## 2026-08-08 - GEO checked: the defect IS in the deposit. C-7 is needed.
 
 **Status:** C-7's one open question, resolved. **`src/` untouched, no label moved, no gate

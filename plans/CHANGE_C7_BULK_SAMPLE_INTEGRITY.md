@@ -108,7 +108,7 @@ would trade a known-bad control for a silent fallback, which is worse: the first
 
 | | consequence | |
 |---|---|---|
-| **(a) reject the sample AND the donor** | a donor with no sound control cannot carry control-relative ΔAge. Drops N2's **21** columns | ✅ **recommended** — consistent, and nothing lands in the fallback |
+| **(a) reject the sample AND the donor** | a donor with no sound control cannot carry control-relative ΔAge. Drops N2's **21** columns | ⛔ **SUPERSEDED by §9** — conflates three separable decisions |
 | (b) reject the sample, let the fallback fire | N2's ΔAge forced toward 0, silently | ❌ Group D pinned this |
 | (c) reject it from `σ_ref` but keep it as N2's baseline | the same column is "too broken to estimate variance, sound enough to define zero" | ❌ incoherent |
 
@@ -251,3 +251,109 @@ replacement is later obtained.
 `O2_d34` **26**. **The populations overlap, so distinct-count would flag two sound columns before it
 reached the fifth degenerate one.** G1 (library) and G2 (dynamic range) separate cleanly; this does
 not. Do not substitute it.
+
+---
+
+## 9. ✅ 2026-08-08 — **OPTION (c) ADOPTED**, and B2 does not have to block it
+
+*The choice among (a)/(b)/(c) is C-7's to make. It is made here.* **Still not implemented.**
+
+### The decision
+
+> **(c) — reject the degenerate control, MASK N2's ΔAge, keep the donor and the fold.**
+> §3's recommendation of (a) is **superseded**: it conflated three separable decisions and answered
+> all three with the harshest available answer.
+
+| the three questions (c) separates | answer |
+|---|---|
+| should the degenerate control enter the harmonizer? | **no**, definitively — §5.14 |
+| should N2's own 21 ΔAge labels survive? | **no** — its zero-point reads **98.65 yr** for a donor of true age **0** |
+| should N2's **cells** survive at all? | **yes** — the fate head consumes no ΔAge and runs at `fate_roc` **0.983** (`00_START_HERE.md:70`, *"untouched by every ΔAge problem"*). Dropping the donor destroys working fate data to fix a broken age label |
+
+**Verified here, independently:** applying the frozen clock to each donor's day-0 fibroblast gives
+
+| donor | predicted | true | error |
+|---|---:|---:|---:|
+| **N2** | **98.65** | **0** | **+98.65** |
+| O2 | 79.50 | 53 | +26.50 |
+| O1 | 79.12 | 53 | +26.12 |
+| Y1 | 64.92 | 29 | +35.92 |
+| Y2 | 57.66 | 35 | +22.66 |
+| N3 | 36.44 | 0 | +36.44 |
+
+N2 sits **+35.12** above the other five's mean (63.53) — the arithmetic behind that figure, confirmed.
+
+*Context, not a new defect:* the clock over-predicts **every** donor by +22 to +36 yr, and **N3 is
+also donor age 0 yet reads 36.44** — it cannot separate a neonate from a 35-year-old. That is
+absolute age, where the intercept does **not** cancel (§0 ERROR 1), so it is known behaviour. It is
+recorded because it bears on C-2 and on whether ΔAge is meaningful for age-0 donors at all.
+
+**And (c) keeps LOOCV at SIX folds**, so §5's "re-report every guard over 5 folds" does not apply,
+§4.7's record stays comparable, and donors — the binding constraint Stage 6 exists to relieve — are
+not spent.
+
+### 🔑 The B2 collision dissolves: B2 was never a prohibition on reaching the fallback
+
+The objection is real as stated. Rejecting N2's control leaves line N2 with zero controls, and
+`_control_baseline` then self-centres — which B2 forbids. **But B2's purpose was never to forbid the
+fallback existing. It was to forbid the fallback producing a label that is KEPT** — the
+`age_label_policy` fail-open, where labels meant to be withheld were silently retained.
+
+So B2 restates as a **conjunction**, and admits (c) unchanged:
+
+> **B2′ — no line may reach `_control_baseline`'s fallback *and* retain its ΔAge label.**
+> `assert not (fell_back and not masked)`.
+
+### And rule 4 should be GENERAL, not a donor special case
+
+§3's cost estimate assumed a fourth rule addressing N2 by `cell_line`. **It does not need to name a
+donor.** `age_label_policy` keys on `source`, `masked_datasets` and `donor_age` — none reaches a
+single line, and none has to:
+
+> **Rule 4 — a `cell_line` with zero admissible controls has no zero-point, so its ΔAge is
+> undefined and is masked.**
+
+Keyed on **data integrity**, not on identity. No donor name anywhere. And it fires on **exactly**
+the condition that triggers the fallback — which is what makes B2′ automatic rather than colliding:
+**the predicate that causes the silent self-centring is the predicate that masks the label.**
+
+It also finally closes Stage 1.5's **Group D** defect properly, open since the harmonization audit:
+the silent zero-point switch stops being silent for every future dataset, not just for N2.
+
+### 🔴 The subtlety that decides whether B2′ is implementable — two different fallbacks
+
+`_control_baseline`'s own docstring:
+
+> *"Falls back to the line's own mean when a line has no controls **in this chunk**"*
+
+**That is per-CHUNK, and ΔAge is computed per chunk** (`build_dataset.py:306`). So the fallback fires
+in two distinguishable situations:
+
+| case | meaning | owner |
+|---|---|---|
+| **the line has no controls AT ALL** | no zero-point exists — N2 after rejection | **rule 4 / B2′.** Mask |
+| the line HAS controls, but none landed in this chunk | a chunking artefact; the line's zero-point exists and is simply absent here | **Stage 1.5 Group E**, already diagnosed and separately owned |
+
+**B2′ must test the first and not the second, or it will fire on Group E's case and block C-7 for
+the wrong reason.** The predicate is *global* per `cell_line` — "zero admissible controls anywhere in
+the corpus" — evaluated before chunking, not inside it. That is decidable in the same pre-pass
+`fit_harmonizer` already runs.
+
+### Sequencing — rule 4 ships WITH C-7, not after it
+
+**C-7's gate alone creates the orphaned line.** Reject the control without rule 4 and line N2 has no
+zero-point and no mask — the exact window B2 exists to forbid. **They are two halves of one
+operation and must land in one change, one rebuild.** §3's *"(c) needs a fourth rule, and it's a
+`src/` change and therefore its own Change"* is answered: **C-7 is already a `src/` change.** Adding
+rule 4 to it costs nothing extra and removes a state the system must never be in.
+
+### What is now settled and what is not
+
+| | |
+|---|---|
+| the option | ✅ **(c)** |
+| rule 4's form | ✅ general — zero admissible controls ⇒ masked |
+| B2 | ✅ restated as B2′, a conjunction; no longer blocks (c) |
+| the global-vs-per-chunk predicate | ✅ named; **implementation must honour it** |
+| drop vs **re-quantify** from SRA `SRP302546` | ⚠️ **still open, and now optional rather than urgent** — under (c) the donor and the fold survive either way, so re-quantification becomes an *upgrade* (it would restore N2's ΔAge labels) rather than a rescue |
+| the ten degenerate non-control columns | ⚠️ still C-7's scope, unresolved |
