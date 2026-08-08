@@ -11,6 +11,71 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-08 - C-7 pre-registered: bulk sample integrity gate (NOT implemented)
+
+**Status:** Pre-registered only. **`src/` untouched, no label moved, no existing plan edited.**
+New file `plans/CHANGE_C7_BULK_SAMPLE_INTEGRITY.md`.
+
+Takes the next free **change ID** rather than a section number, because two machines pushed a
+`## 5.8` concurrently and neither saw the other's. C-1..C-6 are Stage 1.5.3's; this is C-7.
+
+### The gate - two conditions, both justified by UNITS
+
+An earlier proposal thresholded `mean - min` at 1/5 of the cohort median. **Rejected** (§5.10): it
+cuts a continuous distribution 8% from its neighbour, so on a new cohort it flags or misses
+arbitrarily. Replaced by:
+
+* **G1 library** - the matrix is Reads Per Million, so a sound column's linear values must sum to
+  ~1e6 **by definition**. Accept `[1e5, 1e7]`, a decade either side. The 5 degenerate columns sit at
+  1.694e+07 - 2.148e+09; the other 119 at 2.859e+05 - 3.880e+06. Margins 2.58x below, 1.69x above.
+* **G2 dynamic range** - any real transcriptome spans orders of magnitude. Require log2 range >= 8
+  (256-fold). The 5 span 0.15-7.26; the other 119 span 9.00-15.26. **No overlap.**
+
+Each alone flags exactly the same 5 with 0 false positives. Kept as two because they fail
+differently - G1 catches a mis-scaled library, G2 a collapsed distribution.
+
+**Does NOT catch** seven further columns that look poor on `mean-min` but pass both, including
+`Y1_Fib` - whose library and range are normal and whose downgrade to "not established" stands.
+Recorded as open.
+
+### The consequence that makes this more than one assertion
+
+**`N2_Fib` is N2's ONLY control.** Rejecting it leaves N2 with none, and `aging.py:88` then
+self-centres - forcing N2's mean dAge toward 0 silently. **That is the exact behaviour Stage 1.5's
+Group D pinned as a defect.** Rejecting the sample without deciding the donor trades a known-bad
+control for a silent fallback, which is worse because the first is visible.
+
+Recommended: **reject the sample AND the donor** - a donor with no sound control cannot carry
+control-relative dAge. Corpus goes 124 -> 100 Gill columns, **6 donors -> 5**.
+
+Which reaches further: **LOOCV goes 6 folds to 5**, so every Stage 1 guard and step 6's MDE must be
+re-reported; it reaches **C-2** (N2 is donor age 0, so C-2's "two neonatal donors" becomes one plus
+HFF); and it reaches **§4.7**, whose 16.67 yr spread is *defined over the six folds including N2's*.
+
+> **Sequencing, and it is not negotiable: C-7 is WRITTEN now and ADOPTED after 3b and 3c report.**
+> Writing costs nothing and cannot be undone by their results; adopting first would delete their
+> evidence rather than answer their question.
+
+### Bars
+
+B1 separation (exactly 5 flagged, 0 of 119); B2 **no silent fallback** - a donor losing its last
+control must **raise**, per the `age_label_policy` fail-open precedent; B3 the gate can fail, both
+branches executing in tests; B4 **bit-identical when off** - ships off, enabled by its own run
+exactly as C-2 did. All four are **deterministic** classifications on a fixed matrix, so
+`bar_verdict` records *resolvability N/A* rather than simulating a null - claiming a power
+calculation here would be theatre.
+
+### Not licensed
+
+C-7 does **not** re-measure §§4.5/4.6/1c/1d, which were computed on a contaminated `sigma_gill`
+(§5.11) - that costs one HFF stream and belongs to 3b/3c. Nothing is withdrawn. And it does not
+decide whether the defect is GEO's deposit or our read of it - **worth ten minutes against the GEO
+supplementary file before the gate is implemented**, since if it is our read C-7 becomes redundant
+rather than wrong.
+
+---
+
+
 ## 2026-08-08 - 5.10 accepted; and N2_Fib is inside every number 1.5.6 has produced
 
 **Status:** Recorded. **`src/` untouched, no label moved, §5.9 and §5.10 unmodified.**
