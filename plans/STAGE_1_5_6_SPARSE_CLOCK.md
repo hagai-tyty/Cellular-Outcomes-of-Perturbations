@@ -2,6 +2,8 @@
 
 **Status:** ⚠️ **MEASURED 2026-08-04 and CONFINED. The Gill-side result is validated leave-one-donor-out; it does NOT transfer to HFF — on HFF it inverts (§4.6). Not applied to any label, and it must not be until step 4.**
 
+**Status — ✅ CLOSED 2026-08-08 (§5.15).** *The line above is left as written.* Step 2 DECIDED: the estimand stays both methylation clocks, the sparse clock **fails** and is **not adopted**; steps 3, 4 and 5 do not run — **step 4's retrain was cancelled, not deferred**. Step 3c RUN and **ATTRIBUTED**: §4.7's 16.67 yr fold instability is one **degenerate GEO column** (`N2_Fib_Sendai_Exp2`), which makes step 3b unnecessary. Both findings are handed forward with owners in §5.15.
+
 **Scope of what has run:** 3 new read-only scripts, **0 lines changed in `src/`**, **no label moved.**
 **Scope of what this proposes:** one config change, gated, with a pre-registered bar.
 
@@ -1820,6 +1822,130 @@ option it was choosing among is not adopted.
 |---|---|
 | **C-2's activation** (`STAGE_1_5_3_EXECUTE.md` §1948 assigns it to 1.5.6) | **after Stage 6.** `00_START_HERE.md` records that enabling it masks ~99.8 % of the corpus; it is downstream of acquisition, not an early free win |
 | **the clock's −14.10 yr density bias** | **recorded and closed as a measured property of the Fleischer clock.** Not fixed here, and not fixable without changing the estimand |
+
+---
+
+## 5.14 ✅ 2026-08-08 — **STEP 3c RUN: ATTRIBUTED. The degenerate control IS the carrier.**
+
+*Additive.* **Artefacts:** `experiments/step3c_control_leverage.py`,
+`results/step3c_control_leverage_results.json`. Read-only, `src/` untouched, no build touched.
+Pre-registration §5.8, unchanged and unedited before the run.
+
+### G0 first — the reconstruction is validated before anything downstream is read
+
+The five-control fit reproduces the shipped `sigma_gill` on all 2664 unclamped genes at **median
+relative error 6.14e-09**. The reconstruction's scale is confirmed too: baseline `d̂ = −26.755`
+against the recorded shard `d_O1 = −24.023`, a **+2.73 yr** difference — which is the S3+S4
+deconfound-and-re-centre contribution, in the direction and near the magnitude step 1b measured
+(+2.11 yr). **HFF stream: 5782 day-14 cells, 5981 day-0.**
+
+### The result
+
+| dropped control | n ctrl | `d̂` | **Δ (yr)** |
+|---|---|---|---|
+| **N2** | 4 | **−8.196** | **+18.558** |
+| N3 | 4 | −27.174 | −0.419 |
+| O2 | 4 | −28.321 | −1.566 |
+| Y1 | 4 | −27.078 | −0.323 |
+| Y2 | 4 | −29.735 | −2.980 |
+
+*(baseline, all five controls: `d̂ = −26.755`)*
+
+**The four healthy drops move it by −0.32 to −2.98 yr and every one of them moves it the SAME way —
+more negative. N2's drop moves it +18.558 yr, the opposite direction, at 6.23× the largest healthy
+drop.** It is not the biggest of a family; it is not a member of the family.
+
+| bar | required | observed | |
+|---|---|---|---|
+| **B1 OUTLIER** | largest **and** ≥ 2× the second | **6.23×** | ✅ PASS |
+| **B2 MAGNITUDE** | gap closed ≥ 0.70 | **1.113** | ✅ PASS |
+| **B3 DIRECTION** | `Δ_N2 > 0` | **+18.558** | ✅ PASS |
+
+> ## VERDICT: **ATTRIBUTED**
+
+### What it reproduces, without having been asked to
+
+§5.8 stated in advance that *"'O1 minus N2's control' is NOT the N2 fold … exact reproduction of
+−7.352 is NOT predicted and is not the bar."* It very nearly happens anyway: removing the
+contaminant from the O1 fold lands HFF's day-14 at **−8.196**, against the N2 fold's observed
+**−7.352**. Gap closed 1.113 — a slight overshoot, which is what the stated caveat predicts, since
+the N2 fold *includes* O1's control and fits on a different admissible set.
+
+### The consequence that reaches furthest — the "harmonization gain" is largely this defect
+
+Removing one column drops the harmonized magnitude by **69.4 %**, from −26.755 to −8.196. Put beside
+step 1d's own figures:
+
+| | day-14 ΔAge |
+|---|---|
+| unharmonized, direct dense clock (step 1d) | **−9.96** |
+| harmonized dense (step 1d) — "gain 2.152" | **−21.43** |
+| harmonized **without** the degenerate control (here) | **−8.196** |
+
+**With the contaminant removed, the harmonized value lands on the unharmonized one** — an implied
+residual gain of **0.82**, i.e. essentially none. So §4.3–§4.6's "harmonization gain of ×2.152" is
+substantially **not a property of the transform**; it is one degenerate control inflating
+`sigma_gill`, which the gain formula `sigma_ref/sigma_d` then multiplies into every HFF label.
+
+**Stated as a strong implication, not a closed result.** Steps 1c/1d floored `sigma` over the
+**clock genes** while this reconstruction uses the pipeline's own **`genes_G`** floor (defect U1,
+§5.3), so the two gain figures are not exactly comparable and the reconciliation is indicative. The
+*direction and size* of the effect do not depend on that.
+
+### What this settles, and what it costs
+
+| | |
+|---|---|
+| **§4.7's 16.67 yr fold instability** | ✅ **EXPLAINED.** One degenerate GEO column, present in five of six folds and absent from the sixth |
+| **Step 3b** | ⛔ **UNNECESSARY.** Its three-term ladder (T1 mask / T2 floor / T3 σ_gill) was searching for a mechanism that is now named and measured. §5.5 had already eliminated T1 and T2; T3 is confirmed here — and confirmed to be **one bad sample**, not five-sample estimator noise |
+| **the remedy** | a **data** fix — exclude or re-quantify one column. **Leakage-free** (it never touches the held-out donor), **not donor-blocked**, and therefore **off Stage 6's critical path**. C-7 is written and correctly not yet adopted |
+| **which fold is clean** | the **N2 fold** — the only one whose harmonizer excludes the contaminant. Five folds, **including O1 = July's −24.02 reference**, carry inflated HFF labels |
+
+### What it does NOT establish
+
+* **It does not establish that −8.2 is the CORRECT HFF ΔAge.** It establishes that −24 is
+  contaminated. Whether the uncontaminated value is *right* is the same open question arms C and D
+  narrowed and did not close.
+* **It does not withdraw any recorded result.** Arms A–D, step 6 and July's reference stand as
+  recorded, now with a named defect inside them. Re-running any of them needs its own
+  pre-registration.
+* **It does not fix anything.** No column was excluded, no label moved, `src/` untouched.
+
+---
+
+## 5.15 ✅ **STAGE 1.5.6 CLOSED — 2026-08-08**
+
+| step | disposition |
+|---|---|
+| **1, 1b, 1c, 1d** | ✅ DONE. §1's finding is real and **confined to multi-tissue ΔAge on the transient arm**. 1c/1d's gain figures now carry the §5.14 caveat |
+| **2** | ✅ **DECIDED (§5.13)** — estimand stays BOTH clocks; the sparse clock fails its bar at every `k`; bar not registered |
+| **3** | ⛔ NOT DONE, deliberately — building an artefact for a rejected candidate |
+| **3b** | ⛔ **UNNECESSARY (§5.14)** — the mechanism it was designed to find is named and measured |
+| **3b-audit** | ✅ DONE (§5.2, corrected §5.9/§5.10) |
+| **3c** | ✅ **RUN — ATTRIBUTED (§5.14)** |
+| **4** | ⛔ **CANCELLED (§5.13)** — one retrain not spent |
+| **5** | ⛔ MOOT |
+
+**Two findings leave this stage:**
+
+1. **The Fleischer clock carries a −14.10 yr density bias**, removable at k ≈ 100 — real, and
+   confined to one clock, one arm, one estimand. **Not adopted**, because it fails on the second
+   reference clock and Stage 1.5.2's SPLIT rule forbids narrowing the estimand to rescue it.
+2. **`N2_Fib_Sendai_Exp2` is a degenerate column in GEO's deposit**, and it is the carrier of HFF's
+   fold instability — inflating the harmonized magnitude ~3× in five of six folds.
+
+**Handed forward, with owners:**
+
+| item | owner |
+|---|---|
+| exclude-or-re-quantify the degenerate control; the bulk-integrity gate | **C-7** (`plans/CHANGE_C7_BULK_SAMPLE_INTEGRITY.md`), written, not adopted |
+| whether the defect is fixed by dropping N2 or by re-quantifying from SRA `SRP302546` | **C-7 §3** — re-quantification preserves the donor, the fold and the guard record, at the cost of a batch term to check |
+| the ten degenerate non-control Gill columns (live training labels) | **C-7**, scope |
+| C-2's activation | **after Stage 6** — masks ~99.8 % of the corpus |
+| is HFF's ΔAge CORRECT age? | **still open** — arms C and D narrowed it; nothing here closes it |
+
+**No retrain was spent to close this stage.** Every decision above rests on measurements already
+recorded plus two free read-only runs (§5.5, §5.14).
 
 ---
 

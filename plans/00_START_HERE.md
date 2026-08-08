@@ -234,6 +234,19 @@ donor.** N3 is also age 0 and does **not** collapse, so age alone is not the mec
 the variance-floor lever recorded in `STAGE_1_5_6_SPARSE_CLOCK.md` §5.2 A4. Recorded as a lead, not
 a finding.
 
+> **[2026-08-08 — BOTH LEADS ANSWERED, and neither was the mechanism.]**
+> *Nothing above is changed.* **Donor age 0** is not it — N3 is also 0 and does not collapse.
+> **The variance floor** is not it — §5.5 eliminated it at *maximum* leverage (F = 1.398, worse
+> than not correcting at all), and the fold whose floor ratio IS anomalous (Y1, 34% low) has
+> entirely normal labels.
+>
+> **It is the SAMPLE.** `N2_Fib_Sendai_Exp2` is a degenerate column in GEO's deposit — mean−min
+> 0.0008, log2 range 1.74, library 1.03e+08 against a cohort ~1.5e+06 — and §5.14's step-3c run
+> **ATTRIBUTED** the whole 16.67 yr spread to it: removing it from the O1 fold moves HFF's day-14
+> from −26.8 to −8.2, **+18.6 yr, 6.23× the largest healthy control drop and the only one with the
+> opposite sign.** Stage 1.5.6 is CLOSED (§5.15); the fix is owned by
+> `plans/CHANGE_C7_BULK_SAMPLE_INTEGRITY.md`.
+
 ### Where the shortlist stands, item by item
 
 | # | item | status |

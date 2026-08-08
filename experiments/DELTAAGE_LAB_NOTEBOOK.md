@@ -4107,3 +4107,80 @@ could not eliminate it.** The ordering is the real evidence.
 > library gap to the next. Full verification: `plans/STAGE_1_5_6_SPARSE_CLOCK.md` **§5.10**, which
 > also moves the proposed gate from `mean−min` to the library tell and records why **step 3c is
 > unchanged** — its leave-one-control-out design already tests `Y1_Fib` individually.
+
+---
+
+## STAGE 1.5.6 CLOSED — step 3c ATTRIBUTED, step 4 cancelled (2026-08-08)
+
+**Status:** ✅ CLOSED. **No retrain spent.** `src/` untouched, no build touched, no label moved.
+Full record: `plans/STAGE_1_5_6_SPARSE_CLOCK.md` §5.13 (step 2), §5.14 (step 3c), §5.15 (closure).
+**Artefacts:** `experiments/step3c_control_leverage.py`,
+`results/step3c_control_leverage_results.json`.
+
+### Step 3c — RUN, and ATTRIBUTED
+
+G0 first: the five-control fit reproduces the shipped `sigma_gill` on all 2664 unclamped genes at
+median relative error **6.14e-09**. Scale confirmed — baseline `d̂ = −26.755` against the recorded
+`d_O1 = −24.023`, a +2.73 yr difference which is the S3+S4 contribution (step 1b measured +2.11).
+HFF stream: 5782 day-14 cells, 5981 day-0.
+
+| dropped | `d̂` | **Δ (yr)** |
+|---|---|---|
+| **N2** | **−8.196** | **+18.558** |
+| N3 | −27.174 | −0.419 |
+| O2 | −28.321 | −1.566 |
+| Y1 | −27.078 | −0.323 |
+| Y2 | −29.735 | −2.980 |
+
+**The four healthy drops all move it the same way — more negative, by 0.32 to 2.98 yr. N2's drop
+moves it the OPPOSITE way, +18.558 yr, at 6.23× the largest healthy drop.** Not the biggest of a
+family; not a member of it.
+
+B1 outlier 6.23× (bar ≥2×) ✅ · B2 gap closed 1.113 (bar ≥0.70) ✅ · B3 direction +18.558 ✅ →
+**ATTRIBUTED.**
+
+§5.8 stated in advance that exact reproduction of the N2 fold's −7.352 was *not* predicted. It
+nearly happens anyway: −8.196.
+
+### The consequence that reaches furthest
+
+Removing one column drops the harmonized magnitude **69.4 %**. Beside step 1d's own figures:
+unharmonized direct dense **−9.96**; harmonized dense **−21.43** ("gain 2.152"); harmonized
+**without** the degenerate control **−8.196**. **With the contaminant gone, the harmonized value
+lands on the unharmonized one** — residual gain ≈ **0.82**, essentially none.
+
+So §4.3–§4.6's "harmonization gain ×2.152" is substantially **not a property of the transform** but
+one degenerate control inflating `sigma_gill`, which `sigma_ref/sigma_d` then multiplies into every
+HFF label. **Strong implication, not a closed result** — 1c/1d floored over the clock genes while
+this floors over the pipeline's `genes_G` (defect U1), so the two gain figures are not exactly
+comparable.
+
+### Step 2 — DECIDED, and it cancelled step 4
+
+The estimand stays **both** methylation clocks, so the sparse clock **fails** (§5.12: MAE 8.79 vs
+≤8, sign agreement 0.41–0.68 vs ≥0.80, at every k) and is **not adopted**. Narrowing to
+multi-tissue is unavailable: Stage 1.5.2 refuted it with arithmetic — under one shared age factor
+`λ_mt = 0.516/0.493 = 1.048`, and a correlation loading cannot exceed 1. Steps 3, 4 and 5 do not
+run. **Step 4's retrain was cancelled, not deferred.**
+
+### What LEAVES this stage
+
+1. **The clock's −14.10 yr density bias** — real, removable at k≈100 (MAE 16.61→5.36), and
+   **confined to multi-tissue ΔAge on the transient arm**. Not adopted.
+2. **`N2_Fib_Sendai_Exp2` is a degenerate GEO column and the carrier of HFF's fold instability** —
+   inflating the harmonized magnitude ~3× in five of six folds. **The N2 fold is the clean one; the
+   other five, including O1 = July's −24.02 reference, carry inflated labels.**
+
+### What is NOT established
+
+That −8.2 is the *correct* HFF ΔAge. This establishes that −24 is *contaminated*. Whether the
+uncontaminated value is right is the question arms C and D narrowed and did not close. **No
+recorded result is withdrawn** — arms A–D, step 6 and July's reference stand as recorded, now with
+a named defect inside them.
+
+### Superseded leads, recorded rather than deleted
+
+`00_START_HERE.md` carried two candidate explanations for N2, both now answered: **donor age 0**
+(N3 is also 0 and does not collapse) and **fewest admissible genes / the variance-floor lever**
+(§5.5 eliminated the floor at maximum leverage, F = 1.398). Neither was the mechanism. **It is the
+sample.**

@@ -1,0 +1,67 @@
+{
+  "script": "step3c_control_leverage",
+  "gene_space": 5328,
+  "g0": {
+    "median_rel_err": 6.142173165558936e-09,
+    "n_unclamped": 2664,
+    "pass": true
+  },
+  "hff": {
+    "n_day14": 5782,
+    "n_day0": 5981
+  },
+  "d_hat_baseline": -26.754538831502515,
+  "observed": {
+    "d_O1": -24.023,
+    "d_N2": -7.352,
+    "gap": 16.671
+  },
+  "arms": {
+    "N2": {
+      "d_hat": -8.196057711707745,
+      "floor_gill": 0.1614186988790922,
+      "n_controls": 4,
+      "delta_yr": 18.55848111979477
+    },
+    "N3": {
+      "d_hat": -27.17366693806677,
+      "floor_gill": 0.15744005016521345,
+      "n_controls": 4,
+      "delta_yr": -0.4191281065642549
+    },
+    "O2": {
+      "d_hat": -28.32088950108917,
+      "floor_gill": 0.15701635158422572,
+      "n_controls": 4,
+      "delta_yr": -1.5663506695866545
+    },
+    "Y1": {
+      "d_hat": -27.077820427123505,
+      "floor_gill": 0.10094989562516593,
+      "n_controls": 4,
+      "delta_yr": -0.32328159562099046
+    },
+    "Y2": {
+      "d_hat": -29.734898114252232,
+      "floor_gill": 0.1620675450778541,
+      "n_controls": 4,
+      "delta_yr": -2.980359282749717
+    }
+  },
+  "ranked_abs_delta": [
+    "N2",
+    "Y2",
+    "O2",
+    "N3",
+    "Y1"
+  ],
+  "bars": {
+    "B1_outlier": true,
+    "B2_magnitude": true,
+    "B3_direction": true,
+    "gap_closed_A": 1.113219430135851,
+    "outlier_ratio": 6.226927480593038
+  },
+  "verdict": "ATTRIBUTED",
+  "reading": "the degenerate control IS the carrier. Step 3b's ladder is unnecessary; the fix is a data fix, leakage-free and NOT donor-blocked."
+}

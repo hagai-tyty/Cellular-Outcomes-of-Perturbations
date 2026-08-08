@@ -475,6 +475,84 @@ harmonizer facts only.
 ---
 
 
+## 2026-08-08 (later) - STAGE 1.5.6 CLOSED: step 3c ATTRIBUTED, step 4 cancelled, no retrain spent
+
+**Status:** CLOSED. **No retrain spent.** `src/` untouched, no build touched, no label moved,
+`configs/clocks/` untouched. Sections 5.14 (3c result) and 5.15 (closure) added; the status line
+appended to, not replaced. 126 insertions / 0 deletions in the plan.
+
+### Step 3c RUN -> ATTRIBUTED
+
+G0 first: the five-control fit reproduces the shipped sigma_gill on all 2664 unclamped genes at
+median relative error 6.14e-09. Scale confirmed - baseline d_hat -26.755 against the recorded
+d_O1 -24.023, a +2.73 yr difference which is the S3+S4 contribution (step 1b measured +2.11). HFF
+stream 5782 day-14 cells, 5981 day-0.
+
+  dropped   d_hat      Delta
+  N2        -8.196   +18.558
+  N3       -27.174    -0.419
+  O2       -28.321    -1.566
+  Y1       -27.078    -0.323
+  Y2       -29.735    -2.980
+
+The four healthy drops all move it the SAME way, more negative, by 0.32-2.98 yr. N2's drop moves it
+the OPPOSITE way, +18.558 yr, at 6.23x the largest healthy drop. Not the biggest of a family - not a
+member of it.
+
+B1 outlier 6.23x (bar >=2x) PASS. B2 gap closed 1.113 (bar >=0.70) PASS. B3 direction +18.558 PASS.
+Section 5.8 stated in advance that exact reproduction of the N2 fold's -7.352 was NOT predicted; it
+nearly happens anyway (-8.196).
+
+### The consequence that reaches furthest
+
+Removing one column drops the harmonized magnitude 69.4%. Beside step 1d's own figures: unharmonized
+direct dense -9.96; harmonized dense -21.43 ("gain 2.152"); harmonized WITHOUT the degenerate
+control -8.196. **With the contaminant gone the harmonized value lands on the unharmonized one** -
+residual gain ~0.82, essentially none. So sections 4.3-4.6's "harmonization gain x2.152" is
+substantially NOT a property of the transform but one degenerate control inflating sigma_gill.
+Strong implication, not a closed result: 1c/1d floored over the clock genes while this floors over
+the pipeline's genes_G (defect U1), so the figures are not exactly comparable.
+
+### Step 2 DECIDED, and it cancelled step 4
+
+Estimand stays BOTH clocks -> the sparse clock fails (MAE 8.79 vs <=8, sign 0.41-0.68 vs >=0.80, at
+every k) and is NOT adopted. Narrowing to multi-tissue is unavailable: Stage 1.5.2 refuted it with
+arithmetic (lambda_mt = 1.048, and a correlation loading cannot exceed 1). Steps 3, 4, 5 do not run.
+**Step 4's retrain CANCELLED, not deferred.** Step 3b is UNNECESSARY - the mechanism its ladder was
+designed to find is now named and measured.
+
+### What leaves the stage
+
+1. The clock's -14.10 yr density bias: real, removable at k~100 (MAE 16.61 -> 5.36), CONFINED to
+   multi-tissue dAge on the transient arm. Not adopted.
+2. N2_Fib_Sendai_Exp2 is a degenerate GEO column and the carrier of HFF's fold instability,
+   inflating the harmonized magnitude ~3x in five of six folds. **The N2 fold is the clean one; the
+   other five, including O1 = July's -24.02 reference, carry inflated labels.**
+
+### Not established
+
+That -8.2 is the CORRECT HFF dAge. This establishes that -24 is CONTAMINATED. Whether the
+uncontaminated value is right is what arms C and D narrowed and did not close. **No recorded result
+is withdrawn** - arms A-D, step 6 and July's reference stand, now with a named defect inside them.
+
+### Superseded leads, annotated in 00_START_HERE rather than deleted
+
+Both candidate explanations for N2 are answered and neither was the mechanism: donor age 0 (N3 is
+also 0 and does not collapse) and fewest admissible genes / the variance-floor lever (section 5.5
+eliminated the floor at maximum leverage, F = 1.398; and Y1, whose floor ratio IS anomalous at 34%
+low, has entirely normal labels). It is the SAMPLE.
+
+### Handed forward with owners
+
+C-7 owns the fix (exclude or re-quantify from SRA SRP302546) and the bulk-integrity gate, plus the
+ten degenerate non-control columns. C-2's activation moves to AFTER Stage 6 (masks ~99.8% of the
+corpus). "Is HFF's dAge CORRECT age?" remains open.
+
+ruff clean; tests/test_results_paths.py 178 pass - it caught the new script's _RESULTS spelling
+before commit.
+
+---
+
 ## 2026-08-08 (later) - STEP 2 DECIDED: estimand stays BOTH clocks, sparse clock FAILS, step 4 CANCELLED
 
 **Status:** DECIDED on recorded evidence. No run, no retrain. **`src/` untouched, no build touched,
