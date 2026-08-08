@@ -251,6 +251,78 @@ harmonizer facts only.
 ---
 
 
+## 2026-08-08 (later) - Step 3c added: does removing the degenerate control reproduce the spread?
+
+**Status:** PLAN ONLY. Nothing executed. **`src/` untouched, no build touched, no label moved.**
+107 insertions / 1 deletion in the plan - the single deletion is step 3b's row, repointed to note
+it runs only if 3c does not settle it.
+
+Turns section 5.7's "what is NOT established" into an actual pre-registered step rather than a
+paragraph of open questions.
+
+### Why a new step and not a rung of 3b's ladder
+
+5.7 established by direct measurement that N2_Fib_Sendai_Exp2 is nearly a constant vector and that
+it enters sigma_gill in every fold that does not hold N2 out. That is a NAMED candidate. 3b's ladder
+was designed when the candidate was a diffuse property of a five-sample estimate. Testing a named
+contaminant is cheaper and strictly more decisive, so 3c runs first and may make 3b unnecessary.
+
+What 5.7 did not settle: whether removing that column reproduces the magnitude. A scalar sigma
+argument does not deliver it - leave-one-donor-out moves the |w|-weighted sigma_gill -11.8% dropping
+N2 but -20.1% dropping Y1, and Y1's labels are normal.
+
+### The test
+
+On the O1 fold (July's reference, d_O1 = -24.023, and one of the five folds that INCLUDE the
+contaminant), refit the harmonizer five times, each dropping one of its five controls, everything
+else held exactly, and recompute HFF's day-14 dAge each time. MIN_REPLICATES = 3, so four controls
+remain legal in every arm. Needs the HFF stream, because delta is required for a magnitude and 5.6
+established the mixed-sign weights (2648 +, 2589 -) make every delta-free shortcut unbounded - the
+same machinery 3b needs, used once instead of eighteen times.
+
+**The built-in negative control is the point.** Dropping ANY control changes sigma_gill. The claim
+is not that N2's removal moves the number but that it is an OUTLIER among the five, and the four
+healthy drops are measured in the same run by the same code on the same fold.
+
+### Bar
+
+- B1 outlier (primary): |Delta_N2| is the largest of the five AND >= 2x the second largest.
+- B2 magnitude (primary): gap closed A = Delta_N2 / (d_N2 - d_O1) >= 0.70, denominator +16.671 yr.
+- B3 direction (gate): Delta_N2 > 0. Removing the contaminant must move O1's dAge TOWARD zero;
+  the wrong sign falsifies the mechanism outright.
+- bar_verdict resolvability run BEFORE the measurement, bar moves to usable_bar first if
+  UNRESOLVABLE (REF_GROUND_RULES 5b).
+
+Stated in advance so it cannot be read as a shortfall later: "O1 minus N2's control" is NOT the N2
+fold - the N2 fold holds out N2 and therefore includes O1's control, on a different admissible set.
+Exact reproduction of -7.352 is not predicted and is not the bar.
+
+Branches: ATTRIBUTED (3b becomes unnecessary) / PARTIAL (3b runs on the residue) / GENERIC (the
+contaminant is not the carrier, 3b runs as written) / FALSIFIED (wrong sign - record it, do not
+rescue it).
+
+### Why this matters more than the ladder
+
+5.3's remedy table ranked fixes by leakage-safety, with replication donor-blocked behind
+STAGE_6_NEW_DATA_REV section 3 / D2. A degenerate INPUT SAMPLE sits outside that table: excluding or
+repairing one bad column never touches the held-out donor (leakage-free), needs no new donors (not
+donor-blocked), and is a data-ingest fix rather than a change to the estimator. **If 3c attributes,
+the instability is the cheapest thing on the page to fix and comes off Stage 6's critical path.**
+
+### Carried with 3c but not part of its measurement
+
+- 3c.2 - is the defect GEO's deposited matrix or our read of it? Decides whether the fix is exclude
+  or re-read. This stage, reported beside 3c.
+- 3c.3 - apply_qc passed a control constant to 1.74 log2 with a library 68x the cohort. A guard is a
+  src/ change and therefore its own Change with its own bar. NOT this stage; named so it is not lost.
+- 3c.4 - five further degenerate Gill TREATMENT samples. NOT this stage; they do not enter
+  sigma_gill but they do enter their own dAge and any prior Gill analysis.
+
+Includes a falsifiability self-test: synthetic controls with no degenerate sample must return
+GENERIC; one with a planted constant column must return ATTRIBUTED. Both branches execute in tests.
+
+---
+
 ## 2026-08-08 (later) - ROOT CAUSE: a Gill CONTROL sample is degenerate in the raw GEO matrix
 
 **Status:** RUN, read-only, raw GEO only. **`src/` untouched, no build touched, no label moved.**

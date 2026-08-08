@@ -4086,3 +4086,13 @@ could not eliminate it.** The ordering is the real evidence.
 | Is the defect GEO's or our read? | unassigned — new |
 | `apply_qc` does not check whether an `n = 1` control is SOUND | unassigned — new, gate gap |
 | 5 further degenerate Gill treatment samples | unassigned — new |
+
+> **[2026-08-08 annotation]** The four "still open" items above are now a **pre-registered step**:
+> **step 3c**, `plans/STAGE_1_5_6_SPARSE_CLOCK.md` §5.8. It runs **before** 3b and may make it
+> unnecessary. Design: leave-one-CONTROL-out on the O1 fold's harmonizer, all five, recomputing
+> HFF's day-14 each time — the four healthy drops are the built-in negative control, so the claim
+> under test is not "N2's removal moves the number" but "N2's removal is an OUTLIER among the
+> five". Bars B1 outlier / B2 gap-closed ≥ 0.70 / B3 direction-gate. Stated in advance: `O1 minus
+> N2's control` is **not** the N2 fold, so exact reproduction of −7.352 is not predicted.
+> `apply_qc`'s gate gap and the five degenerate treatment samples are carried as 3c.3 / 3c.4 with
+> owners **outside** this stage, per the one-change rule.

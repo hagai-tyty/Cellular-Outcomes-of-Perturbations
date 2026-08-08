@@ -403,8 +403,9 @@ space — is the live problem.
 | **1d** | ✅ **DONE — and it INVERTS §1 on HFF.** top-100 gain **2.769** vs dense **2.152**; harmonized day-14 **−29.70** vs dense **−21.43**. The clock's heavy genes sit where the σ ratio is largest (0.836 vs 0.608). See §4.6 | — | done |
 | **2** | **Pre-register the bar** for adopting a sparse clock: MAE ≤ 8 yr **and** sign agreement ≥ 0.80 vs methylation, on **both** arms, k fixed at 100 in advance | `bar_verdict` row in `tests/test_bars_resolvable.py` | free |
 | **3** | **Write `configs/clocks/fleischer_clock_top100.json`** — the same coefficients, 33,055 zeroed. Provenance in `meta`, original untouched | ships as a **new file**; nothing switches automatically | free |
-| **3b** | 🆕 **GATE ON STEP 4 — what carries the 16.67 yr fold spread in HFF's labels (§4.7)?** RECONSTRUCT `d_f` from each fold's own harmonizer inputs and decompose the residual across three named terms — **T1 mask, T2 variance floor, T3 σ_gill** — which also answers §4.6 **option 2** (same lever). Read-only, **0 lines in `src/`** | `bar_verdict` row in `tests/test_bars_resolvable.py`; pre-registration in **§5.3** (§5.1 superseded by A1, left visible) | free |
+| **3b** | 🆕 **GATE ON STEP 4 — what carries the 16.67 yr fold spread in HFF's labels (§4.7)?** RECONSTRUCT `d_f` from each fold's own harmonizer inputs and decompose the residual across three named terms — **T1 mask, T2 variance floor, T3 σ_gill** — which also answers §4.6 **option 2** (same lever). Read-only, **0 lines in `src/`** | `bar_verdict` row in `tests/test_bars_resolvable.py`; pre-registration in **§5.3** (§5.1 superseded by A1, left visible). **Runs only if 3c does not settle it** — §5.8 | free |
 | **3b-audit** | 🆕 **Independent audit of 3b — 3 defects stand; A5 withdrawn and A2 downgraded after review (§5.2).** `G_f` is the statistic §4.5 disproved and its exact form is a tautology; the question is settled by elimination so the instrument should be a per-fold RECONSTRUCTION; the ATTRIBUTED branch's remedy reintroduces donor leakage; the gene-set/variance-floor mechanism in §4.7's own table is untested — **and it is the same lever as §4.6's option 2** | — | free, done |
+| **3c** | 🆕 **RUNS BEFORE 3b — is the DEGENERATE CONTROL the carrier (§5.7)?** Leave-one-CONTROL-out on the O1 fold's harmonizer, all five, recomputing HFF's day-14 each time, with the four healthy controls as the built-in negative control. Read-only, **0 lines in `src/`** | `bar_verdict` row in `tests/test_bars_resolvable.py`; pre-registration in **§5.8** | free |
 | **4** | **One rebuild + LOOCV under the sparse clock**, full scorecard, snapshot and rollback | every Stage 1 guard reported before/after | one retrain |
 | **5** | Only then decide on the label change | — | — |
 
@@ -1260,6 +1261,111 @@ silently. Stage 1.5's G-a made `n = 1` **visible**; nothing checks whether that 
 
 **Nothing is withdrawn on the strength of this section.** It names a defect and its reach; the
 reconstruction quantifies it.
+
+---
+
+## 5.8 🆕 STEP 3c — PRE-REGISTRATION: is the degenerate control the carrier? (2026-08-08)
+
+**Owner:** this stage. **Cost:** free, read-only. **Scope:** 1 script, 1 test row, **0 lines
+changed in `src/`**, **no label moves under any outcome.**
+**Runs BEFORE step 3b** and may make it unnecessary. **Blocking for:** step 4, same as 3b.
+
+### Why a new step rather than a rung of 3b's ladder
+
+§5.7 established by direct measurement that `N2_Fib_Sendai_Exp2` — N2's day-0 control — is nearly a
+constant vector in the raw GEO matrix, and that it enters `σ_gill` in **every fold that does not
+hold N2 out**. That is a **named, specific** candidate. 3b's ladder was designed when the candidate
+was a diffuse property of a five-sample estimate; testing a named contaminant is cheaper and
+strictly more decisive, so it goes first.
+
+**What §5.7 did NOT establish, and what this step exists to settle:**
+
+> Does removing that column actually reproduce the spread? A scalar σ argument does not deliver the
+> magnitude — leave-one-donor-out moves the `|w|`-weighted `σ_gill` by **−11.8 %** dropping N2 but
+> **−20.1 %** dropping Y1, and **Y1's labels are normal**. Direction and identity match; magnitude
+> is unmeasured.
+
+### The test
+
+On the **O1 fold** — July's reference, `d_O1 = −24.023`, and one of the five folds that *include*
+the contaminant — refit the harmonizer **five times**, each time dropping **one** of its five
+control samples (N2, N3, O2, Y1, Y2), everything else held exactly: same admissible rule, same
+floor rule, same clock, same HFF stream. Recompute HFF's day-14 ΔAge each time.
+
+`MIN_REPLICATES = 3` (`harmonize.py:27`), so four controls remain legal in every arm.
+
+**This requires the HFF stream** — `δ_g` is needed for a magnitude, and §5.6 established that the
+mixed-sign weights (2648 +, 2589 −) make every `δ`-free shortcut unbounded. That is the cost, and
+it is the same machinery 3b needs, used once instead of eighteen times.
+
+### The built-in negative control — the reason this can fail
+
+Dropping **any** control changes `σ_gill`. The claim is not that N2's removal moves the number; it
+is that **N2's removal is an OUTLIER among the five**. The four healthy drops are the negative
+control, and they are measured in the same run, by the same code, on the same fold.
+
+### Metrics and bar
+
+Let `d_O1^(−k)` be HFF's day-14 ΔAge with control `k` dropped, and `Δ_k = d_O1^(−k) − d_O1`.
+
+| | |
+|---|---|
+| **B1 — outlier (PRIMARY)** | `\|Δ_N2\|` is the **largest** of the five **and** `≥ 2 ×` the second largest |
+| **B2 — magnitude (PRIMARY)** | gap closed `A = Δ_N2 / (d_N2 − d_O1) ≥ 0.70`, where `d_N2 − d_O1 = +16.671 yr` |
+| **B3 — direction (gate)** | `Δ_N2 > 0` — removing the contaminant must move O1's ΔAge **toward zero**, the direction §5.7 predicts. `Δ_N2 < 0` falsifies the mechanism outright |
+| **resolvability** | `bar_verdict` run **before** the measurement on a correct system simulated at this geometry: five drops, `Δ` distributed as the healthy drops plus a contaminant term. If UNRESOLVABLE, the bar moves to `usable_bar` **before** the run and the move is recorded — `REF_GROUND_RULES.md` §5b |
+
+**Stated in advance so it cannot be read as a shortfall later:** `O1 minus N2's control` is **not**
+the N2 fold. The N2 fold holds out N2 and therefore *includes O1's* control, and fits on a different
+admissible set. Exact reproduction of `−7.352` is **not** predicted and is not the bar; B2 asks what
+fraction of the gap the contaminant carries.
+
+### Decision branches, fixed in advance
+
+| outcome | reading | consequence |
+|---|---|---|
+| **B1 ∧ B2 ∧ B3** — ATTRIBUTED | the degenerate control is the carrier | **Step 4 stays BLOCKED** until the control is handled. **Step 3b becomes unnecessary** — its ladder was searching for a mechanism now named. The remedy is a *data* fix, and see the asymmetry note below |
+| **B1 ∧ B3, B2 fails** — PARTIAL | N2's removal is special but carries < 70 % of the gap | Step 4 blocked; **3b runs** on the residue, with the contaminant now a known term rather than a hypothesis |
+| **B1 fails** — GENERIC | every control drop moves it comparably | The contaminant is **not** the carrier; §5.7 stands as a data defect with its own owner, and **3b runs as written** |
+| **B3 fails** — FALSIFIED | removing the contaminant moves ΔAge the wrong way | §5.7's mechanism is wrong. Record it, do not rescue it; **3b runs as written** |
+
+### The asymmetry this could resolve, and why it matters more than the ladder
+
+§5.3's remedy table ranked the fixes by leakage-safety: T1/T2 leakage-free, T3 largely not, and
+replication **donor-blocked** behind `STAGE_6_NEW_DATA_REV.md` §3 / D2. A **degenerate input sample**
+sits outside that table entirely:
+
+* excluding or repairing one bad column **never touches the held-out donor**, so it is
+  **leakage-free**;
+* it needs **no new donors**, so it is **not donor-blocked**;
+* it is a data-ingest fix, not a change to the estimator.
+
+**If 3c attributes, the instability is the cheapest thing on this page to fix and comes off Stage
+6's critical path entirely.** That is why it runs before 3b and before step 4.
+
+### Carried with 3c, but NOT part of its measurement
+
+| item | what | owner |
+|---|---|---|
+| **3c.2** | Is the defect GEO's deposited matrix or our read of it? Check the GSM's own record and the series matrix against the supplementary file. Cheap, read-only, and it decides whether the fix is *exclude* or *re-read* | this stage, reported beside 3c |
+| **3c.3** | `apply_qc` passed a control that is constant to 1.74 log2 with a library 68× the cohort. G-a made `n = 1` **visible**; nothing checks it is **sound**. A guard is a `src/` change and therefore **its own Change with its own bar and snapshot**, per the one-change rule | **not this stage** — named so it is not lost |
+| **3c.4** | Five further degenerate Gill **treatment** samples (`N2_d21_CD13`, `N3_d21_SSEA4`, `O2_d40_SSEA4`, `O2_d9_SSEA4`, `Y1_d7_CD13`) | **not this stage** — they do not enter `σ_gill`, but they do enter their own ΔAge and any prior Gill analysis |
+
+### Falsifiability self-test (mandatory)
+
+Fed a synthetic control set in which **no** sample is degenerate, the script must return **GENERIC**.
+Fed one where a known column is replaced by a constant vector, it must return **ATTRIBUTED**. Both
+branches must execute in the test suite.
+
+### What step 3c does NOT license
+
+* **It is not a fix.** It measures attribution. Excluding or repairing the column changes `y_age`
+  and is its own Change, with a rebuild and a restarted guard record.
+* **It does not re-open step 6.** `gc2_A/B/C/D` ran and returned INCONCLUSIVE; re-running needs its
+  own pre-registration and is **not** authorised here.
+* **It does not withdraw July's −24.02**, or any recorded arm result. It measures how much of the
+  fold spread one named column carries.
+* **It says nothing about whether HFF's labels are CORRECT age** — still open after arms C and D.
 
 ---
 
