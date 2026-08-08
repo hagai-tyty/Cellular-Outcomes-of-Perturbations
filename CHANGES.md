@@ -475,6 +475,80 @@ harmonizer facts only.
 ---
 
 
+## 2026-08-08 (later) - Step 2's bar is already measured to FAIL; the "both arms" ambiguity resolves itself
+
+**Status:** RECORDED, no run. **`src/` untouched, no build touched, no label moved.** Section 5.12
+added; step 2's table row flagged. 73 insertions / 1 deletion - the deletion is that row.
+
+Raised by the second machine, verified here against sections 0 and 3 before recording.
+
+### Both clauses of step 2's bar are already measured on skin & blood
+
+Step 2: "MAE <= 8 yr AND sign agreement >= 0.80 vs methylation, on BOTH arms, k fixed at 100."
+
+  MAE            bar <= 8      measured 8.79 at k=100   (section 0, ERROR 3)
+  sign agreement bar >= 0.80   measured 0.41-0.68       (section 3, "sometimes below chance")
+
+Section 3 forecloses the escape: "Horvath skin & blood does not come right at any k." At k=50 the
+MAE clause passes (6.69) while sign agreement still fails. Under REF_GROUND_RULES 5b a bar no
+correct system can clear is UNRESOLVABLE and must move BEFORE the run. Registering it as written
+would be the 5b violation this project has now caught four times - knowingly, against numbers
+already on the page.
+
+### The ambiguity resolves itself - one reading is impossible
+
+"Both arms" could mean the protocol arms (transient/Sendai) or the reference clocks (skin&blood/
+multi-tissue). **It cannot mean the protocol arms:** section 1.3 records that GSE165178 has no
+untreated control, so dAge CANNOT BE FORMED on the Sendai arm - it is scored on absolute age. A dAge
+bar "on both protocol arms" is impossible by construction, not merely unmet. Therefore "both arms"
+means both methylation clocks, and under that reading the bar fails on skin & blood by both clauses
+at every k.
+
+### Narrowing the estimand is not a free escape
+
+The obvious repair - restate the bar as multi-tissue only - is bigger than a bar edit, because
+section 3 already ruled: "This does not clear M-2a's SPLIT rule. A variant passing on one clock and
+not the other is still a SPLIT." Narrowing re-opens Stage 1.5.2's M-2a verdict, which is closed. So
+step 2's decision reaches OUT of this stage and cannot be granted inside it.
+
+### Step 2's real job, and three honest outcomes
+
+Not "write down a threshold" - a SCOPE decision. (1) Estimand stays BOTH clocks: the bar is right
+and the sparse clock already fails it, so steps 3/4/5 do not happen and section 1's finding is
+recorded as real but confined to multi-tissue dAge on the transient arm - which is what section 0's
+"what survives, precisely" table already says. (2) Estimand narrows to MULTI-TISSUE: defensible only
+if M-2a's SPLIT rule is explicitly amended in Stage 1.5.2 with its own justification; step 2 blocks
+on that. (3) Something else entirely (e.g. bias removal rather than agreement): must be stated and
+pre-registered before step 3. Recorded, not decided.
+
+### Consequence for the working order
+
+Steps 2 and 3 were listed as free and independent of 3b/3c. **Step 3 still is** - writing
+fleischer_clock_top100.json ships a new file and switches nothing. **Step 2 is not**: it carries a
+scope decision reaching into Stage 1.5.2, and its bar must not be registered in its current form.
+The order 3c -> 3b is unaffected; step 4 stays blocked on both.
+
+### Agreed from the same exchange, verified
+
+- C-7 (plans/CHANGE_C7_BULK_SAMPLE_INTEGRITY.md) written and NOT adopted until 3b/3c report. The
+  reasoning is right and worth restating: adopting it first drops donor N2, which deletes the fold
+  section 4.7's 16.67 yr spread is DEFINED OVER - it would remove the question rather than answer it.
+  Taking a separate change ID rather than a section number is also the right call after the 5.8
+  collision.
+- The GEO deposit is the source, not our read: same file GEO serves, gzip intact, 136 fields on all
+  35,806 lines so no column can shift, awk agrees with pandas. N2_Fib takes FOUR distinct strings
+  across 35,805 genes with 11.489547 covering 99.7%.
+- The SRA route (SRP302546) is a genuinely better option than dropping the donor - it restores N2's
+  zero-point at no cost in donors, folds, or guard re-reports. Their caveat is right and should stay
+  attached: one sample re-quantified through a different pipeline than the other 123 introduces a
+  batch term to CHECK, not assume.
+- Rejected gate candidate recorded so neither machine retries it: DISTINCT-VALUE COUNT does not
+  separate. The five flagged carry 2, 4, 5, 5 and 27 distinct values; the other 119 carry 22-693 -
+  N2_d21_CD13 (flagged, 27) overlaps sound O2_d40 (22). Library and dynamic range separate cleanly;
+  this does not.
+
+---
+
 ## 2026-08-08 (later) - Section 5.9's separation claim does not reproduce; Y1_Fib downgraded; numbering collision fixed
 
 **Status:** VERIFIED against the raw matrix. **`src/` untouched, no build touched, no label moved.**
