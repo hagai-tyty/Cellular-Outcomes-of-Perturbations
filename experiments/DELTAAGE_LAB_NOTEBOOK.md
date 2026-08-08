@@ -4014,3 +4014,75 @@ and those moves are not independent of gene identity. **T3 must be measured, not
 |---|---|
 | T3 (per-gene σ_gill) and the residue — the reconstruction | Stage 1.5.6 step 3b, §5.3 as corrected by §5.5 |
 | the deconfounder's fold-to-fold behaviour, unbounded since A2's downgrade | same; `diag_pipeline_decompose.py`'s S1→S4 machinery repointed at built shards per fold |
+
+---
+
+## ROOT CAUSE FOUND — a Gill control sample is DEGENERATE in the raw GEO matrix (2026-08-08)
+
+**Status:** ✅ RUN, read-only, raw GEO only. `src/` untouched, no build touched, no label moved.
+**Artefacts:** `experiments/diag_gill_control_integrity.py`,
+`results/diag_gill_control_integrity_results.json`. Full detail in
+`plans/STAGE_1_5_6_SPARSE_CLOCK.md` §5.7.
+
+**How it was found.** Verifying the second machine's §5.6 (T3 survives; fold ordering exact,
+Spearman +1.000). Both §5.5 and §5.6 computed statistics *over* `sigma_gill`. Neither asked whether
+the six control samples it is estimated from are sound.
+
+### `N2_Fib_Sendai_Exp2` is nearly a constant vector
+
+Raw Log2 RPM, before any transform: **min = median = mean = 11.490**, max 13.227 — a dynamic range
+of **1.74 log2 units** where every other control spans **13–15**, and a mean sitting **0.0008**
+above its own floor. Implied library after `2**x − 1`: **1.03e+08** against ~1.5e+06 for all five
+others (**68×**). Its log1p-CP10k profile has SD **0.011** against ~0.58. Rank agreement with the
+other five controls: **0.096** vs 0.50–0.69.
+
+**Six of 124 Gill columns are degenerate**; exactly one is a control (N2's). All 20 of N2's other
+samples are normal, so this is one bad sample, not a bad donor.
+
+### Why it reaches HFF
+
+The day-0 `_Fib_` sample is `is_control` (`sources.py:417`), so it is simultaneously (1) N2's entire
+ΔAge zero-point in **every** fold, and (2) one of the controls `sigma_gill` is fitted on, which sets
+the gain applied to **HFF's** labels in every fold that does not hold N2 out. A near-constant column
+inflates `sigma_gill`; removing it deflates it. **Exactly one fold removes it — N2's — and that is
+the fold reading −7.35 against the others' −22 to −24.**
+
+**So the fold that looked anomalous is the one whose harmonizer is clean.** Five folds agree with
+each other because they share a contaminant, including **O1 — July's −24.02 reference**. Agreement
+across folds is not corroboration when the folds share the defect.
+
+### Established vs not
+
+**Established (direct measurement, no inference):** the six degenerate columns; N2's control among
+them; its 0.096 rank agreement; N2's other 20 samples normal.
+
+**NOT established:** that it accounts for the whole 16.67 yr spread. Leave-one-out on `sigma_gill`
+moves the |w|-weighted mean −11.8 % dropping N2 but **−20.1 % dropping Y1**, and Y1 is normal — a
+scalar σ argument still fails on magnitude, as §5.6 also found. The reconstruction is still
+required; its question is now "does removing this column reproduce d/d_O1 = 0.306?"
+
+**Also open:** whether the defect is GEO's deposit or our read of it. Either way the pipeline
+consumes it as a control, and `apply_qc` did not stop it.
+
+### On the second machine's §5.6, which led here
+
+Verified independently: G0 passes **bit-exactly** (median rel err 6.1e-09, p90 5.6e-08, 5328/5328
+aligned) — that settles the artifact identity by reconstruction and validates the Gill side end to
+end. The ordering statistic is real and survives stripping the O1 anchor and N2 (n=4, ρ = +1.000,
+exact p = 0.042), though it hinges on the Y1/N3 pair, separated by 0.003 in observation.
+
+**One correction:** the containment interval cannot falsify. `d̂_f/d̂_O1 = Σ c_g ρ_g / Σ c_g` with
+`c_g = δ_g·r_g^(O1)·w_g`, and the clock's weights are near-balanced in sign (2648 +, 2589 −), so
+`c` is mixed-sign and the weighted average is **not** bounded by `[min ρ, max ρ]`. Their script says
+as much; the summary reads it as a passed test. T2's bound *was* valid — `d` is affine in one
+scalar — which is why T2 could be and was eliminated. **"T3 not eliminated" comes from a test that
+could not eliminate it.** The ordering is the real evidence.
+
+### Still open
+
+| item | owner |
+|---|---|
+| Does removing the degenerate control reproduce `d/d_O1 = 0.306`? | 1.5.6 step 3b, the reconstruction |
+| Is the defect GEO's or our read? | unassigned — new |
+| `apply_qc` does not check whether an `n = 1` control is SOUND | unassigned — new, gate gap |
+| 5 further degenerate Gill treatment samples | unassigned — new |

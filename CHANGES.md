@@ -251,6 +251,68 @@ harmonizer facts only.
 ---
 
 
+## 2026-08-08 (later) - ROOT CAUSE: a Gill CONTROL sample is degenerate in the raw GEO matrix
+
+**Status:** RUN, read-only, raw GEO only. **`src/` untouched, no build touched, no label moved.**
+Added `experiments/diag_gill_control_integrity.py` + results JSON; section 5.7 added to
+STAGE_1_5_6_SPARSE_CLOCK.md (5.3/5.5/5.6 all untouched).
+
+Found while verifying the second machine's 5.6. Sections 5.5 and 5.6 both computed statistics OVER
+sigma_gill; neither asked whether the six control samples it is fitted on are sound.
+
+### N2_Fib_Sendai_Exp2 is nearly a constant vector
+
+Raw Log2 RPM before any transform: min = median = mean = 11.490, max 13.227. Dynamic range **1.74
+log2 units** where every other control spans 13-15, and a mean sitting 0.0008 above its own floor -
+which real RNA-seq cannot do. Implied library after 2**x - 1: **1.03e+08** vs ~1.5e+06 for all five
+others (68x). log1p-CP10k profile SD 0.011 vs ~0.58. Rank agreement with the other five controls
+**0.096** vs 0.50-0.69.
+
+Six of 124 Gill columns are degenerate; exactly one is a control (N2's). All 20 of N2's other
+samples are normal - one bad sample, not a bad donor. The other five are treatment samples
+(N2_d21_CD13, N3_d21_SSEA4, O2_d40_SSEA4, O2_d9_SSEA4, Y1_d7_CD13; Y1_d7_CD13's range is 0.152).
+
+### Why it does not stay in its own donor
+
+The day-0 _Fib_ sample is is_control (sources.py:417), so it is BOTH N2's entire dAge zero-point in
+every fold AND one of the controls sigma_gill is fitted on - and sigma_gill/sigma_hff is the gain
+applied to HFF's labels, 99.7% of the corpus, in every fold that does not hold N2 out. A
+near-constant column inflates sigma_gill; removing it deflates it. Exactly one fold removes it -
+N2's - and that is the fold reading -7.35 against the others' -22 to -24.
+
+**The fold that looked anomalous is the one whose harmonizer is clean.** The five agreeing folds
+agree because they share a contaminant, including O1 - July's -24.02 reference. Agreement across
+folds is not corroboration when the folds share the defect.
+
+### Established vs not
+
+Established by direct measurement: the six degenerate columns, N2's control among them, its 0.096
+rank agreement, N2's other 20 samples normal. NOT established: that it accounts for the whole
+16.67 yr spread - leave-one-out on sigma_gill moves the |w|-weighted mean -11.8% dropping N2 but
+-20.1% dropping Y1, and Y1 is normal. The reconstruction is still required. Also open: whether the
+defect is GEO's deposit or our read of it.
+
+### Gate gap
+
+apply_qc runs on every fetched chunk and this column passed it. Stage 1.5's G-a made n=1 controls
+VISIBLE; nothing checks whether that n=1 is SOUND.
+
+### On 5.6, verified independently
+
+G0 passes BIT-EXACTLY (median rel err 6.1e-09, p90 5.6e-08, 5328/5328 aligned) - settles the
+artifact identity by reconstruction and validates the Gill side end to end. The ordering statistic
+survives stripping the O1 anchor and N2 (n=4, rho +1.000, exact p 0.042), though it hinges on the
+Y1/N3 pair separated by 0.003 in observation. ONE CORRECTION: the containment interval cannot
+falsify - d_hat_f/d_hat_O1 is a c_g-weighted average with c_g = delta*r*w, and the clock's weights
+are near-balanced in sign (2648 +, 2589 -), so the average is NOT bounded by [min rho, max rho].
+Their script says so; the summary reads it as a passed test. T2's bound WAS valid (d affine in one
+scalar), which is why T2 could be and was eliminated. "T3 not eliminated" comes from a test that
+could not eliminate it. The ordering is the real evidence.
+
+Nothing is withdrawn on the strength of this entry. It names a defect and its reach.
+
+---
+
 ## 2026-08-08 - Precheck RUN: the variance floor is NOT the carrier (section 5.5)
 
 **Status:** RUN. **`src/` untouched, no build touched, read-only.** Added

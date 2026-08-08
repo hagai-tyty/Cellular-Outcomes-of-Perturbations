@@ -1,0 +1,1268 @@
+{
+  "script": "diag_gill_control_integrity",
+  "source": "GSE165176_Log2_RPM_Sendai_reprogramming (1).txt.gz",
+  "n_columns": 124,
+  "thresholds": {
+    "flat_mean_minus_min": 0.05,
+    "narrow_range": 4.0
+  },
+  "degenerate_columns": [
+    "N2_d21_CD13_Sendai_Exp2",
+    "N2_Fib_Sendai_Exp2",
+    "N3_d21_SSEA4_Sendai_Exp2",
+    "O2_d40_SSEA4_Sendai_Exp2",
+    "O2_d9_SSEA4_Sendai_Exp1",
+    "Y1_d7_CD13_Sendai_Exp1"
+  ],
+  "degenerate_includes_a_control": true,
+  "per_column": {
+    "N2_d11_CD13_Sendai_Exp1": {
+      "min": 3.7120996,
+      "median": 3.7120996,
+      "mean": 4.3043445159056,
+      "max": 15.072947,
+      "log2_range": 11.360847399999999,
+      "mean_minus_min": 0.5922449159056002,
+      "implied_library_size": 1882872.5664217786,
+      "is_control": false
+    },
+    "N2_d11_CD13_Sendai_Exp2": {
+      "min": 6.392423,
+      "median": 6.392423,
+      "mean": 6.488931634319229,
+      "max": 15.411705,
+      "log2_range": 9.019282,
+      "mean_minus_min": 0.09650863431922918,
+      "implied_library_size": 3879917.702788566,
+      "is_control": false
+    },
+    "N2_d11_SSEA4_Sendai_Exp1": {
+      "min": 1.2171012,
+      "median": 1.2171012,
+      "mean": 2.7966426633486945,
+      "max": 13.577338,
+      "log2_range": 12.3602368,
+      "mean_minus_min": 1.5795414633486944,
+      "implied_library_size": 1635016.3435473857,
+      "is_control": false
+    },
+    "N2_d11_SSEA4_Sendai_Exp2": {
+      "min": 1.0224246,
+      "median": 1.0224246,
+      "mean": 2.5344435550844855,
+      "max": 13.402645,
+      "log2_range": 12.380220399999999,
+      "mean_minus_min": 1.5120189550844856,
+      "implied_library_size": 1280044.2052250379,
+      "is_control": false
+    },
+    "N2_d13_CD13_Sendai_Exp1": {
+      "min": 0.9094612,
+      "median": 0.9094612,
+      "mean": 2.484076451962016,
+      "max": 14.576056,
+      "log2_range": 13.666594799999999,
+      "mean_minus_min": 1.5746152519620162,
+      "implied_library_size": 1551139.4601382595,
+      "is_control": false
+    },
+    "N2_d13_SSEA4_Sendai_Exp1": {
+      "min": 0.79628664,
+      "median": 0.79628664,
+      "mean": 2.5315326315324675,
+      "max": 13.142123,
+      "log2_range": 12.34583636,
+      "mean_minus_min": 1.7352459915324676,
+      "implied_library_size": 1528959.5112292047,
+      "is_control": false
+    },
+    "N2_d15_CD13_Sendai_Exp1": {
+      "min": 3.3963082,
+      "median": 3.3963082,
+      "mean": 4.084231181234465,
+      "max": 15.446535,
+      "log2_range": 12.0502268,
+      "mean_minus_min": 0.6879229812344647,
+      "implied_library_size": 1891767.7138818586,
+      "is_control": false
+    },
+    "N2_d15_SSEA4_Sendai_Exp1": {
+      "min": 1.2789316,
+      "median": 1.2789316,
+      "mean": 2.8775744731853092,
+      "max": 13.745801,
+      "log2_range": 12.4668694,
+      "mean_minus_min": 1.5986428731853093,
+      "implied_library_size": 1653787.7373746606,
+      "is_control": false
+    },
+    "N2_d21_CD13_Sendai_Exp2": {
+      "min": 8.841825,
+      "median": 8.841825,
+      "mean": 8.856062391481636,
+      "max": 16.102352,
+      "log2_range": 7.260527,
+      "mean_minus_min": 0.014237391481636053,
+      "implied_library_size": 16943968.211324632,
+      "is_control": false
+    },
+    "N2_d21_SSEA4_Sendai_Exp2": {
+      "min": 3.6300068,
+      "median": 3.6300068,
+      "mean": 4.249254948473677,
+      "max": 13.822299,
+      "log2_range": 10.192292199999999,
+      "mean_minus_min": 0.6192481484736772,
+      "implied_library_size": 1687629.3605205195,
+      "is_control": false
+    },
+    "N2_d29_CD13_Sendai_Exp2": {
+      "min": 1.4463184,
+      "median": 1.4463184,
+      "mean": 2.7254094992682583,
+      "max": 15.18387,
+      "log2_range": 13.7375516,
+      "mean_minus_min": 1.2790910992682583,
+      "implied_library_size": 1456457.4254193965,
+      "is_control": false
+    },
+    "N2_d29_SSEA4_Sendai_Exp2": {
+      "min": 1.7061954,
+      "median": 1.7061954,
+      "mean": 2.942873936022902,
+      "max": 13.640787,
+      "log2_range": 11.9345916,
+      "mean_minus_min": 1.236678536022902,
+      "implied_library_size": 1396158.5241195706,
+      "is_control": false
+    },
+    "N2_d34_SSEA4_Sendai_Exp2": {
+      "min": 1.7296078,
+      "median": 1.7296078,
+      "mean": 3.040173294389052,
+      "max": 13.9930725,
+      "log2_range": 12.2634647,
+      "mean_minus_min": 1.3105654943890521,
+      "implied_library_size": 1496116.6335722888,
+      "is_control": false
+    },
+    "N2_d40_SSEA4_Sendai_Exp2": {
+      "min": 1.7599882,
+      "median": 1.7599882,
+      "mean": 2.981950907459852,
+      "max": 14.185495,
+      "log2_range": 12.425506799999999,
+      "mean_minus_min": 1.221962707459852,
+      "implied_library_size": 1439559.2666213727,
+      "is_control": false
+    },
+    "N2_d47_SSEA4_Sendai_Exp2": {
+      "min": 2.5793326,
+      "median": 2.5793326,
+      "mean": 3.4848204236587073,
+      "max": 14.551115,
+      "log2_range": 11.971782399999999,
+      "mean_minus_min": 0.9054878236587074,
+      "implied_library_size": 1788979.3275286402,
+      "is_control": false
+    },
+    "N2_d54_SSEA4_Sendai_Exp2": {
+      "min": 2.5789971,
+      "median": 2.5789971,
+      "mean": 3.464157876313364,
+      "max": 14.648372,
+      "log2_range": 12.0693749,
+      "mean_minus_min": 0.8851607763133638,
+      "implied_library_size": 1605380.9922933646,
+      "is_control": false
+    },
+    "N2_d7_CD13_Sendai_Exp1": {
+      "min": 2.3698306,
+      "median": 2.3698306,
+      "mean": 3.414600775243681,
+      "max": 14.3567,
+      "log2_range": 11.9868694,
+      "mean_minus_min": 1.044770175243681,
+      "implied_library_size": 1717446.6185687564,
+      "is_control": false
+    },
+    "N2_d7_SSEA4_Sendai_Exp1": {
+      "min": 1.166499,
+      "median": 1.166499,
+      "mean": 2.7387532279737465,
+      "max": 13.312148,
+      "log2_range": 12.145649,
+      "mean_minus_min": 1.5722542279737466,
+      "implied_library_size": 1636124.8072523256,
+      "is_control": false
+    },
+    "N2_d9_CD13_Sendai_Exp1": {
+      "min": 0.73427105,
+      "median": 0.73427105,
+      "mean": 2.3834053918447142,
+      "max": 14.640118,
+      "log2_range": 13.905846949999999,
+      "mean_minus_min": 1.6491343418447142,
+      "implied_library_size": 1484241.8852515928,
+      "is_control": false
+    },
+    "N2_d9_SSEA4_Sendai_Exp1": {
+      "min": 0.8451101,
+      "median": 0.8451101,
+      "mean": 2.356801005411814,
+      "max": 12.963259,
+      "log2_range": 12.118148900000001,
+      "mean_minus_min": 1.5116909054118142,
+      "implied_library_size": 1363422.9889999107,
+      "is_control": false
+    },
+    "N2_Fib_Sendai_Exp2": {
+      "min": 11.489547,
+      "median": 11.489547,
+      "mean": 11.490302908616115,
+      "max": 13.226513,
+      "log2_range": 1.7369660000000007,
+      "mean_minus_min": 0.0007559086161155193,
+      "implied_library_size": 102986585.69151007,
+      "is_control": true
+    },
+    "N3_d11_CD13_Sendai_Exp1": {
+      "min": 3.9130592,
+      "median": 3.9130592,
+      "mean": 4.456414498748778,
+      "max": 13.874026,
+      "log2_range": 9.960966800000001,
+      "mean_minus_min": 0.5433552987487777,
+      "implied_library_size": 1780278.5901846616,
+      "is_control": false
+    },
+    "N3_d11_CD13_Sendai_Exp2": {
+      "min": 0.7332567,
+      "median": 0.7332567,
+      "mean": 2.026371263950565,
+      "max": 14.677033,
+      "log2_range": 13.9437763,
+      "mean_minus_min": 1.293114563950565,
+      "implied_library_size": 1407033.59147618,
+      "is_control": false
+    },
+    "N3_d11_SSEA4_Sendai_Exp1": {
+      "min": 2.9466815,
+      "median": 2.9466815,
+      "mean": 3.763269499053205,
+      "max": 13.16073,
+      "log2_range": 10.214048499999999,
+      "mean_minus_min": 0.8165879990532052,
+      "implied_library_size": 1558271.2195700672,
+      "is_control": false
+    },
+    "N3_d11_SSEA4_Sendai_Exp2": {
+      "min": 2.669582,
+      "median": 2.669582,
+      "mean": 2.966307972587627,
+      "max": 12.578141,
+      "log2_range": 9.908559,
+      "mean_minus_min": 0.2967259725876268,
+      "implied_library_size": 846636.1112064039,
+      "is_control": false
+    },
+    "N3_d13_CD13_Sendai_Exp1": {
+      "min": 0.4455475,
+      "median": 0.4455475,
+      "mean": 2.2702504608741796,
+      "max": 14.34207,
+      "log2_range": 13.8965225,
+      "mean_minus_min": 1.8247029608741796,
+      "implied_library_size": 1597537.8322433364,
+      "is_control": false
+    },
+    "N3_d13_SSEA4_Sendai_Exp1": {
+      "min": 0.6225554,
+      "median": 0.6225554,
+      "mean": 2.4879090364725593,
+      "max": 13.838121,
+      "log2_range": 13.2155656,
+      "mean_minus_min": 1.8653536364725594,
+      "implied_library_size": 1539648.7896921248,
+      "is_control": false
+    },
+    "N3_d15_CD13_Sendai_Exp1": {
+      "min": 1.0174332,
+      "median": 1.0174332,
+      "mean": 2.5843799978690125,
+      "max": 14.58808,
+      "log2_range": 13.5706468,
+      "mean_minus_min": 1.5669467978690126,
+      "implied_library_size": 1643219.458797592,
+      "is_control": false
+    },
+    "N3_d15_SSEA4_Sendai_Exp1": {
+      "min": 1.0943633,
+      "median": 1.0943633,
+      "mean": 2.73827895198436,
+      "max": 13.49073,
+      "log2_range": 12.3963667,
+      "mean_minus_min": 1.64391565198436,
+      "implied_library_size": 1605755.0470379451,
+      "is_control": false
+    },
+    "N3_d21_CD13_Sendai_Exp2": {
+      "min": 2.3166158,
+      "median": 2.3166158,
+      "mean": 3.274416107202905,
+      "max": 15.762235,
+      "log2_range": 13.4456192,
+      "mean_minus_min": 0.9578003072029051,
+      "implied_library_size": 1567032.2995304577,
+      "is_control": false
+    },
+    "N3_d21_SSEA4_Sendai_Exp2": {
+      "min": 12.697415,
+      "median": 12.697415,
+      "mean": 12.697804977726575,
+      "max": 15.171348,
+      "log2_range": 2.4739330000000006,
+      "mean_minus_min": 0.00038997772657545227,
+      "implied_library_size": 237881302.16018274,
+      "is_control": false
+    },
+    "N3_d29_CD13_Sendai_Exp2": {
+      "min": 0.47045445,
+      "median": 0.47045445,
+      "mean": 2.232478098283759,
+      "max": 15.453864,
+      "log2_range": 14.98340955,
+      "mean_minus_min": 1.7620236482837588,
+      "implied_library_size": 1533374.4152574919,
+      "is_control": false
+    },
+    "N3_d29_SSEA4_Sendai_Exp2": {
+      "min": 1.7225652,
+      "median": 1.7225652,
+      "mean": 2.9642876348135734,
+      "max": 14.092526,
+      "log2_range": 12.3699608,
+      "mean_minus_min": 1.2417224348135734,
+      "implied_library_size": 1399629.832547231,
+      "is_control": false
+    },
+    "N3_d34_SSEA4_Sendai_Exp2": {
+      "min": 1.285577,
+      "median": 1.285577,
+      "mean": 2.75318816588186,
+      "max": 13.975042,
+      "log2_range": 12.689465,
+      "mean_minus_min": 1.46761116588186,
+      "implied_library_size": 1523781.7114918907,
+      "is_control": false
+    },
+    "N3_d40_SSEA4_Sendai_Exp2": {
+      "min": 1.0183389,
+      "median": 1.0183389,
+      "mean": 2.6019554671107388,
+      "max": 14.07083,
+      "log2_range": 13.052491100000001,
+      "mean_minus_min": 1.5836165671107387,
+      "implied_library_size": 1556015.6306892722,
+      "is_control": false
+    },
+    "N3_d47_SSEA4_Sendai_Exp2": {
+      "min": 1.8495817,
+      "median": 1.8495817,
+      "mean": 3.0179094144588747,
+      "max": 14.672905,
+      "log2_range": 12.8233233,
+      "mean_minus_min": 1.1683277144588746,
+      "implied_library_size": 1825228.7591517149,
+      "is_control": false
+    },
+    "N3_d54_SSEA4_Sendai_Exp2": {
+      "min": 1.9590435,
+      "median": 1.9590435,
+      "mean": 3.1111185372182657,
+      "max": 14.741314,
+      "log2_range": 12.7822705,
+      "mean_minus_min": 1.1520750372182658,
+      "implied_library_size": 1478723.2432718445,
+      "is_control": false
+    },
+    "N3_d7_CD13_Sendai_Exp1": {
+      "min": 1.4365597,
+      "median": 1.4365597,
+      "mean": 2.7209175936293812,
+      "max": 14.118481,
+      "log2_range": 12.681921299999999,
+      "mean_minus_min": 1.2843578936293811,
+      "implied_library_size": 1484773.86837458,
+      "is_control": false
+    },
+    "N3_d7_SSEA4_Sendai_Exp1": {
+      "min": 0.9195227,
+      "median": 0.9195227,
+      "mean": 2.567908153601453,
+      "max": 13.405799,
+      "log2_range": 12.4862763,
+      "mean_minus_min": 1.648385453601453,
+      "implied_library_size": 1586611.17997827,
+      "is_control": false
+    },
+    "N3_d9_CD13_Sendai_Exp1": {
+      "min": 0.71852785,
+      "median": 0.71852785,
+      "mean": 2.429477405491412,
+      "max": 14.333417,
+      "log2_range": 13.614889150000002,
+      "mean_minus_min": 1.7109495554914118,
+      "implied_library_size": 1611267.6329251854,
+      "is_control": false
+    },
+    "N3_d9_SSEA4_Sendai_Exp1": {
+      "min": 0.6173217,
+      "median": 0.6173217,
+      "mean": 2.449013783044267,
+      "max": 13.497458,
+      "log2_range": 12.8801363,
+      "mean_minus_min": 1.8316920830442671,
+      "implied_library_size": 1579732.1666501567,
+      "is_control": false
+    },
+    "N3_Fib_Sendai_Exp2": {
+      "min": 0.7601702,
+      "median": 0.7601702,
+      "mean": 2.3229887096439046,
+      "max": 15.221436,
+      "log2_range": 14.461265800000001,
+      "mean_minus_min": 1.5628185096439045,
+      "implied_library_size": 1521543.3709513634,
+      "is_control": true
+    },
+    "O1_d11_CD13_Sendai_Exp1": {
+      "min": 1.3220543,
+      "median": 1.3220543,
+      "mean": 2.625018034805195,
+      "max": 14.418587,
+      "log2_range": 13.096532700000001,
+      "mean_minus_min": 1.302963734805195,
+      "implied_library_size": 1456727.241166259,
+      "is_control": false
+    },
+    "O1_d11_CD13_Sendai_Exp2": {
+      "min": 6.3490477,
+      "median": 6.3490477,
+      "mean": 6.452432366954336,
+      "max": 15.34654,
+      "log2_range": 8.9974923,
+      "mean_minus_min": 0.10338466695433635,
+      "implied_library_size": 3809365.401593971,
+      "is_control": false
+    },
+    "O1_d11_SSEA4_Sendai_Exp1": {
+      "min": 1.0378598,
+      "median": 1.0378598,
+      "mean": 2.5327929993324956,
+      "max": 13.5146055,
+      "log2_range": 12.4767457,
+      "mean_minus_min": 1.4949331993324955,
+      "implied_library_size": 1473774.5324589643,
+      "is_control": false
+    },
+    "O1_d11_SSEA4_Sendai_Exp2": {
+      "min": 1.1732794,
+      "median": 1.1732794,
+      "mean": 2.601416019927384,
+      "max": 14.030914,
+      "log2_range": 12.857634599999999,
+      "mean_minus_min": 1.4281366199273842,
+      "implied_library_size": 1388278.5745726177,
+      "is_control": false
+    },
+    "O1_d13_CD13_Sendai_Exp1": {
+      "min": 3.5782263,
+      "median": 3.5782263,
+      "mean": 4.19374140810222,
+      "max": 15.527081,
+      "log2_range": 11.948854700000002,
+      "mean_minus_min": 0.6155151081022199,
+      "implied_library_size": 1960847.9502052497,
+      "is_control": false
+    },
+    "O1_d13_SSEA4_Sendai_Exp1": {
+      "min": 1.3167696,
+      "median": 1.3167696,
+      "mean": 2.791883031615696,
+      "max": 12.973591,
+      "log2_range": 11.6568214,
+      "mean_minus_min": 1.4751134316156962,
+      "implied_library_size": 1479319.218455151,
+      "is_control": false
+    },
+    "O1_d15_CD13_Sendai_Exp1": {
+      "min": 0.7999017,
+      "median": 0.7999017,
+      "mean": 2.4710874081888,
+      "max": 15.4461975,
+      "log2_range": 14.6462958,
+      "mean_minus_min": 1.6711857081888,
+      "implied_library_size": 1687065.2572228462,
+      "is_control": false
+    },
+    "O1_d15_SSEA4_Sendai_Exp1": {
+      "min": 1.0832957,
+      "median": 1.0832957,
+      "mean": 2.6587393166876137,
+      "max": 13.057073,
+      "log2_range": 11.9737773,
+      "mean_minus_min": 1.5754436166876136,
+      "implied_library_size": 1598093.1611556695,
+      "is_control": false
+    },
+    "O1_d21_CD13_Sendai_Exp2": {
+      "min": 2.145318,
+      "median": 2.145318,
+      "mean": 3.172913919220779,
+      "max": 16.18806,
+      "log2_range": 14.042742,
+      "mean_minus_min": 1.0275959192207789,
+      "implied_library_size": 1651905.0682829483,
+      "is_control": false
+    },
+    "O1_d21_SSEA4_Sendai_Exp2": {
+      "min": 1.9851273,
+      "median": 1.9851273,
+      "mean": 3.156824396120653,
+      "max": 13.443192,
+      "log2_range": 11.4580647,
+      "mean_minus_min": 1.171697096120653,
+      "implied_library_size": 1420380.6771198555,
+      "is_control": false
+    },
+    "O1_d29_CD13_Sendai_Exp2": {
+      "min": 1.6257563,
+      "median": 1.6257563,
+      "mean": 2.900311116383186,
+      "max": 16.237894,
+      "log2_range": 14.612137700000002,
+      "mean_minus_min": 1.2745548163831861,
+      "implied_library_size": 1653142.4572688916,
+      "is_control": false
+    },
+    "O1_d29_SSEA4_Sendai_Exp2": {
+      "min": 1.7173136,
+      "median": 1.7173136,
+      "mean": 2.97158592856305,
+      "max": 13.785196,
+      "log2_range": 12.067882399999998,
+      "mean_minus_min": 1.2542723285630502,
+      "implied_library_size": 1391848.265177364,
+      "is_control": false
+    },
+    "O1_d34_SSEA4_Sendai_Exp2": {
+      "min": 2.9225566,
+      "median": 2.9225566,
+      "mean": 3.0127231059600614,
+      "max": 12.7111845,
+      "log2_range": 9.7886279,
+      "mean_minus_min": 0.09016650596006137,
+      "implied_library_size": 311598.65271588106,
+      "is_control": false
+    },
+    "O1_d40_SSEA4_Sendai_Exp2": {
+      "min": 1.2472457,
+      "median": 1.2472457,
+      "mean": 2.6947702283228603,
+      "max": 14.476732,
+      "log2_range": 13.2294863,
+      "mean_minus_min": 1.4475245283228604,
+      "implied_library_size": 1557257.5332072228,
+      "is_control": false
+    },
+    "O1_d47_SSEA4_Sendai_Exp2": {
+      "min": 1.719714,
+      "median": 1.719714,
+      "mean": 2.972617827336964,
+      "max": 14.151619,
+      "log2_range": 12.431905,
+      "mean_minus_min": 1.252903827336964,
+      "implied_library_size": 1423210.3613432152,
+      "is_control": false
+    },
+    "O1_d54_SSEA4_Sendai_Exp2": {
+      "min": 1.3822125,
+      "median": 1.3822125,
+      "mean": 2.7225292982516405,
+      "max": 14.201772,
+      "log2_range": 12.8195595,
+      "mean_minus_min": 1.3403167982516404,
+      "implied_library_size": 1272959.5215440656,
+      "is_control": false
+    },
+    "O1_d7_CD13_Sendai_Exp1": {
+      "min": 1.5503076,
+      "median": 1.5503076,
+      "mean": 2.9316305843485546,
+      "max": 14.240015,
+      "log2_range": 12.6897074,
+      "mean_minus_min": 1.3813229843485546,
+      "implied_library_size": 1737870.2910109137,
+      "is_control": false
+    },
+    "O1_d7_SSEA4_Sendai_Exp1": {
+      "min": 1.5413287,
+      "median": 1.5413287,
+      "mean": 2.896251175324675,
+      "max": 13.697201,
+      "log2_range": 12.1558723,
+      "mean_minus_min": 1.3549224753246751,
+      "implied_library_size": 1616035.41073503,
+      "is_control": false
+    },
+    "O1_d9_CD13_Sendai_Exp1": {
+      "min": 4.215595,
+      "median": 4.215595,
+      "mean": 4.660582383284458,
+      "max": 14.347738,
+      "log2_range": 10.132143,
+      "mean_minus_min": 0.44498738328445775,
+      "implied_library_size": 1801105.2616082917,
+      "is_control": false
+    },
+    "O1_d9_SSEA4_Sendai_Exp1": {
+      "min": 0.8424676,
+      "median": 0.8424676,
+      "mean": 2.5021164927323,
+      "max": 14.259938,
+      "log2_range": 13.4174704,
+      "mean_minus_min": 1.6596488927322999,
+      "implied_library_size": 1567648.3467250236,
+      "is_control": false
+    },
+    "O1_Fib_Sendai_Exp2": {
+      "min": 2.2177517,
+      "median": 2.2177517,
+      "mean": 3.1816408234715823,
+      "max": 15.313368,
+      "log2_range": 13.0956163,
+      "mean_minus_min": 0.9638891234715823,
+      "implied_library_size": 1660239.716881825,
+      "is_control": true
+    },
+    "O2_d11_CD13_Sendai_Exp1": {
+      "min": 0.893074,
+      "median": 0.893074,
+      "mean": 2.5488737636978076,
+      "max": 14.83807,
+      "log2_range": 13.944996,
+      "mean_minus_min": 1.6557997636978077,
+      "implied_library_size": 1604961.5369654002,
+      "is_control": false
+    },
+    "O2_d11_CD13_Sendai_Exp2": {
+      "min": 1.1229712,
+      "median": 1.1229712,
+      "mean": 2.599454364935065,
+      "max": 15.242291,
+      "log2_range": 14.1193198,
+      "mean_minus_min": 1.476483164935065,
+      "implied_library_size": 1485278.3189016897,
+      "is_control": false
+    },
+    "O2_d11_SSEA4_Sendai_Exp1": {
+      "min": 0.94723934,
+      "median": 0.94723934,
+      "mean": 2.5462236377623237,
+      "max": 13.446311,
+      "log2_range": 12.49907166,
+      "mean_minus_min": 1.5989842977623239,
+      "implied_library_size": 1515593.9284452791,
+      "is_control": false
+    },
+    "O2_d11_SSEA4_Sendai_Exp2": {
+      "min": 1.0874813,
+      "median": 1.0874813,
+      "mean": 2.4145806904203324,
+      "max": 14.107729,
+      "log2_range": 13.0202477,
+      "mean_minus_min": 1.3270993904203323,
+      "implied_library_size": 1296124.757023972,
+      "is_control": false
+    },
+    "O2_d13_CD13_Sendai_Exp1": {
+      "min": 0.75148,
+      "median": 0.75148,
+      "mean": 2.3215380856751855,
+      "max": 14.609871,
+      "log2_range": 13.858391,
+      "mean_minus_min": 1.5700580856751856,
+      "implied_library_size": 1440687.996065796,
+      "is_control": false
+    },
+    "O2_d13_SSEA4_Sendai_Exp1": {
+      "min": 0.92143875,
+      "median": 0.92143875,
+      "mean": 2.590447622468929,
+      "max": 13.181967,
+      "log2_range": 12.26052825,
+      "mean_minus_min": 1.669008872468929,
+      "implied_library_size": 1514753.9355720854,
+      "is_control": false
+    },
+    "O2_d15_CD13_Sendai_Exp1": {
+      "min": 0.64074,
+      "median": 0.64074,
+      "mean": 2.3618713562100266,
+      "max": 14.956236,
+      "log2_range": 14.315496000000001,
+      "mean_minus_min": 1.7211313562100266,
+      "implied_library_size": 1647288.0752368192,
+      "is_control": false
+    },
+    "O2_d15_SSEA4_Sendai_Exp1": {
+      "min": 0.80305725,
+      "median": 0.80305725,
+      "mean": 2.560085028140204,
+      "max": 13.255985,
+      "log2_range": 12.45292775,
+      "mean_minus_min": 1.757027778140204,
+      "implied_library_size": 1552167.0354698903,
+      "is_control": false
+    },
+    "O2_d21_CD13_Sendai_Exp2": {
+      "min": 0.96222574,
+      "median": 0.96222574,
+      "mean": 2.4942781601374113,
+      "max": 15.889685,
+      "log2_range": 14.92745926,
+      "mean_minus_min": 1.5320524201374113,
+      "implied_library_size": 1509140.882376567,
+      "is_control": false
+    },
+    "O2_d21_SSEA4_Sendai_Exp2": {
+      "min": 0.84874725,
+      "median": 0.84874725,
+      "mean": 2.499745002664432,
+      "max": 13.423078,
+      "log2_range": 12.57433075,
+      "mean_minus_min": 1.6509977526644322,
+      "implied_library_size": 1423372.1407239726,
+      "is_control": false
+    },
+    "O2_d29_CD13_Sendai_Exp2": {
+      "min": 0.851381,
+      "median": 0.851381,
+      "mean": 2.427350354341572,
+      "max": 16.111828,
+      "log2_range": 15.260447,
+      "mean_minus_min": 1.5759693543415723,
+      "implied_library_size": 1575168.0995580384,
+      "is_control": false
+    },
+    "O2_d29_SSEA4_Sendai_Exp2": {
+      "min": 1.2567099,
+      "median": 1.2567099,
+      "mean": 2.7652307302052783,
+      "max": 13.197839,
+      "log2_range": 11.9411291,
+      "mean_minus_min": 1.5085208302052784,
+      "implied_library_size": 1493050.201924663,
+      "is_control": false
+    },
+    "O2_d34_SSEA4_Sendai_Exp2": {
+      "min": 2.8581893,
+      "median": 2.8581893,
+      "mean": 2.9380960112302748,
+      "max": 12.543522,
+      "log2_range": 9.6853327,
+      "mean_minus_min": 0.07990671123027493,
+      "implied_library_size": 285918.3258317702,
+      "is_control": false
+    },
+    "O2_d40_SSEA4_Sendai_Exp2": {
+      "min": 3.9270725,
+      "median": 3.9270725,
+      "mean": 3.9524795993715967,
+      "max": 13.062069,
+      "log2_range": 9.1349965,
+      "mean_minus_min": 0.025407099371596686,
+      "implied_library_size": 575855.291269297,
+      "is_control": false
+    },
+    "O2_d47_SSEA4_Sendai_Exp2": {
+      "min": 1.0002196,
+      "median": 1.0002196,
+      "mean": 2.5696909001619885,
+      "max": 14.462126,
+      "log2_range": 13.4619064,
+      "mean_minus_min": 1.5694713001619884,
+      "implied_library_size": 1433369.6991702039,
+      "is_control": false
+    },
+    "O2_d54_SSEA4_Sendai_Exp2": {
+      "min": 1.9519435,
+      "median": 1.9519435,
+      "mean": 2.999904823569334,
+      "max": 14.645528,
+      "log2_range": 12.6935845,
+      "mean_minus_min": 1.047961323569334,
+      "implied_library_size": 1621996.6593419665,
+      "is_control": false
+    },
+    "O2_d7_CD13_Sendai_Exp1": {
+      "min": 1.892211,
+      "median": 1.892211,
+      "mean": 3.1186579485937718,
+      "max": 14.24695,
+      "log2_range": 12.354739,
+      "mean_minus_min": 1.2264469485937717,
+      "implied_library_size": 1737367.2962952987,
+      "is_control": false
+    },
+    "O2_d7_SSEA4_Sendai_Exp1": {
+      "min": 1.4574656,
+      "median": 1.4574656,
+      "mean": 2.8892053003882134,
+      "max": 13.743574,
+      "log2_range": 12.2861084,
+      "mean_minus_min": 1.4317397003882135,
+      "implied_library_size": 1658829.0160043552,
+      "is_control": false
+    },
+    "O2_d9_CD13_Sendai_Exp1": {
+      "min": 1.0254755,
+      "median": 1.0254755,
+      "mean": 2.595384782558302,
+      "max": 13.731109,
+      "log2_range": 12.7056335,
+      "mean_minus_min": 1.5699092825583019,
+      "implied_library_size": 1517137.4642749315,
+      "is_control": false
+    },
+    "O2_d9_SSEA4_Sendai_Exp1": {
+      "min": 12.150208,
+      "median": 12.150208,
+      "mean": 12.15073156307778,
+      "max": 14.302212,
+      "log2_range": 2.1520040000000016,
+      "mean_minus_min": 0.0005235630777811195,
+      "implied_library_size": 162801472.3674132,
+      "is_control": false
+    },
+    "O2_Fib_Sendai_Exp2": {
+      "min": 1.0521485,
+      "median": 1.0521485,
+      "mean": 2.4676837600977515,
+      "max": 14.340342,
+      "log2_range": 13.2881935,
+      "mean_minus_min": 1.4155352600977515,
+      "implied_library_size": 1509996.866949351,
+      "is_control": true
+    },
+    "Y1_d11_CD13_Sendai_Exp1": {
+      "min": 4.8521113,
+      "median": 4.8521113,
+      "mean": 5.158963626672253,
+      "max": 14.676539,
+      "log2_range": 9.824427700000001,
+      "mean_minus_min": 0.30685232667225293,
+      "implied_library_size": 2287310.269305258,
+      "is_control": false
+    },
+    "Y1_d11_CD13_Sendai_Exp2": {
+      "min": 1.7218434,
+      "median": 1.7218434,
+      "mean": 2.91415151860634,
+      "max": 15.326216,
+      "log2_range": 13.604372600000001,
+      "mean_minus_min": 1.19230811860634,
+      "implied_library_size": 1481544.380503288,
+      "is_control": false
+    },
+    "Y1_d11_SSEA4_Sendai_Exp1": {
+      "min": 1.7329638,
+      "median": 1.7329638,
+      "mean": 3.061535543474375,
+      "max": 13.499217,
+      "log2_range": 11.7662532,
+      "mean_minus_min": 1.328571743474375,
+      "implied_library_size": 1566933.0684131836,
+      "is_control": false
+    },
+    "Y1_d11_SSEA4_Sendai_Exp2": {
+      "min": 1.32043,
+      "median": 1.32043,
+      "mean": 2.6634852312442394,
+      "max": 13.642359,
+      "log2_range": 12.321929,
+      "mean_minus_min": 1.3430552312442394,
+      "implied_library_size": 1310949.7708372853,
+      "is_control": false
+    },
+    "Y1_d13_CD13_Sendai_Exp1": {
+      "min": 1.3223689,
+      "median": 1.3223689,
+      "mean": 2.557714156439045,
+      "max": 14.811854,
+      "log2_range": 13.4894851,
+      "mean_minus_min": 1.235345256439045,
+      "implied_library_size": 1354831.4950640604,
+      "is_control": false
+    },
+    "Y1_d13_SSEA4_Sendai_Exp1": {
+      "min": 1.0181961,
+      "median": 1.0181961,
+      "mean": 2.469818930791789,
+      "max": 13.22853,
+      "log2_range": 12.210333899999998,
+      "mean_minus_min": 1.451622830791789,
+      "implied_library_size": 1339046.4809701454,
+      "is_control": false
+    },
+    "Y1_d15_CD13_Sendai_Exp1": {
+      "min": 3.728091,
+      "median": 3.728091,
+      "mean": 4.277517105717079,
+      "max": 15.760444,
+      "log2_range": 12.032353,
+      "mean_minus_min": 0.5494261057170791,
+      "implied_library_size": 1921304.1785141518,
+      "is_control": false
+    },
+    "Y1_d15_SSEA4_Sendai_Exp1": {
+      "min": 1.4299668,
+      "median": 1.4299668,
+      "mean": 2.9367709120821113,
+      "max": 13.528146,
+      "log2_range": 12.098179199999999,
+      "mean_minus_min": 1.5068041120821112,
+      "implied_library_size": 1598018.7913433653,
+      "is_control": false
+    },
+    "Y1_d21_CD13_Sendai_Exp2": {
+      "min": 1.7665482,
+      "median": 1.7665482,
+      "mean": 2.8153116335092863,
+      "max": 15.618015,
+      "log2_range": 13.8514668,
+      "mean_minus_min": 1.0487634335092864,
+      "implied_library_size": 1339303.8818905554,
+      "is_control": false
+    },
+    "Y1_d21_SSEA4_Sendai_Exp2": {
+      "min": 1.0930119,
+      "median": 1.0930119,
+      "mean": 2.5867989831978777,
+      "max": 13.455381,
+      "log2_range": 12.362369099999999,
+      "mean_minus_min": 1.4937870831978777,
+      "implied_library_size": 1329516.4386549066,
+      "is_control": false
+    },
+    "Y1_d34_SSEA4_Sendai_Exp2": {
+      "min": 1.0887114,
+      "median": 1.0887114,
+      "mean": 2.598546532372574,
+      "max": 14.469985,
+      "log2_range": 13.3812736,
+      "mean_minus_min": 1.5098351323725738,
+      "implied_library_size": 1506672.2347737865,
+      "is_control": false
+    },
+    "Y1_d40_SSEA4_Sendai_Exp2": {
+      "min": 1.0842438,
+      "median": 1.0842438,
+      "mean": 2.570771928655215,
+      "max": 13.969686,
+      "log2_range": 12.8854422,
+      "mean_minus_min": 1.486528128655215,
+      "implied_library_size": 1365150.7950733132,
+      "is_control": false
+    },
+    "Y1_d47_SSEA4_Sendai_Exp2": {
+      "min": 1.2936004,
+      "median": 1.2936004,
+      "mean": 2.710294757924871,
+      "max": 14.562598,
+      "log2_range": 13.268997599999999,
+      "mean_minus_min": 1.416694357924871,
+      "implied_library_size": 1377627.7737578426,
+      "is_control": false
+    },
+    "Y1_d54_SSEA4_Sendai_Exp2": {
+      "min": 1.4299062,
+      "median": 1.4299062,
+      "mean": 2.7510281563049857,
+      "max": 14.731339,
+      "log2_range": 13.3014328,
+      "mean_minus_min": 1.3211219563049856,
+      "implied_library_size": 1299184.697407817,
+      "is_control": false
+    },
+    "Y1_d7_CD13_Sendai_Exp1": {
+      "min": 15.872675,
+      "median": 15.872675,
+      "mean": 15.872713207457059,
+      "max": 16.024677,
+      "log2_range": 0.1520020000000013,
+      "mean_minus_min": 3.820745705951367e-05,
+      "implied_library_size": 2148324372.8378506,
+      "is_control": false
+    },
+    "Y1_d7_SSEA4_Sendai_Exp1": {
+      "min": 2.1460736,
+      "median": 2.1460736,
+      "mean": 3.302751682974445,
+      "max": 14.136099,
+      "log2_range": 11.9900254,
+      "mean_minus_min": 1.1566780829744454,
+      "implied_library_size": 1793764.4548536914,
+      "is_control": false
+    },
+    "Y1_d9_CD13_Sendai_Exp1": {
+      "min": 1.0102619,
+      "median": 1.0102619,
+      "mean": 2.6400277911492807,
+      "max": 13.507115,
+      "log2_range": 12.496853100000001,
+      "mean_minus_min": 1.6297658911492807,
+      "implied_library_size": 1547089.2552822225,
+      "is_control": false
+    },
+    "Y1_d9_SSEA4_Sendai_Exp1": {
+      "min": 0.9866703,
+      "median": 0.9866703,
+      "mean": 2.5203375281385285,
+      "max": 15.004406,
+      "log2_range": 14.0177357,
+      "mean_minus_min": 1.5336672281385284,
+      "implied_library_size": 1567892.372111223,
+      "is_control": false
+    },
+    "Y1_Fib_Sendai_Exp2": {
+      "min": 2.1655996,
+      "median": 2.1655996,
+      "mean": 2.4401120647395618,
+      "max": 16.6004,
+      "log2_range": 14.4348004,
+      "mean_minus_min": 0.2745124647395616,
+      "implied_library_size": 1510500.0974361456,
+      "is_control": true
+    },
+    "Y2_d11_CD13_Sendai_Exp1": {
+      "min": 1.323253,
+      "median": 1.323253,
+      "mean": 2.754003021097612,
+      "max": 15.4248085,
+      "log2_range": 14.1015555,
+      "mean_minus_min": 1.430750021097612,
+      "implied_library_size": 1674923.7400996177,
+      "is_control": false
+    },
+    "Y2_d11_CD13_Sendai_Exp2": {
+      "min": 0.60638124,
+      "median": 0.60638124,
+      "mean": 2.289826952602988,
+      "max": 15.216406,
+      "log2_range": 14.61002476,
+      "mean_minus_min": 1.683445712602988,
+      "implied_library_size": 1536059.0490265235,
+      "is_control": false
+    },
+    "Y2_d11_SSEA4_Sendai_Exp1": {
+      "min": 1.7396398,
+      "median": 1.7396398,
+      "mean": 3.0381122151375504,
+      "max": 13.474256,
+      "log2_range": 11.734616200000001,
+      "mean_minus_min": 1.2984724151375504,
+      "implied_library_size": 1563763.0626082313,
+      "is_control": false
+    },
+    "Y2_d11_SSEA4_Sendai_Exp2": {
+      "min": 1.5726511,
+      "median": 1.5726511,
+      "mean": 2.890359486043849,
+      "max": 13.637169,
+      "log2_range": 12.0645179,
+      "mean_minus_min": 1.3177083860438488,
+      "implied_library_size": 1421929.8699022948,
+      "is_control": false
+    },
+    "Y2_d13_CD13_Sendai_Exp1": {
+      "min": 0.47407255,
+      "median": 0.47407255,
+      "mean": 2.236175146218405,
+      "max": 15.302915,
+      "log2_range": 14.82884245,
+      "mean_minus_min": 1.7621025962184051,
+      "implied_library_size": 1635584.1521850196,
+      "is_control": false
+    },
+    "Y2_d13_SSEA4_Sendai_Exp1": {
+      "min": 0.9167102,
+      "median": 0.9167102,
+      "mean": 2.440386035450356,
+      "max": 13.025453,
+      "log2_range": 12.1087428,
+      "mean_minus_min": 1.5236758354503561,
+      "implied_library_size": 1432223.7298401499,
+      "is_control": false
+    },
+    "Y2_d15_CD13_Sendai_Exp1": {
+      "min": 0.8871739,
+      "median": 0.8871739,
+      "mean": 2.4834449633040077,
+      "max": 15.04638,
+      "log2_range": 14.159206099999999,
+      "mean_minus_min": 1.5962710633040076,
+      "implied_library_size": 1646150.9967021341,
+      "is_control": false
+    },
+    "Y2_d15_SSEA4_Sendai_Exp1": {
+      "min": 1.2678727,
+      "median": 1.2678727,
+      "mean": 2.864428049453987,
+      "max": 13.511642,
+      "log2_range": 12.2437693,
+      "mean_minus_min": 1.5965553494539868,
+      "implied_library_size": 1639548.8950815573,
+      "is_control": false
+    },
+    "Y2_d21_CD13_Sendai_Exp2": {
+      "min": 0.7752161,
+      "median": 0.7752161,
+      "mean": 2.288711315218545,
+      "max": 15.817863,
+      "log2_range": 15.0426469,
+      "mean_minus_min": 1.5134952152185452,
+      "implied_library_size": 1400111.361972703,
+      "is_control": false
+    },
+    "Y2_d21_SSEA4_Sendai_Exp2": {
+      "min": 1.1091512,
+      "median": 1.1091512,
+      "mean": 2.577644358388493,
+      "max": 13.948968,
+      "log2_range": 12.839816800000001,
+      "mean_minus_min": 1.468493158388493,
+      "implied_library_size": 1373984.755979081,
+      "is_control": false
+    },
+    "Y2_d29_CD13_Sendai_Exp2": {
+      "min": 0.9759861,
+      "median": 0.9759861,
+      "mean": 2.470486265231113,
+      "max": 15.447378,
+      "log2_range": 14.4713919,
+      "mean_minus_min": 1.4945001652311127,
+      "implied_library_size": 1528251.3002592726,
+      "is_control": false
+    },
+    "Y2_d29_SSEA4_Sendai_Exp2": {
+      "min": 1.0507298,
+      "median": 1.0507298,
+      "mean": 2.654886279516827,
+      "max": 13.041937,
+      "log2_range": 11.991207200000002,
+      "mean_minus_min": 1.6041564795168268,
+      "implied_library_size": 1434852.1912926023,
+      "is_control": false
+    },
+    "Y2_d34_SSEA4_Sendai_Exp2": {
+      "min": 2.9291465,
+      "median": 2.9291465,
+      "mean": 3.028678559287809,
+      "max": 12.983524,
+      "log2_range": 10.0543775,
+      "mean_minus_min": 0.09953205928780928,
+      "implied_library_size": 330280.7976668042,
+      "is_control": false
+    },
+    "Y2_d40_SSEA4_Sendai_Exp2": {
+      "min": 1.2415054,
+      "median": 1.2415054,
+      "mean": 2.7074575918838155,
+      "max": 14.386093,
+      "log2_range": 13.144587600000001,
+      "mean_minus_min": 1.4659521918838154,
+      "implied_library_size": 1550554.6913387175,
+      "is_control": false
+    },
+    "Y2_d47_SSEA4_Sendai_Exp2": {
+      "min": 1.434,
+      "median": 1.434,
+      "mean": 2.891989877782432,
+      "max": 15.05882,
+      "log2_range": 13.624820000000001,
+      "mean_minus_min": 1.4579898777824323,
+      "implied_library_size": 1702245.6501341565,
+      "is_control": false
+    },
+    "Y2_d54_SSEA4_Sendai_Exp2": {
+      "min": 1.5070883,
+      "median": 1.5070883,
+      "mean": 2.7991951384275935,
+      "max": 14.555802,
+      "log2_range": 13.0487137,
+      "mean_minus_min": 1.2921068384275936,
+      "implied_library_size": 1412113.003968984,
+      "is_control": false
+    },
+    "Y2_d7_CD13_Sendai_Exp1": {
+      "min": 1.6832441,
+      "median": 1.6832441,
+      "mean": 2.982949512866918,
+      "max": 14.8218,
+      "log2_range": 13.1385559,
+      "mean_minus_min": 1.2997054128669179,
+      "implied_library_size": 1781399.0454579869,
+      "is_control": false
+    },
+    "Y2_d7_SSEA4_Sendai_Exp1": {
+      "min": 1.9093572,
+      "median": 1.9093572,
+      "mean": 3.1707007989107665,
+      "max": 14.275983,
+      "log2_range": 12.3666258,
+      "mean_minus_min": 1.2613435989107664,
+      "implied_library_size": 1787447.1466512624,
+      "is_control": false
+    },
+    "Y2_d9_CD13_Sendai_Exp1": {
+      "min": 1.0991938,
+      "median": 1.0991938,
+      "mean": 2.6370199451054326,
+      "max": 13.72769,
+      "log2_range": 12.6284962,
+      "mean_minus_min": 1.5378261451054325,
+      "implied_library_size": 1510666.7115834546,
+      "is_control": false
+    },
+    "Y2_d9_SSEA4_Sendai_Exp1": {
+      "min": 0.851543,
+      "median": 0.851543,
+      "mean": 2.2740723595922354,
+      "max": 15.62617,
+      "log2_range": 14.774627,
+      "mean_minus_min": 1.4225293595922355,
+      "implied_library_size": 1445270.8018873348,
+      "is_control": false
+    },
+    "Y2_Fib_Sendai_Exp2": {
+      "min": 0.7048804,
+      "median": 0.7048804,
+      "mean": 2.2673703091830752,
+      "max": 14.37135,
+      "log2_range": 13.6664696,
+      "mean_minus_min": 1.5624899091830753,
+      "implied_library_size": 1480402.9496822227,
+      "is_control": true
+    }
+  },
+  "control_rank_agreement": {
+    "N2": 0.0961389640509142,
+    "N3": 0.6788956547015337,
+    "O1": 0.6774157416486734,
+    "O2": 0.6852547705987881,
+    "Y1": 0.5030105501428844,
+    "Y2": 0.6838761221282715
+  }
+}

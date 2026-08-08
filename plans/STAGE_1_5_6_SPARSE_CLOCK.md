@@ -1164,6 +1164,105 @@ not establish magnitude** — that needs `δ`, hence the HFF stream, hence the r
 
 ---
 
+## 5.7 🚨 2026-08-08 — ROOT CAUSE: a Gill CONTROL sample is DEGENERATE in the raw GEO matrix
+
+*Additive. §5.3, §5.5 and §5.6 are unmodified.* **Artefacts:**
+`experiments/diag_gill_control_integrity.py`, `results/diag_gill_control_integrity_results.json`.
+Read-only, raw GEO only, `src/` untouched.
+
+§5.5 eliminated T2 and T1. §5.6 showed T3 survives with the fold ordering exact. Both were
+statistics **over** `sigma_gill`. Neither asked the prior question: **are the six control samples
+`sigma_gill` is estimated from actually sound?** They are not.
+
+### The measurement — raw `Log2 RPM`, before any pipeline transform
+
+| control column | min | median | mean | max | **log2 range** | mean−min | implied library |
+|---|---|---|---|---|---|---|---|
+| **N2_Fib_Sendai_Exp2** | 11.490 | 11.490 | **11.490** | 13.227 | **1.74** | **0.0008** | **1.03e+08** |
+| N3_Fib_Sendai_Exp2 | 0.760 | 0.760 | 2.323 | 15.221 | 14.46 | 1.563 | 1.52e+06 |
+| O1_Fib_Sendai_Exp2 | 2.218 | 2.218 | 3.182 | 15.313 | 13.10 | 0.964 | 1.66e+06 |
+| O2_Fib_Sendai_Exp2 | 1.052 | 1.052 | 2.468 | 14.340 | 13.29 | 1.416 | 1.51e+06 |
+| Y1_Fib_Sendai_Exp2 | 2.166 | 2.166 | 2.440 | 16.600 | 14.43 | 0.275 | 1.51e+06 |
+| Y2_Fib_Sendai_Exp2 | 0.705 | 0.705 | 2.267 | 14.371 | 13.67 | 1.562 | 1.48e+06 |
+
+**N2's day-0 control is nearly constant.** Its mean sits **0.0008 log2 above its own floor** and its
+entire dynamic range is **1.74 log2 units** where every other control spans **13–15**. Real RNA-seq
+cannot look like this — the mean is always pulled well above the floor by the highly-expressed
+minority. After the pipeline's own inversion `2**x − 1` it implies a library **68× larger** than
+every other control, and its `log1p`-CP10k profile has SD **0.011** against ~**0.58**.
+
+Rank agreement with the other five controls: **N2 0.096**, against N3 0.679, O1 0.677, O2 0.685,
+Y1 0.503, Y2 0.684.
+
+**Six of the 124 Gill sample columns are degenerate**, and exactly one of them is a control:
+
+    N2_Fib_Sendai_Exp2        ** IS A CONTROL **   range 1.737
+    N2_d21_CD13_Sendai_Exp2   treatment            range 7.261
+    N3_d21_SSEA4_Sendai_Exp2  treatment            range 2.474
+    O2_d40_SSEA4_Sendai_Exp2  treatment            range 9.135
+    O2_d9_SSEA4_Sendai_Exp1   treatment            range 2.152
+    Y1_d7_CD13_Sendai_Exp1    treatment            range 0.152
+
+### Why one bad control does not stay in its own donor
+
+The day-0 `_Fib_` sample is `is_control` (`sources.py:417`), which makes it **two things at once**:
+
+1. **that donor's entire ΔAge zero-point** — Stage 1.5 audit §5.2's `n = 1` finding, now with a
+   concrete instance: N2's 21 ΔAge labels are measured against a constant vector, **in every
+   fold**, because a donor's baseline does not depend on which fold is running;
+2. **one of the five or six controls `sigma_gill` is estimated from** (`fit_harmonizer`), and
+   `sigma_gill/sigma_hff` is the gain applied to **HFF's** labels — 99.7 % of the age-labelled
+   corpus — **in every fold that does not hold N2 out.**
+
+A near-constant column sits far from the other donors at most genes, so including it **inflates**
+`sigma_gill`, inflating the gain and therefore `|ΔAge|` on HFF. Removing it — which happens in
+**exactly one fold, N2's** — deflates it. Direction and identity both match §4.7: five folds read
+−22 to −24 and the N2 fold reads **−7.35**.
+
+> ### The uncomfortable consequence, stated plainly
+>
+> **The N2 fold is the only one whose harmonizer excludes the degenerate control.** On this
+> evidence the anomalous-looking number may be the *clean* one, and the five agreeing folds —
+> including **O1, which is July's −24.02 reference and the source of every recorded HFF ΔAge** —
+> may be the contaminated ones. Agreement among five folds is not corroboration when all five
+> share the same contaminant.
+
+### What is ESTABLISHED, and what is NOT
+
+**Established, measured directly from the raw GEO file, no inference:** the six columns above are
+degenerate; `N2_Fib_Sendai_Exp2` is one of them and is a control; its rank agreement with the other
+five controls is 0.096; all 20 of N2's other samples are normal.
+
+**NOT established:** that this *fully accounts* for the 16.67 yr spread. Leave-one-donor-out on
+`sigma_gill` moves the `|w|`-weighted mean by −11.8 % when N2 is dropped but **−20.1 % when Y1 is
+dropped**, and Y1's labels are normal — so a scalar σ argument still does not deliver the
+magnitude, exactly as §5.6 found. **The reconstruction is still required**, and its question is now
+sharper: does removing this specific column reproduce N2's `d/d_O1 = 0.306`?
+
+**Also not established:** whether the defect is in GEO's deposited matrix or in how it is read.
+Either way the pipeline consumes it as a control.
+
+### Gate gap
+
+`apply_qc` runs on every fetched chunk and this column survived it. A control that is constant to
+within 1.7 log2 units, with a library 68× the cohort, should not be able to reach the harmonizer
+silently. Stage 1.5's G-a made `n = 1` **visible**; nothing checks whether that `n = 1` is *sound*.
+
+### Scope — this reaches past Stage 1.5.6
+
+| affected | how |
+|---|---|
+| N2's 21 Gill ΔAge labels | zero-point is a constant vector, in every fold |
+| HFF's labels in 5 of 6 folds | through `sigma_gill` in the harmonizer |
+| every step-6 arm (`gc2_A/B/C/D`) | all six folds aggregated, five contaminated |
+| July's −24.02 HFF reference | the O1 fold, which includes N2's control |
+| 5 further Gill treatment samples | degenerate in their own right, listed above |
+
+**Nothing is withdrawn on the strength of this section.** It names a defect and its reach; the
+reconstruction quantifies it.
+
+---
+
 ## 6. What this does not license
 
 * **It is not yet a label change.** Nothing in `src/` or `configs/` has moved.
