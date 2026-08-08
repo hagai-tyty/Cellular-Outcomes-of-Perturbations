@@ -1070,6 +1070,100 @@ is the only instrument that separates the surviving harmonization channel from t
 
 ---
 
+## 5.6 🆕 2026-08-08 — T3 SURVIVES the same test that killed T2, and my averaging argument is DEAD
+
+*Additive. §5.3 and §5.5 unmodified. `experiments/diag_t3_sigma_gill_leverage.py`, read-only, no
+HFF stream — Gill's six control samples and the shipped O1 harmonizer are enough.*
+
+### First: my §5.4 prediction was WRONG, and §5.5's precheck is what killed it
+
+§5.4 predicted **T2 > T3** from the floor's coherence. §5.5 measured the floor ratios and they are
+**anti-aligned** with the labels — N2, the fold that collapses, sits **1.4 %** off O1; Y1, whose
+ratio is genuinely anomalous (34 % low), has entirely normal labels. The max-leverage bound then
+eliminated T2 outright: **−24.35 predicted against −7.35 actual, a 17.00 yr miss on a 16.671 yr
+spread.**
+
+**The prediction is withdrawn.** It cost two numbers per fold and it died on the first fold it
+touched — which is what a precheck is for.
+
+### 🟢 G0 PASSES BIT-EXACTLY, and settles the fold identity by construction
+
+Before any counterfactual: recompute `σ_gill` from the raw Gill matrix with **O1 held out**, floor
+it, and compare gene by gene to `runs/cellfate_multi/harmonization.json`.
+
+| | |
+|---|---|
+| unclamped genes compared | **2664** |
+| **median relative error** | **0.0000** |
+| p90 relative error | **0.0000** |
+| shipped genes found in the Gill matrix | **5328 / 5328** |
+
+**Bit-exact.** Three things follow at once, none of them assumed:
+
+1. **The shipped artifact IS the O1 fold** — proven by reconstruction, not inferred from gene count.
+2. **`sources.py:417`'s control definition is the pipeline's** — six `_Fib_` samples, one per donor.
+3. **The Gill side of the reconstruction is validated end to end**, so a T3 counterfactual built on
+   it is standing on checked ground. This is the G0 §5.3 asked for, and it is stronger than a 0.5 yr
+   scalar agreement.
+
+### The T3-only counterfactual — vary `σ_raw^(gill)`, hold mask and floor at O1
+
+Per fold, `rho_g = ratio_g^(f) / ratio_g^(O1)`, and `d̂_f/d̂_O1` is a `δ_g·w_g`-weighted average of
+`rho_g`:
+
+| fold | observed day-14 | `d_f/d_O1` | `rho` range on clock genes | `|w|`-mean | observed inside? |
+|---|---:|---:|---|---:|:---:|
+| **N2** | **−7.35** | **0.306** | [0.108, 1.766] | **0.870** | ✅ |
+| Y1 | −22.05 | 0.918 | [0.542, 1.926] | 0.915 | ✅ |
+| N3 | −22.12 | 0.921 | [0.144, 2.021] | 0.987 | ✅ |
+| O2 | −22.89 | 0.953 | [0.426, 1.999] | 0.995 | ✅ |
+| Y2 | −23.87 | 0.994 | [0.427, 2.007] | 0.999 | ✅ |
+| O1 | −24.02 | 1.000 | [1.000, 1.000] | 1.000 | ✅ |
+
+**T3 is NOT eliminated.** Unlike T2, every fold's observation lies inside T3's containment interval,
+and N2's interval reaches down to **0.108** — far more than the 0.306 it needs.
+
+### 🔑 And the ordering is EXACT
+
+```
+Spearman( |w|-weighted rho , observed d_f/d_O1 )  over 6 folds  =  +1.000
+```
+
+**T3's leverage rank-orders all six folds exactly as the labels are ordered.** The magnitude is
+under-predicted (0.870 against 0.306) — which is precisely what §5.2 A1 says a `|w|`-weighted mean
+must do, since it drops `δ_g`. **The ordering statistic is scale-free, so A1's objection does not
+reach it.** What the two together say is: right channel, wrong estimator.
+
+### Why my averaging argument was wrong — the mechanism, not just the verdict
+
+§5.4 argued T3 "largely averages out" over ~5000 weighted genes because per-gene `σ` noise is
+independent. **It is not independent.** Dropping one of five controls removes **one entire donor
+expression profile**, so every gene's `σ` moves in response to **a single shared latent** — which
+donor was dropped. The perturbation is therefore **coherent across genes in exactly the way I
+attributed to the floor**, and the coherence is donor-specific rather than gene-specific.
+
+That is visible in the table: dropping **N2** moves the clock-weighted `σ_gill` more than dropping
+any other donor, and N2 is the fold that collapses. It also explains the **N2 / N3 asymmetry** that
+donor age alone could not (§`00_START_HERE.md`, both are donor age 0): in the N3 fold, **N2 is still
+in the control set** and still carries the spread; only in the N2 fold is it removed.
+
+### Where this leaves §5.5's inversion
+
+§5.5 argued that with T1 and T2 out and T3 expected to average out, the residue points **outside**
+harmonization at the unbounded deconfounder. **The second half of that premise is now measured
+false.** T3 does not average out, it survives its max-leverage test, and it orders the folds
+perfectly.
+
+> **The reconstruction is still necessary — but its most likely outcome has changed.** The live
+> hypothesis is no longer "harmonization is exonerated"; it is **T3, the five-sample `σ_ref`
+> estimate**, which is the one term whose leakage-free remedies are shrinkage or a reference change,
+> and whose replication remedy is donor-blocked (§5.3's asymmetry table).
+
+**Stated at its true strength: this NARROWS the field to T3 and shows the ordering is right. It does
+not establish magnitude** — that needs `δ`, hence the HFF stream, hence the reconstruction.
+
+---
+
 ## 6. What this does not license
 
 * **It is not yet a label change.** Nothing in `src/` or `configs/` has moved.

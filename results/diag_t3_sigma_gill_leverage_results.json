@@ -1,0 +1,77 @@
+{
+  "script": "diag_t3_sigma_gill_leverage",
+  "utc": "2026-08-08T00:04:37.747518+00:00",
+  "ref_fold": "O1",
+  "n_shipped_genes": 5328,
+  "n_genes_aligned": 5328,
+  "n_clock_genes": 5237,
+  "clock_weight_signs": {
+    "positive": 2648,
+    "negative": 2589
+  },
+  "g0": {
+    "median_rel_err": 6.142173165558936e-09,
+    "p90_rel_err": 5.62979835426136e-08,
+    "n_unclamped": 2664,
+    "pass": true
+  },
+  "folds": {
+    "N2": {
+      "observed_day14": -7.352,
+      "observed_over_ref": 0.3060400449569163,
+      "rho_min_clock": 0.10757852260548605,
+      "rho_max_clock": 1.7660473165687143,
+      "rho_absw_mean_clock": 0.869682005439398,
+      "rho_median_all": 1.0,
+      "observed_inside_rho_range": true
+    },
+    "N3": {
+      "observed_day14": -22.12,
+      "observed_over_ref": 0.9207842484285893,
+      "rho_min_clock": 0.14399147404677484,
+      "rho_max_clock": 2.021026796616251,
+      "rho_absw_mean_clock": 0.9869318835957961,
+      "rho_median_all": 1.0,
+      "observed_inside_rho_range": true
+    },
+    "O1": {
+      "observed_day14": -24.023,
+      "observed_over_ref": 1.0,
+      "rho_min_clock": 1.0,
+      "rho_max_clock": 1.0,
+      "rho_absw_mean_clock": 1.0,
+      "rho_median_all": 1.0,
+      "observed_inside_rho_range": true
+    },
+    "O2": {
+      "observed_day14": -22.89,
+      "observed_over_ref": 0.9528368646713566,
+      "rho_min_clock": 0.42601700672103615,
+      "rho_max_clock": 1.9991459895731776,
+      "rho_absw_mean_clock": 0.9946520793627289,
+      "rho_median_all": 1.0,
+      "observed_inside_rho_range": true
+    },
+    "Y1": {
+      "observed_day14": -22.049,
+      "observed_over_ref": 0.91782874745036,
+      "rho_min_clock": 0.5417362318809082,
+      "rho_max_clock": 1.925868904466441,
+      "rho_absw_mean_clock": 0.9147262220366325,
+      "rho_median_all": 1.0,
+      "observed_inside_rho_range": true
+    },
+    "Y2": {
+      "observed_day14": -23.87,
+      "observed_over_ref": 0.9936311035257879,
+      "rho_min_clock": 0.42731424229790493,
+      "rho_max_clock": 2.006527030221699,
+      "rho_absw_mean_clock": 0.9992519530484903,
+      "rho_median_all": 1.0,
+      "observed_inside_rho_range": true
+    }
+  },
+  "spearman_absw_rho_vs_observed": 1.0,
+  "verdict": "T3_STILL_LIVE",
+  "scope_limit": "Holds the mask and the floor at O1 (T3-only counterfactual). The rho range is a containment interval, not a prediction: clock weights carry both signs. NARROWS T3, does not close it -- closing needs delta."
+}

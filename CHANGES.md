@@ -11,6 +11,67 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-08 - T3 survives the test that killed T2; my averaging argument is dead
+
+**Status:** Measured. **`src/` untouched, no label moved, §5.3/§5.5 unmodified.** New read-only
+script `experiments/diag_t3_sigma_gill_leverage.py` - **no HFF stream needed**, Gill's six control
+samples and the shipped O1 harmonizer are enough.
+
+### My §5.4 prediction was wrong and the precheck killed it
+
+§5.4 predicted T2 > T3. §5.5 measured the floor ratios: **anti-aligned**. N2, the fold that
+collapses, is 1.4% off O1; Y1's ratio is 34% low with entirely normal labels. Max-leverage then
+eliminated T2 outright - **-24.35 predicted vs -7.35 actual, a 17.00 yr miss on a 16.671 yr
+spread.** Withdrawn. It cost two numbers per fold and died on the first fold it touched.
+
+### G0 passes BIT-EXACTLY
+
+Recomputing `sigma_gill` from the raw Gill matrix with **O1 held out**, floored, against
+`runs/cellfate_multi/harmonization.json`: **2664 unclamped genes, median relative error 0.0000,
+p90 0.0000, 5328/5328 genes aligned.**
+
+Three things follow, none assumed: the shipped artifact **is** the O1 fold (proven by
+reconstruction, not inferred from gene count); `sources.py:417`'s control definition is the
+pipeline's; and the Gill side of the reconstruction is validated end to end.
+
+### T3-only counterfactual - T3 is NOT eliminated
+
+| fold | observed | d_f/d_O1 | rho range on clock genes | \|w\|-mean | inside? |
+|---|---:|---:|---|---:|:---:|
+| **N2** | **-7.35** | **0.306** | [0.108, 1.766] | **0.870** | yes |
+| Y1 | -22.05 | 0.918 | [0.542, 1.926] | 0.915 | yes |
+| N3 | -22.12 | 0.921 | [0.144, 2.021] | 0.987 | yes |
+| O2 | -22.89 | 0.953 | [0.426, 1.999] | 0.995 | yes |
+| Y2 | -23.87 | 0.994 | [0.427, 2.007] | 0.999 | yes |
+| O1 | -24.02 | 1.000 | [1.000, 1.000] | 1.000 | yes |
+
+Every fold's observation lies inside T3's containment interval; N2's reaches to **0.108** against
+the 0.306 it needs.
+
+**Spearman(|w|-weighted rho, observed d_f/d_O1) = +1.000 over 6 folds.** T3's leverage rank-orders
+all six folds exactly as the labels are. Magnitude is under-predicted (0.870 vs 0.306), which is
+exactly what §5.2 A1 says a |w|-weighted mean must do since it drops delta. The ordering statistic
+is scale-free, so A1 does not reach it. **Right channel, wrong estimator.**
+
+### Why the averaging argument was wrong
+
+Dropping one of five controls removes **one entire donor profile**, so every gene's sigma responds
+to a **single shared latent** - which donor was dropped. The perturbation is coherent across genes
+in exactly the way I attributed to the floor. It also explains the **N2/N3 asymmetry** that donor
+age alone could not (both are age 0): in the N3 fold, N2 is still in the control set and still
+carries the spread.
+
+### Consequence for §5.5's inversion
+
+§5.5 argued the residue points outside harmonization because T3 should average out. **That premise
+is now measured false.** The live hypothesis is T3 - the five-sample sigma_ref estimate - whose
+leakage-free remedies are shrinkage or a reference change, and whose replication remedy is
+donor-blocked. **NARROWS the field and shows the ordering is right; does NOT establish magnitude**,
+which needs delta and therefore the HFF stream.
+
+---
+
+
 ## 2026-08-08 - Audit of 5.3, and the variance floor turns out to BE the transform's centre
 
 **Status:** Recorded. **`src/` untouched, no label moved, §5.3 unmodified.** Nothing here required a
