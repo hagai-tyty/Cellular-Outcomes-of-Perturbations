@@ -324,6 +324,82 @@ harmonizer facts only.
 ---
 
 
+## 2026-08-08 (later) - Section 5.9's separation claim does not reproduce; Y1_Fib downgraded; numbering collision fixed
+
+**Status:** VERIFIED against the raw matrix. **`src/` untouched, no build touched, no label moved.**
+140 insertions / 1 deletion in the plan - the single deletion is a duplicate section header.
+
+### Numbering collision fixed first
+
+Two machines pushed a `## 5.8` concurrently (78fd8a9 = step 3c's pre-registration, 09bc61f = the
+audit of 5.7) and neither saw the other's. The audit is renumbered **5.8 -> 5.9**. **Only the header
+number changed; every word of its body is as written.** The step-3b and step-3c table rows point at
+5.8, which now resolves unambiguously.
+
+### What reproduces from 5.9
+
+12 of 124 columns flagged at mean-min < 1/5 x cohort median (median 1.4196, threshold 0.2839) - same
+twelve. The %at-min screen is useless (124/124 exceed 50%), a genuinely useful negative result.
+N2_Fib to the digit. The ten degenerate NON-control columns are live gill_bulk training labels;
+Y1_d7_CD13_Sendai_Exp1 is entirely constant (range 0.15, library 2.15e+09) and apply_qc passes it
+because min_genes and max_mito_frac are single-cell gates a constant bulk column clears trivially.
+And 5.9's framing of the containment interval as a DEFECT rather than a caveat is the right call.
+
+### What does NOT reproduce
+
+5.9: "Every flagged column is below 0.284; the next sound one is 0.964. A 3.4x gap, no overlap."
+
+**The next sound column is N3_d11_SSEA4 at 0.2967, not 0.964. The margin is 1.08x and there is no
+gap** - the threshold falls between two adjacent values 8% apart. 0.964 is O1_Fib, the next sound
+CONTROL. The screen ran on 124 columns; the separation was computed against 6. Different populations.
+
+### Y1_Fib as a second defective control - NOT ESTABLISHED
+
+Library 1.51e+06 (sound population 8.47e+05 - 2.29e+06) and log2 range 14.43 (sound 13.1-14.5) are
+both entirely normal. Only mean-min is low, and it is lowest of six controls - but n=6, and against
+124 columns it is unremarkable. Its max is the HIGHEST of any control (16.600), which reads more
+like a library dominated by a few transcripts than a constant column. Possibly a quality concern;
+not the defect N2_Fib has.
+
+### What survives: FIVE columns, ONE control
+
+Flagged by BOTH mechanical tells (mean-min < 0.015 AND library >= 1.69e+07): Y1_d7_CD13 2.15e+09,
+N3_d21_SSEA4 2.38e+08, O2_d9_SSEA4 1.63e+08, **N2_Fib 1.03e+08 (CONTROL)**, N2_d21_CD13 1.69e+07.
+Next column by library is 3.88e+06 - a **4.4x gap**. That is the real separation; it is just not
+where the mean-min threshold put it. Section 5.7 unchanged.
+
+### 5.9's supersession of 5.6 held at PARTIAL
+
+It requires Y1_Fib to be defective, and rests on Y1 (0.918) vs N3 (0.921) in observed d/d_O1 - a
+0.003 margin, the same fragile pair flagged when 5.6's Spearman was checked. WHAT STANDS: 5.6's
+"N2 is the atypical donor / donor age 0" reading IS superseded; N2_Fib is a sample defect. WHAT DOES
+NOT: that Y1 is the second instance. Recorded as "N2_Fib explains N2; Y1 remains unexplained".
+
+### The gate moved to the library tell
+
+5.9's proposed mean-min gate is "validated on this cohort - 12/124, 3.4x margin, no false
+positives". That validation does not hold, and a threshold cutting a continuous distribution 8% from
+its neighbour will flag or miss arbitrarily on a new cohort. Use 5.9's own stronger half instead:
+**assert each bulk sample's linear RPM sum lies within a stated band of 1e6** - justified by the
+matrix's own units rather than a quantile of this cohort, and separating the five by 4.4x. One
+supporting figure corrected: "sound columns land at 1.48-1.66e6" is the six CONTROLS' range; over
+all 124 the sound range is 8.47e+05 - 2.29e+06, so the band must be set from the full population.
+
+### Step 3c UNCHANGED, deliberately
+
+5.9's covering note asks 3c to test removing the TWO defective controls jointly. Declined: (1) 3c
+already answers it - its design is leave-one-CONTROL-out over ALL FIVE O1-fold controls
+individually, and Y1_Fib is one of them, so if it matters 3c returns it as a second outlier, B1's
+">= 2x the second largest" fails, and the run routes to PARTIAL by measurement; (2) joint removal
+would destroy the separability that makes the question answerable and would bake in an unestablished
+premise. No change to 5.8 and none needed.
+
+Carried: 5.9's reconciliation request stands and 3c settles it - 5.7's leave-one-out figures
+(-11.8% N2, -20.1% Y1) are over all genes unweighted while 5.6's rho is |w|-weighted on clock genes
+and orders them the other way. Different quantities; 3c computes actual dAge and adjudicates.
+
+---
+
 ## 2026-08-08 (later) - Step 3c added: does removing the degenerate control reproduce the spread?
 
 **Status:** PLAN ONLY. Nothing executed. **`src/` untouched, no build touched, no label moved.**

@@ -4096,3 +4096,14 @@ could not eliminate it.** The ordering is the real evidence.
 > N2's control` is **not** the N2 fold, so exact reproduction of −7.352 is not predicted.
 > `apply_qc`'s gate gap and the five degenerate treatment samples are carried as 3c.3 / 3c.4 with
 > owners **outside** this stage, per the one-change rule.
+
+> **[2026-08-08 annotation, later]** The second machine extended this to **12 columns and TWO
+> defective controls**. Recomputed here: the 12-column screen reproduces, but its separation claim
+> does **not** — the next sound column is `N3_d11_SSEA4` at **0.2967**, not 0.964, so the margin is
+> **1.08×**, not 3.4×. The 0.964 is the next sound *control*; the screen ran on 124 columns and the
+> separation was computed against 6. **`Y1_Fib` is therefore NOT established as a second defective
+> control** — its library (1.51e6) and log2 range (14.43) are both normal. What survives is **five
+> columns flagged by both mechanical tells, exactly one of them a control (`N2_Fib`)**, with a 4.4×
+> library gap to the next. Full verification: `plans/STAGE_1_5_6_SPARSE_CLOCK.md` **§5.10**, which
+> also moves the proposed gate from `mean−min` to the library tell and records why **step 3c is
+> unchanged** — its leave-one-control-out design already tests `Y1_Fib` individually.

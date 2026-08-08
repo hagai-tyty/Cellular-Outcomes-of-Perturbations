@@ -1369,7 +1369,26 @@ branches must execute in the test suite.
 
 ---
 
-## 5.8 🆕 2026-08-08 — §5.7 CONFIRMED, and the defect is LARGER: 12 columns, and TWO controls
+## 5.9 🆕 2026-08-08 — §5.7 CONFIRMED, and the defect is LARGER: 12 columns, and TWO controls
+
+> ### ⚠️ **RENUMBERED 5.8 → 5.9, and PARTIALLY CORRECTED by §5.10.**
+> *Two machines pushed a `## 5.8` concurrently (78fd8a9 and 09bc61f) and neither saw the other's.
+> §5.8 is step 3c's pre-registration; this section is renumbered to 5.9. **Only the header number
+> changed — every word below is as written.** The step-3b and step-3c table rows point at §5.8,
+> which now resolves unambiguously.*
+>
+> **Two claims below do not reproduce and are corrected in §5.10 — read it before acting on this
+> section:**
+>
+> * **"3.4× margin, no false positives"** — the next SOUND column is `N3_d11_SSEA4` at
+>   **0.2967**, not 0.964, so the margin is **1.08×** and there is **no separation**. 0.964 is the
+>   next sound *control*, a different population from the 124 the screen ran on.
+> * **`Y1_Fib` as a SECOND defective control** — **not established.** Its library (1.51e6) and log2
+>   range (14.43) are both **normal**; only `mean−min` is low, on a continuum.
+>
+> Consequently the **§5.6 supersession below is held at PARTIAL** (it requires `Y1_Fib` to be
+> defective) and **the proposed gate statistic is changed** — §5.10 moves it to the library tell,
+> which is the half of this section's own argument that does hold.
 
 *Additive. §5.7 unmodified. Census over the raw `GSE165176_Log2_RPM_Sendai_reprogramming` matrix,
 before any transform. No run, no HFF stream.*
@@ -1472,6 +1491,126 @@ Stage 1.5.2's gate G-a made `n = 1` **visible**; nothing checks whether that `n 
 That is the hole, and it is one assertion wide.
 
 **Not established here:** that removing these columns reproduces `d/d_O1 = 0.306`. That is step 3c.
+
+---
+
+## 5.10 🆕 2026-08-08 — VERIFICATION of §5.9: the separation claim does not reproduce
+
+*Additive. §5.9's body is unmodified — only its header number changed, and the reason is recorded
+in its own banner. Everything below was recomputed here from the raw matrix.*
+
+### ✅ What reproduces exactly
+
+| §5.9 claim | verified |
+|---|---|
+| 12 of 124 columns flagged at `mean−min < ⅕ × cohort median` (median 1.4196, threshold 0.2839) | ✅ **12/124**, same twelve |
+| the `%at-min` screen is useless | ✅ **124/124 columns exceed 50 %** — a genuinely useful negative result, and worth the record so neither machine retries it |
+| `N2_Fib` to the digit | ✅ `mean−min` 0.0008, range 1.74, 99.7 % at the column min, library 1.03e+08 |
+| ten degenerate NON-control columns are live Gill training labels | ✅ `gill_bulk` is a training source; `Y1_d7_CD13_Sendai_Exp1` is entirely constant (range 0.15, library 2.15e+09) |
+| `apply_qc` passes them — `min_genes` / `max_mito_frac` are single-cell gates a constant bulk column clears trivially | ✅ |
+| §5.6's containment interval cannot falsify | ✅ agreed, and §5.9's framing of it as a **defect** rather than a caveat is the right call |
+
+### 🔴 What does NOT reproduce — the separation
+
+§5.9: *"Every flagged column is below 0.284; the next sound one is 0.964. A 3.4× gap, no overlap."*
+
+Sorted by `mean−min` over all 124 columns, across the threshold:
+
+| rank | column | `mean−min` | library |
+|---|---|---|---|
+| 11 | **Y1_Fib_Sendai_Exp2** | 0.2745 | 1.51e+06 |
+| — | *threshold* | *0.2839* | |
+| 12 | **N3_d11_SSEA4_Sendai_Exp2** | **0.2967** | 8.47e+05 |
+| 13 | Y1_d11_CD13_Sendai_Exp1 | 0.3069 | 2.29e+06 |
+
+**The next sound column is 0.2967, not 0.964. The margin is 1.08×, not 3.4×, and there is no gap** —
+the threshold falls between two adjacent values 8 % apart. **0.964 is `O1_Fib`, the next sound
+CONTROL.** Comparing `Y1_Fib` against the five other controls gives 3.4×; comparing it against the
+124-column population the screen actually ran on gives 1.08×. The screen and the separation claim
+were computed on different populations.
+
+### 🔴 `Y1_Fib` as a second defective control — NOT ESTABLISHED
+
+Three tells, and only one is even suggestive:
+
+| tell | `N2_Fib` | `Y1_Fib` | sound population |
+|---|---|---|---|
+| linear library | **1.03e+08** | **1.51e+06** | 8.47e+05 – 2.29e+06 |
+| log2 dynamic range | **1.74** | **14.43** | 13.1 – 14.5 |
+| `mean−min` | **0.0008** | 0.2745 | continuous from 0.2967 |
+
+**`Y1_Fib`'s library and dynamic range are both entirely normal.** Only `mean−min` is low, and it is
+the lowest of six controls — but `n = 6`, and against 124 columns it is unremarkable. Its `max` is
+the **highest of any control** (16.600), which reads more like a library dominated by a few
+transcripts than a constant column. That may still be a quality concern; it is **not** the defect
+`N2_Fib` has, and §5.9's "same direction, milder" does not follow from these numbers.
+
+### ✅ What survives: FIVE columns, ONE control
+
+Flagged by **both** mechanical tells — `mean−min < 0.015` **and** library ≥ 1.69e+07:
+
+| column | `mean−min` | range | library | |
+|---|---|---|---|---|
+| Y1_d7_CD13_Sendai_Exp1 | 0.0000 | 0.15 | 2.15e+09 | |
+| N3_d21_SSEA4_Sendai_Exp2 | 0.0004 | 2.47 | 2.38e+08 | |
+| O2_d9_SSEA4_Sendai_Exp1 | 0.0005 | 2.15 | 1.63e+08 | |
+| **N2_Fib_Sendai_Exp2** | 0.0008 | 1.74 | 1.03e+08 | **CONTROL** |
+| N2_d21_CD13_Sendai_Exp2 | 0.0142 | 7.26 | 1.69e+07 | |
+
+The next column by library is 3.88e+06 — a **4.4× gap**. **That** is the separation §5.9 was
+reaching for, and it is real; it just is not where the `mean−min` threshold put it. **Exactly one
+of the five is a control, and it is `N2_Fib`** — §5.7 unchanged.
+
+### Consequence for §5.9's §5.6 supersession — held at PARTIAL
+
+§5.9 argues the two lowest `|w|`-weighted ρ folds (N2 0.870, Y1 0.915) are *"exactly the two folds
+that remove a defective control, ranked by severity"*. That requires `Y1_Fib` to be defective. It
+also rests on Y1 (0.918) versus N3 (0.921) in observed `d/d_O1` — a **0.003 margin**, the same
+fragile pair flagged when §5.6's Spearman was checked (drop the O1 anchor and N2 and the ordering
+holds at exact `p = 0.042`, hinging on this pair).
+
+**What stands:** §5.6's "N2 is the atypical donor / donor age 0" reading **is** superseded —
+`N2_Fib` is a sample defect and that much is established. **What does not:** that Y1 is the second
+instance. Recorded as **N2_Fib explains N2; Y1 remains unexplained.**
+
+### The gate — moved to the library tell
+
+§5.9 proposes `mean−min` floored at ⅕ of the cohort median, *"validated on this cohort — 12/124,
+3.4× margin, no false positives"*. **That validation does not hold**, and a threshold cutting a
+continuous distribution 8 % from its neighbour will flag or miss arbitrarily on a new cohort.
+
+**Use the library instead** — which is §5.9's own stronger half: *"the library is the mechanical
+tell — these are reads per million, so a sound column sums to ~1e6."*
+
+> **Gate: assert each bulk sample's linear RPM sum lies within a stated band of 1e6.**
+> Mechanically justified by the matrix's own units rather than by a quantile of this cohort, and it
+> separates the five degenerate columns from the rest by **4.4×**.
+
+One correction to §5.9's supporting figure: *"sound columns land at 1.48–1.66e6"* is the range of
+the six **controls**. Over all 124 columns the sound range is **8.47e+05 – 2.29e+06**, so the band
+must be set from the full population, not the controls.
+
+### Step 3c is UNCHANGED, and deliberately
+
+§5.9's covering note asks that 3c test *"removing the TWO defective controls"* jointly. **Declined,
+for two reasons:**
+
+1. **3c already answers it.** Its design (§5.8) is leave-one-**CONTROL**-out over **all five** O1-fold
+   controls, individually. `Y1_Fib` is one of the five. If it matters, 3c returns it as a **second
+   outlier**, B1's *"≥ 2× the second largest"* clause fails, and the run routes to **PARTIAL** — the
+   correct branch, reached by measurement.
+2. **Joint removal would destroy the separability** that makes the question answerable, and would
+   bake in a premise this section shows is unestablished.
+
+**No change to §5.8, and none needed.** The individual design is what lets 3c settle §5.9's claim
+rather than assume it.
+
+### Also carried forward
+
+§5.9's reconciliation request stands and 3c settles it: the leave-one-out figures in §5.7
+(−11.8 % dropping N2, −20.1 % dropping Y1) are over **all genes, unweighted**, while §5.6's ρ is
+**`|w|`-weighted on clock genes** and orders the two the other way. They are different quantities;
+3c computes actual ΔAge and therefore adjudicates between them.
 
 ---
 
