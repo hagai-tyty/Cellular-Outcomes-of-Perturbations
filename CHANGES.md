@@ -11,6 +11,42 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-08 - 5.10 accepted; and N2_Fib is inside every number 1.5.6 has produced
+
+**Status:** Recorded. **`src/` untouched, no label moved, §5.9 and §5.10 unmodified.**
+
+### 5.10's corrections verified, and both errors are mine
+
+Next SOUND column is `N3_d11_SSEA4` at **0.2967** (rank 13); rank 12 is `Y1_Fib` at 0.2745, flagged.
+**Margin 1.08x, no gap** - §5.9 claimed 3.4x by comparing `Y1_Fib` against the six CONTROLS while
+the screen ran on 124 COLUMNS. Two populations, one number, the same error species as A5. `Y1_Fib`
+**downgraded**: library 1.51e+06 and range 14.43 both sit inside the sound population. The
+five-column / one-control / 4.37x library separation reproduces exactly. **Gate moves to the library
+tell.**
+
+### THE EXPOSURE nobody had stated
+
+`diag_harmonization_gain.py:112` selects **all six** `_Fib_` controls, `N2_Fib` included. So
+`sigma_gill` was inflated by the degenerate column in **every** measurement built on it: the gain
+**2.152** (1c), the top-100 gain **2.769** and the whole k-sweep (1d), and HFF day-14 **-21.43 /
+-29.70**. `diag_harmonizer_refit_sparse.py` inherits it (written, never run).
+
+Same contamination in the recorded builds: `N2_Fib` is `is_control` for `gill_bulk`, so it enters
+`sigma_ref` in **five of six folds** - including **O1**, July's -24.02 reference and the anchor
+`d_f/d_O1` is normalised against throughout 5.3-5.10.
+
+**So 4.6's headline - "sparsification makes the gain worse, 2.769 vs 2.152" - was computed on a
+contaminated sigma_gill.** Both share the contamination so the comparison may survive; the absolute
+values do not, and whether the ordering survives is a measurement nobody has made. **Nothing
+withdrawn** - what is recorded is that the inputs are known-contaminated and the re-measurement
+costs one HFF stream, the same one step 3c needs.
+
+Not touched: §1's MAE 16.61 -> 5.36 (transient arm, different matrix), and §5.6's G0, which is a
+bit-exact reproduction of the SHIPPED harmonizer - a fidelity gate, not a correctness one.
+
+---
+
+
 ## 2026-08-08 - 5.7 confirmed, and the defect is larger: 12 columns and TWO controls
 
 **Status:** Verified independently. **`src/` untouched, no label moved, §5.7 unmodified.** Census

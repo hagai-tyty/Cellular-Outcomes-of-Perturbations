@@ -1614,6 +1614,61 @@ rather than assume it.
 
 ---
 
+## 5.11 🆕 2026-08-08 — §5.10 ACCEPTED, and an exposure NEITHER section has stated
+
+*Additive. §5.9 and §5.10 unmodified.*
+
+### ✅ §5.10's corrections verified here, and both errors are mine
+
+| §5.10's correction | recomputed | verdict |
+|---|---|---|
+| next SOUND column is `N3_d11_SSEA4` at **0.2967**, not 0.964 | rank 12 = `Y1_Fib` 0.2745 (flagged), rank 13 = `N3_d11_SSEA4` **0.2967** (sound) | ✅ **margin 1.08×, no gap.** §5.9 said 3.4× |
+| `Y1_Fib` not established as defective | library **1.51e+06** and range **14.43** both sit inside the sound population; only `mean−min` is low, on a continuum 0.2745 → 0.2967 → 0.3069 | ✅ **downgraded** |
+| FIVE columns by both tells, ONE control, 4.4× library gap | 5 columns, 1 control (`N2_Fib`); smallest flagged library 1.694e+07 against next-down 3.880e+06 | ✅ **4.37×** |
+
+**§5.9 compared `Y1_Fib` against the six CONTROLS while the screen ran on 124 COLUMNS.** Two
+populations, one number — the same error species as §5.2's A5. **The gate moves to the library
+tell** (§5.10), which is justified by the matrix's units rather than by a quantile of this cohort.
+
+### 🔴 THE EXPOSURE — `N2_Fib` is inside every number 1.5.6 has produced
+
+`experiments/diag_harmonization_gain.py:112` selects Gill's controls as **all six** `_Fib_` samples:
+
+```python
+g_ctrl = g_norm[g_day == 0.0]      # all six, N2_Fib included
+```
+
+**So `σ_gill` was inflated by the degenerate column in every measurement built on that script:**
+
+| result | where | `N2_Fib` in `σ_gill`? |
+|---|---|---|
+| harmonization gain **2.152** | §4.5, step 1c | ✅ **yes** |
+| top-100 gain **2.769**, and the whole k-sweep | §4.6, step 1d | ✅ **yes** |
+| HFF day-14 harmonized **−21.43 / −29.70** | §4.5, §4.6 | ✅ **yes** |
+| `diag_harmonizer_refit_sparse.py`'s three floor regimes | §5.2 U2 | ✅ yes — **written, never run** |
+| §5.6's T3 ladder | `diag_t3_sigma_gill_leverage.py` | ⚠️ **by design** — leave-one-donor-out, so `N2_Fib` is absent from the N2 fold and present in the other five. That is what it was measuring |
+
+**The same contamination is in the recorded builds.** `N2_Fib` is `is_control` for `gill_bulk`, so it
+enters `σ_ref` in **five of six folds** — including **O1**, which is July's −24.02 reference and the
+anchor `d_f/d_O1` is normalised against throughout §§5.3–5.10.
+
+> **§4.6's headline — "sparsification makes the gain worse, 2.769 against 2.152" — was computed on a
+> contaminated `σ_gill`.** Both numbers share the contamination, so the *comparison* may well
+> survive; **the absolute values do not**, and whether the ordering survives is a measurement nobody
+> has made.
+
+**Nothing is withdrawn.** What is recorded is that the inputs are **known-contaminated** and the
+re-measurement has not been done. It costs one HFF stream — **the same stream step 3c needs.**
+
+### What this does NOT touch
+
+* **§1's MAE 16.61 → 5.36** — transient arm, a different matrix. Untouched.
+* **§5.6's G0** — a bit-exact reproduction of the **shipped** harmonizer, i.e. the pipeline's own
+  output, contamination included. That is what makes it a **fidelity** gate rather than a
+  correctness one, and it is unaffected.
+
+---
+
 ## 6. What this does not license
 
 * **It is not yet a label change.** Nothing in `src/` or `configs/` has moved.
