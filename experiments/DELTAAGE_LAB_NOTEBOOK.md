@@ -4184,3 +4184,30 @@ a named defect inside them.
 (N3 is also 0 and does not collapse) and **fewest admissible genes / the variance-floor lever**
 (§5.5 eliminated the floor at maximum leverage, F = 1.398). Neither was the mechanism. **It is the
 sample.**
+
+> **[2026-08-08 addendum — what the degenerate control does to N2's OWN labels, and to Stage 3]**
+>
+> The clock read on each donor's day-0 control — that donor's zero-point, in every fold:
+>
+> | donor | N2 | N3 | O1 | O2 | Y1 | Y2 |
+> |---|---|---|---|---|---|---|
+> | zero-point (yr) | **98.65** | 36.44 | 79.12 | 79.50 | 64.92 | 57.66 |
+> | donor age | **0** | 0 | 53 | 53 | 29 | 35 |
+>
+> **N2 reads 98.65 — the HIGHEST of the six — from a constant vector, while being a donor of age 0
+> that should read lowest.** Offset against the other five: **+35.12 yr**. So  in EVERY fold, pushing N2 entire series ~35 yr too negative. This is Stage 1.5 audit
+> D2 (*"any error in that single day-0 measurement propagates 1:1 into every dAge for that donor"*)
+> with a measured instance.
+>
+> **It reaches Stage 2.** Stage 2 exists to correct a per-donor level shift of ±12.7 yr assumed to be
+> donor biology. At least one donor's offset is a corrupted sample, not biology — which is exactly
+> what D2 could not resolve (baseline explains 56% of the offset variance, 95% CI [9%, 100%]).
+>
+> **And it reaches Stage 3a.**  targets the held-out Gill donor's mean
+>  under leave-one-donor-out, so one donor of six carries a +35 yr artificial offset. The two
+> GO clauses move in OPPOSITE directions under the defect — the gain contamination inflates |dAge|
+> and so makes *"sweep moves > 2 yr"* easier, while N2 offset adds LODO error and makes *"Dt beats
+> state-only"* harder. There is no clean asymmetry, so a 3a verdict taken now is interpretable only
+> with this caveat. **Cheap resolution, to be pre-registered before running: run 3a twice — six
+> donors, and again with N2 excluded. If the verdict agrees both ways, the defect does not decide
+> it.**
