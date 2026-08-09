@@ -2,6 +2,8 @@
 
 **Status:** 🔵 **PRE-REGISTERED 2026-08-08. NOT IMPLEMENTED. `src/` untouched, no label moved.**
 
+**Status — ✅ IMPLEMENTED 2026-08-08 (§13). Flag OFF.** *The line above is left as written.* All four components shipped; **B1 verified twice** (real matrix and the recorded 124-column cohort) and **B4 verified** — `max|Δ| = 0.00e+00` on 1944 cells against the pre-C-1 baseline. **Not adopted:** the flag is off, no label has moved, and enabling it for anything consuming a trained model remains a separate pre-registered run.
+
 **Why a file and not a section:** two machines pushed a `## 5.8` into `STAGE_1_5_6_SPARSE_CLOCK.md`
 concurrently and neither saw the other's. This change is not part of 1.5.6 — it is a data-integrity
 gate that 1.5.6 *surfaced* — and it takes the next free **change ID** (C-1 … C-6 are Stage 1.5.3's)
@@ -600,3 +602,74 @@ work item** — and it is strictly smaller than either option offered.
 **Four of five were answerable from the code, and the fifth had a cheaper third option.** Recorded
 because the pattern matters more than the five items: *"I left these to you"* on a change this
 mechanical is a signal to go and look, not a signal to choose.
+
+---
+
+## 13. ✅ 2026-08-08 — **IMPLEMENTED**, flag OFF. What shipped, and two things the spec review missed
+
+*Additive. §§1–12 unmodified.* **Code:** `src/cellfate/data/integrity.py`, and edits to
+`sources.py`, `aging.py`, `build_dataset.py`. **Tests:** `tests/test_c7_integrity.py` (12),
+`tests/test_c7_rule4_and_b2prime.py` (13). **Drivers:** `local_runners/build_c7_folds.py`,
+`experiments/verify_c7_adoption.py`, `experiments/stage3a_forward_gate.py`.
+
+### The five decisions, resolved as §12 argued
+
+Each was verified against the file before adopting it. §12's readings were correct, and two of
+them were better than the spec's recommendations:
+
+| | resolution | verified by |
+|---|---|---|
+| **A1** | gate in the source's `_load` | `.fetch` really is called at **three** sites (`:170`, `:289`, `:345`); `_load` is one edit covering all three plus `plan()` |
+| **A2** | dissolves | `normalize_counts` runs at `:174`/`:290`/`:358`, i.e. **after** fetch — a single-cell source hands over raw UMI counts, so G1 would reject every cell by units, not by data |
+| **B1** | dedicated, and it is bulk-only | one 8.3 MB file; no second corpus pass |
+| **C1** | rule 4 **before** `donor_out_of_clock_range` | `age_mask_reason` is persisted (`io.py:139`, `:265`); the order decides what is written once C-2 activates |
+| **D1** | neither — reuse G-a's census | `aging.py:121` already writes `"source": "self_fallback"` |
+
+### Two things the implementation found that no review had
+
+1. **`_control_baseline` has TWO call sites**, and the second — `recenter_on_control_arrays`,
+   the **S4 re-centring** — passed **no census**, so its fallback was **invisible**. A B2′
+   guarding only `delta_age` would have *passed* while S4 silently self-centred the same
+   orphaned line. It now accepts a census, with a test pinning it.
+2. **`delta_age` is called twice** (`build_dataset.py:189` harmonized, `:199` raw), so rule 4
+   had to reach both paths.
+
+### A design error the suite caught before any rebuild
+
+B2′ was first written **unconditional**. That broke
+`test_the_silent_no_control_fallback_self_centres_a_line_to_zero`, which pins today's Group E
+behaviour and states that changing it must be *"a deliberate, reviewed act"*. Making the
+assertion unconditional **was** such a change, unreviewed. B2′ is now gated on the flag, so the
+flag-off path is untouched — **which is what B4 then confirmed at 0.00e+00.**
+
+### Bars
+
+| bar | result |
+|---|---|
+| **B1** separation | ✅ exactly 5 rejected, 0 false positives of 119 — verified on the **real matrix** and on the recorded cohort; each condition independently rejects all five |
+| **B2′** no unmasked fallback | ✅ enforced at both `_control_baseline` sites, three tests including the S4 one |
+| **B3a/b** the gate can fail | ✅ both branches execute |
+| **B3c** rule 4 masks | ✅ |
+| **B3d** rule 4 does **not** fire chunk-locally | ✅ **the load-bearing test** — Group E must not trip C-7 |
+| **B4** bit-identical when off | ✅ **`max|Δ| = 0.00e+00`**, 7 chunks / 1944 cells, self-test confirmed the bar can fail |
+
+### End-to-end on the real Gill matrix
+
+| | samples | donors | rejected | lines without controls |
+|---|---|---|---|---|
+| gate **off** | 124 | 6 | none | none |
+| gate **on** | **119** | **6** | the exact five | **{N2}** |
+
+**Option (c) exactly as designed: the donor and the fold survive.** §5's "re-report over 5 folds"
+stays corrected to **6**.
+
+### What is NOT done
+
+**Adoption.** The flag is off. A **dataset-only** six-fold build (`_c7` roots) is running to
+unblock Stage 3a — `test18_forward_gate.py` imports no `Predictor` and no bundle, so 3a needs a
+build, not a retrain. Adoption for anything that consumes a **trained model** still requires the
+retrain and the full Stage 1 guard re-report over six folds, as its own pre-registered run.
+
+**And the seven `mean − min` outliers that pass G1 ∧ G2 remain unresolved**, including `Y1_Fib`
+— a control whose library and range are both normal. §5.10's *not established* stands, and Y1's
+floor ratio (§5.5) stays unexplained.
