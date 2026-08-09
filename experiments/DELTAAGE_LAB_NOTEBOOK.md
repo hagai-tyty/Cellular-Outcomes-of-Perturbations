@@ -4211,3 +4211,64 @@ sample.**
 > with this caveat. **Cheap resolution, to be pre-registered before running: run 3a twice — six
 > donors, and again with N2 excluded. If the verdict agrees both ways, the defect does not decide
 > it.**
+
+---
+
+## CHANGE C-7 IMPLEMENTED, B4 PASSES, adoption build running (2026-08-08)
+
+**Status:** ✅ IMPLEMENTED, flag OFF, **B4 verified**. Adoption build in progress.
+**Artefacts:** `src/cellfate/data/integrity.py`, `tests/test_c7_integrity.py`,
+`tests/test_c7_rule4_and_b2prime.py`, `local_runners/build_c7_folds.py`,
+`experiments/stage3a_forward_gate.py`, `results/verify_age_mask_identical_results.json`.
+Spec: `plans/CHANGE_C7_IMPLEMENTATION_SPEC.md`; decisions: C-7 §9–§11.
+
+### B4 — the gate on everything after step 5
+
+`plan_tests/verify_age_mask_identical.py --verify`, against the baseline captured **before C-1**:
+all seven chunks (1944 cells) **bit-identical, max|Δ| = 0.00e+00**. The gate's own self-test
+passed first — `one_ulp`, `mask_flip` and `reason_appeared` are all **DETECTED** — so the PASS
+means something.
+
+### Verified end to end on the real Gill matrix
+
+| | samples | donors | rejected | lines without controls |
+|---|---|---|---|---|
+| gate **off** | 124 | 6 | none | none |
+| gate **on** | **119** | **6** | the exact five | **{N2}** |
+
+**Option (c) working as designed: the donor and the fold survive.** Only N2's zero-point goes,
+and rule 4 masks its 21 labels. C-7 §5's "re-report over 5 folds" stays corrected to **6**.
+
+### A design error the test suite caught, before any rebuild
+
+I first made B2′ **unconditional**. That broke
+`test_the_silent_no_control_fallback_self_centres_a_line_to_zero`, which pins today's Group E
+behaviour and says in terms that changing it must be *"a deliberate, reviewed act"*. Making the
+assertion unconditional **was** such a change, unreviewed. B2′ is now gated on the flag.
+**That is B4 doing its job at unit-test speed rather than after a five-hour rebuild.**
+
+### Two things the implementation found that the spec review had not
+
+1. **`_control_baseline` has TWO call sites**, and the second — `recenter_on_control_arrays`,
+   the S4 re-centring — passed **no census**, so its fallback was invisible. A B2′ guarding only
+   `delta_age` would have passed while S4 silently self-centred the same orphaned line. It now
+   accepts a census.
+2. **`delta_age` is called twice** in `build_dataset` (harmonized `:189` and raw `:199`), so
+   rule 4 had to reach both paths, not just the harmonized one.
+
+### Why the adoption build is DATASET-ONLY
+
+Stage 3a's gate, `test18_forward_gate.py`, imports `ArtifactPaths` and `gather_split` and fits
+its own **ridge** — no `Predictor`, no bundle. Its docstring says *"needs cellfate_loocv_*
+bundles"*, which is loose wording: what it reads is the built dataset's shards and splits. So
+unblocking 3a costs a **build**, not a retrain. The full retrain plus the Stage 1 guard
+re-report over **six** folds remains required before C-7 is adopted for anything that consumes a
+trained model.
+
+### Still open
+
+| item | owner |
+|---|---|
+| C-7 adoption for trained-model consumers (retrain + 6-fold guard re-report) | separate pre-registered run |
+| the seven `mean − min` outliers that pass G1 ∧ G2, including `Y1_Fib` (a control) | C-7, recorded as not resolved |
+| Y1's unexplained floor ratio (§5.5) | still unexplained |
