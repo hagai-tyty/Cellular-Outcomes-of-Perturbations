@@ -566,6 +566,86 @@ harmonizer facts only.
 ---
 
 
+## 2026-08-08 (later) - C-7 IMPLEMENTED (components A-D), ships OFF
+
+**Status:** IMPLEMENTED, flag OFF. No label moved, no build touched, nothing adopted.
+25 new tests, full suite green, ruff clean.
+
+### The four components, landed together
+
+Any three of them leave the system in a state C-7's own bars forbid, so they ship as one change.
+
+**A. `src/cellfate/data/integrity.py`** - pure, no I/O, no config. G1 (linear RPM sum in
+[1e5,1e7], because the matrix IS RPM and must sum to ~1e6 by definition of the units) AND G2
+(log2 dynamic range >= 8, i.e. >= 256-fold). Both unit-justified, not fitted to this cohort's
+quantiles - the mean-min-at-1/5-median proposal was rejected in 5.10 for cutting a continuous
+distribution 8% from its neighbour. Verified against the real matrix AND the committed
+124-column census: exactly 5 rejected, 0 false positives, each condition independently
+rejecting all five.
+
+**B. `GillReprogrammingSource`** gates in `_load()`, the single place the matrix is read, so
+`plan()` and all THREE `src.fetch` call sites (build_dataset.py:170, :289, :345) are covered by
+one edit. Missing :345 would leave the degenerate column inside `sigma_ref`, which is the entire
+defect being fixed. Plus `lines_without_controls()`, GLOBAL by construction because `_load`
+already holds every column - so there is no second corpus pass, and the chunk-local case cannot
+be confused for the global one.
+
+**C. `age_label_policy` rule 4 `no_control_baseline`** - a `cell_line` with zero admissible
+controls has no zero-point, so its dAge is UNDEFINED and is masked. Keyed on the condition, not
+on identity, so it works for every future dataset and closes Stage 1.5 Group D generally. Placed
+AFTER `cancer_source` and BEFORE `donor_out_of_clock_range`: N2 is donor_age 0 so it matches both
+once C-2 activates, and `age_mask_reason` is a persisted parquet column (io.py:139, :265), so the
+order decides what is written to the shard. "No zero-point exists" is undefined; "outside the
+fitted range" is out-of-validity. Undefined is stronger and is what gets recorded.
+
+**D. `assert_no_unmasked_fallback`** - B2', reading the census `_control_baseline` already writes
+(`"source": "self_fallback"`, gate G-a). And `recenter_on_control_arrays` now ACCEPTS a census:
+it is `_control_baseline`'s SECOND call site (the S4 re-centring) and it passed none, so its
+fallback was invisible. A B2' guarding only `delta_age` would have passed while S4 silently
+self-centred the same orphaned line.
+
+**ONE FLAG** (`DataConfig.bulk_integrity_gate`), set centrally in `build_sources`, so the gate
+and rule 4 cannot be switched independently - the gate alone would strip the control and leave
+the dAge unmasked, which is the state B2' exists to forbid.
+
+### A design error the test suite caught, before any rebuild
+
+I first made B2' UNCONDITIONAL. That broke
+`test_the_silent_no_control_fallback_self_centres_a_line_to_zero`, which pins today's Group E
+behaviour and says in terms that changing it must be "a deliberate, reviewed act". Making the
+assertion unconditional WAS such a change, made without review. B2' is now gated on the flag, so
+the flag-off path is untouched. **That is B4 doing its job at unit-test speed rather than after a
+5-hour rebuild.**
+
+### Verified end to end on the real Gill matrix
+
+  gate OFF -> 124 samples, 6 donors, nothing rejected, empty census
+  gate ON  -> 119 samples, 6 donors STILL, rejects exactly the five, and
+              lines_without_controls == {'N2'}
+
+Option (c) working as designed: **the donor and the fold survive**; only N2's zero-point goes,
+and rule 4 masks its 21 labels. C-7 section 5's "re-report over 5 folds" stays corrected to 6.
+
+### Tests
+
+12 gate tests (B1 separation on the recorded 124-column cohort, margins, each condition
+independently rejecting, B3a/B3b both branches) + 13 rule-4/B2' tests (B3c, **B3d**, C1 ordering,
+B2'a/b/c including the S4 site, B4 defaults). **B3d is the load-bearing one**: a chunk with no
+controls whose line HAS them globally must NOT trip rule 4, or C-7 blocks on Stage 1.5 Group E
+for the wrong reason.
+
+One test expectation was wrong and the code right: a constant column at a HIGH value fails G1
+first, because 36k genes at 11.489547 gives a library of 1.03e+08 - N2_Fib's actual signature.
+It now has its own test, and the G2 test pins the library in-band so it grades G2 specifically.
+
+### NOT done
+
+Adoption. The flag is off; enabling it is a separate pre-registered run with its own snapshot and
+a full Stage 1 guard re-report over 6 folds. That is the retrain 5.13 freed by cancelling 1.5.6
+step 4.
+
+---
+
 ## 2026-08-08 (later) - C-7 section 9 verified: (c) agreed, B2' is an AMENDMENT, and the predicate's host is wrong
 
 **Status:** VERIFIED and RECORDED. No run. `src/` untouched, no build touched, no label moved.
