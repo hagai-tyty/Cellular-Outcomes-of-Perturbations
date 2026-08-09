@@ -2097,6 +2097,59 @@ a **recorded finding** is right — and §4.6's four-way option table was built 
 
 ---
 
+## 5.18 📏 2026-08-08 — **MEASURED**: §4.6's inversion SURVIVES C-7; §4.5's gain does NOT
+
+*Additive. §4.5 and §4.6 are unmodified — this measures the numbers they rest on.*
+**Artefacts:** `experiments/diag_gain_after_c7.py`, `results/diag_gain_after_c7_results.json`.
+Gene space 5328; clock genes present 5237; **top-100 present 48**; HFF 5782 day-14 / 5981 day-0.
+
+| clock | `sigma_gill` from | direct ΔAge | harmonized | **gain** |
+|---|---|---|---|---|
+| dense | all 6 controls (as 1c/1d) | −16.881 | −24.413 | **1.446** |
+| dense | **`N2_Fib` EXCLUDED (C-7)** | −16.881 | −8.149 | **0.483** |
+| top-100 | all 6 controls (as 1c/1d) | −13.376 | −25.401 | **1.899** |
+| top-100 | **`N2_Fib` EXCLUDED (C-7)** | −13.376 | −11.358 | **0.849** |
+
+### Two findings, and they point opposite ways
+
+**1. §4.6's inversion SURVIVES — and gets stronger.** `gain(top100) > gain(dense)` both before
+cleaning (1.899 vs 1.446, ratio **1.31**) and after (0.849 vs 0.483, ratio **1.76**). §4.6's
+mechanism — *the clock's heavy genes sit exactly where the σ ratio is largest* — is real and is not
+an artefact of the degenerate control. **§4.6's conclusion stands.**
+
+**2. §4.5's gain does NOT survive, and its sign flips.** Both gains fall **below 1**. Harmonization
+does not **amplify** HFF's ΔAge ×2.152 — with the contaminant removed it **ATTENUATES** it, ×0.483
+dense and ×0.849 top-100. The `−24.02` that §4.3 spent this whole section explaining as "the
+harmonization gain" was **the degenerate control**, not the transform. §5.14's implication is
+confirmed in direction and magnitude: removing one column cuts the dense gain **3.0×**.
+
+### The honest limit on comparing to 1c/1d's own figures
+
+Even in the *contaminated* condition this measures dense gain **1.446**, not §4.5's **2.152**. That
+is defect **U1**: 1c/1d floored `sigma` at the median over the **clock genes**, while this floors
+over the pipeline's own **`genes_G`** — different sets, different floors. So the absolute numbers
+here are **not** directly comparable to §4.5's, and the reconciliation is indicative. What *is*
+internally consistent, and what the verdict rests on, is the comparison **within this
+measurement**: contaminated vs clean, and dense vs top-100, all four cells computed the same way.
+
+### What this changes
+
+| | |
+|---|---|
+| §4.6's inversion | ✅ **stands** — measured, and stronger once cleaned |
+| §4.5's "gain 2.152" | ❌ **contaminated.** Clean value ≈ 0.48; harmonization attenuates, it does not amplify |
+| §4.3's attribution of the −24.02 gap to "the harmonization gain" | ❌ **wrong target.** It was the degenerate control |
+| the clock's adoption | **unchanged.** §5.17 verified no `k` passes step 2's bar on both clocks; that comparison never touches harmonization or HFF |
+| step 4's cancellation | **unchanged**, for the same reason |
+
+### What is NOT claimed
+
+That the clean gains (0.483 / 0.849) are the pipeline's own numbers to three digits — U1's floor
+difference is unresolved and would need the regime-A reconciliation `diag_harmonizer_refit_sparse.py`
+was written for. **The ordering and the ~3× contamination factor do not depend on it.**
+
+---
+
 ## 6. What this does not license
 
 * **It is not yet a label change.** Nothing in `src/` or `configs/` has moved.

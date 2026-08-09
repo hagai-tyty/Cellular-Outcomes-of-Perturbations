@@ -1,0 +1,36 @@
+{
+  "dense|all 6 controls (as 1c/1d)": {
+    "direct": -16.88114502942779,
+    "harmonized": -24.412680464589812,
+    "gain": 1.4461507452268667
+  },
+  "dense|N2_Fib EXCLUDED (C-7)": {
+    "direct": -16.88114502942779,
+    "harmonized": -8.148913630903731,
+    "gain": 0.48272280207878476
+  },
+  "top100|all 6 controls (as 1c/1d)": {
+    "direct": -13.376183029050603,
+    "harmonized": -25.400584452353016,
+    "gain": 1.8989411551253172
+  },
+  "top100|N2_Fib EXCLUDED (C-7)": {
+    "direct": -13.376183029050603,
+    "harmonized": -11.35800362004135,
+    "gain": 0.8491214268953902
+  },
+  "verdict": "INVERSION_SURVIVES",
+  "recorded_1c_1d": {
+    "dense_gain": 2.152,
+    "top100_gain": 2.769
+  },
+  "n_hff": {
+    "day14": 5782,
+    "day0": 5981
+  },
+  "n_genes": {
+    "space": 5328,
+    "clock_present": 5237,
+    "top_present": 48
+  }
+}
