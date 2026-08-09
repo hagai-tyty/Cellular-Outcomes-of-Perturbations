@@ -2036,6 +2036,67 @@ decision is not optional; fix that first."*
 
 ---
 
+## 5.17 ✅ 2026-08-08 — §5.13's decision RE-VERIFIED against the sweep data, and one thing it did not pursue
+
+*Additive. §5.13 stands unchanged. Prompted by a direct challenge — was so much cancelled, and
+was it really tried?*
+
+### The cancellation is sound, and now checked against the DATA rather than the prose
+
+§5.13 decided step 2 from §0's ERROR 3 table and §3's narrative. Those are the plan's own words.
+The underlying measurement is `results/diag_dage_ksweep_results.json` — transient arm, ΔAge vs
+ΔAge, n = 68 — and it was never re-read while the decision was being taken. It has been now.
+
+Step 2's bar: **MAE ≤ 8 yr AND sign agreement ≥ 0.80, on BOTH clocks.**
+
+| k | mt MAE | mt sign | sb MAE | sb sign | passes BOTH? |
+|---|---|---|---|---|---|
+| 10 | 7.69 | 0.691 | **6.59** | 0.515 | no |
+| 20 | 6.19 | 0.853 | 7.47 | 0.412 | no |
+| 50 | 5.99 | 0.794 | 6.69 | 0.441 | no |
+| **100** | 5.36 | 0.941 | 8.79 | 0.441 | no |
+| 150 | 5.42 | 0.897 | 8.47 | 0.456 | no |
+| 200 | 6.31 | 0.897 | 10.13 | 0.397 | no |
+| 300 | 9.99 | 0.824 | 12.97 | 0.500 | no |
+| 500 | 11.64 | 0.706 | 13.72 | 0.529 | no |
+| 1000 | 12.33 | 0.603 | 14.15 | 0.632 | no |
+| 2000 | 15.30 | 0.691 | 17.21 | 0.544 | no |
+| 5000 | 16.31 | 0.588 | 17.65 | 0.647 | no |
+| None (dense) | 16.61 | 0.618 | 17.84 | **0.676** | no |
+
+> **No `k` passes.** The best skin-&-blood sign agreement anywhere in the sweep is **0.676**
+> against a **0.80** bar — and it occurs at the *dense* clock. The best sb MAE (**6.59**, k = 10)
+> comes with sign agreement **0.515**. The two clauses are never satisfiable together.
+
+**So steps 3, 4 and 5 follow correctly from step 2**, and the cancellation was not premature. It
+is also worth stating plainly what was *not* cancelled: step **3b** was not skipped, it was
+**answered** — step 3c ran in its place and returned ATTRIBUTED. And three things ran that were
+never on the plan at all: **3c**, **C-7** (written → implemented → adopted on six folds), and
+**Stage 3a**.
+
+### What §5.13 DID leave unpursued, and it is a real gap
+
+§4.5 measured the harmonization gain at **2.152** (dense) and §4.6 at **2.769** (top-100), and
+concluded *"§1's finding does not transfer to HFF. It INVERTS."* **Both numbers were computed
+with `N2_Fib_Sendai_Exp2` inside `sigma_gill`** — the near-constant column C-7 rejects, and the
+one §5.14 showed moves HFF's day-14 from −26.755 to −8.196, an implied residual gain of ~0.82.
+
+**So the gains the inversion rests on are contaminated by exactly the defect C-7 removes**, and
+§5.14 recorded that as an *implication* rather than measuring it. That is the one place the
+challenge lands.
+
+`experiments/diag_gain_after_c7.py` measures it: {dense, top-100} × {`sigma_gill` from all six
+controls as 1c/1d had it, `sigma_gill` with `N2_Fib` excluded}, gain defined by the harmonizer's
+own algebra with `sigma` floored exactly as `harmonize.py:112-113` does. Stated so it can fail —
+**INVERSION SURVIVES** if `gain(top100) > gain(dense)` once cleaned, **INVERSION IS AN ARTEFACT**
+otherwise.
+
+**It changes no decision about the clock either way.** Step 2's bar fails on a
+Gill-versus-methylation comparison that never touches harmonization or HFF. This is about whether
+a **recorded finding** is right — and §4.6's four-way option table was built on top of it.
+
+---
+
 ## 6. What this does not license
 
 * **It is not yet a label change.** Nothing in `src/` or `configs/` has moved.
