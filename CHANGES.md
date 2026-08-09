@@ -11,6 +11,32 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-08 - C-7's five "open decisions" are not decisions: four dissolve, one has a third answer
+
+**Status:** Recorded. **Still NOT implemented. `src/` untouched, no label moved, §11 unmodified.**
+
+The spec closed on five items marked "yours to decide", with recommendations but no data. A project
+whose discipline is *measure, don't decide* should not close a change that way - and it does not
+have to. Every answer below is read off the code with the line cited.
+
+| | asked | answer | basis |
+|---|---|---|---|
+| **A1** | gate in `fetch` or the build loop | **fetch** | `src.fetch` is called at **three** sites - `build_dataset.py:170, 289, 345`. Build-loop gating means three edit sites and **missing :345 leaves the degenerate column in `sigma_ref`**, which is the whole defect. Source gating is one site, covers three |
+| **A2** | assert against single-cell sources | **question DISSOLVES** | under A1 a single-cell source never calls the gate. And G1 is defined on **RPM** while `GSE242423SingleCellSource` yields **raw UMI counts** (~1e3-1e4/cell; `normalize_counts` runs later), so G1 would reject every cell by construction of the units |
+| **B1** | which census pass | **dedicated - and the flagged cost is not real** | rule 4 fires only where a line can lose a control; only the gate removes controls; the gate is bulk-only. **So the census is bulk-only** - `gill_bulk`, one 8 MB file, 124 columns. There is no "second full corpus read". (`fit_harmonizer` is also conditional, `:383` - reusing it would leave non-harmonized builds ungated) |
+| **C1** | rule 4 first or second | **before `donor_out_of_clock_range`** | `age_mask_reason` is a **persisted parquet column** (`io.py:139, 265`) and `schemas.py:57-59` says the order is meaningful. Free today because C-2 is off, but **N2 is donor age 0, so once C-2 activates it matches BOTH rules** and the order decides the recorded reason. "No zero-point exists" is *undefined*; "outside the clock's range" is *out-of-validity* - undefined is stronger. Decide it now while it costs nothing |
+| **D1** | thread the mask or assert at the call site | **NEITHER - the census already records it** | `aging.py:121` already writes `"source": "controls" if ctrl.any() else "self_fallback"` per line. **That is Stage 1.5.2's G-a gate; B2' is the same census one field further** - one assertion, at the single place the fallback occurs, not two places it is consumed |
+
+**D1's real work item**, smaller than either option offered: of the two `_control_baseline` call
+sites only `delta_age` passes a census (`aging.py:301`); `aging.py:245` does not. That site must
+pass one or its fallback stays invisible.
+
+Recorded because the pattern matters more than the items: **"I left these to you" on a change this
+mechanical is a signal to go and look, not a signal to choose.**
+
+---
+
+
 ## 2026-08-08 - C-7 decides: option (c), and B2 does not have to block it
 
 **Status:** Decision recorded. **Still NOT implemented. `src/` untouched, no label moved.**

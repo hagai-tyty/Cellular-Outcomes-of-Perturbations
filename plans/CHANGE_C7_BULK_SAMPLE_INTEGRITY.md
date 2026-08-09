@@ -492,3 +492,111 @@ step 4; it is not free, it is *already budgeted*.
 **The DECISION is ready; the IMPLEMENTATION is not started.** B1 is verified, the gate is
 unit-justified, (c) and rule 4's form are agreed, and the sequencing is settled. Items 1–3 are the
 spec for writing it, item 5 was a live wrong instruction and is now flagged, item 4 is the work.
+
+---
+
+## 12. 🆕 2026-08-08 — THE FIVE OPEN DECISIONS ARE NOT DECISIONS. Four dissolve; one has a third answer.
+
+*Additive. §11's spec is unmodified. Every answer below is read off the code, with the line cited —
+none is a preference.*
+
+**The objection that prompted this:** a project whose discipline is *measure, don't decide* should
+not close a change on five judgement calls presented without data. It doesn't have to.
+
+### A1 — gate in the source's `fetch`, or the build loop? → **`fetch`, decided by a count**
+
+`src.fetch(chunk)` is called at **three** sites in `build_dataset.py`, each wrapped identically:
+
+```
+170:  raw = apply_qc(src.fetch(chunk), cfg.qc)     # process_chunk  -- the build loop
+289:  raw = apply_qc(src.fetch(chunk), cfg.qc)     # gene-panel pre-pass
+345:  raw = apply_qc(src.fetch(chunk), cfg.qc)     # fit_harmonizer pre-pass
+```
+
+**Gating in the build loop means three edit sites, and missing one is the failure mode** — miss :345
+and the degenerate column still reaches `σ_ref`, which is the entire defect. **Gating in the source
+is one site and covers all three.** Not a preference: 1 against 3, with a known failure mode on the 3.
+
+### A2 — refuse to run on single-cell sources? → **the question DISSOLVES**
+
+It only exists if the gate sits somewhere generic. **Put it in the bulk source's `fetch` (A1) and a
+single-cell source never calls it** — there is nothing to assert and no branch to test.
+
+And the assertion would be redundant anyway, on the same units argument that justifies G1:
+**G1 is defined on RPM.** `GSE242423SingleCellSource` yields **raw UMI counts**, which sum to
+~1e3–1e4 per cell — `normalize_counts` runs *later*, in `process_chunk`. So G1 would reject **every
+cell** by construction of the units, not by any property of the data. A gate that cannot be
+meaningfully applied should not be reachable, rather than reachable-and-guarded.
+
+### B1 — dedicated census pass vs reuse vs obs-only? → **the flagged cost DOES NOT EXIST**
+
+§11 flags *"a dedicated census means a second full corpus read on harmonized builds"* and weighs
+that against entangling with the harmonizer. **Neither trade-off is real, because the census does
+not need the corpus.**
+
+Rule 4 fires only where a line can *lose* its last control. **A line can only lose a control to the
+C-7 gate, and the gate is bulk-only (A1/A2). So the census is bulk-only.** That is `gill_bulk`:
+**one 8 MB file, 124 columns** — already read once by `load_gill`, and trivially cheap beside the
+42 605-cell single-cell corpus it does not touch.
+
+**So take the dedicated pass — but the honest cost is one bulk matrix, not a corpus read**, and the
+entanglement §10 rejected is avoided for free rather than paid for. *(`fit_harmonizer` is also
+conditional — `build_dataset.py:383`, `if cfg.harmonize` — so reusing it would leave non-harmonized
+builds ungated. A second reason not to.)*
+
+### C1 — rule 4 first or second in the reason order? → **not cosmetic, and free to do RIGHT today**
+
+`age_mask_reason` is **persisted**, not internal: `io.py:139` and `io.py:265` declare it in the
+parquet schema, and `schemas.py:57-59` states the ordering is meaningful — *"a consumer that needs
+RANK order can honour `donor_out_of_clock_range` differently from `cancer_source`."*
+
+**Today no cell can match two rules**, because the only overlap candidate is C-2 and C-2 is **off**.
+So the choice costs nothing now. **But it stops being free the moment C-2 activates:** N2 is donor
+age 0, so it would match **both** rule 4 (no controls) *and* `donor_out_of_clock_range`, and the
+recorded reason would be whichever comes first.
+
+> **Place it by specificity while it is free:** *"no zero-point exists"* is **undefined**;
+> *"donor outside the clock's fitted range"* is **out-of-validity**. Undefined is the stronger and
+> more informative statement, so rule 4 belongs **before** `donor_out_of_clock_range` and after
+> `cancer_source`. Deciding it later means deciding it under pressure, on shards already written.
+
+### D1 — thread the mask, or assert at the call site? → **NEITHER. The census already records it.**
+
+`_control_baseline` **already** distinguishes the two paths, at the single place the fallback occurs:
+
+```python
+ref = values[ctrl] if ctrl.any() else values[in_line]          # aging.py:116
+...
+rec = {"n_control": int(ctrl.sum()), "n_cells": int(in_line.sum()),
+       "source": "controls" if ctrl.any() else "self_fallback",   # aging.py:121
+       "unreplicated": bool(ctrl.sum() == 1)}
+census[str(line)] = rec
+```
+
+**That is Stage 1.5.2's gate G-a — built to make `n = 1` visible. B2′ is the same census, one field
+further.** So B2′ is one assertion over a dict that already exists, keyed by line:
+
+> **for every line whose census records `source == "self_fallback"`, that line's ΔAge must be
+> masked.**
+
+No mask threading, no duplicated assertion at two call sites, no new plumbing — and it lands at the
+**one** place the fallback can happen rather than the two places it is consumed.
+
+**One real prerequisite, and it is small:** of the two call sites, only `delta_age` passes the
+census (`aging.py:301`); `aging.py:245` calls `_control_baseline(values, lines, is_ctrl)` **without
+it**. That site must pass a census too, or its fallback stays invisible. **That is the actual D1
+work item** — and it is strictly smaller than either option offered.
+
+### Net
+
+| | §11 asked | answer | basis |
+|---|---|---|---|
+| **A1** | fetch or build loop | **fetch** | 3 call sites vs 1; `:345` is the one that matters |
+| **A2** | assert on single-cell? | **question dissolves** | unreachable under A1; and G1 is RPM-defined |
+| **B1** | which census? | **dedicated — and it is bulk-only** | the flagged corpus-read cost is not real |
+| **C1** | first or second | **before `donor_out_of_clock_range`** | persisted column; free now, contested once C-2 is on |
+| **D1** | thread or assert | **neither — read G-a's census** | `aging.py:121` already records it |
+
+**Four of five were answerable from the code, and the fifth had a cheaper third option.** Recorded
+because the pattern matters more than the five items: *"I left these to you"* on a change this
+mechanical is a signal to go and look, not a signal to choose.
