@@ -566,6 +566,67 @@ harmonizer facts only.
 ---
 
 
+## 2026-08-08 (later) - C-7 adopted on the DATASET: A1-A4 all pass, 5.14's prediction confirmed
+
+**Status:** Six `_c7` folds built (6380 s), dataset only - no training, no bundle. `src/`
+unchanged since e6fc183. Nothing adopted for trained-model consumers.
+
+### A bug caught first, by checking the artefact rather than the wiring
+
+The first build produced `cellfate_loocv_N2_c7` with `n_samples=42605` - byte-identical to arm A
+- and N2's baseline census still reading `n_control=1, source=controls`. **The gate had done
+nothing.** `run()` does `sources = sources if sources is not None else build_sources(cfg)`, and
+the flag was set only inside `build_sources`; every real caller INJECTS sources
+(`run_multi_local.py`, the C-7 driver, every test with a synthetic source), so `build_sources`
+never ran and the flag never reached the source.
+
+It would not have failed loudly. It would have produced six "C-7" folds identical to arm A and a
+Stage 3a verdict reported as taken on clean labels. Fixed with `apply_source_flags(cfg, sources)`
+called from BOTH `build_sources` and `run`, plus a test pinning exactly this. (e6fc183)
+
+### The gate then fired identically in all six folds
+
+    rejected: N2_Fib_Sendai_Exp2, N2_d21_CD13_Sendai_Exp2, N3_d21_SSEA4_Sendai_Exp2,
+              O2_d9_SSEA4_Sendai_Exp1, Y1_d7_CD13_Sendai_Exp1
+    lines_without_controls: ['N2']
+    n_samples: 42605 -> 42600
+
+  fold  HFF day-14 _c7   HFF day-14 _armA
+  N2         -7.337            -7.352
+  N3         -5.628           -22.121
+  O1         -6.514           -24.023
+  O2         -6.674           -22.891
+  Y1         -4.606           -22.049
+  Y2         -8.292           -23.869
+
+  A1  N2's dAge fully masked, every fold, reason `no_control_baseline`   PASS
+  A2  donor and fold survive -- 6 folds, N2's cells present              PASS
+  A3  mean |day14 - (-8.196)| = 1.719 yr against 5.14's reconstruction   PASS
+  A4  spread 16.671 -> 3.686 yr, a 78% reduction                         PASS
+
+### The strongest evidence is one nobody designed
+
+**The N2 fold barely moved: -7.352 -> -7.337.** It is the one fold whose harmonizer ALREADY
+excluded the degenerate control, so C-7 had almost nothing to remove there. The other five, which
+all contained it, moved from -22..-24 down to -4.6..-8.3 - **they moved to join N2**. The fold
+that looked anomalous was the clean one all along, exactly as 5.7 and 5.14 predicted, now
+measured on built labels rather than reconstructed.
+
+### What it does NOT establish
+
+That ~-6.5 is the CORRECT HFF dAge. It is the UNCONTAMINATED one; whether it is right is still
+what arms C and D narrowed and did not close. It does sit close to the raw single-dataset value
+(-8.5 to -10.6), consistent with 5.14's implication that the "harmonization gain" was
+substantially this defect.
+
+**And the residual is not zero:** 3.686 yr of spread remains. C-7 removed 78%; something still
+moves HFF's labels a few years across folds, and that is not investigated here.
+
+N2 now contributes 19 samples not 21 (two of its columns rejected), dAge masked, so it feeds the
+FATE head only - precisely what option (c) was chosen to preserve.
+
+---
+
 ## 2026-08-08 (later) - C-7 IMPLEMENTED (components A-D), ships OFF
 
 **Status:** IMPLEMENTED, flag OFF. No label moved, no build touched, nothing adopted.
