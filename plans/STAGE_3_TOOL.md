@@ -129,6 +129,49 @@ cannot find a Δt signal, a neural net will not either.**
 | **WEAK GO** | sweep moves but Δt does not beat state-only | build, tempered |
 | **STOP** | neither | **do not write tool code.** Ship the scoring model; go to Stage 5 |
 
+> ## 🚨 **3a RESULT — 2026-08-08: STOP.** Run on C-7-clean labels AND on the contaminated ones; they agree.
+>
+> *Additive. Nothing above is changed.* `experiments/stage3a_forward_gate.py` imported
+> `test18_forward_gate.py` **unmodified** and called its own `main()` with `resolve_root`
+> redirected. Full record: `experiments/DELTAAGE_LAB_NOTEBOOK.md`, "STAGE 3a RUN".
+>
+> **Run on two arms, because this branch is terminal.** §5.14 of `STAGE_1_5_6_SPARSE_CLOCK.md`
+> proved arm A's `y_age` is inflated ~3× in five of six folds by one degenerate GEO column, and a
+> terminal decision must not rest on that. `_c7` (C-7 gate on, degenerate control rejected, donor
+> N2's ΔAge masked) is **operative**; `_armA` is context.
+>
+> | | `_c7` (operative) | `_armA` |
+> |---|---|---|
+> | Part A ΔAge MAE, state only | **20.67** | 25.53 |
+> | Part A state + Δt | 86.77 | 90.54 |
+> | Part C unsafe-frac MAE, state only | **0.409** | 0.386 |
+> | Part C state + Δt | 2.010 | 0.983 |
+> | Part C paired | +1.601, CI [−2.270, +5.472] | +0.598, CI [−0.821, +2.016] |
+> | **verdict** | **STOP** | **STOP** |
+>
+> Cleaning the labels improved the state-only fit by **19 %** (25.53 → 20.67) and **did not change
+> the verdict.**
+>
+> **Δt does not merely fail to help — it makes the fit worse**, by ~65 MAE in Part A and 0.6–1.6
+> in Part C. Both CIs include zero, so both are formally *tied*, but the point estimate is
+> consistently the wrong way. That is §0.4's own diagnosis: along one trajectory, time is
+> **redundant with state**.
+>
+> ⚠️ **Part B must NOT be read as passing the ">2 yr sweep" clause.** Its swing is 255–269 yr,
+> and in `_armA` the per-fold swing is **identical to the digit (−255.76) in all six folds** — a
+> real per-fold response cannot be identical across six different held-out donors. That is the
+> ridge extrapolating on Δt², not signal. **Part C is decisive and test 18 says so itself.**
+>
+> **Consequence, per the table above: 3b, 3c and 3d are NOT written.** This routes to *"ship the
+> scoring model; go to Stage 5."* The **fate head is untouched** and works (ROC 0.983, PR-AUC
+> 0.992) — that is what shipping the scoring model means.
+>
+> **What it does not decide:** that forward prediction is impossible in principle. Test 18's own
+> caveat governs — *"a screen, not a proof … a NEGATIVE result is decisive"* — decisive **for this
+> corpus**, at ~12 timepoints × 6 donors. The two options §3a names, **(a)** a ΔAge-trajectory
+> readout with no safety recommendation and **(b)** data with more unsafe-cell variation (Stage 6),
+> are scope decisions and are **recorded, not taken.**
+
 **A STOP is a real result** — this dataset cannot support forward prediction, which is worth
 knowing and worth reporting.
 

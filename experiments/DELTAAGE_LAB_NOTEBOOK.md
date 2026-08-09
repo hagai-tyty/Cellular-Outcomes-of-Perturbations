@@ -4336,3 +4336,77 @@ labels across folds by a few years. Not investigated here.
 N2 now contributes **19** samples, not 21 — two of its columns were rejected (`N2_Fib` and
 `N2_d21_CD13`). Its ΔAge labels are masked, so it contributes to the **fate** head only, which is
 exactly what option (c) was chosen to preserve.
+
+---
+
+## STAGE 3a RUN — **STOP**, on clean labels and on contaminated ones alike (2026-08-08)
+
+**Status:** ✅ RUN. Read-only. **Artefacts:** `experiments/stage3a_forward_gate.py`,
+`results/stage3a_forward_gate_results.json`. `experiments/test18_forward_gate.py` was imported
+**unmodified** and its own `main()` called with `resolve_root` redirected; the verdict recorded is
+the one test 18 produced.
+
+### Why it was run on two arms
+
+§3a's STOP branch is **terminal** — *"do not write tool code. Ship the scoring model; go to
+Stage 5."* Its target is `y_age` for the held-out Gill donor, pooled across folds, which §5.14
+proved was inflated ~3× in five of six arm-A folds. A terminal decision must not rest on labels
+known to be contaminated, so the **`_c7`** arm is operative and `_armA` is context. **If the two
+had disagreed, the disagreement would itself have been the finding.**
+
+### They agree
+
+| | `_c7` (operative) | `_armA` (context) |
+|---|---|---|
+| **Part A** ΔAge MAE, state only | **20.67** | 25.53 |
+| **Part A** state + Δt | 86.77 | 90.54 |
+| paired (Δt − state) | +66.11, 95% CI **[−89.10, +221.31]** | +65.01, CI **[−38.01, +168.03]** |
+| **Part C** unsafe-fraction MAE, state only | **0.409** | 0.386 |
+| **Part C** state + Δt | 2.010 | 0.983 |
+| paired | +1.601, CI **[−2.270, +5.472]** | +0.598, CI **[−0.821, +2.016]** |
+| **VERDICT** | **STOP** | **STOP** |
+
+> ### VERDICT: **STOP (or REDESIGN).** Δt cannot predict the UNSAFE FRACTION forward.
+
+Cleaning the labels *did* improve the state-only ΔAge fit (**25.53 → 20.67**, 19 % better), which
+is what cleaner labels should do. **It did not change the verdict.**
+
+### Reading it honestly
+
+**Adding Δt does not merely fail to help — it makes the fit worse**, by ~65 MAE in Part A and by
+0.6–1.6 in Part C. Both CIs include zero so both are formally *tied*, but the point estimate is
+consistently in the wrong direction. That is consistent with `STAGE_3_TOOL.md` §0.4's own
+diagnosis: along a single trajectory, time is **redundant with state**, so a Δt feature adds
+variance and no information.
+
+**Part B is not evidence and must not be read as passing the ">2 yr sweep" clause.** The swing is
+255–269 yr, and in `_armA` the per-fold swing is **identical to the digit** (−255.76) in all six
+folds. A real per-fold forward response cannot be identical across six different held-out donors.
+That is the ridge **extrapolating on the Δt² term**, not a signal. Part C is the decisive part,
+and test 18 says so in its own output.
+
+**`_c7` runs on n = 5 folds in Part A, not 6** — N2's ΔAge is masked by C-7 rule 4, exactly as
+intended. Its unsafe fraction shows "no variation" in `_armA` too, which matches July's Test 7.1
+(N2 had 0 unsafe cells).
+
+### What this decides, and what it does not
+
+**Decides:** the stopping-time tool is **not supported by this dataset**. Sub-stages 3b, 3c and 3d
+do not get written. Per §3a this routes to *"ship the scoring model; go to Stage 5."*
+
+**Does NOT decide** that forward prediction is impossible in principle. Test 18's own caveat
+stands: *"pairs share timepoints so they are not independent — a screen, not a proof. A NEGATIVE
+result is decisive; a POSITIVE one is permission to proceed."* It is decisive **for this corpus**,
+at ~12 timepoints × 6 donors. §3a's own STOP text calls this *"a real result — this dataset cannot
+support forward prediction, which is worth knowing and worth reporting."*
+
+**And it does not touch the fate head**, which consumes no ΔAge and works (ROC 0.983, PR-AUC
+0.992). That is what "ship the scoring model" means.
+
+### The options §3a itself names
+
+* **(a)** ship a ΔAge-trajectory readout with **no safety recommendation**;
+* **(b)** acquire data with more unsafe-cell variation — which is Stage 6, and which the donor
+  arithmetic already pointed at.
+
+Both are decisions about scope, not measurements. Recorded, not taken.
