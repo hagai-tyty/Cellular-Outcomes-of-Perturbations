@@ -1,0 +1,96 @@
+{
+  "script": "verify_c7_adoption",
+  "c7": {
+    "N2": {
+      "n_cells": 42600,
+      "n2_cells": 19,
+      "n2_masked": 19,
+      "reasons": {
+        "no_control_baseline": 19
+      },
+      "hff_day14": -7.337034150202123
+    },
+    "N3": {
+      "n_cells": 42600,
+      "n2_cells": 19,
+      "n2_masked": 19,
+      "reasons": {
+        "no_control_baseline": 19
+      },
+      "hff_day14": -5.628030671011796
+    },
+    "O1": {
+      "n_cells": 42600,
+      "n2_cells": 19,
+      "n2_masked": 19,
+      "reasons": {
+        "no_control_baseline": 19
+      },
+      "hff_day14": -6.514103926912447
+    },
+    "O2": {
+      "n_cells": 42600,
+      "n2_cells": 19,
+      "n2_masked": 19,
+      "reasons": {
+        "no_control_baseline": 19
+      },
+      "hff_day14": -6.67408722082151
+    },
+    "Y1": {
+      "n_cells": 42600,
+      "n2_cells": 19,
+      "n2_masked": 19,
+      "reasons": {
+        "no_control_baseline": 19
+      },
+      "hff_day14": -4.6063438286082
+    },
+    "Y2": {
+      "n_cells": 42600,
+      "n2_cells": 19,
+      "n2_masked": 19,
+      "reasons": {
+        "no_control_baseline": 19
+      },
+      "hff_day14": -8.292220907248597
+    }
+  },
+  "armA_day14_recorded": {
+    "N2": -7.352,
+    "N3": -22.121,
+    "O1": -24.023,
+    "O2": -22.891,
+    "Y1": -22.049,
+    "Y2": -23.869
+  },
+  "predicted_clean_day14": -8.196,
+  "checks": [
+    {
+      "name": "A1  N2's \u0394Age fully masked in every fold",
+      "pass": true,
+      "observed": "reasons seen: ['no_control_baseline']"
+    },
+    {
+      "name": "A1b reason is `no_control_baseline`",
+      "pass": true,
+      "observed": "['no_control_baseline']"
+    },
+    {
+      "name": "A2  donor and fold survive (option (c))",
+      "pass": true,
+      "observed": "6 folds, N2 cells present in all"
+    },
+    {
+      "name": "A3  HFF day-14 moved toward the reconstruction's value",
+      "pass": true,
+      "observed": "mean |d14 - -8.196| = 1.719 yr"
+    },
+    {
+      "name": "A4  HFF day-14 spread collapsed (was 16.671 yr)",
+      "pass": true,
+      "observed": "spread now 3.686 yr"
+    }
+  ],
+  "all_pass": true
+}

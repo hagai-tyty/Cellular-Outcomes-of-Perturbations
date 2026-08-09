@@ -4272,3 +4272,67 @@ trained model.
 | C-7 adoption for trained-model consumers (retrain + 6-fold guard re-report) | separate pre-registered run |
 | the seven `mean − min` outliers that pass G1 ∧ G2, including `Y1_Fib` (a control) | C-7, recorded as not resolved |
 | Y1's unexplained floor ratio (§5.5) | still unexplained |
+
+---
+
+## C-7 ADOPTED on the dataset — A1–A4 ALL PASS, and §5.14's prediction is CONFIRMED (2026-08-08)
+
+**Status:** ✅ Six `_c7` folds built (6380 s), gate firing identically in each.
+**Artefacts:** `results/verify_c7_adoption_results.json`, `cellfate_loocv_<donor>_c7/`.
+Dataset only — no training, no bundle.
+
+### The gate fired the same way in all six folds
+
+    rejected 5 Gill samples: N2_Fib_Sendai_Exp2, N2_d21_CD13_Sendai_Exp2,
+                             N3_d21_SSEA4_Sendai_Exp2, O2_d9_SSEA4_Sendai_Exp1,
+                             Y1_d7_CD13_Sendai_Exp1
+    lines_without_controls:  ['N2']
+
+`n_samples` 42605 → **42600**, i.e. exactly the five rejected columns.
+
+### The result
+
+| fold | cells | N2 cells | N2 masked | HFF day-14 `_c7` | HFF day-14 `_armA` |
+|---|---|---|---|---|---|
+| N2 | 42600 | 19 | 19 | **−7.337** | −7.352 |
+| N3 | 42600 | 19 | 19 | −5.628 | −22.121 |
+| O1 | 42600 | 19 | 19 | −6.514 | **−24.023** |
+| O2 | 42600 | 19 | 19 | −6.674 | −22.891 |
+| Y1 | 42600 | 19 | 19 | −4.606 | −22.049 |
+| Y2 | 42600 | 19 | 19 | −8.292 | −23.869 |
+
+| check | verdict | observed |
+|---|---|---|
+| **A1** N2's ΔAge fully masked, every fold | ✅ PASS | reason `no_control_baseline` — rule 4 fired |
+| **A2** donor and fold survive | ✅ PASS | 6 folds, N2's cells present in all |
+| **A3** moved toward the reconstruction's value | ✅ PASS | mean \|d14 − (−8.196)\| = **1.719 yr** |
+| **A4** spread collapsed | ✅ PASS | **16.671 → 3.686 yr**, a 78 % reduction |
+
+### The internal consistency check nobody designed, and it is the strongest evidence here
+
+**The N2 fold barely moved: −7.352 → −7.337.** It is the one fold whose harmonizer *already*
+excluded N2's degenerate control, so C-7 had almost nothing left to remove there. The other five
+— which all contained it — moved from −22…−24 down to −4.6…−8.3, i.e. **they moved to join N2**.
+
+That is exactly the shape §5.7 and §5.14 predicted, and it is now measured on real built labels
+rather than reconstructed: **the fold that looked anomalous was the clean one all along.**
+
+### What this confirms, and what it does not
+
+**Confirms:** the degenerate control was the carrier of §4.7's 16.67 yr fold instability. Step
+3c's ATTRIBUTED verdict (B1 6.23×, B2 gap closed 1.113, B3 +18.558) is borne out end to end.
+July's **−24.02** reference was contaminated.
+
+**Does NOT confirm** that ≈ −6.5 is the *correct* HFF ΔAge. It is the uncontaminated one. Whether
+it is *right* is still the question arms C and D narrowed and did not close — and note it now sits
+close to the raw single-dataset value (−8.5 to −10.6, `diag_pipeline_decompose`), which is
+consistent with the harmonization gain having been substantially this defect (§5.14).
+
+**Residual spread is 3.686 yr, not zero.** C-7 removed 78 % of it; something still moves HFF's
+labels across folds by a few years. Not investigated here.
+
+### Also
+
+N2 now contributes **19** samples, not 21 — two of its columns were rejected (`N2_Fib` and
+`N2_d21_CD13`). Its ΔAge labels are masked, so it contributes to the **fate** head only, which is
+exactly what option (c) was chosen to preserve.
