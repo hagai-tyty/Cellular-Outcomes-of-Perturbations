@@ -118,7 +118,7 @@ refitted** — refitting it to improve our own numbers would be fitting the test
 | path | what lives here |
 |---|---|
 | **`src/cellfate/common/`** | Foundation shared by every stage: `io.py` (Parquet shard/manifest schemas, atomic writes), `schemas.py` (Pydantic `Sample`, `ManifestRow`, `AgeProvenance` + validators), `constants.py`, `scalers.py`, `calibration.py`, `seeding.py` (global determinism), `logging.py`, `console.py`, `errors.py`, `panel.py`, `progress.py` |
-| **`src/cellfate/data/`** | The ETL. `build_dataset.py` is the orchestrator; `sources.py` the corpus adapters; `aging.py` the ΔAge definition and label policy; `harmonize.py` the cross-modality alignment; `proliferation.py` the cell-cycle deconfounder; plus `qc`, `normalize`, `labels`, `signatures`, `perturbation`, `splits`, `chunking`, `clock_fit`, `assemble` |
+| **`src/cellfate/data/`** | The ETL. `build_dataset.py` is the orchestrator; `sources.py` the corpus adapters; `aging.py` the ΔAge definition and label policy; `harmonize.py` the cross-modality alignment; `proliferation.py` the cell-cycle deconfounder; **`integrity.py` the bulk-sample gate (Change C-7)**; plus `qc`, `normalize`, `labels`, `signatures`, `perturbation`, `splits`, `chunking`, `clock_fit`, `assemble` |
 | **`src/cellfate/models/`** | The network. `network.py` (`CellFateNet`: shared trunk → two heads), `encoders.py` (cell / chem / TF), `heads.py`, `losses.py` (focal, masked-Huber, Kendall–Gal `MultiTaskLoss`) |
 | **`src/cellfate/training/`** | `train_model.py` (orchestrator), `train.py` (loops + `_AgeWindow`), `dataset.py` (shard→tensor), `xdonor_calib.py` (**inner LODO**), `calibrate.py`, `conformal.py`, `ood.py`, `bundle.py`, `metrics.py` |
 | **`src/cellfate/evaluation/`** | `evaluate_cli.py` (gates), `baselines.py` (mean / ridge / x-only / u-only / kNN / predict-control), `metrics.py`, `regimes.py`, `report.py`, `external_validation.py`, `data.py` |
@@ -280,6 +280,58 @@ For each training donor `d`: train an inner ensemble on `train − d`, early-sto
 collect residuals on **all** of `d`'s cells. Donors whose removal would leave under
 `MIN_INNER_TRAIN_FRAC = 0.5` of the training set are **skipped** — holding out a bulk corpus
 measures data starvation, not donor shift.
+
+### `data/integrity.py` — the bulk-sample gate (Change C-7, ships OFF)
+
+**Why it exists.** `GSE165176` contains columns that are **not transcriptomes**.
+`N2_Fib_Sendai_Exp2` — donor N2's day-0 control, and therefore N2's entire ΔAge zero-point — is
+nearly a constant vector: `min = median = mean = 11.490`, a log2 range of **1.74** where sound
+controls span 13–15, and a linear library **68×** the cohort. The clock reads it as **98.65 yr**
+for a donor of age **0**.
+
+**Why one bad column mattered so much.** The day-0 `_Fib_` sample is `is_control`, so it is *two
+things at once*: that donor's zero-point, **and** one of the five or six controls `sigma_gill` is
+fitted on. `sigma_gill / sigma_hff` is the gain applied to **HFF's** labels — 99.7 % of the
+age-labelled corpus — in every fold that does not hold N2 out.
+
+**Two conditions, justified by units rather than by this cohort's quantiles:**
+
+| | |
+|---|---|
+| **G1** library | the matrix is RPM, so a sound column's linear values sum to ≈ 1e6 *by definition*. Accept `[1e5, 1e7]` |
+| **G2** dynamic range | a real transcriptome spans orders of magnitude; require `log2(max) − log2(min) ≥ 8` |
+
+On the 124 Gill columns these reject **exactly 5** with **0** false positives, each condition
+independently rejecting all five.
+
+**Where it acts.** In `GillReprogrammingSource._load` — the single place the matrix is read — so
+`plan()` and all **three** `src.fetch` call sites are covered by one edit. Missing the third
+(`fit_harmonizer`) would leave the degenerate column inside `sigma_ref`, which is the entire
+defect.
+
+**What it forces downstream.** Rejecting a control can leave a line with **no zero-point**, so
+C-7 ships with two companions that must land with it:
+
+* **`age_label_policy` rule 4 `no_control_baseline`** — a `cell_line` with zero admissible
+  controls **anywhere in the corpus** has undefined ΔAge and is masked. GLOBAL, never
+  chunk-local: `_control_baseline` *also* falls back when a line has no controls *in this chunk*
+  (Stage 1.5's Group E), and conflating the two would block C-7 for the wrong reason.
+* **`assert_no_unmasked_fallback` (bar B2′)** — no line may reach the fallback *and* keep its
+  label. Guards **both** of `_control_baseline`'s call sites, including the S4 re-centring in
+  `recenter_on_control_arrays`, which previously passed no census and so had an invisible
+  fallback.
+
+**One flag** (`DataConfig.bulk_integrity_gate`), applied by `apply_source_flags` from **both**
+`build_sources` and `run` — because callers inject sources, and a flag set only on the
+construction path silently never reaches a production build.
+
+**Measured effect** (six dataset-only folds, `_c7`): HFF's day-14 ΔAge spread across folds falls
+from **16.671 → 3.686 yr**, and the five contaminated folds move from −22…−24 to −4.6…−8.3, i.e.
+**toward the N2 fold, which barely moves** because it already excluded the bad control. The
+residual 3.686 yr is what an `n = 1` unreplicated control per donor predicts — Stage 1.5's D2,
+owned by Stage 6.
+
+---
 
 ### `data/harmonize.py`
 
