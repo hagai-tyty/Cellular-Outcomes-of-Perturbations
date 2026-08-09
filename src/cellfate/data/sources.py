@@ -24,6 +24,7 @@ from cellfate.common import constants as C
 from cellfate.common.errors import DataSourceError
 
 from .chunking import CellChunk
+from .integrity import screen_bulk_matrix
 
 # Columns every source must provide in RawChunk.obs.
 OBS_COLUMNS = ("cell_id", "cell_line", "pert_id", "smiles", "scaffold_id",
@@ -430,6 +431,11 @@ class GillReprogrammingSource(ReprogrammingSource):
         self._genes: list[str] | None = None
         self._rpm = None            # linear RPM, genes x samples (DataFrame)
         self._meta: dict | None = None
+        # CHANGE C-7. Set centrally by `build_sources` from ONE DataConfig flag, so the gate
+        # and rule 4 cannot be switched independently -- the gate alone would strip a donor's
+        # last control and leave its ΔAge unmasked, which is exactly what B2' forbids.
+        self.bulk_integrity_gate: bool = False
+        self.rejected_samples: dict[str, str] = {}
 
     # GEO spells the chronological-age characteristic two ways across the four SubSeries of
     # GSE165180: "donor age" (GSE165176 / GSE165178) and "donor age (years)" (GSE165177 /
@@ -478,6 +484,25 @@ class GillReprogrammingSource(ReprogrammingSource):
         gene_col = df.columns[0]                       # "Probe" == HGNC symbol
         sample_cols = list(df.columns[self._ANNOT_COLS:])
         log2 = df[sample_cols].to_numpy(dtype=np.float64)
+        # ---- CHANGE C-7: reject columns that are not transcriptomes ---------------------- #
+        # Screened HERE, in `_load`, because this is the single place the matrix is read: the
+        # gate then covers `plan()` and every `fetch()` at once. `src.fetch` has THREE call
+        # sites (build_dataset.py:170, :289, :345) and missing the third would leave a
+        # degenerate column inside `sigma_ref` -- which is the entire defect being fixed.
+        # Screened on the RAW log2 values, pre-dedupe, so the numbers match the recorded
+        # 124-column census exactly.
+        if getattr(self, "bulk_integrity_gate", False):
+            self.rejected_samples = screen_bulk_matrix(log2, sample_cols)
+            if self.rejected_samples:
+                keep = [c for c in sample_cols if c not in self.rejected_samples]
+                if not keep:
+                    raise DataSourceError(
+                        f"{self.name}: the integrity gate rejected ALL {len(sample_cols)} "
+                        "samples. Refusing to build from nothing -- check the units of "
+                        f"'{self.expr_tsv}' before disabling the gate.")
+                idx = [sample_cols.index(c) for c in keep]
+                log2 = log2[:, idx]
+                sample_cols = keep
         rpm = np.power(2.0, log2) - 1.0                # Log2 RPM -> linear RPM
         rpm[rpm < 0] = 0.0
         out = pd.DataFrame(rpm, columns=sample_cols)
@@ -500,6 +525,37 @@ class GillReprogrammingSource(ReprogrammingSource):
                 "GSE165176_Log2_RPM_Sendai_reprogramming.txt.gz. A raw-count matrix keyed by Entrez "
                 "Gene IDs with GSM##### column headers will NOT parse and silently drops out.")
         return [CellChunk(id=f"{self.name}:{d}", cell_line=str(d)) for d in donors]
+
+    def _is_control_column(self, col: str) -> bool:
+        """The `is_control` rule `fetch` applies, factored out so the census uses the SAME one.
+
+        A census computed by a second, similar-looking rule would be a different question
+        wearing the same name.
+        """
+        m = self._meta[col]
+        return bool(m["day"] == 0.0 or m["ctype"] == "Dermal fibroblast")
+
+    def lines_without_controls(self) -> frozenset[str]:
+        """Donors left with ZERO admissible controls, over the WHOLE corpus (Change C-7).
+
+        GLOBAL, not chunk-local, and that distinction is load-bearing. `_control_baseline`
+        falls back when a line has no controls *in this chunk* -- Stage 1.5's Group E -- which
+        is a different condition with a different owner. Rule 4 must fire only on the global
+        case, or it trips on Group E and blocks C-7 for the wrong reason.
+
+        Computed here rather than by a pass over `work` because `_load` already holds every
+        column of the matrix, so this is O(1) after load and costs no extra read. A donor is
+        listed only when it is KNOWN to have none: a source that cannot answer contributes
+        nothing, so an un-censused line is never masked by accident.
+        """
+        self._load()
+        by_donor: dict[str, int] = {}
+        for c in self._rpm.columns:
+            if c not in self._meta:
+                continue
+            d = str(self._meta[c]["donor"])
+            by_donor[d] = by_donor.get(d, 0) + int(self._is_control_column(c))
+        return frozenset(d for d, n in by_donor.items() if n == 0)
 
     def fetch(self, chunk: CellChunk) -> RawChunk:
         self._load()

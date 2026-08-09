@@ -139,6 +139,7 @@ def age_label_policy(
     *,
     masked_datasets: frozenset[str] = frozenset(),
     clock_age_range: tuple[float, float] | None = None,
+    lines_without_controls: frozenset[str] = frozenset(),
 ) -> tuple[np.ndarray, list[str | None]]:
     """Which cells get a usable ΔAge label, and -- when they do not -- WHY. Pure.
 
@@ -155,9 +156,20 @@ def age_label_policy(
                                 Today's only rule (``CANCER_SOURCES``), unchanged.
       2. ``dataset_policy``  -- gate G-c: this dataset's labels are withheld by decision, not
                                 by cell type. Empty by default.
-      3. ``donor_out_of_clock_range`` -- the donor's chronological age is outside the range the
+      3. ``no_control_baseline`` -- Change C-7: this ``cell_line`` has ZERO admissible controls
+                                in the whole corpus, so it has no zero-point and its ΔAge is
+                                **undefined**, not merely untrusted. Keyed on data integrity,
+                                never on identity. Empty by default. GLOBAL, not chunk-local:
+                                `_control_baseline` also falls back when a line has no controls
+                                *in this chunk* (Stage 1.5's Group E), which is a different
+                                condition and must NOT trip this rule.
+      4. ``donor_out_of_clock_range`` -- the donor's chronological age is outside the range the
                                 clock was FITTED on (``configs/clocks/*.json`` ->
                                 ``meta.age_range``). An UNKNOWN age never masks.
+
+    Rule 3 precedes rule 4 because a cell can match both -- N2 is ``donor_age`` 0 and the
+    shipped clock's range starts at 1.0 -- and the FIRST reason to fire is the one persisted to
+    the shard. "No zero-point exists" is the stronger claim, so it is the one recorded.
 
     Returns ``(age_mask, reasons)`` with ``reasons[i] is None`` exactly where ``age_mask[i]``
     is True -- the invariant :class:`~cellfate.common.schemas.Sample` validation enforces.
@@ -185,6 +197,21 @@ def age_label_policy(
                 "column, so the policy cannot be applied. Refusing to silently keep labels "
                 "that were meant to be withheld.")
         _exclude(obs["dataset_id"].isin(masked_datasets).to_numpy(), "dataset_policy")
+
+    # CHANGE C-7, rule 4. Placed BEFORE `donor_out_of_clock_range` deliberately: a cell can
+    # match both (N2 is donor_age 0, and the shipped clock's range starts at 1.0), and the
+    # first rule that fires is the reason PERSISTED to the shard (`io.py:139`, `:265`). "No
+    # zero-point exists" is UNDEFINED; "outside the clock's fitted range" is out-of-validity.
+    # Undefined is the stronger statement, so it is the one recorded. Costs nothing to order
+    # correctly today because C-2 is off; once C-2 activates the order decides what is written,
+    # and by then the shards exist.
+    if lines_without_controls:
+        if "cell_line" not in obs.columns:
+            raise KeyError(
+                "age_label_policy: lines_without_controls was requested but obs has no "
+                "'cell_line' column. Refusing to silently keep ΔAge labels that have no "
+                "zero-point.")
+        _exclude(obs["cell_line"].isin(lines_without_controls).to_numpy(), "no_control_baseline")
 
     if clock_age_range is not None:
         if "donor_age" not in obs.columns:
@@ -234,15 +261,55 @@ def census_warnings(census: dict, min_controls: int = 2) -> list[str]:
     return out
 
 
+def assert_no_unmasked_fallback(census: dict, lines: np.ndarray, age_mask: np.ndarray) -> None:
+    """B2' (Change C-7) -- no line may reach the fallback AND keep its ΔAge label.
+
+    The bar this enforces was pre-registered as *"a donor losing its last control must raise"*
+    and was **amended 2026-08-08 to B2'**, because the original conflated the MECHANISM (raise)
+    with the INVARIANT (no unmasked fallback label). Falling back is harmless when the label is
+    discarded; it is only ever a defect when the resulting value is kept.
+
+    Reads the census `_control_baseline` already writes (`"source": "self_fallback"`, gate G-a),
+    so this adds a field's worth of work rather than a second traversal.
+    """
+    if not census:
+        return
+    lines = np.asarray(lines)
+    mask = np.asarray(age_mask, dtype=bool)
+    offenders = []
+    for key, rec in census.items():
+        if not isinstance(rec, dict) or rec.get("source") != "self_fallback":
+            continue
+        line = rec.get("cell_line", str(key).split("::")[-1])
+        kept = mask[lines == line]
+        if kept.any():
+            offenders.append(f"{line} ({int(kept.sum())} of {kept.size} cells still labelled)")
+    if offenders:
+        raise AssertionError(
+            "B2' violated -- a cell_line reached `_control_baseline`'s self-centring fallback "
+            "and RETAINED its ΔAge label, so that label is measured against the line's own "
+            f"mean rather than a zero-point: {'; '.join(offenders)}. Either the line has "
+            "controls and this is a chunking problem (Stage 1.5 Group E), or it has none and "
+            "rule 4 (`no_control_baseline`) should have masked it.")
+
+
 def recenter_on_control_arrays(
-    values: np.ndarray, lines: np.ndarray, is_ctrl: np.ndarray
+    values: np.ndarray, lines: np.ndarray, is_ctrl: np.ndarray,
+    census: dict | None = None,
 ) -> np.ndarray:
     """Array form of :func:`recenter_on_controls` (no DataFrame needed).
 
     Subtracts the per-line vehicle-control baseline from ``values`` given the
     per-cell ``lines`` and boolean ``is_ctrl`` arrays.
+
+    ``census`` is optional and OFF by default, so no caller changes behaviour. It exists
+    because this is the **S4** re-centring and it is the second of `_control_baseline`'s two
+    call sites -- the one that passed no census, and whose fallback was therefore **invisible**.
+    A B2' that guarded only `delta_age` would pass while this site silently self-centred the
+    same orphaned line.
     """
-    return np.asarray(values, dtype=np.float64) - _control_baseline(values, lines, is_ctrl)
+    return np.asarray(values, dtype=np.float64) - _control_baseline(
+        values, lines, is_ctrl, census=census)
 
 
 def recenter_on_controls(values: np.ndarray, obs: pd.DataFrame) -> np.ndarray:
@@ -269,6 +336,8 @@ def delta_age(
     census: dict | None = None,
     composition_cols: tuple[str, ...] = ("batch", "donor_age"),
     clock_age_range: tuple[float, float] | None = None,
+    lines_without_controls: frozenset[str] = frozenset(),
+    enforce_no_unmasked_fallback: bool = False,
 ) -> tuple[np.ndarray, np.ndarray, list[str | None]]:
     """Compute (ΔAge, age_mask, age_mask_reason) from the **full normalised profile**.
 
@@ -298,8 +367,19 @@ def delta_age(
     lines = obs["cell_line"].to_numpy()
     is_ctrl = obs["is_control"].to_numpy().astype(bool)
     comp = {c: obs[c].to_numpy() for c in composition_cols if c in obs.columns} or None
-    d = age - _control_baseline(age, lines, is_ctrl, census=census, composition=comp)
+    # B2' needs a census to read `source == "self_fallback"`. When the caller supplied one we
+    # use it; when it did not, we make a local one ONLY if B2' is being enforced. With the
+    # C-7 flag off this branch never runs, so the flag-off path is untouched -- which is what
+    # B4 requires, and what `test_the_silent_no_control_fallback_self_centres_a_line_to_zero`
+    # pins: that test documents today's Group E behaviour and must keep passing unchanged.
+    local_census: dict | None = census
+    if local_census is None and enforce_no_unmasked_fallback:
+        local_census = {}
+    d = age - _control_baseline(age, lines, is_ctrl, census=local_census, composition=comp)
     age_mask, age_mask_reason = age_label_policy(
         age.shape[0], source, obs,
-        masked_datasets=C.AGE_MASKED_DATASETS, clock_age_range=clock_age_range)
+        masked_datasets=C.AGE_MASKED_DATASETS, clock_age_range=clock_age_range,
+        lines_without_controls=lines_without_controls)
+    if enforce_no_unmasked_fallback:
+        assert_no_unmasked_fallback(local_census or {}, lines, age_mask)
     return d, age_mask, age_mask_reason

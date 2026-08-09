@@ -135,6 +135,15 @@ class DataConfig:
     # real per-cell signal from a day-level artefact. Stratifying preserves the trajectory and
     # destroys only the within-stratum pairing, which is what separates them.
     age_shuffle_strata: bool = False
+    # CHANGE C-7: reject bulk samples that are not transcriptomes (G1 library band, G2 dynamic
+    # range) and mask ΔAge for any cell_line the rejection leaves with no controls.
+    # OFF by default because turning it on MOVES LABELS -- `N2_Fib_Sendai_Exp2` is donor N2's
+    # entire zero-point, so N2's 21 ΔAge labels go with it, and HFF's labels move ~3x in five
+    # of six folds because that column also sits inside `sigma_gill`. Enabling it is a
+    # pre-registered change with its own bar and its own snapshot, never a side effect.
+    # ONE flag, deliberately: the gate alone would strip the control and leave the ΔAge
+    # unmasked, which is the state B2' exists to forbid.
+    bulk_integrity_gate: bool = False
 
 
 def _clock_range(clock: AgingClock, cfg: DataConfig) -> tuple[float, float] | None:
@@ -153,7 +162,8 @@ def _clock_range(clock: AgingClock, cfg: DataConfig) -> tuple[float, float] | No
 # Per-chunk pipeline                                                          #
 # --------------------------------------------------------------------------- #
 def process_chunk(src, chunk, panel, clock: AgingClock, cfg: DataConfig, harmonizer=None,
-                  census: dict | None = None):
+                  census: dict | None = None,
+                  no_control_lines: frozenset[str] = frozenset()):
     """Run the full transform for one chunk.
 
     Returns ``(samples, aux)`` where ``samples`` carry the *raw* control-relative
@@ -188,7 +198,9 @@ def process_chunk(src, chunk, panel, clock: AgingClock, cfg: DataConfig, harmoni
         cc = cell_cycle_score(norm, raw.genes)     # cell cycle stays on raw norm
         d_age, age_mask, age_reason = delta_age(clock, x_clock, hgenes, raw.obs, raw.source,
                                                 census=census,
-                                                clock_age_range=_clock_range(clock, cfg))
+                                                clock_age_range=_clock_range(clock, cfg),
+                                                lines_without_controls=no_control_lines,
+                                                enforce_no_unmasked_fallback=cfg.bulk_integrity_gate)
     else:
         y_cls = fate_labels(norm, raw.genes, raw.obs, cfg.label_tau)
         cc = cell_cycle_score(norm, raw.genes)
@@ -197,6 +209,8 @@ def process_chunk(src, chunk, panel, clock: AgingClock, cfg: DataConfig, harmoni
         # model input x_panel -- so aging genes filtered out of the HVG panel still
         # reach the clock. The model still trains on x_panel below.
         d_age, age_mask, age_reason = delta_age(clock, norm, raw.genes, raw.obs, raw.source,
+                                                lines_without_controls=no_control_lines,
+                                                enforce_no_unmasked_fallback=cfg.bulk_integrity_gate,
                                                 census=census,
                                                 clock_age_range=_clock_range(clock, cfg))
     cell_ids = raw.obs["cell_id"].tolist()
@@ -321,8 +335,35 @@ def build_sources(cfg: DataConfig) -> list[DataSource]:
             spec["name"] = spec.pop("source_name")
         if key not in SOURCE_REGISTRY:
             raise ValueError(f"unknown source {key!r}; have {list(SOURCE_REGISTRY)}")
-        sources.append(SOURCE_REGISTRY[key](**spec))
+        src = SOURCE_REGISTRY[key](**spec)
+        # CHANGE C-7: set centrally from ONE config flag rather than per-source in the specs,
+        # so the gate cannot be enabled for one source and not another -- and so it cannot be
+        # switched independently of rule 4, which consumes its result.
+        if hasattr(src, "bulk_integrity_gate"):
+            src.bulk_integrity_gate = bool(cfg.bulk_integrity_gate)
+        sources.append(src)
     return sources
+
+
+def lines_without_controls(cfg: DataConfig, sources) -> frozenset[str]:
+    """Union, over sources that can answer, of cell_lines with ZERO admissible controls.
+
+    Change C-7, component B. Only a source knows which of its own samples are controls, and
+    only the bulk gate can remove one, so this asks the sources instead of re-reading the
+    corpus -- there is no second full pass. A source that does not implement
+    ``lines_without_controls`` contributes nothing, so an un-censused line is never masked by
+    accident: the set names lines KNOWN to have none, and silence is not evidence of absence.
+
+    Empty when the gate is off, which is what keeps B4 (bit-identical when disabled) true.
+    """
+    if not cfg.bulk_integrity_gate:
+        return frozenset()
+    out: set[str] = set()
+    for s in sources:
+        fn = getattr(s, "lines_without_controls", None)
+        if callable(fn):
+            out |= set(fn())
+    return frozenset(out)
 
 
 # --------------------------------------------------------------------------- #
@@ -380,6 +421,13 @@ def run(cfg: DataConfig, sources: list[DataSource] | None = None,
 
     panel = load_or_fit_panel(cfg, work)
     clock = clock if clock is not None else build_clock(cfg, panel)
+    # CHANGE C-7, component B. Computed BEFORE the harmonizer and independently of it:
+    # `fit_harmonizer` is `if cfg.harmonize`, so a predicate hosted there would silently not
+    # exist in harmonize=False builds (the arm B/C/D probes, any single-dataset build) -- a
+    # data-integrity invariant that evaporates when a flag is off is a guard that cannot fire.
+    no_control_lines = lines_without_controls(cfg, sources)
+    if no_control_lines:
+        log_event(log, "c7.no_control_lines", lines=sorted(no_control_lines))
     harmonizer = fit_harmonizer(cfg, work) if cfg.harmonize else None
     if harmonizer is not None:
         harmonizer.to_json(paths.bundle_dir / "harmonization.json"
@@ -398,7 +446,8 @@ def run(cfg: DataConfig, sources: list[DataSource] | None = None,
         try:
             chunk_census: dict = {}
             samples, aux = process_chunk(src, chunk, panel, clock, cfg, harmonizer,
-                                         census=chunk_census)
+                                         census=chunk_census,
+                                         no_control_lines=no_control_lines)
             # Key by chunk AND line, never by line alone. `cell_line` is NOT unique across
             # chunks -- HFF spans 45 of them (verify_stage1_5_results.json) -- so a plain
             # `.update()` keyed on the line silently kept 1 record and discarded 44, for the
