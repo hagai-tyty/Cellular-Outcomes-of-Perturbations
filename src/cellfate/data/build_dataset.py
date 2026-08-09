@@ -335,14 +335,26 @@ def build_sources(cfg: DataConfig) -> list[DataSource]:
             spec["name"] = spec.pop("source_name")
         if key not in SOURCE_REGISTRY:
             raise ValueError(f"unknown source {key!r}; have {list(SOURCE_REGISTRY)}")
-        src = SOURCE_REGISTRY[key](**spec)
-        # CHANGE C-7: set centrally from ONE config flag rather than per-source in the specs,
-        # so the gate cannot be enabled for one source and not another -- and so it cannot be
-        # switched independently of rule 4, which consumes its result.
+        sources.append(SOURCE_REGISTRY[key](**spec))
+    apply_source_flags(cfg, sources)
+    return sources
+
+
+def apply_source_flags(cfg: DataConfig, sources) -> None:
+    """Push config flags that GOVERN a source onto the sources actually being used.
+
+    Change C-7. Called from BOTH `build_sources` and `run`, because `run` accepts injected
+    sources (`run_multi_local.py` passes them, and so does every test with a synthetic source)
+    and then never calls `build_sources`. A flag applied only on the construction path would
+    silently never reach a production build -- a gate that cannot fire, which is precisely the
+    defect class C-7 exists to remove. Idempotent, so applying it twice is harmless.
+
+    Set centrally rather than per-source in `source_specs` so the gate cannot be enabled for one
+    source and not another, and cannot be switched independently of rule 4 that consumes it.
+    """
+    for src in sources:
         if hasattr(src, "bulk_integrity_gate"):
             src.bulk_integrity_gate = bool(cfg.bulk_integrity_gate)
-        sources.append(src)
-    return sources
 
 
 def lines_without_controls(cfg: DataConfig, sources) -> frozenset[str]:
@@ -415,6 +427,12 @@ def run(cfg: DataConfig, sources: list[DataSource] | None = None,
     """Execute the ETL and return a summary dict."""
     paths = ArtifactPaths.of(cfg.out)
     sources = sources if sources is not None else build_sources(cfg)
+    # CHANGE C-7. Applied HERE, not only in `build_sources`, because callers may INJECT sources
+    # -- `run_multi_local.py` does, and so does every test that hands in a synthetic source. A
+    # flag set only on the construction path would silently never reach a production build,
+    # which is exactly the class of defect this gate exists to remove. Setting it on whatever
+    # sources `run` actually uses makes the config's flag mean the same thing either way.
+    apply_source_flags(cfg, sources)
     if not sources:
         raise ValueError("no data sources configured")
     work = plan_all(sources)

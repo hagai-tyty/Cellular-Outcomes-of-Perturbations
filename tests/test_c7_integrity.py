@@ -178,3 +178,40 @@ def test_screen_refuses_a_mismatched_name_list():
     m = np.zeros((10, 3))
     with pytest.raises(ValueError, match="refusing to guess"):
         screen_bulk_matrix(m, ["a", "b"])
+
+
+# --------------------------------------------------------------------------- wiring
+def test_the_gate_flag_reaches_injected_sources_not_only_constructed_ones():
+    """The bug this pins actually happened, and it made the gate a no-op in production.
+
+    `run` takes `sources: list | None`. When a caller INJECTS sources -- which
+    `local_runners/run_multi_local.py` does, and so does every test with a synthetic source --
+    `build_sources` is never called. Setting the flag only there meant the first C-7 build came
+    out byte-identical to arm A: 42605 samples, N2's degenerate control still present, the gate
+    silently inert. A guard that cannot fire is the exact defect C-7 exists to remove.
+    """
+    from cellfate.data.build_dataset import DataConfig, apply_source_flags
+
+    class _FakeSource:
+        def __init__(self):
+            self.bulk_integrity_gate = False
+
+    cfg_on = DataConfig(out="x", gene_panel="p", bulk_integrity_gate=True)
+    cfg_off = DataConfig(out="x", gene_panel="p", bulk_integrity_gate=False)
+
+    injected = [_FakeSource(), _FakeSource()]
+    apply_source_flags(cfg_on, injected)
+    assert all(s.bulk_integrity_gate for s in injected), "injected sources did not get the flag"
+
+    apply_source_flags(cfg_off, injected)
+    assert not any(s.bulk_integrity_gate for s in injected), "flag-off must also propagate"
+
+
+def test_apply_source_flags_ignores_sources_that_do_not_have_the_attribute():
+    """Single-cell sources never gate, so they simply do not carry the attribute."""
+    from cellfate.data.build_dataset import DataConfig, apply_source_flags
+
+    class _NoAttr:
+        pass
+
+    apply_source_flags(DataConfig(out="x", gene_panel="p", bulk_integrity_gate=True), [_NoAttr()])
