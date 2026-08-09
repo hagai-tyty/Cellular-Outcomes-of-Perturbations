@@ -566,6 +566,48 @@ harmonizer facts only.
 ---
 
 
+## 2026-08-08 (later) - STAGE 3a RUN: STOP, on clean labels and contaminated ones alike
+
+**Status:** RUN, read-only. Goal reached: C-7 implemented, adopted on the dataset, and Stage 3a
+executed on the resulting clean labels.
+
+Run on TWO arms because 3a's STOP branch is TERMINAL - "do not write tool code, ship the scoring
+model, go to Stage 5" must not rest on labels 5.14 proved were inflated ~3x in five of six folds.
+`_c7` operative, `_armA` context. If they had disagreed, the disagreement would itself have been
+the finding.
+
+    Part A dAge MAE state-only     _c7 20.67   _armA 25.53
+    Part A state + Dt              _c7 86.77   _armA 90.54
+    Part C unsafe-frac state-only  _c7 0.409   _armA 0.386
+    Part C state + Dt              _c7 2.010   _armA 0.983
+    Part C paired   _c7 +1.601 CI [-2.270,+5.472]   _armA +0.598 CI [-0.821,+2.016]
+    VERDICT                        _c7 STOP    _armA STOP
+
+Cleaning the labels improved the state-only fit by 19 percent and did NOT change the verdict.
+
+Dt does not merely fail to help, it makes the fit WORSE - about 65 MAE in Part A and 0.6 to 1.6 in
+Part C. Both CIs include zero so both are formally tied, but the point estimate is consistently the
+wrong way. That is section 0.4's own diagnosis: along one trajectory, time is redundant with state.
+
+**PART B IS NOT EVIDENCE and must not be read as passing the 2-yr sweep clause.** Its swing is 255
+to 269 yr, and in `_armA` the per-fold swing is identical to the digit, -255.76, in all six folds. A
+real per-fold forward response cannot be identical across six different held-out donors. That is the
+ridge extrapolating on the Dt-squared term, not signal. Part C is decisive and test 18 says so in
+its own output.
+
+`_c7` runs n=5 in Part A because N2's dAge is masked by C-7 rule 4, exactly as intended.
+
+CONSEQUENCE: 3b, 3c and 3d are NOT written. This routes to shipping the scoring model and going to
+Stage 5. The fate head is untouched and works - ROC 0.983, PR-AUC 0.992 - and that is what shipping
+the scoring model means.
+
+NOT DECIDED: that forward prediction is impossible in principle. Test 18's own caveat governs - a
+screen, not a proof - and it is decisive for THIS corpus, at roughly 12 timepoints across 6 donors.
+The two options section 3a names, a dAge-trajectory readout with no safety recommendation, or data
+with more unsafe-cell variation via Stage 6, are scope decisions. Recorded, not taken.
+
+---
+
 ## 2026-08-08 (later) - C-7 adopted on the DATASET: A1-A4 all pass, 5.14's prediction confirmed
 
 **Status:** Six `_c7` folds built (6380 s), dataset only - no training, no bundle. `src/`
