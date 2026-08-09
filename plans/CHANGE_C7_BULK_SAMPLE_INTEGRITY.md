@@ -147,7 +147,7 @@ would trade a known-bad control for a silent fallback, which is worse: the first
 
 | outcome | meaning | what happens |
 |---|---|---|
-| **B1–B4 all pass** | the gate is correct and inert until switched on | ships **off**. Adoption is a separate run **after 3b/3c report**, with a snapshot and every Stage 1 guard re-reported over **5** folds |
+| **B1–B4 all pass** | the gate is correct and inert until switched on | ships **off**. Adoption is a separate run **after 3b/3c report**, with a snapshot and every Stage 1 guard re-reported over ~~**5**~~ → **6** folds — ⚠️ **corrected §11: §9 adopted option (c), which keeps the donor and the fold. The "5" was written under option (a).** |
 | **B1 fails — extra columns flagged** | a threshold is wrong, or the cohort is not what §1 measured | **do not widen the band to fit.** Re-derive from the units or record that the units do not separate this cohort |
 | **B2 fails** | a donor reaches the fallback | **blocking.** The donor-level decision (§3 option a) is not optional; fix that first |
 | **B4 fails** | the gate is not inert when off | **blocking, and a bug in this change** — nothing about a disabled flag may move a label |
@@ -440,3 +440,55 @@ them. Only the predicate's **host** changes.
 (c) is adopted. Rule 4 is general and ships with C-7. B2 becomes B2′ **as a recorded amendment**.
 The global-vs-chunk-local distinction is correct and load-bearing. The predicate moves out of
 `fit_harmonizer` into an unconditional pass. **Nothing here re-opens the decision.**
+
+---
+
+## 11. 🆕 2026-08-08 — B1 VERIFIED INDEPENDENTLY, and what still blocks implementation
+
+*Additive. §2's gate ran here against the raw matrix before any agreement to proceed.*
+
+### ✅ B1 PASSES — run, not quoted
+
+`G1` (linear RPM sum ∈ [1e5, 1e7]) ∧ `G2` (log2 range ≥ 8) applied to all **124** columns of
+`GSE165176_Log2_RPM_Sendai_reprogramming`:
+
+| | |
+|---|---|
+| rejected | **exactly 5** |
+| the five | `Y1_d7_CD13` 2.148e+09 / 0.15 · `N3_d21_SSEA4` 2.379e+08 / 2.47 · `O2_d9_SSEA4` 1.628e+08 / 2.15 · **`N2_Fib` 1.03e+08 / 1.74** · `N2_d21_CD13` 1.694e+07 / 7.26 |
+| false positives | **0 of 119** |
+| the other 119 | library **2.859e+05 – 3.880e+06**, log2 range **9.00 – 15.26** |
+| G1 margins | ceiling/max-sound **2.58×**; min-degenerate/ceiling **1.69×** |
+| G2 gap | worst degenerate **7.26** vs best sound **9.00** — no overlap |
+
+**Each condition independently rejects all five** — every one fails G1 *and* G2 — so the "kept as
+two because they fail differently" rationale costs nothing on this cohort. **B1 is confirmed, and
+confirmed against the units rather than a quantile of this cohort.**
+
+### 🔴 What still blocks IMPLEMENTATION — five items, all identified, none built
+
+| # | item | state |
+|---|---|---|
+| **1** | **the predicate host.** §9 puts the global per-`cell_line` control census in `fit_harmonizer`'s pre-pass. That pre-pass is `if cfg.harmonize` (`build_dataset.py:383`) and tallies per `dataset_id`, not per `cell_line`. It must move to an unconditional pass over `work` | **§10, recorded, not fixed** |
+| **2** | **B2 → B2′ is an unlabelled amendment.** Agreed in substance; §5b requires the move be recorded as an amendment before the run | **§10, recorded, not applied to §4** |
+| **3** | **rule 4 does not exist in code.** `age_label_policy` has three rules (`aging.py:135-176`); the fourth — zero admissible controls ⇒ ΔAge undefined ⇒ masked — is designed and unwritten. It **must ship with C-7** | **designed only** |
+| **4** | **nothing is implemented.** C-7's own status: *"PRE-REGISTERED. NOT IMPLEMENTED. `src/` untouched"* | **0 lines written** |
+| **5** | **§3 and §5 still instruct a 5-fold re-report.** §3 line 119 (*"LOOCV goes from 6 folds to 5"*) and §5's decision row were written under option **(a)**. §9 adopted **(c)**, which keeps six. §9 *notes* the conflict but did not amend the instruction — and §5 is a **decision table**, i.e. what an implementer executes | **§5 row corrected above; §3 left as the record** |
+
+### What C-7 does not resolve, restated so adoption does not imply it
+
+Seven columns pass `G1 ∧ G2` while looking poor on `mean − min`, **including `Y1_Fib`, a control**
+(library 1.51e+06, range 14.43 — both normal). §5.10 downgraded it to *not established* and that
+stands. **Y1's unexplained floor ratio (§5.5) remains unexplained after C-7.**
+
+### Cost of adoption, named
+
+C-7 changes `y_age`, so adoption is **a rebuild + full re-score**, and the Stage 1 guard record
+**restarts** — over **6** folds under (c). That is the retrain §5.13 freed by cancelling 1.5.6
+step 4; it is not free, it is *already budgeted*.
+
+### Net
+
+**The DECISION is ready; the IMPLEMENTATION is not started.** B1 is verified, the gate is
+unit-justified, (c) and rule 4's form are agreed, and the sequencing is settled. Items 1–3 are the
+spec for writing it, item 5 was a live wrong instruction and is now flagged, item 4 is the work.
