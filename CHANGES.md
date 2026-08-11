@@ -11,6 +11,61 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-11 - AUDIT: C-7's fix is REAL and large; Stage 3a's STOP is NOT safe to act on
+
+**Status:** Audit. **`src/` untouched, nothing withdrawn.** New file
+`plans/STAGE_3A_VERDICT_AUDIT.md`.
+
+### What genuinely got fixed - this is not a reclassification
+
+C-7 implemented and adopted on the dataset. HFF day-14 dAge per fold, before -> after:
+N2 -7.352 -> -7.337, N3 -22.121 -> **-5.628**, O1 -24.023 -> **-6.514**, O2 -22.891 -> **-6.674**,
+Y1 -22.049 -> **-4.606**, Y2 -23.869 -> **-8.292**.
+
+**Fold spread 16.671 -> 3.686 yr, a 78% reduction**, magnitudes landing on §5.14's pre-registered
+-8.196. n_cells 42605 -> 42600 (exactly the five rejected columns); N2's 19 cells masked in every
+fold. A real bug was found on the way - the gate flag never reached injected sources, so the gate
+was inert when first wired (e6fc183).
+
+### But Stage 3a's STOP rests on a diverging fit
+
+`p_unsafe` is built at `test18_forward_gate.py:85` as a **fraction** - `((cls==LOSS)|(cls==DEATH))
+.astype(float)` then `.mean()`. **It cannot leave [0,1].** Yet Part C's Y1 fold reports state+dt
+**MAE 7.589**. A model predicting ~8 for a quantity bounded by 1 is producing out-of-range output.
+
+Corroborating: Part A's Y1 goes **22.84 -> 311.47** by adding one feature under a standardized ridge
+at alpha=1.0; Part B's swing is **-269.13 for all five folds, identical to 2 dp**, which five
+independent LOO fits cannot do by chance; Part B's magnitude is **269 yr**, nonphysical against a
+>2 yr threshold; and the paired CI (mean +1.601, 95% [-2.270, +5.472], n=5) is **driven entirely by
+Y1** - without it the gains are +0.049, -0.184, -0.560, -0.147.
+
+**Y1 has 11 timepoints not 12** and 55 pairs not 66, so held out its dt distribution sits outside
+the training support and the linear model extrapolates. **A data-shape artefact, not a property of
+forward prediction.**
+
+**And no resolvability check.** §5b requires simulating a correct system before the run; there is no
+`bar_verdict` for 3a. With n=5 and a CI spanning 7.7 units on a [0,1] target the honest verdict is
+**UNRESOLVABLE**, not "tied". The script's own caveat - *"a NEGATIVE result is decisive"* - holds
+only when the negative comes from the data.
+
+### What is NOT established
+
+**RES improved: UNKNOWN, not measured.** RES is a model output and **no retrain has happened** - the
+newest scorecard, `gc2_D_stratshuffle_hff_s0.json`, predates C-7. Every Stage 1 guard under the new
+labels is likewise not re-reported, though C-7 §5 requires it on adoption.
+
+**"Stage 1.5.6 closed" is fair. "Ready for Stage 5" is not.**
+
+### Recommended, none of it needing a retrain
+
+Diagnose Y1's dt support; bound Part C's prediction to [0,1] (clip at minimum, logit link honestly);
+explain the identical -269.13 swing before Part B is read; and run `bar_verdict` for 3a at this
+geometry. **If a correct system cannot clear the bar with 5 folds and 55-66 pairs, then the dataset
+cannot answer the question - and that, not STOP, is the finding.**
+
+---
+
+
 ## 2026-08-08 - C-7's five "open decisions" are not decisions: four dissolve, one has a third answer
 
 **Status:** Recorded. **Still NOT implemented. `src/` untouched, no label moved, §11 unmodified.**
