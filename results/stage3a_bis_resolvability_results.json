@@ -1,0 +1,413 @@
+{
+  "script": "stage3a_bis_resolvability",
+  "arm": "_c7",
+  "k_pseudo": 10,
+  "trials": 2000,
+  "alphas": [
+    0.0,
+    0.25,
+    0.5,
+    1.0
+  ],
+  "geometry": {
+    "rows": [
+      [
+        "HFF_r0",
+        "train",
+        "9",
+        "472.4",
+        "36"
+      ],
+      [
+        "HFF_r1",
+        "train",
+        "9",
+        "472.3",
+        "36"
+      ],
+      [
+        "HFF_r2",
+        "train",
+        "9",
+        "472.1",
+        "36"
+      ],
+      [
+        "HFF_r3",
+        "train",
+        "9",
+        "472.0",
+        "36"
+      ],
+      [
+        "HFF_r4",
+        "train",
+        "9",
+        "472.0",
+        "36"
+      ],
+      [
+        "HFF_r5",
+        "train",
+        "9",
+        "472.0",
+        "36"
+      ],
+      [
+        "HFF_r6",
+        "train",
+        "9",
+        "472.0",
+        "36"
+      ],
+      [
+        "HFF_r7",
+        "train",
+        "9",
+        "471.9",
+        "36"
+      ],
+      [
+        "HFF_r8",
+        "train",
+        "9",
+        "471.8",
+        "36"
+      ],
+      [
+        "HFF_r9",
+        "train",
+        "9",
+        "471.6",
+        "36"
+      ],
+      [
+        "N3",
+        "train",
+        "12",
+        "1.7",
+        "66"
+      ],
+      [
+        "O1",
+        "train",
+        "12",
+        "1.8",
+        "66"
+      ],
+      [
+        "O2",
+        "train",
+        "12",
+        "1.7",
+        "66"
+      ],
+      [
+        "Y1",
+        "train",
+        "11",
+        "1.6",
+        "55"
+      ],
+      [
+        "Y2",
+        "train",
+        "12",
+        "1.8",
+        "66"
+      ],
+      [
+        "N2",
+        "HELD OUT",
+        "11",
+        "1.7",
+        "55"
+      ],
+      [
+        "N3",
+        "HELD OUT",
+        "12",
+        "1.7",
+        "66"
+      ],
+      [
+        "O1",
+        "HELD OUT",
+        "12",
+        "1.8",
+        "66"
+      ],
+      [
+        "O2",
+        "HELD OUT",
+        "12",
+        "1.7",
+        "66"
+      ],
+      [
+        "Y1",
+        "HELD OUT",
+        "11",
+        "1.6",
+        "55"
+      ],
+      [
+        "Y2",
+        "HELD OUT",
+        "12",
+        "1.8",
+        "66"
+      ]
+    ]
+  },
+  "hff_curve": {
+    "log_t": [
+      -4.60517,
+      3.871201,
+      4.564348,
+      4.969813,
+      5.257495,
+      5.480639,
+      5.662961,
+      5.817111,
+      6.222576
+    ],
+    "g": [
+      0.08348384507324905,
+      0.350899417278946,
+      0.35084033613445376,
+      0.4225592822046571,
+      0.4708368554522401,
+      0.3964220369993901,
+      0.46592775041050905,
+      0.6790998124609293,
+      0.9995822890559732
+    ]
+  },
+  "regimes": {
+    "B": {
+      "alpha=0.0": {
+        "raw": {
+          "null_median": 0.02544418902962192,
+          "null_p90": 0.04646840726205441,
+          "pass_rate": 0.0385,
+          "usable_bar": 0.05185287508959472,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        },
+        "logit": {
+          "null_median": 0.029248688431139685,
+          "null_p90": 0.0498306906117566,
+          "pass_rate": 0.017,
+          "usable_bar": 0.05574025009139245,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        }
+      },
+      "alpha=0.25": {
+        "raw": {
+          "null_median": 0.0022079617843386544,
+          "null_p90": 0.039698105103658905,
+          "pass_rate": 0.4675,
+          "usable_bar": 0.052024140040958164,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        },
+        "logit": {
+          "null_median": 0.008048795284449697,
+          "null_p90": 0.031321310855434395,
+          "pass_rate": 0.337,
+          "usable_bar": 0.03870034966930783,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        }
+      },
+      "alpha=0.5": {
+        "raw": {
+          "null_median": -0.08938250413551152,
+          "null_p90": -0.0297966221726424,
+          "pass_rate": 0.9755,
+          "usable_bar": -0.014097012847334589,
+          "min_pass": 0.95,
+          "verdict": "RESOLVABLE"
+        },
+        "logit": {
+          "null_median": -0.036523703758136905,
+          "null_p90": -0.019175148392917653,
+          "pass_rate": 0.99,
+          "usable_bar": -0.011780229047849202,
+          "min_pass": 0.95,
+          "verdict": "RESOLVABLE"
+        }
+      },
+      "alpha=1.0": {
+        "raw": {
+          "null_median": -0.31862072510364126,
+          "null_p90": -0.2686503698173897,
+          "pass_rate": 1.0,
+          "usable_bar": -0.25482110644193334,
+          "min_pass": 0.95,
+          "verdict": "RESOLVABLE"
+        },
+        "logit": {
+          "null_median": -0.07122419668002633,
+          "null_p90": -0.0594549276513236,
+          "pass_rate": 1.0,
+          "usable_bar": -0.056678082252980364,
+          "min_pass": 0.95,
+          "verdict": "RESOLVABLE"
+        }
+      },
+      "folds": [
+        "HFF_r0",
+        "HFF_r1",
+        "HFF_r2",
+        "HFF_r3",
+        "HFF_r4",
+        "HFF_r5",
+        "HFF_r6",
+        "HFF_r7",
+        "HFF_r8",
+        "HFF_r9"
+      ],
+      "n_train_pairs": 643,
+      "n_test_pairs": [
+        36,
+        36,
+        36,
+        36,
+        36,
+        36,
+        36,
+        36,
+        36,
+        36
+      ]
+    },
+    "A": {
+      "alpha=0.0": {
+        "raw": {
+          "null_median": 0.00622675785164959,
+          "null_p90": 0.017881581943402912,
+          "pass_rate": 0.006,
+          "usable_bar": 0.02485238112523456,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        },
+        "logit": {
+          "null_median": 0.009491786536390243,
+          "null_p90": 0.02123165561864814,
+          "pass_rate": 0.0105,
+          "usable_bar": 0.02655627151057104,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        }
+      },
+      "alpha=0.25": {
+        "raw": {
+          "null_median": 0.038147320672519774,
+          "null_p90": 0.08243726928311336,
+          "pass_rate": 0.0055,
+          "usable_bar": 0.09533340163729073,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        },
+        "logit": {
+          "null_median": 0.022875176075305925,
+          "null_p90": 0.04813622742260549,
+          "pass_rate": 0.0165,
+          "usable_bar": 0.05756781440978695,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        }
+      },
+      "alpha=0.5": {
+        "raw": {
+          "null_median": 0.12927603460815104,
+          "null_p90": 0.18061612595297438,
+          "pass_rate": 0.001,
+          "usable_bar": 0.19418249789393718,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        },
+        "logit": {
+          "null_median": 0.05800794076421499,
+          "null_p90": 0.09409075998411076,
+          "pass_rate": 0.0055,
+          "usable_bar": 0.10397290610027222,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        }
+      },
+      "alpha=1.0": {
+        "raw": {
+          "null_median": 0.4163240670681221,
+          "null_p90": 0.4553444553785493,
+          "pass_rate": 0.0,
+          "usable_bar": 0.46507984111481393,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        },
+        "logit": {
+          "null_median": 0.1886914940801481,
+          "null_p90": 0.2217471944979271,
+          "pass_rate": 0.0,
+          "usable_bar": 0.23036804710102343,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        }
+      },
+      "folds": [
+        "N2",
+        "N3",
+        "O1",
+        "O2",
+        "Y1",
+        "Y2"
+      ],
+      "n_train_pairs": 679,
+      "n_test_pairs": [
+        55,
+        66,
+        66,
+        66,
+        55,
+        66
+      ]
+    }
+  },
+  "pre_registered": {
+    "Q1_regimeB_resolvable_at_alpha1_logit": {
+      "held": true,
+      "pass_rate": 1.0
+    },
+    "Q2_regimeA_raw_not_resolvable_at_alpha1": {
+      "held": true,
+      "pass_rate": 0.0
+    },
+    "Q3_heldout_cells_bind_not_training_size": {
+      "held": true,
+      "A": [
+        0.0105,
+        0.0165,
+        0.0055,
+        0.0
+      ],
+      "B": [
+        0.017,
+        0.337,
+        0.99,
+        1.0
+      ]
+    },
+    "Q4_no_false_positive_at_alpha0": {
+      "held": true,
+      "rates": [
+        0.006,
+        0.0105,
+        0.0385,
+        0.017
+      ]
+    }
+  }
+}

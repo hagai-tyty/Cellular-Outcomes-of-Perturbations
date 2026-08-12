@@ -129,6 +129,98 @@ cannot find a Δt signal, a neural net will not either.**
 | **WEAK GO** | sweep moves but Δt does not beat state-only | build, tempered |
 | **STOP** | neither | **do not write tool code.** Ship the scoring model; go to Stage 5 |
 
+> ## 🧭 **3a-bis §5b — 2026-08-12. 3a was run on 0.3 % of the cells, and as designed it could NEVER have returned GO.**
+>
+> *Additive. Everything below is unchanged.* Artefacts: `experiments/stage3a_bis_resolvability.py`,
+> `results/stage3a_bis_resolvability_results.json`, `tests/test_stage3a_bis_resolvability.py`
+> (18 tests). **READ-ONLY** — no retrain, no rebuild, `src/` untouched. **No 3a verdict is taken
+> here**; this is the `REF_GROUND_RULES.md` §5b precondition that must precede any bar.
+>
+> ### What 3a was actually reading
+>
+> `test18_forward_gate.py:74` builds every row from `gather_split(..., REGIME, "test")`. Under the
+> `holdout` regime the test split is **the held-out Gill donor and nothing else**. So 3a ran on
+> 18–21 bulk samples per fold at **1.7 cells per timepoint** — while the *same bundle's* train
+> split holds **33,613 HFF single cells across 9 timepoints at ~3,700 cells per timepoint**:
+>
+> | | cells | timepoints | cells/timepoint |
+> |---|---|---|---|
+> | what 3a graded (one Gill donor) | **19** | 11 | **1.7** |
+> | what sat unused in the same bundle (HFF) | **33,613** | 9 | **3,734.8** |
+>
+> HFF's safety target is not flat either — it runs **0.0835 → 0.9996** from day 0 to day 21 with a
+> per-timepoint SE of **0.006**. SD across timepoints ÷ typical SE = **42 : 1**. The gate was
+> decided on **~0.3 %** of the available cells, and the 99.7 % it ignored are the precise ones.
+>
+> ### The check, grounded in HFF's own curve rather than an invented effect size
+>
+> A system that "meets the intent exactly" is one where the unsafe probability really is a function
+> of elapsed time. So the simulated truth is **HFF's measured curve**, `p(t_j) = ḡ + α·(g(t_j) −
+> ḡ)`, observed at the **real cell counts** — `u_j ~ Binomial(n_j, p)/n_j` — so 1–2 cells and ~470
+> cells enter as the measurement noise they actually are. Under this truth `state + Δt` can reach
+> `t_j` and `state` alone cannot, so a working test **must** detect it. 3a's rule is graded
+> verbatim: PASS iff the paired 95 % CI upper end < 0. 2000 trials/cell, `MIN_PASS_RATE = 0.95`.
+>
+> **The two regimes share almost the same training set** — 643 vs 679 pairs, both containing every
+> HFF pseudo-replicate. The only thing that differs is how precisely the **held-out** trajectory is
+> measured. That makes this a controlled comparison, not two separate experiments.
+>
+> | α (amplitude of HFF's curve) | **B: held out on ~470 cells/tp** raw / logit | **A: held out on 1–2 cells/tp** raw / logit |
+> |---|---|---|
+> | 0.00 (no time effect) | 0.038 / 0.017 | 0.006 / 0.011 |
+> | 0.25 | 0.468 / 0.337 | 0.005 / 0.017 |
+> | 0.50 | **0.976 / 0.990** ✅ | 0.001 / 0.005 |
+> | **1.00 (HFF's curve exactly)** | **1.000 / 1.000** ✅ | **0.000 / 0.000** ❌ |
+>
+> ### The finding
+>
+> **Regime A — holding out a Gill donor — is UNRESOLVABLE at every amplitude, including α = 1
+> where the truth is HFF's full measured curve.** Pass rate **0.000**. And it *falls* as the effect
+> grows (0.011 → 0.017 → 0.005 → 0.000), the same non-detector behaviour §D4 found.
+>
+> **So Stage 3a as designed could not have returned GO for any signal whatever.** Its STOP was not
+> merely unsupported — the test was structurally incapable of any other answer.
+>
+> **Regime B — holding out a precisely-measured trajectory — is RESOLVABLE** from α = 0.5 upward
+> (0.990, then 1.000). The corpus can recover its own forward curve when the held-out target is
+> measured on ~470 cells rather than 1.7.
+>
+> **And the binding constraint is now identified by a controlled comparison: the HELD-OUT
+> cells-per-timepoint, not the training-set size.** Regime A has *more* training pairs than B (679
+> vs 643) and still reads 0.000. More training data does not fix it; a measurable held-out target
+> does.
+>
+> At α = 0 every cell is ≤ 0.038, so the bar has **no false-positive problem** — it is specific,
+> and blind. Note also that even in the good regime **α = 0.25 fails (0.337)**: the detectable
+> effect must be at least about half HFF's measured amplitude.
+>
+> ### Pre-registered, graded: **4 of 4 held**
+>
+> | | question | held? |
+> |---|---|---|
+> | **Q1** | regime B resolvable at α = 1 (logit) | ✅ 1.000 |
+> | **Q2** | regime A raw NOT resolvable at α = 1 | ✅ 0.000 |
+> | **Q3** | held-out cells bind, not training size | ✅ A ≤ B at every α > 0 |
+> | **Q4** | no false positive at α = 0 | ✅ max 0.038 |
+>
+> ### What this changes
+>
+> | | |
+> |---|---|
+> | 3a's STOP | **stays withdrawn**, and is now known to have been **unfalsifiable** — the design admits no GO |
+> | *"this dataset cannot support forward prediction"* (§3a's closing line, and the 3a RESULT box) | **wrong as stated.** The dataset supports it where it is measured densely; the Gill *bulk* arm cannot serve as a held-out target at any effect size |
+> | the cells-per-timepoint warning test 18 prints | **promoted from a warning to the binding constraint**, now quantified |
+> | Stage 6 (more data) | **quantified, not asserted.** What is needed is a SECOND dense single-cell time course on a DIFFERENT line — not more donors measured at 1–2 cells |
+> | 3b / 3c / 3d | **still unwritten.** Regime B is a positive control on one culture, not cross-line transfer |
+>
+> ### What is NOT claimed
+>
+> That the tool is buildable. Regime B holds out a **pseudo-replicate of the same culture** — one
+> culture split up, not an independent one — so it establishes that the forward curve is
+> recoverable, never that it transfers to a new line. **The product question (cross-line transfer)
+> remains unanswerable with this corpus**, and that is now a measured statement rather than an
+> inference from a broken run.
+
 > ## 🔬 **3a DIAGNOSIS — 2026-08-12. A forward time signal IS present; 3a's estimator could not have found it, and its bar could not have registered it.**
 >
 > *Additive. The withdrawal banner and the result box below are unchanged apart from two dated

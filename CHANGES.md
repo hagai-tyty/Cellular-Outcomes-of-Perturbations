@@ -11,6 +11,83 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-12 - STAGE 3a-bis: 3a was graded on 0.3% of the cells, and as designed could never have returned GO
+
+**Status:** Run and recorded. **READ-ONLY - no retrain, no rebuild, `src/` untouched. NO 3a verdict
+is taken.** New files `experiments/stage3a_bis_resolvability.py` and
+`tests/test_stage3a_bis_resolvability.py` (18 tests, pass); new artefact
+`results/stage3a_bis_resolvability_results.json`. Recorded as the "3a-bis" box in
+`plans/STAGE_3_TOOL.md`. This is the REF_GROUND_RULES 5b precondition that must precede any bar.
+
+### What 3a was reading
+
+`test18_forward_gate.py:74` builds every row from `gather_split(..., REGIME, "test")`, and under
+the `holdout` regime the test split is **the held-out Gill donor and nothing else**. So 3a ran on
+18-21 bulk samples per fold at **1.7 cells per timepoint** - while the SAME bundle's train split
+holds **33,613 HFF single cells over 9 timepoints at ~3,735 cells per timepoint**, whose unsafe
+fraction runs **0.0835 -> 0.9996** with a per-timepoint SE of **0.006** (SD across timepoints over
+typical SE = **42:1**). The gate was decided on **~0.3%** of the available cells, and the 99.7% it
+ignored are the precise ones.
+
+### The check
+
+The simulated truth is **HFF's own measured curve** rather than an invented effect size:
+`p(t_j) = g_bar + alpha*(g(t_j) - g_bar)`, observed at the **real cell counts**
+`u_j ~ Binomial(n_j, p)/n_j`, so 1-2 cells and ~470 cells enter as the noise they actually are.
+Under this truth `state+dt` can reach t_j and `state` alone cannot, so a working test MUST detect
+it. 3a's rule graded verbatim, 2000 trials/cell, MIN_PASS_RATE 0.95.
+
+**Both regimes share almost the same training set** - 643 vs 679 pairs, both containing every HFF
+pseudo-replicate - so the only thing that differs is how precisely the HELD-OUT trajectory is
+measured. A controlled comparison, not two experiments.
+
+| alpha | B: held out on ~470 cells/tp (raw/logit) | A: held out on 1-2 cells/tp (raw/logit) |
+|---|---|---|
+| 0.00 | 0.038 / 0.017 | 0.006 / 0.011 |
+| 0.25 | 0.468 / 0.337 | 0.005 / 0.017 |
+| 0.50 | **0.976 / 0.990** | 0.001 / 0.005 |
+| 1.00 | **1.000 / 1.000** | **0.000 / 0.000** |
+
+### The finding
+
+**Regime A - holding out a Gill donor - is UNRESOLVABLE at every amplitude**, including alpha = 1
+where the truth is HFF's full measured curve (pass rate **0.000**), and it FALLS as the effect grows
+(0.011 -> 0.017 -> 0.005 -> 0.000). **So Stage 3a as designed could not have returned GO for any
+signal whatever** - its STOP was not merely unsupported, the test was structurally incapable of any
+other answer.
+
+**Regime B is RESOLVABLE from alpha = 0.5 upward** (0.990, then 1.000): the corpus can recover its
+own forward curve when the held-out target is measured on ~470 cells rather than 1.7. **The binding
+constraint is the HELD-OUT cells per timepoint, not the training-set size** - regime A has MORE
+training pairs than B and still reads 0.000.
+
+At alpha = 0 every cell is <= 0.038, so there is no false-positive problem: the bar is specific and
+blind. Even in the good regime **alpha = 0.25 fails (0.337)** - the detectable effect must be at
+least about half HFF's measured amplitude.
+
+### Pre-registered: 4 of 4 held
+
+Q1 regime B resolvable at alpha 1 **YES** (1.000). Q2 regime A raw not resolvable at alpha 1
+**YES** (0.000). Q3 held-out cells bind rather than training size **YES**. Q4 no false positive at
+alpha 0 **YES** (max 0.038).
+
+### What this changes
+
+3a's STOP **stays withdrawn** and is now known to have been **unfalsifiable**. Section 3a's closing
+line - *"this dataset cannot support forward prediction"* - is **wrong as stated**: the dataset
+supports it where it is measured densely, and it is the Gill BULK arm that cannot serve as a
+held-out target at any effect size. Test 18's cells-per-timepoint warning is **promoted from a
+warning to the binding constraint, quantified**. Stage 6 is likewise quantified: what is needed is
+a **second dense single-cell time course on a DIFFERENT line**, not more donors measured at 1-2
+cells.
+
+**Not claimed:** that the tool is buildable. Regime B holds out a **pseudo-replicate of the same
+culture**, so it shows the forward curve is recoverable, never that it transfers to a new line. The
+product question - cross-line transfer - **remains unanswerable with this corpus**, now as a
+measured statement rather than an inference from a broken run. 3b/3c/3d stay unwritten.
+
+---
+
 ## 2026-08-12 - STAGE 3a DIAGNOSED: a forward time signal IS present; the estimator could not find it and the bar could not register it
 
 **Status:** Run and recorded. **READ-ONLY - no retrain, no rebuild, `src/` untouched.** New files

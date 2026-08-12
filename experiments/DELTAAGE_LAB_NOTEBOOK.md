@@ -4493,3 +4493,40 @@ and **no 3a verdict may be taken again until a resolvable bar is registered unde
 oracle is a ceiling and an existence proof — it needs `t_j` and other donors' measurements at
 `t_j` — **not a model**. What a valid re-run needs is listed in the plan: a bounded predictor, a
 resolvable bar, N2 resolved, and a model class that can reach the ceiling §D0 measures.
+
+---
+
+## STAGE 3a-bis — the gate was graded on 0.3 % of the cells (2026-08-12)
+
+`experiments/stage3a_bis_resolvability.py` → `results/stage3a_bis_resolvability_results.json`;
+`tests/test_stage3a_bis_resolvability.py` (18 tests). READ-ONLY. **No 3a verdict is taken** — this
+is the `REF_GROUND_RULES.md` §5b precondition. Full write-up: the "3a-bis" box in
+`plans/STAGE_3_TOOL.md`.
+
+**What 3a was reading.** `test18_forward_gate.py:74` takes every row from
+`gather_split(..., REGIME, "test")`, and under `holdout` the test split is the held-out Gill donor
+alone. 3a therefore ran on 18–21 bulk samples per fold at **1.7 cells/timepoint**, while the same
+bundle's train split holds **33,613 HFF single cells over 9 timepoints at ~3,735 cells/timepoint**,
+unsafe fraction **0.0835 → 0.9996**, per-timepoint SE **0.006**.
+
+**The check.** Simulated truth = HFF's own measured curve scaled by α, observed at the **real cell
+counts** via `Binomial(n_j, p)/n_j`. Both regimes share nearly the same training set (643 vs 679
+pairs); only the held-out trajectory's precision differs.
+
+| α | B: held out on ~470 cells/tp | A: held out on 1–2 cells/tp |
+|---|---|---|
+| 0.00 | 0.038 / 0.017 | 0.006 / 0.011 |
+| 0.25 | 0.468 / 0.337 | 0.005 / 0.017 |
+| 0.50 | **0.976 / 0.990** | 0.001 / 0.005 |
+| 1.00 | **1.000 / 1.000** | **0.000 / 0.000** |
+
+**Regime A is UNRESOLVABLE at every amplitude** — 0.000 even when the truth is HFF's full curve —
+so **3a as designed could not have returned GO for any signal**. Regime B is RESOLVABLE from
+α = 0.5. The binding constraint is the **held-out cells per timepoint**, not the training-set size:
+A has more training pairs than B and still reads 0.000. Pre-registered Q1–Q4 all held.
+
+**Consequence.** §3a's *"this dataset cannot support forward prediction"* is wrong as stated — the
+Gill **bulk** arm cannot serve as a held-out target at any effect size. Stage 6's requirement is now
+quantified: a **second dense single-cell time course on a different line**. Regime B holds out a
+pseudo-replicate of the *same* culture, so cross-line transfer remains unanswerable here. 3b/3c/3d
+stay unwritten.
