@@ -11,6 +11,111 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-12 - STAGE 3a DIAGNOSED: a forward time signal IS present; the estimator could not find it and the bar could not register it
+
+**Status:** Run and recorded. **READ-ONLY - no retrain, no rebuild, `src/` untouched.** New files
+`experiments/stage3a_diagnose.py` and `tests/test_stage3a_diagnose.py` (20 tests, pass); new
+artefact `results/stage3a_diagnose_results.json`. Recorded as the "3a DIAGNOSIS" box in
+`plans/STAGE_3_TOOL.md` and as "STAGE 3a WITHDRAWN AND DIAGNOSED" in the lab notebook. All four
+items accepted when 3a's STOP was withdrawn (81b70ad) are run here, plus one section (D0) added
+after the shape of the target became visible and labelled as not pre-registered.
+
+`test18_forward_gate.py` is imported UNMODIFIED and its own primitives are used, so what is
+diagnosed is the estimator 3a actually ran. All ten of 3a's Part A/C numbers reproduce to the digit.
+The fast ridge path used by D4 is validated against `sklearn.linear_model.Ridge` first
+(max|d| = 3.9e-10) and pinned as a property in the test file.
+
+### D0 - the finding: a model-free predictor using only t_j beats every arm 3a ran
+
+Part C's target is the mean of **1.6-1.8 binary cells per timepoint**, and **63/70 = 90% of its
+values are exactly 0 or 1** - per donor, close to a monotone step in time. So the forward question
+has a model-free ceiling: predict the held-out donor's value at t_j from the OTHER donors at that
+same t_j. No genes, no fitting, nothing from the held-out donor (pinned by a leakage test).
+
+On the five folds 3a graded: pooled-mean baseline 0.493, **3a's state+dt raw 2.010** (the arm the
+STOP was read from), 3a's state-only 0.409, bounded logit 0.352, **oracle on t_j alone 0.157**.
+**Paired -0.336, 95% CI [-0.450, -0.221], n=5 -> t_j HELPS**, every fold the same direction; the
+oracle beats 3a's best arm by 2.24x. Same for dAge: oracle **14.208** vs pooled 23.615, paired
+**-9.407, CI [-16.332, -2.482]**.
+
+**The limit, stated as plainly as the claim.** Those five folds exclude **N2**, the one donor that
+never becomes unsafe (flat 0 across 11 timepoints). Include it and the advantage falls to **-0.183,
+CI [-0.411, +0.046] -> tied**, N2 the only negative fold. N2 is absent from 3a's grading for an
+unrelated reason: `timepoint_table` filters on the AGE mask before computing a target that does not
+depend on dAge at all, so C-7's rule 4 removed it from the SAFETY analysis too. **Established on the
+graded geometry; not established across all six donors.**
+
+### D1 - the divergence is real; BOTH proposed mechanisms are wrong
+
+The audit's proposal - Y1's dt lies outside training support - **does not hold**: all five folds
+share the identical dt range [0.14, 11.77] with **0 held-out pairs outside**, Y1's missing timepoint
+being interior. My own pre-registered guess (P2, the dt block) is **also refuted**: Y1's dt
+coefficient (2.089) and mean |dt contribution| (1.634) sit inside the other folds' range.
+
+It is the **gene** block. Adding the two dt columns re-solves the ridge and rotates the gene-weight
+vector ~60 degrees (cos 0.47-0.52), amplifying the gene block **7.7x-20.4x on every fold**. Y1's
+held-out state is the one far outside the training scaler's support - mean |z| **2.546 vs 0.671**.
+Rotated weights times out-of-support state gives predictions of **5.44 to 10.92** on a target
+bounded by 1. Not only Y1: raw Part C is out of range on **every fold** (33%, 33%, 62%, 77%, 100%).
+
+### D2 - bounding repairs the instrument, not the answer
+
+Part C, 5 folds: raw +1.601 CI [-2.270, +5.472] width **7.742**; clip -0.028 CI [-0.105, +0.050]
+width **0.155**; logit -0.027 CI [-0.109, +0.054] width **0.163**. Y1 goes **7.589 -> 0.314**, the
+CI narrows **50x**, the point estimate flips sign - and all three still read "tied". Read against
+D0 that is the informative part: the signal is there and a bounded ridge over 2000 genes plus two
+dt columns still does not reach it. The failure is the **model class and the geometry**, not the
+corpus. Pre-registered P4 **failed**: state-only was not broken (0.409 vs a 0.446 mean-only
+baseline; 0.380 once bounded).
+
+### D3 - Part B closed arithmetically
+
+SD of the swing across folds **2.5e-14**; analytic value **-269.12592**; max |observed - analytic|
+**5.7e-14**. The expression has **no x0 term**, so the five rows cannot disagree. Re-run correctly
+(one LODO fit per fold over its own dt range) the swings finally differ - -241.91, -247.74, -264.16,
+-267.33, -274.71, SD 13.80 yr - and remain **nonphysical**. Part B never "passed" the >2 yr clause.
+
+### D4 - `bar_verdict` at the real geometry (REF_GROUND_RULES 5b), never run for 3a
+
+Real features, real dt, real fold/pair structure; only the TARGET is simulated so a dt effect is
+present by construction. 2000 trials/cell, MIN_PASS_RATE 0.95, 3a's rule graded verbatim.
+
+**The raw estimator is not a detector**: its pass rate is non-monotone in the true effect - 0.000 at
+rho 0.5, **1.000** at rho 0.75, back to **0.000 at rho 1.0** where the target IS dt with sigma
+0.001. Even repaired, the logit version clears 0.95 only at rho = 1.0 with sigma = 0.001 (0.055 at
+rho 0.75; 0.447 at rho 1.0/sigma 0.05, 0.823 at six folds). At rho = 0 both are 0.000 -
+**specificity without sensitivity**.
+
+### Pre-registered, graded: 3 of 5 held
+
+P1 dt nested inside training **YES** (0 outside). P2 dt block carries the divergence **NO** (the
+gene block does). P3 Part B identical and analytic **YES**. P4 state-only also broken **NO**. P5 bar
+unresolvable even at pure dt **YES** for raw. Both failures recorded as failures.
+
+### What this changes
+
+3a's STOP **stays withdrawn**, and the ground has shifted - on the graded geometry it points the
+wrong way. The withdrawal banner's *"the forward signal may well be absent"* is **superseded** and
+annotated in place, not deleted. Part B **must not be read at all**. Part C's prediction **must be
+bounded**. **No 3a verdict may be taken again until a resolvable bar is registered under 5b** with
+`tests/test_bars_resolvable.py` updated. 3b/3c/3d **stay unwritten**; Stage 5 is **still not entered
+on this basis**.
+
+**Not claimed:** that the tool is buildable, or that the oracle is a model - it needs t_j and other
+donors' measurements at t_j, so it is a **ceiling and an existence proof**. A valid re-run needs
+four things, listed in the plan: a bounded predictor, a resolvable bar, N2's status resolved, and a
+model class that can reach the ceiling D0 measures.
+
+### Correction to the withdrawal banner (81b70ad)
+
+The two CIs in item 2 of that banner were recomputed by hand with the `T_CRIT` entry for one fold
+too few. Means and the with-Y1 width are right; the endpoints are not. Measured: with Y1
+**[-2.270, +5.472]** (width 7.742, matching the recorded run); without Y1 **[-0.194, +0.615]**
+(width **0.810**, not 1.095). Corrected as a dated note; the original text is left standing. No
+conclusion drawn from them changes.
+
+---
+
 ## 2026-08-11 - AUDIT: C-7's fix is REAL and large; Stage 3a's STOP is NOT safe to act on
 
 **Status:** Audit. **`src/` untouched, nothing withdrawn.** New file

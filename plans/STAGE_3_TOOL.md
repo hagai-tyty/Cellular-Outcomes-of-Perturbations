@@ -129,6 +129,203 @@ cannot find a Δt signal, a neural net will not either.**
 | **WEAK GO** | sweep moves but Δt does not beat state-only | build, tempered |
 | **STOP** | neither | **do not write tool code.** Ship the scoring model; go to Stage 5 |
 
+> ## 🔬 **3a DIAGNOSIS — 2026-08-12. A forward time signal IS present; 3a's estimator could not have found it, and its bar could not have registered it.**
+>
+> *Additive. The withdrawal banner and the result box below are unchanged apart from two dated
+> annotations inside them.* Artefacts: `experiments/stage3a_diagnose.py`,
+> `results/stage3a_diagnose_results.json`, `tests/test_stage3a_diagnose.py` (20 tests).
+> **READ-ONLY** — no retrain, no rebuild, `src/` untouched. `test18_forward_gate.py` is imported
+> **unmodified** and its own `timepoint_table` / `build_pairs` / `feats` / `paired_ci` are the
+> primitives, so what is diagnosed is the estimator 3a actually ran.
+>
+> **Anchored first.** All ten of 3a's Part A/C numbers reproduce to the digit (Y1's 311.47 and
+> 7.589 included). The fast ridge path used by §D4 — features frozen so only the target varies —
+> is checked against `sklearn.linear_model.Ridge` on the real targets before use: **max|Δ| =
+> 3.9e−10**, and pinned as a property in the test file.
+>
+> ### D0 — the finding. A model-free predictor using only t_j beats every arm 3a ran
+>
+> *Not pre-registered; added once the target's shape became visible.* Part C's target is the mean
+> of **1.6–1.8 binary cells per timepoint**, and **63/70 = 90 % of its values sit exactly at 0 or
+> 1**. Per donor it is close to a monotone **step in time**:
+>
+> | donor | timepoints | cells/tp | unsafe fraction by timepoint | at 0 or 1 | std |
+> |---|---|---|---|---|---|
+> | **N2** | 11 | 1.7 | `0 0 0 0 0 0 0 0 0 0 0` | 11/11 | **0.000** |
+> | N3 | 12 | 1.7 | `0 0 0 .5 0 0 0 0 0 1 1 1` | 11/12 | 0.431 |
+> | O1 | 12 | 1.8 | `0 0 0 0 0 0 0 0 1 1 1 1` | 12/12 | 0.471 |
+> | O2 | 12 | 1.7 | `0 0 0 0 0 0 0 0 1 1 1 1` | 12/12 | 0.471 |
+> | Y1 | 11 | 1.6 | `0 0 .5 .75 .5 .5 .5 0 1 1 1` | 6/11 | 0.376 |
+> | Y2 | 12 | 1.8 | `0 0 0 0 0 0 .5 0 1 1 1 1` | 11/12 | 0.462 |
+>
+> If the target is essentially "when does this culture turn", the forward question has a
+> **model-free ceiling**: predict the held-out donor's value at `t_j` from the **other** donors'
+> value at that same `t_j`. That uses only `t_j = t_i + Δt` — no genes, no fitting, and nothing
+> from the held-out donor (pinned by a leakage test). It is the most forward-in-time information
+> Δt can carry at this geometry.
+>
+> | Part C, the 5 folds 3a graded | MAE |
+> |---|---|
+> | pooled-mean baseline | 0.493 |
+> | 3a's **state + Δt, raw** (the arm the STOP was read from) | **2.010** |
+> | 3a's state only | 0.409 |
+> | state + Δt, bounded (logit) | 0.352 |
+> | **oracle on `t_j` alone** | **0.157** |
+>
+> **paired oracle − pooled = −0.336, 95 % CI [−0.450, −0.221], n = 5 → `t_j` HELPS**, decisively;
+> the CI is nowhere near 0. The oracle beats 3a's best arm by **2.24×** and its state-only by
+> **2.6×**. Per fold the gain is +0.329, +0.400, +0.400, +0.180, +0.369 — **every fold, same
+> direction.**
+>
+> The same holds for Part A's target: ΔAge oracle **14.208** against a pooled-mean 23.615 and 3a's
+> state-only 20.67, paired **−9.407, CI [−16.332, −2.482] → `t_j` HELPS**.
+>
+> **So a forward time signal exists in this corpus, on the exact geometry 3a graded**, and 3a
+> reported that it does not.
+>
+> #### The limit on that claim, stated as plainly as the claim
+>
+> The five graded folds exclude **N2**, and N2 is the one donor that **never becomes unsafe** —
+> flat 0 across all 11 timepoints. Include it and the oracle's advantage falls to **−0.183, CI
+> [−0.411, +0.046] → tied**, with N2 the only negative fold (**−0.240**): the shared time course
+> predicts a transition that N2 never has. N2 is absent from 3a's grading for an unrelated reason
+> (C-7 rule 4 masks its **ΔAge**, and `timepoint_table` filters on the age mask before computing a
+> target that does not depend on ΔAge at all), and it is separately ungradable because a
+> zero-variance target is `test18`'s own documented skip. **So: established on the graded
+> geometry; not established across all six donors.** The point estimate favours `t_j` either way.
+> Resolving N2's status is a precondition of any re-run.
+>
+> ### D1 — the divergence is real, and BOTH proposed mechanisms were wrong
+>
+> The audit proposed that Y1's Δt sits outside the training folds' support. **It does not.** All
+> five folds share the *identical* Δt range **[0.14, 11.77]** with **0 held-out pairs outside
+> training support** — Y1's missing timepoint is **interior**, so only its pair count is smaller
+> (55 vs 66). My own pre-registered guess (**P2**: the Δt block carries it) is **also refuted** —
+> Y1's Δt coefficient (2.089) and mean |Δt contribution| (1.634) sit inside the other folds' range
+> (1.745–1.832, 1.356–1.443).
+>
+> **It is the gene block.**
+>
+> | held-out | \|gene\| state-only | \|gene\| state+Δt | ratio | cos(w_gene) | mean\|z_gene\| train | mean\|z_gene\| held-out | pred outside [0,1] |
+> |---|---|---|---|---|---|---|---|
+> | N3 | 0.134 | 1.563 | 11.7× | +0.475 | 0.604 | 0.503 | **77 %** |
+> | O1 | 0.147 | 1.440 | 9.8× | +0.485 | 0.604 | 0.455 | 33 % |
+> | O2 | 0.162 | 1.513 | 9.4× | +0.473 | 0.604 | 0.488 | 62 % |
+> | **Y1** | 0.373 | **7.614** | **20.4×** | +0.517 | 0.671 | **2.546** | **100 %** |
+> | Y2 | 0.139 | 1.074 | 7.7× | +0.477 | 0.605 | 0.448 | 33 % |
+>
+> Adding the two Δt columns re-solves the ridge and **rotates the gene-weight vector by ~60°**
+> (cos ≈ 0.47–0.52), amplifying the gene block's contribution **7.7×–20.4× on every fold**. Y1's
+> held-out state is the one that sits far outside the training scaler's support — mean |z| **2.546
+> against 0.671** in training, while every other fold's held-out mean |z| is *below* its own
+> training value. Rotated weights × out-of-support state = predictions of **5.44 to 10.92** on a
+> target bounded by 1. **And it is not only Y1** — the raw estimator emits out-of-range predictions
+> on **every fold**: 33 %, 33 %, 62 %, 77 %, 100 %.
+>
+> ### D2 — bounding the predictor repairs the instrument; it does not, by itself, find the signal
+>
+> | Part C, 5 folds | mean-only | state | state+Δt | paired mean | 95 % CI | width |
+> |---|---|---|---|---|---|---|
+> | **raw** (as 3a ran it) | 0.446 | 0.409 | 2.010 | +1.601 | [−2.270, +5.472] | **7.742** |
+> | **clip to [0,1]** | 0.446 | 0.386 | 0.358 | −0.028 | [−0.105, +0.050] | **0.155** |
+> | **logit link** | 0.446 | 0.380 | 0.352 | −0.027 | [−0.109, +0.054] | **0.163** |
+>
+> Y1's state+Δt MAE goes **7.589 → 0.314**; the CI **narrows 50×** and the point estimate flips
+> sign. All three still read *tied* — so the bound fixes the instrument and does **not** change
+> this run's reading. Read against D0 that is the informative part: the signal is there, and a
+> bounded *ridge on 2000 genes plus two Δt columns* still does not reach it. The failure is the
+> **model class and the geometry**, not the corpus.
+>
+> **P4 failed and is recorded as failed:** the state-only arm is *not* broken on the graded
+> geometry — it beats mean-only 0.409 vs 0.446, and 0.380 vs 0.446 once bounded. There was a
+> working comparator. (Without the age mask the raw state arm *is* worse than mean-only, 0.564 vs
+> 0.461, and only the bounded versions beat it.)
+>
+> ### D3 — Part B's identical swing, closed arithmetically
+>
+> SD of the swing across folds = **2.5e−14**; the analytic value `w_Δt·Δz(Δt) + w_Δt²·Δz(Δt²)` =
+> **−269.12592**; **max |observed − analytic| = 5.7e−14**. The expression contains **no x₀ term**,
+> so the five rows cannot disagree — one fit printed five times. **P3 confirmed**, and pinned as a
+> theorem in `tests/test_stage3a_diagnose.py` rather than as an observation.
+>
+> Re-run correctly (one LODO fit per fold, each swept over its own Δt range) the swings finally
+> differ — **−241.91, −247.74, −264.16, −267.33, −274.71**, SD 13.80 yr — and remain
+> **nonphysical**. Part B never "passed" the >2 yr clause; it was out of range, exactly as Part C's
+> 7.589 is.
+>
+> ### D4 — `bar_verdict` at the real geometry: the bar could not have registered the signal
+>
+> §5b's check, run at last, on the real features, the real Δt and the real fold/pair structure —
+> only the **target** is simulated, so a Δt effect is present **by construction**. ρ is the share
+> of the simulated signal carried by Δt (ρ = 1 is a *pure function of Δt*). 3a's rule is graded
+> verbatim: PASS iff the paired 95 % CI upper end < 0. 2000 trials/cell, `MIN_PASS_RATE = 0.95`.
+>
+> | ρ | σ | pass rate, **raw** (what 3a used) | pass rate, **logit** |
+> |---|---|---|---|
+> | 0.00 | 0.05 / 0.001 | 0.000 / 0.000 | 0.000 / 0.000 |
+> | 0.25 | 0.05 / 0.001 | 0.000 / 0.000 | 0.000 / 0.000 |
+> | 0.50 | 0.05 / 0.001 | 0.000 / 0.000 | 0.000 / 0.000 |
+> | 0.75 | 0.05 / 0.001 | 0.273 / **1.000** | 0.055 / 0.000 |
+> | 1.00 | 0.05 / 0.001 | **0.000** / **0.000** | 0.447 / **1.000** |
+>
+> 1. **The raw estimator is not a detector.** Its pass rate is **non-monotone in the true effect**
+>    — 0.000 at ρ = 0.5, 1.000 at ρ = 0.75, back to **0.000 at ρ = 1.0**, where the target *is* Δt
+>    with near-zero noise. A statistic whose verdict is not a function of the effect it is meant to
+>    measure cannot support a verdict in either direction.
+> 2. **Even repaired, the bar needs ρ ≈ 1.** The logit version clears 0.95 only at ρ = 1.0 with
+>    σ = 0.001; at ρ = 0.75 it reaches 0.055, at ρ = 1.0 / σ = 0.05 it reaches 0.447 (0.823 at six
+>    folds). At ρ = 0 both are 0.000, so there is no false-positive problem: this is **specificity
+>    without sensitivity**.
+>
+> At 5 folds × 55–66 pairs × 11–12 timepoints, this bar can only register a Δt effect that explains
+> **essentially all** of the forward signal. Per the accepted item verbatim: *"If a correct system
+> cannot clear the bar at that scale, then the dataset cannot answer the question, and THAT is the
+> finding, not STOP."* D0 sharpens it — the dataset **does** carry the answer; **this bar** could
+> not have registered it.
+>
+> ### Pre-registered expectations, graded (written before the run, in the script's docstring)
+>
+> | | expectation | held? |
+> |---|---|---|
+> | **P1** | Y1's Δt is nested inside the training range, not outside | ✅ **YES** — 0 pairs outside |
+> | **P2** | the Δt block carries the divergence | ❌ **NO** — ratio 1.13; the **gene** block does |
+> | **P3** | Part B's swing is identical and equals the analytic value | ✅ **YES** — SD 2.5e−14 |
+> | **P4** | the state-only arm is also broken (worse than mean-only) | ❌ **NO** — 0.409 vs 0.446 |
+> | **P5** | the bar is UNRESOLVABLE even at pure Δt | ✅ **YES** for raw (0.000) |
+>
+> Two of five failed. Both are recorded as failures, and every section above is written from what
+> was measured rather than from what was expected.
+>
+> ### What this changes
+>
+> | | |
+> |---|---|
+> | 3a's STOP | **stays withdrawn**, and the ground has shifted: it is not only unsupported, it points the wrong way on the graded geometry |
+> | *"the forward signal may well be absent"* (withdrawal banner) | **superseded.** D0 measures it present and strong on those five folds; annotated in place, not deleted |
+> | the audit's Y1-extrapolation mechanism | ❌ **refuted** — identical Δt support, 0 pairs outside |
+> | my own P2 (the Δt block) | ❌ **refuted** — the gene block, rotated ~60° by adding the Δt columns |
+> | Part B | **must not be read at all** — constant by arithmetic before the fix, nonphysical after |
+> | Part C's prediction | **must be bounded.** Raw least squares on a fraction is misspecified twice: unbounded output, and a target that is 90 % at 0 or 1 |
+> | 3a's bar | **UNRESOLVABLE as written.** No 3a verdict may be taken again until a resolvable bar is registered under §5b |
+> | 3b / 3c / 3d | **still unwritten.** D0 is an existence proof, not a model — nothing here licenses building them |
+> | Stage 5 | **still not entered on this basis** |
+>
+> ### What a valid 3a re-run needs, before it is run
+>
+> 1. A **bounded** predictor (logit link; `clip` is the floor) — D2.
+> 2. A **resolvable bar** registered under §5b at the real geometry, with `tests/test_bars_resolvable.py`
+>    updated. D4 says the current rule is not one. Pooling timepoints is the mitigation test 18's
+>    own cells-per-timepoint warning already named.
+> 3. **N2 resolved** — decoupled from the age mask, and a stated rule for a donor whose target has
+>    zero variance.
+> 4. A **model class that can reach the ceiling D0 measures.** A ridge over 2000 genes plus two Δt
+>    columns cannot; the oracle needs only `t_j`.
+>
+> **What is NOT claimed.** That the tool is buildable, that 3b–3d should be written, or that the
+> oracle is a model — it needs `t_j` and other donors' measurements at `t_j`, so it is a **ceiling
+> and an existence proof**, not a predictor for an unseen culture. And it is established on five
+> donors, not six.
+
 > ## ⛔ **3a's STOP IS WITHDRAWN — 2026-08-08, later the same day.** The run below is NOT VALID and must not be acted on.
 >
 > *The result box is left exactly as it was written. Nothing in it is deleted — it is the record of a verdict that should not have been taken.*
@@ -136,14 +333,14 @@ cannot find a Δt signal, a neural net will not either.**
 > **Three defects, each verified here before accepting the challenge that raised them:**
 >
 > 1. **Part C's decisive statistic is produced by a DIVERGING FIT, not by absent signal.** The target is `unsafe.mean()` — a FRACTION, bounded `[0,1]` by construction (`test18_forward_gate.py:85`). Y1 reports **MAE 7.589**, so the model is emitting values around **8** on a quantity that cannot exceed 1. Out-of-range output is not evidence about forward safety.
-> 2. **Y1 drives the entire verdict.** With Y1: mean +1.601, 95 % CI **[−2.836, +6.038]**, width **7.742**. Without it: mean **+0.211**, CI **[−0.337, +0.758]**, width **1.095**. **Y1 contributes 89.5 % of the mean.** And Y1 is structurally different — **11 timepoints and 55 pairs** against 12 and 66 for every other fold.
+> 2. **Y1 drives the entire verdict.** With Y1: mean +1.601, 95 % CI **[−2.836, +6.038]**, width **7.742**. Without it: mean **+0.211**, CI **[−0.337, +0.758]**, width **1.095**. *(**CORRECTED 2026-08-12** — the two intervals as written are wrong. Both were recomputed by hand with the `T_CRIT` entry for one fold too few; the means and the with-Y1 width are right, the endpoints are not. Measured by `stage3a_diagnose.py`: with Y1 **[−2.270, +5.472]**, width 7.742 — matching the recorded run exactly; without Y1 **[−0.194, +0.615]**, width **0.810**. No conclusion drawn from them changes. Left standing above rather than edited.)* **Y1 contributes 89.5 % of the mean.** And Y1 is structurally different — **11 timepoints and 55 pairs** against 12 and 66 for every other fold.
 > 3. **Part B's per-fold column is CONSTANT BY CONSTRUCTION, and my own explanation of it was wrong.** I flagged the identical −269.13 as suspicious but attributed it to *"the ridge extrapolating on Δt²"*. The real cause is at `test18_forward_gate.py:224-228`: Part B fits **ONE global model on all donors' pairs** and varies only `x0` per row, so the swing is `β·Δ(features)` with identical `β` and an identical Δt range — **identical for every donor by arithmetic.** It is one fit printed five times, not five fits agreeing.
 >
 > **And no `bar_verdict` was ever run for 3a** — `REF_GROUND_RULES.md` §5b requires showing a system that meets intent clears the bar ≥ 95 % of the time **before** the run. With n = 5 and a CI spanning 7.7 units on a `[0,1]` target, the honest verdict is **UNRESOLVABLE**, not *"tied"*.
 >
 > **Why this matters more than an ordinary correction:** STOP is the one **terminal** verdict in this project — *"do not write tool code; ship the scoring model; go to Stage 5."* My script's own text says *"a NEGATIVE result is decisive"*, and that rule holds only when the negative comes from the **data**. A negative produced by a diverging fit on one structurally-odd fold is decisive about nothing.
 >
-> **What is NOT withdrawn:** the qualitative direction. Excluding Y1, Δt still fails to help (mean +0.211, CI includes 0). The forward signal may well be absent — **this run did not establish it.** 3b/3c/3d stay unwritten pending a valid re-run, and Stage 5 is NOT entered on this basis.
+> **What is NOT withdrawn:** the qualitative direction. Excluding Y1, Δt still fails to help (mean +0.211, CI includes 0). The forward signal may well be absent — **this run did not establish it.** *(**SUPERSEDED 2026-08-12 — and in the direction that favours the tool, not the STOP.** §D0 of the diagnosis box above measures a model-free ceiling: on the very five folds 3a graded, a predictor using **only `t_j = t_i + Δt`** reaches unsafe-fraction MAE **0.157** against 3a's best arm at 0.352 and its state-only at 0.409, paired **−0.336, CI [−0.450, −0.221]**. A forward time signal is **present and strong** on that geometry. The sentence above is left standing as what was believed on 2026-08-08; it should no longer be relied on. The limit is in §D0 — add donor N2, which never becomes unsafe, and the six-fold CI includes 0.)* 3b/3c/3d stay unwritten pending a valid re-run, and Stage 5 is NOT entered on this basis.
 >
 > Diagnosis and re-run: `experiments/stage3a_diagnose.py`.
 >
