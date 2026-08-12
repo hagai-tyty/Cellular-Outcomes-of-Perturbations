@@ -129,6 +129,26 @@ cannot find a Δt signal, a neural net will not either.**
 | **WEAK GO** | sweep moves but Δt does not beat state-only | build, tempered |
 | **STOP** | neither | **do not write tool code.** Ship the scoring model; go to Stage 5 |
 
+> ## ⛔ **3a's STOP IS WITHDRAWN — 2026-08-08, later the same day.** The run below is NOT VALID and must not be acted on.
+>
+> *The result box is left exactly as it was written. Nothing in it is deleted — it is the record of a verdict that should not have been taken.*
+>
+> **Three defects, each verified here before accepting the challenge that raised them:**
+>
+> 1. **Part C's decisive statistic is produced by a DIVERGING FIT, not by absent signal.** The target is `unsafe.mean()` — a FRACTION, bounded `[0,1]` by construction (`test18_forward_gate.py:85`). Y1 reports **MAE 7.589**, so the model is emitting values around **8** on a quantity that cannot exceed 1. Out-of-range output is not evidence about forward safety.
+> 2. **Y1 drives the entire verdict.** With Y1: mean +1.601, 95 % CI **[−2.836, +6.038]**, width **7.742**. Without it: mean **+0.211**, CI **[−0.337, +0.758]**, width **1.095**. **Y1 contributes 89.5 % of the mean.** And Y1 is structurally different — **11 timepoints and 55 pairs** against 12 and 66 for every other fold.
+> 3. **Part B's per-fold column is CONSTANT BY CONSTRUCTION, and my own explanation of it was wrong.** I flagged the identical −269.13 as suspicious but attributed it to *"the ridge extrapolating on Δt²"*. The real cause is at `test18_forward_gate.py:224-228`: Part B fits **ONE global model on all donors' pairs** and varies only `x0` per row, so the swing is `β·Δ(features)` with identical `β` and an identical Δt range — **identical for every donor by arithmetic.** It is one fit printed five times, not five fits agreeing.
+>
+> **And no `bar_verdict` was ever run for 3a** — `REF_GROUND_RULES.md` §5b requires showing a system that meets intent clears the bar ≥ 95 % of the time **before** the run. With n = 5 and a CI spanning 7.7 units on a `[0,1]` target, the honest verdict is **UNRESOLVABLE**, not *"tied"*.
+>
+> **Why this matters more than an ordinary correction:** STOP is the one **terminal** verdict in this project — *"do not write tool code; ship the scoring model; go to Stage 5."* My script's own text says *"a NEGATIVE result is decisive"*, and that rule holds only when the negative comes from the **data**. A negative produced by a diverging fit on one structurally-odd fold is decisive about nothing.
+>
+> **What is NOT withdrawn:** the qualitative direction. Excluding Y1, Δt still fails to help (mean +0.211, CI includes 0). The forward signal may well be absent — **this run did not establish it.** 3b/3c/3d stay unwritten pending a valid re-run, and Stage 5 is NOT entered on this basis.
+>
+> Diagnosis and re-run: `experiments/stage3a_diagnose.py`.
+>
+> ---
+>
 > ## 🚨 **3a RESULT — 2026-08-08: STOP.** Run on C-7-clean labels AND on the contaminated ones; they agree.
 >
 > *Additive. Nothing above is changed.* `experiments/stage3a_forward_gate.py` imported
