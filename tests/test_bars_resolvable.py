@@ -100,6 +100,47 @@ def null_gc_step2_paired(sd: float, delta: float = 3.5723, n_folds: int = 6,
 
 _T_CRIT_5 = 2.5705818366147395      # t(.975, df=5)
 
+# HFF's measured unsafe fraction by timepoint (day 0 -> day 21), GSE242423 pooled over 42,481
+# cells at ~4,700 per timepoint. Recorded in STAGE_3_TOOL.md "3a-bis". Used as the shape of a
+# REAL forward safety curve so the 3a bar is simulated against something the data actually shows
+# rather than an invented effect size.
+_HFF_UNSAFE_CURVE = np.array([0.0835, 0.3509, 0.3508, 0.4226, 0.4708, 0.3964, 0.4659, 0.6791,
+                              0.9996])
+
+
+def null_forward_gate_paired(cells_per_tp: int, n_folds: int, alpha: float = 1.0):
+    """3a's paired forward comparison when the Δt signal is REAL, at a given held-out precision.
+
+    Both arms are given the best predictor their information set allows -- the Δt arm knows
+    `p(t_j)` exactly, the state arm the best value available from `t_i` alone -- so this is a
+    system that meets 3a's intent exactly. The only thing that varies is the binomial noise on
+    the held-out target at `cells_per_tp` cells. Returns the paired 95 % CI upper end, which 3a
+    requires to be < 0.
+
+    This isolates the PRECISION axis only. `STAGE_3_TOOL.md` "3a-bis" measured the other axis --
+    the held-out line/modality shift -- on the real data, and THAT is what makes the Gill-donor
+    geometry unresolvable at any cell count. It is not synthesisable here and is not claimed to be.
+    """
+    from scipy.stats import t as _t
+
+    rng = np.random.default_rng(SEED)
+    p = np.clip(_HFF_UNSAFE_CURVE.mean() + alpha * (_HFF_UNSAFE_CURVE - _HFF_UNSAFE_CURVE.mean()),
+                0.01, 0.99)
+    T = len(p)
+    ii = np.array([i for i in range(T) for j in range(T) if j > i])
+    jj = np.array([j for i in range(T) for j in range(T) if j > i])
+    blind = np.array([p[jj[ii == i]].mean() if (ii == i).any() else p.mean() for i in range(T)])
+    tc = float(_t.ppf(0.975, n_folds - 1))
+    out = []
+    for _ in range(TRIALS):
+        d = []
+        for _f in range(n_folds):
+            y = rng.binomial(cells_per_tp, p)[jj] / cells_per_tp
+            d.append(float(np.abs(p[jj] - y).mean()) - float(np.abs(blind[ii] - y).mean()))
+        d = np.asarray(d)
+        out.append(d.mean() + tc * d.std(ddof=1) / np.sqrt(n_folds))
+    return np.asarray(out)
+
 
 REGISTERED_BARS = [
     {
@@ -175,6 +216,32 @@ REGISTERED_BARS = [
         "note": "sqrt(2) x the 9.67 yr baseline fold SD -- the pessimistic bound if pairing "
                 "cancels nothing. Detection collapses to ~7.5%, barely above the 5% false-positive "
                 "rate: the test would be almost pure noise.",
+    },
+    {
+        "name": "3a forward gate, held-out target on ~470 cells/tp, full HFF curve (10 folds)",
+        "kind": "lower",
+        "null": lambda: null_forward_gate_paired(472, 10, alpha=1.0),
+        "bar": 0.0,
+        "expect": "RESOLVABLE",
+        "where": "STAGE_3_TOOL.md '3a-bis'; experiments/stage3a_bis_resolvability.py regime B",
+        "note": "the ONLY held-out geometry in which 3a's rule can register its own data's "
+                "forward curve. Measured on the real folds at 1.000. Registered so that any "
+                "future 3a run states which side of this line it sits on.",
+    },
+    {
+        "name": "3a forward gate, held-out target on 2 cells/tp, HALF-amplitude curve (10 folds)",
+        "kind": "lower",
+        "null": lambda: null_forward_gate_paired(2, 10, alpha=0.5),
+        "bar": 0.0,
+        "expect": "UNRESOLVABLE",
+        "where": "STAGE_3_TOOL.md '3a-bis'; regime C, the precision counterfactual",
+        "note": "the SENSITIVITY FLOOR. At 2 cells/timepoint a real effect of half HFF's measured "
+                "amplitude is missed almost always, while the same effect at ~470 cells/tp is "
+                "caught every time. NOTE what this does NOT show: at FULL amplitude 2 cells/tp "
+                "still resolves (regime C, 0.965), so held-out precision is NOT what makes the "
+                "Gill-donor geometry unresolvable -- the held-out line/modality shift is, and "
+                "that was measured on the real folds (regime D: 0.000 even at 472 cells/tp). "
+                "Kept as the regression for the precision axis only.",
     },
 ]
 

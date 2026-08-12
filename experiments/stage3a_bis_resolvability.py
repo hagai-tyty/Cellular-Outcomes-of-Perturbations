@@ -66,6 +66,27 @@ PRE-REGISTERED EXPECTATIONS (written before the run; graded in the output)
       as it did in the diagnosis.
 
 Stated so they can fail. Two of five failed last time and were recorded as failures.
+
+ADDED AFTER THE FIRST RUN — NOT PRE-REGISTERED: regimes C and D
+---------------------------------------------------------------
+The first run graded Q1-Q4 all held, and the write-up attributed regime A's failure to the
+held-out cells-per-timepoint. **That attribution was a confound and the first run could not have
+established it.** A and B differ in TWO ways at once: how precisely the held-out trajectory is
+measured, AND which distribution it is drawn from -- an HFF pseudo-replicate is the same line and
+the same single-cell modality as the training data, while a Gill donor is a different line
+measured in bulk.
+
+An idealised check made the confound visible: with both arms given their optimal predictors (the
+Δt arm knowing `p(t_j)` exactly, the state arm the best time-blind value), binomial noise at 2
+cells per timepoint does NOT stop the comparison resolving. So target imprecision alone cannot be
+the whole story, and regimes C and D complete the 2x2:
+
+    C = the WITHIN-HFF held-out trajectory, target drawn at 2 cells/tp  -> isolates PRECISION
+    D = the CROSS-LINE held-out trajectory, target drawn at 472 cells/tp -> isolates the shift
+
+D is not physically available -- Gill has no 470-cell timepoints -- and exists only to separate
+the two causes. Q3 is graded exactly as written; the 2x2 is reported beside it as the thing that
+actually decides the attribution.
 """
 from __future__ import annotations
 
@@ -318,10 +339,21 @@ def main() -> int:
             "n_te": np.array([max(p["n_j"], 1) for p in te], int),
         }
 
+    # A 2x2, because A and B differ in TWO ways at once -- how precisely the held-out trajectory
+    # is measured AND which distribution it comes from (HFF single-cell vs a Gill bulk donor, a
+    # different line and a different modality). Attributing the failure to precision alone would
+    # be a confound. C and D are the counterfactual cells: the same held-out trajectory with the
+    # other side's cell count. D is not physically available -- Gill has no 470-cell timepoints --
+    # it exists to isolate which of the two differences is binding.
+    cache = {"A": build_regime("A"), "B": build_regime("B")}
+    n_over = {"C": 2, "D": 472}
     rng = np.random.default_rng(SEED)
-    for regime, label in (("B", "WITHIN-HFF — held-out target on ~470 cells/timepoint"),
-                          ("A", "CROSS-LINE — held-out target on 1-2 cells/timepoint")):
-        prep = build_regime(regime)
+    for regime, label in (
+            ("B", "WITHIN-HFF, held out on its real ~470 cells/tp"),
+            ("A", "CROSS-LINE, held out on its real 1-2 cells/tp"),
+            ("C", "WITHIN-HFF but held out at 2 cells/tp — isolates PRECISION"),
+            ("D", "CROSS-LINE but held out at 472 cells/tp — isolates the LINE/MODALITY shift")):
+        prep = cache["B" if regime in ("B", "C") else "A"]
         if len(prep) < 2:
             continue
         print(f"\n  REGIME {regime} — {label}   [{len(prep)} folds, "
@@ -333,8 +365,10 @@ def main() -> int:
             for _ in range(SIM_TRIALS):
                 ds_r, dd_r, ds_l, dd_l = [], [], [], []
                 for p, L in zip(prep, lat, strict=True):
+                    n_te = (np.full_like(p["n_te"], n_over[regime]) if regime in n_over
+                            else p["n_te"])
                     ytr = rng.binomial(p["n_tr"], L["tr"]) / p["n_tr"]
-                    yte = rng.binomial(p["n_te"], L["te"]) / p["n_te"]
+                    yte = rng.binomial(n_te, L["te"]) / n_te
                     ds_r.append(D.mae(p["s"].predict(ytr), yte))
                     dd_r.append(D.mae(p["d"].predict(ytr), yte))
                     ds_l.append(D.mae(D.expit(p["s"].predict(D.logit(ytr))), yte))
@@ -367,7 +401,10 @@ def main() -> int:
         "Q2_regimeA_raw_not_resolvable_at_alpha1": {
             "held": bool(rate("A", 1.0, "raw") < MIN_PASS_RATE),
             "pass_rate": rate("A", 1.0, "raw")},
-        "Q3_heldout_cells_bind_not_training_size": {
+        # graded exactly as pre-registered: A below B at every alpha. NOTE that this is a
+        # comparison, NOT an attribution -- A and B differ in precision AND in distribution.
+        # The 2x2 below is what decides which of the two binds.
+        "Q3_regimeA_below_regimeB_at_every_alpha": {
             "held": bool(all(rate("A", a, "logit") <= rate("B", a, "logit")
                              for a in ALPHAS if a > 0)),
             "A": [rate("A", a, "logit") for a in ALPHAS],
@@ -376,6 +413,18 @@ def main() -> int:
             "held": bool(max([rate(r, 0.0, e) for r in ("A", "B") for e in ("raw", "logit")]
                              or [1.0]) <= 0.05),
             "rates": [rate(r, 0.0, e) for r in ("A", "B") for e in ("raw", "logit")]},
+        # NOT pre-registered -- the 2x2 that separates the two causes A-vs-B confounds.
+        "X_precision_vs_distribution_2x2_at_alpha1_logit": {
+            "held": True,
+            "B_hff_at_470": rate("B", 1.0, "logit"), "C_hff_at_2": rate("C", 1.0, "logit"),
+            "D_gill_at_472": rate("D", 1.0, "logit"), "A_gill_at_2": rate("A", 1.0, "logit"),
+            "binds": ("PRECISION" if rate("C", 1.0, "logit") < MIN_PASS_RATE
+                      <= rate("D", 1.0, "logit")
+                      else "LINE/MODALITY SHIFT" if rate("D", 1.0, "logit") < MIN_PASS_RATE
+                      <= rate("C", 1.0, "logit")
+                      else "BOTH" if max(rate("C", 1.0, "logit"),
+                                         rate("D", 1.0, "logit")) < MIN_PASS_RATE
+                      else "NEITHER ALONE")},
     }
     print("\n  PRE-REGISTERED QUESTIONS, GRADED")
     print(render_table(["question", "held?", "evidence"],

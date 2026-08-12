@@ -11,6 +11,63 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-12 - CORRECTION to 3a-bis: the binding constraint is the LINE/MODALITY shift, not cells per timepoint
+
+**Status:** Run and recorded. READ-ONLY. Found by checking my own claim before registering a bar on
+it. The 3a-bis entry below is **left standing**; the correction is recorded here and as a box inside
+the "3a-bis" section of `plans/STAGE_3_TOOL.md`. New: two registered bars in
+`tests/test_bars_resolvable.py`. 976 tests pass.
+
+### What was wrong
+
+The 3a-bis write-up attributed regime A's failure to the **held-out cells per timepoint**. Regimes A
+and B differ in **two** ways at once, not one: held-out precision AND held-out distribution - an HFF
+pseudo-replicate is the same line and the same single-cell modality as the training data, while a
+Gill donor is a **different line measured in bulk**. A-vs-B cannot separate them, so the attribution
+was a confound.
+
+It surfaced from an idealised check while drafting the registered bar: give both arms their optimal
+predictors and binomial noise at 2 cells/timepoint does NOT stop the comparison resolving. Target
+imprecision alone therefore could not be the whole story.
+
+### The 2x2 that settles it
+
+C = the within-HFF trajectory scored at 2 cells/tp; D = the Gill donor scored at 472, a
+counterfactual Gill can never have, included only to separate the causes. Pass rate at alpha=1,
+logit:
+
+| held-out trajectory | at 2 cells/tp | at 472 cells/tp |
+|---|---|---|
+| **HFF pseudo-replicate** | **C: 0.965** RESOLVABLE | **B: 1.000** RESOLVABLE |
+| **Gill donor** | **A: 0.000** | **D: 0.000** |
+
+**The binding constraint is the LINE/MODALITY SHIFT.** Handing the Gill geometry 472 cells per
+timepoint changes nothing - 0.000 at every alpha. Handing the HFF geometry only 2 cells still
+resolves at full amplitude.
+
+**What precision does control is the SENSITIVITY FLOOR**, and that is real: at alpha = 0.5 the
+within-HFF geometry drops from **0.990 to 0.429** when scored on 2 cells instead of 470.
+
+**Limit on the correction:** every Gill donor is bulk and HFF is single-cell, so line and modality
+are **perfectly confounded** in this corpus. The 2x2 separates precision from the shift, and no
+further.
+
+### Registered bars (REF_GROUND_RULES 5b)
+
+Two entries added to `REGISTERED_BARS`, both on the PRECISION axis, which is the only one that is
+synthesisable self-contained: held-out at ~470 cells/tp on HFF's full measured curve -> RESOLVABLE;
+held-out at 2 cells/tp at half amplitude -> UNRESOLVABLE. The second carries an explicit note that
+it does NOT explain the Gill geometry's failure, so the correction cannot be silently re-lost.
+
+### Downstream
+
+Stage 6's requirement is unchanged in substance - a second dense single-cell time course on a
+different line - but for a different reason: a held-out line **of the same modality** is the only
+way to test transfer at all, not more cells per timepoint. Still no 3a verdict taken; 3b/3c/3d stay
+unwritten.
+
+---
+
 ## 2026-08-12 - STAGE 3a-bis: 3a was graded on 0.3% of the cells, and as designed could never have returned GO
 
 **Status:** Run and recorded. **READ-ONLY - no retrain, no rebuild, `src/` untouched. NO 3a verdict

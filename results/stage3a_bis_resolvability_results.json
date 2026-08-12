@@ -374,6 +374,196 @@
         55,
         66
       ]
+    },
+    "C": {
+      "alpha=0.0": {
+        "raw": {
+          "null_median": 0.016069487930911702,
+          "null_p90": 0.030451977185343884,
+          "pass_rate": 0.0285,
+          "usable_bar": 0.03544804580493152,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        },
+        "logit": {
+          "null_median": 0.016641487231788585,
+          "null_p90": 0.03215716542436114,
+          "pass_rate": 0.009,
+          "usable_bar": 0.03703077124311312,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        }
+      },
+      "alpha=0.25": {
+        "raw": {
+          "null_median": 0.013558486255533289,
+          "null_p90": 0.0435013106375821,
+          "pass_rate": 0.2665,
+          "usable_bar": 0.05189939051496887,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        },
+        "logit": {
+          "null_median": 0.017362456177741105,
+          "null_p90": 0.03731710205275326,
+          "pass_rate": 0.075,
+          "usable_bar": 0.04319697799377614,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        }
+      },
+      "alpha=0.5": {
+        "raw": {
+          "null_median": -0.04421700234125571,
+          "null_p90": 0.002582832368251914,
+          "pass_rate": 0.8855,
+          "usable_bar": 0.015683840580328363,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        },
+        "logit": {
+          "null_median": 0.0026665537263098026,
+          "null_p90": 0.022979254004625038,
+          "pass_rate": 0.429,
+          "usable_bar": 0.029598460194665856,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        }
+      },
+      "alpha=1.0": {
+        "raw": {
+          "null_median": -0.2698309707145589,
+          "null_p90": -0.22264917879653479,
+          "pass_rate": 1.0,
+          "usable_bar": -0.21064163175572645,
+          "min_pass": 0.95,
+          "verdict": "RESOLVABLE"
+        },
+        "logit": {
+          "null_median": -0.03147498119788436,
+          "null_p90": -0.010013680645003659,
+          "pass_rate": 0.965,
+          "usable_bar": -0.003130522589506326,
+          "min_pass": 0.95,
+          "verdict": "RESOLVABLE"
+        }
+      },
+      "folds": [
+        "HFF_r0",
+        "HFF_r1",
+        "HFF_r2",
+        "HFF_r3",
+        "HFF_r4",
+        "HFF_r5",
+        "HFF_r6",
+        "HFF_r7",
+        "HFF_r8",
+        "HFF_r9"
+      ],
+      "n_train_pairs": 643,
+      "n_test_pairs": [
+        36,
+        36,
+        36,
+        36,
+        36,
+        36,
+        36,
+        36,
+        36,
+        36
+      ]
+    },
+    "D": {
+      "alpha=0.0": {
+        "raw": {
+          "null_median": 0.0160496692009673,
+          "null_p90": 0.03723404275902763,
+          "pass_rate": 0.003,
+          "usable_bar": 0.04622079491114061,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        },
+        "logit": {
+          "null_median": 0.024795738611007475,
+          "null_p90": 0.05003096217874196,
+          "pass_rate": 0.003,
+          "usable_bar": 0.05906642261275019,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        }
+      },
+      "alpha=0.25": {
+        "raw": {
+          "null_median": 0.08373421447802888,
+          "null_p90": 0.13281574850469158,
+          "pass_rate": 0.0,
+          "usable_bar": 0.1482596776620746,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        },
+        "logit": {
+          "null_median": 0.06189827939804543,
+          "null_p90": 0.09594860444587842,
+          "pass_rate": 0.001,
+          "usable_bar": 0.10804392562345866,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        }
+      },
+      "alpha=0.5": {
+        "raw": {
+          "null_median": 0.1952532850266684,
+          "null_p90": 0.2496714676076621,
+          "pass_rate": 0.0,
+          "usable_bar": 0.2625951000115229,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        },
+        "logit": {
+          "null_median": 0.09499889671315967,
+          "null_p90": 0.12913087841935403,
+          "pass_rate": 0.0,
+          "usable_bar": 0.13882375320612883,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        }
+      },
+      "alpha=1.0": {
+        "raw": {
+          "null_median": 0.43576240221743445,
+          "null_p90": 0.4676682729677722,
+          "pass_rate": 0.0,
+          "usable_bar": 0.4759441855964756,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        },
+        "logit": {
+          "null_median": 0.19059889805940095,
+          "null_p90": 0.20637580828066115,
+          "pass_rate": 0.0,
+          "usable_bar": 0.21047651430338613,
+          "min_pass": 0.95,
+          "verdict": "UNRESOLVABLE"
+        }
+      },
+      "folds": [
+        "N2",
+        "N3",
+        "O1",
+        "O2",
+        "Y1",
+        "Y2"
+      ],
+      "n_train_pairs": 679,
+      "n_test_pairs": [
+        55,
+        66,
+        66,
+        66,
+        55,
+        66
+      ]
     }
   },
   "pre_registered": {
@@ -385,7 +575,7 @@
       "held": true,
       "pass_rate": 0.0
     },
-    "Q3_heldout_cells_bind_not_training_size": {
+    "Q3_regimeA_below_regimeB_at_every_alpha": {
       "held": true,
       "A": [
         0.0105,
@@ -408,6 +598,14 @@
         0.0385,
         0.017
       ]
+    },
+    "X_precision_vs_distribution_2x2_at_alpha1_logit": {
+      "held": true,
+      "B_hff_at_470": 1.0,
+      "C_hff_at_2": 0.965,
+      "D_gill_at_472": 0.0,
+      "A_gill_at_2": 0.0,
+      "binds": "LINE/MODALITY SHIFT"
     }
   }
 }

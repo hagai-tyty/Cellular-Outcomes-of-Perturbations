@@ -4530,3 +4530,28 @@ Gill **bulk** arm cannot serve as a held-out target at any effect size. Stage 6'
 quantified: a **second dense single-cell time course on a different line**. Regime B holds out a
 pseudo-replicate of the *same* culture, so cross-line transfer remains unanswerable here. 3b/3c/3d
 stay unwritten.
+
+### CORRECTION to 3a-bis, same day — the binding constraint is the LINE/MODALITY shift
+
+*The section above is left standing.* Attributing regime A's failure to the held-out cells per
+timepoint was a **confound**: A and B differ in precision AND in held-out distribution (an HFF
+pseudo-replicate is the same line and modality as the training data; a Gill donor is a different
+line measured in bulk). Found while drafting the registered bar — an idealised check showed that
+with optimal predictors, binomial noise at 2 cells/timepoint does not stop the comparison
+resolving.
+
+Regimes C (within-HFF at 2 cells/tp) and D (Gill at 472 cells/tp, a counterfactual) complete the
+2×2. Pass rate at α = 1, logit:
+
+| held-out trajectory | at 2 cells/tp | at 472 cells/tp |
+|---|---|---|
+| **HFF pseudo-replicate** | **C: 0.965** ✅ | **B: 1.000** ✅ |
+| **Gill donor** | **A: 0.000** ❌ | **D: 0.000** ❌ |
+
+**The LINE/MODALITY shift binds**; 472 cells changes nothing for Gill. Precision controls the
+**sensitivity floor** instead — within-HFF at α = 0.5 falls from 0.990 to 0.429 when scored on 2
+cells. **Limit:** every Gill donor is bulk and HFF is single-cell, so line and modality are
+perfectly confounded here; the 2×2 separates precision from the shift and no further.
+
+Two bars registered in `tests/test_bars_resolvable.py` on the precision axis, the second noting
+explicitly that it does not explain the Gill geometry's failure.

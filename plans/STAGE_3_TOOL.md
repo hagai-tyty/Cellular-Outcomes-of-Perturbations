@@ -190,6 +190,46 @@ cannot find a Δt signal, a neural net will not either.**
 > vs 643) and still reads 0.000. More training data does not fix it; a measurable held-out target
 > does.
 >
+> > ### ❌ **CORRECTION, same day — the paragraph above is WRONG and I found it by checking my own claim.**
+> >
+> > *Left standing rather than edited, per the project's rule.* Regimes A and B differ in **two**
+> > ways at once, not one: how precisely the held-out trajectory is measured **and which
+> > distribution it comes from** — an HFF pseudo-replicate is the same line and the same
+> > single-cell modality as the training data, while a Gill donor is a **different line measured
+> > in bulk**. The A-vs-B comparison cannot separate them, so attributing the failure to
+> > cells-per-timepoint was a confound.
+> >
+> > It surfaced from an idealised check: give both arms their optimal predictors and binomial
+> > noise at 2 cells/timepoint does **not** stop the comparison resolving. So target imprecision
+> > alone could not be the whole story. Regimes **C** and **D** complete the 2×2 — C is the
+> > within-HFF trajectory scored at 2 cells/tp, D is the Gill donor scored at 472, a counterfactual
+> > Gill can never have, included only to separate the causes:
+> >
+> > | held-out trajectory | at **2** cells/tp | at **472** cells/tp |
+> > |---|---|---|
+> > | **HFF pseudo-replicate** | **C: 0.965** ✅ RESOLVABLE | **B: 1.000** ✅ RESOLVABLE |
+> > | **Gill donor** | **A: 0.000** ❌ | **D: 0.000** ❌ |
+> >
+> > **The binding constraint is the LINE/MODALITY SHIFT, not the cell count.** Handing the Gill
+> > geometry 472 cells per timepoint changes **nothing** — 0.000 at every α. Handing the HFF
+> > geometry only 2 cells still resolves at full amplitude.
+> >
+> > **What precision does control is the SENSITIVITY FLOOR**, and that is real: at α = 0.5 the
+> > within-HFF geometry drops from **0.990 to 0.429** when scored on 2 cells instead of 470. So
+> > cells-per-timepoint sets how small an effect can be seen; it is not what makes the cross-line
+> > geometry unanswerable.
+> >
+> > **A limit on the correction itself:** every Gill donor is bulk and HFF is single-cell, so
+> > **line and modality are perfectly confounded in this corpus** and the 2×2 cannot say which of
+> > the two is responsible. It separates *precision* from *the shift*, and no further.
+> >
+> > **What changes downstream.** Stage 6's requirement still points at a second dense single-cell
+> > time course on a different line — but for a different reason than stated below: not because
+> > more cells per timepoint are needed, but because a held-out line **of the same modality** is
+> > the only way to test transfer at all. Registered in `tests/test_bars_resolvable.py` as two
+> > bars: the precision axis (resolvable at 470, unresolvable at 2 cells and half amplitude), with
+> > an explicit note that the shift axis is not synthesisable there.
+>
 > At α = 0 every cell is ≤ 0.038, so the bar has **no false-positive problem** — it is specific,
 > and blind. Note also that even in the good regime **α = 0.25 fails (0.337)**: the detectable
 > effect must be at least about half HFF's measured amplitude.
@@ -209,8 +249,8 @@ cannot find a Δt signal, a neural net will not either.**
 > |---|---|
 > | 3a's STOP | **stays withdrawn**, and is now known to have been **unfalsifiable** — the design admits no GO |
 > | *"this dataset cannot support forward prediction"* (§3a's closing line, and the 3a RESULT box) | **wrong as stated.** The dataset supports it where it is measured densely; the Gill *bulk* arm cannot serve as a held-out target at any effect size |
-> | the cells-per-timepoint warning test 18 prints | **promoted from a warning to the binding constraint**, now quantified |
-> | Stage 6 (more data) | **quantified, not asserted.** What is needed is a SECOND dense single-cell time course on a DIFFERENT line — not more donors measured at 1–2 cells |
+> | the cells-per-timepoint warning test 18 prints | **promoted from a warning to a quantified sensitivity floor** — *not* the binding constraint; see the CORRECTION above |
+> | Stage 6 (more data) | **quantified, not asserted.** A SECOND dense single-cell time course on a DIFFERENT line — but per the CORRECTION above, because a held-out line of the SAME MODALITY is the only way to test transfer, not because of the cell count |
 > | 3b / 3c / 3d | **still unwritten.** Regime B is a positive control on one culture, not cross-line transfer |
 >
 > ### What is NOT claimed
