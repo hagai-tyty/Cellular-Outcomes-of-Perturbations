@@ -78,7 +78,8 @@ sys.path.insert(0, str(REPO / "experiments"))
 sys.path.insert(0, str(REPO))
 sys.path.insert(0, str(REPO / "src"))
 
-OUT = REPO / "results" / "stage3a_diagnose_results.json"
+_RESULTS = Path(__file__).resolve().parents[1] / "results"
+OUT = _RESULTS / "stage3a_diagnose_results.json"
 
 ALPHA = 1.0             # test18's ridge alpha, unchanged
 LOGIT_EPS = 0.01        # clamp before logit; the target is a fraction over <=2 cells/timepoint
