@@ -11,6 +11,69 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-12 - REGIME E: P0 fired, and p_unsafe turns out not to be expressible in bulk at all
+
+**Status:** Run and recorded, graded against `plans/STAGE_3A_REGIME_E_PREREG.md` (committed
+81602fe BEFORE the script existed). **READ-ONLY - no build, no retrain, `src/` untouched, no 3a
+verdict taken.** New: `experiments/stage3a_regime_e.py`, `tests/test_stage3a_regime_e.py` (26
+tests), `results/stage3a_regime_e_results.json`.
+
+### The pre-registered precondition fired
+
+93 of 95 GSE165177 samples loaded (2 excluded iPSC lines), 35,720 genes, donors O1/O2/O3 aged
+53/53/38, 33 contemporaneous controls. Unsafe fraction by (donor, day): **1.000 everywhere except
+O1 at day 10 (0.750)**. SD across timepoints: O1 0.100, O2 **0.000**, O3 **0.000**. Two of three
+donors flat -> **P0 fires -> E1-E4 must not be read**, and they were not; the null was not run.
+
+### Why - the part that matters more than the verdict
+
+The **untreated day-0 fibroblasts label `loss`**, P(loss) = 0.966 / 0.876 / 0.730. They are the
+starting material, so that cannot be biology. `fate_labels` z-scores each program against the
+`is_control` samples, which here are fibroblasts cultured 10-17 days; anything differing from that
+reference lands on the unsafe side. The split produced is **control vs non-control, not a time
+course** - negative controls P(safe) 0.699, every other arm P(loss) 0.61-1.00.
+
+### The structural finding
+
+**`p_unsafe` is a fraction OF CELLS. A bulk sample is ALREADY a population average, so a hard
+label per sample collapses the fraction to 0/1 before it can be counted, and the "fraction"
+becomes a fraction of SAMPLES.**
+
+One mechanism explains two things previously blamed on sample size: gill_bulk's 63/70 values
+pinned at the bounds, and why more bulk replication cannot help. GSE165177 has 4-6x the
+replication and real contemporaneous controls and is **more** saturated, not less - 11 of 12 cells
+at exactly 1.000. Regime E could never have succeeded, and the A1/A2/A3 attribution 2x2 is moot:
+fold count and replication were never the binding constraint for the safety target.
+
+### What it settles
+
+The acquisition ask is **RE-ESTABLISHED on much better grounds**: not "more replication" but
+"`p_unsafe` requires single-cell resolution, and GSE242423 is the only single-cell dataset we
+have". Requirement H2 of the spec (single-cell, not bulk) is **promoted from one of eight
+requirements to the whole point**.
+
+AUDIT-2's challenge was **right to make** - testing it cost one script run and replaced an
+assertion with a mechanism. Its expectation that GSE165177 would carry the gate is **refuted**, for
+a reason neither of us had identified. **GSE165177 is NOT dismissed**: its replication, 33
+contemporaneous controls and three adult in-range donors are real advantages for **dAge**, which is
+continuous per sample and does not have this problem. Separate and still open.
+
+### A bug this run caught in itself
+
+The first implementation matched only `{donor}_{arm}_{N}days_{exp}`. GSE165177 names its day-0
+fibroblasts **`O1 Fib`** - space-separated, no `days` token - so all three were **dropped
+silently**, cutting every trajectory's first timepoint and the pair count from 10 per donor to 6.
+Nothing raised; the run just answered a smaller question, and would have agreed with AUDIT-2's
+"4 timepoints, 6 pairs" for the wrong reason. Fixed and pinned by a named regression test.
+Including day 0 did **not** rescue P0 - those samples label `loss` too, which is what exposed the
+mechanism.
+
+Also recorded: the gene-space join listed as the next thing to cost before acquisition is **moot
+for the safety target** - joining gene spaces cannot make a bulk sample express a per-cell
+fraction. It stays open and worthwhile for dAge.
+
+---
+
 ## 2026-08-12 - AUDIT-2: the 3a diagnosis is right; "the blocker is more data" is not
 
 **Status:** Audit. **`src/` untouched, nothing withdrawn.**

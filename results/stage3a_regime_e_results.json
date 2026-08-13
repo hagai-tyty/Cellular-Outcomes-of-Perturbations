@@ -1,0 +1,210 @@
+{
+  "script": "stage3a_regime_e",
+  "prereg": "plans/STAGE_3A_REGIME_E_PREREG.md",
+  "n_samples": 93,
+  "n_genes": 35720,
+  "donors": [
+    "O1",
+    "O2",
+    "O3"
+  ],
+  "ages": {
+    "O1": "53",
+    "O2": "53",
+    "O3": "38"
+  },
+  "n_controls": 33,
+  "batches": {
+    "exp2": 69,
+    "exp1": 24
+  },
+  "geometry": [
+    [
+      "O1",
+      "53",
+      "0",
+      "1",
+      "0",
+      "1.000"
+    ],
+    [
+      "O1",
+      "53",
+      "10",
+      "4",
+      "2",
+      "0.750"
+    ],
+    [
+      "O1",
+      "53",
+      "13",
+      "4",
+      "3",
+      "1.000"
+    ],
+    [
+      "O1",
+      "53",
+      "15",
+      "4",
+      "3",
+      "1.000"
+    ],
+    [
+      "O1",
+      "53",
+      "17",
+      "5",
+      "3",
+      "1.000"
+    ],
+    [
+      "O2",
+      "53",
+      "0",
+      "1",
+      "0",
+      "1.000"
+    ],
+    [
+      "O2",
+      "53",
+      "10",
+      "4",
+      "2",
+      "1.000"
+    ],
+    [
+      "O2",
+      "53",
+      "13",
+      "6",
+      "3",
+      "1.000"
+    ],
+    [
+      "O2",
+      "53",
+      "15",
+      "4",
+      "3",
+      "1.000"
+    ],
+    [
+      "O2",
+      "53",
+      "17",
+      "5",
+      "3",
+      "1.000"
+    ],
+    [
+      "O3",
+      "38",
+      "0",
+      "1",
+      "0",
+      "1.000"
+    ],
+    [
+      "O3",
+      "38",
+      "10",
+      "4",
+      "2",
+      "1.000"
+    ],
+    [
+      "O3",
+      "38",
+      "13",
+      "6",
+      "3",
+      "1.000"
+    ],
+    [
+      "O3",
+      "38",
+      "15",
+      "6",
+      "3",
+      "1.000"
+    ],
+    [
+      "O3",
+      "38",
+      "17",
+      "5",
+      "3",
+      "1.000"
+    ]
+  ],
+  "unsafe_sd_by_donor": {
+    "O1": 0.09999999999999999,
+    "O2": 0.0,
+    "O3": 0.0
+  },
+  "label_by_arm": [
+    [
+      "day0_fibroblast",
+      "3",
+      "0.071",
+      "0.857",
+      "0.071",
+      "loss=3"
+    ],
+    [
+      "failed_to_transiently_reprogram",
+      "21",
+      "0.019",
+      "0.962",
+      "0.019",
+      "loss=21"
+    ],
+    [
+      "failing_to_transiently_reprogram",
+      "12",
+      "0.000",
+      "0.998",
+      "0.002",
+      "loss=12"
+    ],
+    [
+      "negative_control",
+      "33",
+      "0.699",
+      "0.163",
+      "0.138",
+      "safe=30, loss=3"
+    ],
+    [
+      "transient_reprogramming",
+      "11",
+      "0.000",
+      "1.000",
+      "0.000",
+      "loss=11"
+    ],
+    [
+      "transiently_reprogrammed",
+      "13",
+      "0.059",
+      "0.613",
+      "0.328",
+      "loss=9, death=3, safe=1"
+    ]
+  ],
+  "day0_p_loss": [
+    0.9658019703043397,
+    0.8757355031293443,
+    0.7301196586875811
+  ],
+  "P0_void": true,
+  "pairs_per_donor": {
+    "O1": 10,
+    "O2": 10,
+    "O3": 10
+  },
+  "structural_finding": "p_unsafe is a fraction of CELLS; a bulk sample is already a population average, so a per-sample hard label collapses the fraction to 0/1 before it can be counted. No bulk dataset can carry this target at any replication. Specific to the SAFETY target -- dAge is continuous per sample and is unaffected."
+}

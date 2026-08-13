@@ -4555,3 +4555,40 @@ perfectly confounded here; the 2×2 separates precision from the shift and no fu
 
 Two bars registered in `tests/test_bars_resolvable.py` on the precision axis, the second noting
 explicitly that it does not explain the Gill geometry's failure.
+
+---
+
+## REGIME E — `p_unsafe` is not expressible in bulk (2026-08-12)
+
+`experiments/stage3a_regime_e.py` → `results/stage3a_regime_e_results.json`;
+`tests/test_stage3a_regime_e.py` (26 tests). READ-ONLY. Graded against
+`plans/STAGE_3A_REGIME_E_PREREG.md`, committed **before** the script existed.
+
+**Question.** AUDIT-2 pointed out that the acquisition ask skipped `GSE165177`, on disk and in no
+training config: 3 donors aged 53/53/38 (all inside the clock's [1, 96], unlike HFF at 0), 4–6
+treated samples per (donor, day) against `gill_bulk`'s 1.7, and **33 contemporaneous negative
+controls** against 6 day-0-only ones. Fair challenge, so it was tested.
+
+**Result: P0 fired.** Unsafe fraction 1.000 at every (donor, day) except O1 day 10 (0.750);
+SD across timepoints O1 0.100, O2 0.000, O3 0.000. Two of three donors flat → E1–E4 not read.
+
+**Why.** The **untreated day-0 fibroblasts label `loss`** (P = 0.966 / 0.876 / 0.730). Impossible
+biologically, so it was chased down: `fate_labels` z-scores against the `is_control` samples,
+which here are fibroblasts cultured 10–17 days, so everything that differs from that reference
+falls on the unsafe side. The split is **control vs non-control, not a time course**.
+
+**The structural finding.** `p_unsafe` is a fraction *of cells*; a bulk sample is already a
+population average, so a per-sample hard label collapses the fraction to 0/1 before it can be
+counted. That single mechanism explains `gill_bulk`'s 63/70 saturation *and* why more bulk
+replication cannot help — GSE165177 has 4–6× the replication and is **more** saturated, 11 of 12
+cells at exactly 1.000.
+
+**Consequences.** The acquisition ask is re-established on better grounds — single-cell resolution,
+not replication. AUDIT-2 was right to force the test and wrong about the outcome, for a reason
+neither machine had identified. `GSE165177` is **not** dismissed: for **ΔAge**, which is continuous
+per sample, its replication and contemporaneous controls remain a genuine and open opportunity.
+
+**Bug caught in itself:** the day-0 fibroblasts are named `O1 Fib`, not `O1_..._0days_exp2`, and
+the first parser dropped all three **silently** — 10 pairs per donor became 6 with nothing raising.
+Fixed and pinned by a named regression test. Including day 0 did not rescue P0; those samples label
+`loss` too, which is what exposed the mechanism.
