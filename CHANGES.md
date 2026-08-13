@@ -11,6 +11,81 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-12 - dAge ON GSE165177: Gill 2022's rejuvenation REPRODUCED; absolute age FAILS; two of my own bars were badly posed
+
+**Status:** Run and recorded, graded against `plans/STAGE_1_5_7_DAGE_ON_GSE165177_PREREG.md`
+(committed BEFORE the script existed). **READ-ONLY - no build, no retrain, `src/` untouched.** New:
+`experiments/dage_gse165177.py`, `tests/test_dage_gse165177.py` (18 tests),
+`results/dage_gse165177_results.json`. 93 samples x 35,720 genes.
+
+Normalisation was the main hazard and is handled by reusing the pipeline's own path for the
+identically-formatted gill_bulk (`sources.py:506`): `2**log2 - 1` -> `normalize_counts(1e4)` ->
+`log1p`. The clock declares log1p_cp10k and the file ships Log2 RPM; feeding it straight in would
+have inflated every age by ~1.44x.
+
+### M-E0 CLEAN. 0 of 93 columns rejected by the C-7 integrity gate
+
+The same gate rejected five gill_bulk columns, one of which (N2_Fib_Sendai_Exp2) corrupted five of
+six folds. **By the project's own standard GSE165177 is cleaner than the dataset every recorded
+dAge was computed on.**
+
+### M-E1 FAIL-CALIBRATION. Absolute age is unusable here
+
+O1 (53) -> 89.2, O2 (53) -> 97.3, O3 (38) -> 95.9; pooled **94.1 vs a true mean of 48.0, |d| = 46.1
+yr, nearly 4x one cv_mae**. Gene coverage does NOT excuse it: 57.1% of clock genes are present but
+that is **89.2% of the clock's total |weight|**. The 53-vs-38 contrast was pre-registered as not
+gated and is reported as indicative only - and it points the wrong way (O3, the youngest, reads
+second-highest).
+
+### M-E2 The contemporaneous-control dAge, computed for the first time in this project
+
+`clock(sample) - mean(clock(controls of the SAME donor at the SAME day))`. failed -6.2 to -11.0 yr;
+transient -3.1 to -24.3 yr. gill_bulk is structurally incapable of this - its only baseline is one
+day-0 sample per donor, cross-batch for ~half the data.
+
+### M-E3 REPRODUCED. Transient reprogramming rejuvenates, by our own clock
+
+dAge(transient) vs its own contemporaneous control: **-17.88 yr, 95% CI [-21.13, -14.64]**, n=12
+cells. Paired transient - failed: **-9.58 yr, CI [-12.77, -6.39]**. 11 of 12 (donor, day) cells
+negative. Gill 2022's central claim recovered on data that was in no training config.
+
+**Why M-E3 succeeds while M-E1 fails, and it is the load-bearing point:** dAge is a DIFFERENCE, so
+the clock's +46 yr bias and every missing-gene term appear in the treated sample and its control
+alike and cancel exactly. Absolute age needs the clock to be accurate; dAge needs it only to be
+consistent. First direct evidence that the control-relative design does the job it was chosen for.
+
+### M-E4 The bar fired, but the inference I attached to it does not follow - WITHDRAWN
+
+Pooled within-(donor, day) control SD = **5.04 yr** against cv_mae 12.27, i.e. the "< half"
+branch, whose pre-registered reading was "the per-donor offset is MORE LIKELY REAL BIOLOGY; first
+evidence for Stage 2's premise". **That reading is wrong and this same run disproves it.** cv_mae
+is cross-validated error against TRUE age across 133 donors; 5.04 is replicate scatter within one
+condition. A clock can be reproducible and badly biased - M-E1 shows exactly that, 5 yr scatter
+alongside a +46 yr bias. **Reproducibility is not accuracy.** The bar fired as written; the
+conclusion is withdrawn. Stage 2's premise is NOT strengthened. What stands is narrower and still
+useful: the zero-point is reproducible to ~5 yr once controls are contemporaneous and replicated.
+
+### M-E5 The pooled bar said "sub-error"; the pooled statistic was the wrong one
+
+Pooled exp1-exp2 = -2.91 yr, CI [-6.35, +0.54]. Stratified by arm (not pre-registered): **control
+-8.52 yr, CI [-10.13, -6.92]**; failed -4.29 [-7.52, -1.06]; transient +7.59 [-3.60, +18.77].
+Control and transient move in OPPOSITE directions, so the pooled mean cancels an effect real in
+both. The control CI excludes zero: **the zero-point itself shifts -8.52 yr between batches, 0.69
+cv_mae**, and because dAge is measured against that control an arm-dependent offset does NOT
+cancel. **D1 is confirmed material for any cross-batch comparison** - my pooled bar could not have
+seen it.
+
+### Net
+
+GSE165177 is **valuable for dAge and now demonstrated to be** - exactly the opposite of its verdict
+for p_unsafe, and precisely the split regime E predicted. The control-relative design is
+**vindicated**; the clock's absolute age on bulk fibroblasts is **unusable**; D1 is **confirmed**;
+D2 is **quantified** at 5.04 yr. **Not claimed:** that the clock is calibrated here, that 53-vs-38
+resolves, or that these values compare to the project's harmonised figures - no harmonizer was
+applied, by design.
+
+---
+
 ## 2026-08-12 - REGIME E: P0 fired, and p_unsafe turns out not to be expressible in bulk at all
 
 **Status:** Run and recorded, graded against `plans/STAGE_3A_REGIME_E_PREREG.md` (committed

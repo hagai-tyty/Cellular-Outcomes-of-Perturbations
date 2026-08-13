@@ -4592,3 +4592,39 @@ per sample, its replication and contemporaneous controls remain a genuine and op
 the first parser dropped all three **silently** — 10 pairs per donor became 6 with nothing raising.
 Fixed and pinned by a named regression test. Including day 0 did not rescue P0; those samples label
 `loss` too, which is what exposed the mechanism.
+
+---
+
+## ΔAge ON GSE165177 — the published effect reproduces; absolute age does not (2026-08-12)
+
+`experiments/dage_gse165177.py` → `results/dage_gse165177_results.json`;
+`tests/test_dage_gse165177.py` (18 tests). READ-ONLY. Graded against
+`plans/STAGE_1_5_7_DAGE_ON_GSE165177_PREREG.md`, committed **before** the script existed.
+
+Normalisation reused verbatim from `sources.py:506` (`2**log2 − 1` → `normalize_counts(1e4)` →
+`log1p`) — the clock declares `log1p_cp10k` and the file ships Log2 RPM, a ~1.44× hazard.
+
+**M-E0 CLEAN** — 0 of 93 columns rejected by the C-7 gate that rejected five `gill_bulk` columns.
+
+**M-E1 FAIL-CALIBRATION** — O1 (53) → 89.2, O2 (53) → 97.3, O3 (38) → 95.9; pooled **94.1 vs 48.0
+true, +46.1 yr ≈ 4 cv_mae**. Not explained by coverage: 57.1 % of genes but **89.2 % of the total
+|weight|** is present. Absolute ages declared invalid, per the pre-registration.
+
+**M-E3 REPRODUCED** — ΔAge(transient) = **−17.88 yr, CI [−21.13, −14.64]**; paired vs failed
+**−9.58, CI [−12.77, −6.39]**; 11 of 12 cells negative. **Gill 2022's central claim recovered by
+our own clock, against replicated contemporaneous controls, on data in no training config.**
+
+**Why M-E3 works while M-E1 fails:** ΔAge is a *difference*, so the +46 yr bias and every
+missing-gene term cancel between a sample and its control. Absolute age needs accuracy; ΔAge needs
+only consistency. First direct evidence the control-relative design does what it was chosen for.
+
+**M-E4 — bar fired, inference withdrawn.** Control replicate SD **5.04 yr** vs cv_mae 12.27. The
+pre-registered reading ("the offset is more likely real biology") **does not follow**: cv_mae is
+cross-donor error against true age, 5.04 is replicate scatter, and M-E1 shows the clock is
+reproducible *and* badly biased at once. Stage 2's premise is **not** strengthened. What stands:
+the zero-point is reproducible to ~5 yr once controls are contemporaneous and replicated.
+
+**M-E5 — the pooled statistic was wrong.** Pooled −2.91 [−6.35, +0.54] looks sub-error, but by arm:
+**control −8.52 [−10.13, −6.92]**, failed −4.29 [−7.52, −1.06], transient +7.59 [−3.60, +18.77].
+Opposite directions cancel in the pool. The **zero-point** shifts −8.52 yr between batches and,
+being what ΔAge is measured against, does not cancel — **D1 confirmed material**.

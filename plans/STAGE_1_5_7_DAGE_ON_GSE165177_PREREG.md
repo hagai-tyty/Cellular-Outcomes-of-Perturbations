@@ -122,3 +122,115 @@ At matched (donor, day, arm) present in both batches, the mean clock difference.
 `results/dage_gse165177_results.json`; write-up to `CHANGES.md` and
 `experiments/DELTAAGE_LAB_NOTEBOOK.md`; unit tests in `tests/test_dage_gse165177.py`. Every bar in
 §3 graded as written, including any that fail.
+
+---
+
+## 6. RESULT — 2026-08-12. **Gill 2022's rejuvenation claim REPRODUCED**; the clock's absolute age FAILS; and two of my own bars were badly posed.
+
+*Graded against §3 exactly as written. Artefacts: `experiments/dage_gse165177.py`,
+`results/dage_gse165177_results.json`, `tests/test_dage_gse165177.py` (18 tests).*
+**READ-ONLY** — no build, no retrain, `src/` untouched. 93 samples × 35,720 genes; groups
+control 33, failed 33, transient 24, day-0 3.
+
+### M-E0 — the C-7 integrity gate: ✅ **CLEAN**
+
+**0 of 93 columns rejected.** `GSE165177` passes the gate that rejected five `gill_bulk` columns
+and whose single worst case (`N2_Fib_Sendai_Exp2`) corrupted five of six folds. By the project's
+own standard this dataset is cleaner than the one every ΔAge to date was computed on.
+
+### M-E1 — absolute age: ❌ **FAIL-CALIBRATION**
+
+| donor | true age | n untreated | predicted | 95 % CI | error |
+|---|---|---|---|---|---|
+| O1 | 53 | 12 | 89.2 | [85.0, 93.5] | **+36.2** |
+| O2 | 53 | 12 | 97.3 | [93.6, 100.9] | **+44.3** |
+| O3 | 38 | 12 | 95.9 | [92.4, 99.4] | **+57.9** |
+
+Pooled **94.1 against a true mean of 48.0 → |Δ| = 46.1 yr**, nearly **4× one `cv_mae`**. Every
+untreated fibroblast reads 65–105 yr. **Per the pre-registration, absolute ages on this dataset are
+invalid and only control-relative ΔAge is used below.**
+
+*Gene coverage does not excuse it.* 18,928 of 33,155 clock genes are present (57.1 %) — but that
+is **89.2 % of the clock's total |weight|**, so the missing genes are overwhelmingly low-weight.
+Coverage is a contributing bias, not an explanation for +46 yr.
+
+*The 53-vs-38 contrast was pre-registered as NOT gated and is reported as indicative only —* and
+the indication is unfavourable: **O3, the youngest donor at 38, reads the second-highest.** At
+15 yr against a 12.27 yr `cv_mae` this resolves nothing, and no claim is made either way.
+
+### M-E2 — contemporaneous-control ΔAge: computed, for the first time in this project
+
+Every value is `clock(sample) − mean(clock(controls of the SAME donor at the SAME day))`. `failed`
+runs −6.2 to −11.0 yr; `transient` runs −3.1 to −24.3 yr. **This is the quantity `gill_bulk` is
+structurally incapable of producing** — its only baseline is one day-0 sample per donor, from a
+different batch for ~half the data.
+
+### M-E3 — does transient reprogramming rejuvenate? ✅ **REPRODUCED**
+
+| | mean | 95 % CI | n |
+|---|---|---|---|
+| ΔAge(transient) vs its own contemporaneous control | **−17.88 yr** | **[−21.13, −14.64]** | 12 |
+| paired transient − failed | **−9.58 yr** | **[−12.77, −6.39]** | 12 |
+
+Both CIs exclude zero, and **11 of 12 (donor, day) cells are negative** (the sole exception is
+O3 day 15 at +3.29). Gill 2022's central claim is recovered by this project's own clock, on data
+that was in no training config, against **replicated contemporaneous controls**.
+
+> **Why M-E3 can succeed while M-E1 fails, and this is the load-bearing point:** ΔAge is a
+> *difference*. The clock's +46 yr bias, and every missing-gene term, appear in the treated sample
+> and in its control alike and **cancel exactly**. Absolute age needs the clock to be *accurate*;
+> ΔAge needs it only to be *consistent*. This is the first direct evidence in the project that the
+> control-relative design does the job it was chosen for.
+
+### M-E4 — the zero-point's own noise: bar fired, ⚠️ **but the inference I attached to it does not follow**
+
+Pooled within-(donor, day) control SD over 12 groups of n = 2–3: **5.04 yr**, against
+`cv_mae` 12.27. By §3 as written this is the *"< ½ × cv_mae"* branch, whose pre-registered reading
+was *"the per-donor offset is MORE LIKELY REAL BIOLOGY; first evidence for Stage 2's premise."*
+
+**That reading is wrong, and this same run disproves it.** The two quantities are not comparable:
+`cv_mae` is cross-validated error against **true age across 133 donors**; the 5.04 yr is
+**replicate scatter within one condition**. A clock can be highly reproducible and badly biased —
+and M-E1 shows *exactly that*: 5 yr replicate scatter alongside a **+46 yr** bias. **Reproducibility
+is not accuracy**, so low replicate SD says nothing about whether the per-donor offset is biology.
+
+**Recorded as: the bar fired as written; the conclusion attached to it is withdrawn.** Stage 2's
+premise is **not** strengthened by this. The honest statement is narrower and still useful: *the
+zero-point is reproducible to ~5 yr when controls are contemporaneous and replicated*, which is a
+real improvement over an unreplicated single sample and is worth having on its own.
+
+### M-E5 — the batch offset: pooled bar says "sub-error", ⚠️ **but the pooled statistic was the wrong one**
+
+Pooled `exp1 − exp2` = **−2.91 yr**, CI [−6.35, +0.54] → by §3, *"batch present but sub-error"*.
+**Stratifying by arm — not pre-registered — shows that summary is misleading:**
+
+| arm | mean `exp1 − exp2` | 95 % CI | n |
+|---|---|---|---|
+| **control** | **−8.52 yr** | **[−10.13, −6.92]** | 9 |
+| failed | −4.29 yr | [−7.52, −1.06] | 9 |
+| transient | +7.59 yr | [−3.60, +18.77] | 6 |
+
+The control and transient arms move in **opposite directions**, so the pooled mean cancels an
+effect that is real in both. The control CI excludes zero: **the ZERO-POINT itself shifts −8.52 yr
+between batches — 0.69 `cv_mae`.** Because ΔAge is measured *against* that control, an
+arm-dependent offset **does not cancel**, which is precisely D1's concern. **D1 is confirmed as
+material for any cross-batch comparison**, and my pre-registered pooled bar could not have seen it.
+
+### Summary of what this establishes
+
+| | |
+|---|---|
+| `GSE165177` for **ΔAge** | ✅ **valuable, and now demonstrated** — clean by C-7, contemporaneous replicated controls, and it reproduces the published effect |
+| Gill 2022's rejuvenation direction | ✅ **reproduced** by our clock, −17.88 yr [−21.13, −14.64] |
+| the control-relative ΔAge design | ✅ **vindicated** — it works precisely where absolute age fails |
+| the clock's **absolute** age on bulk fibroblasts | ❌ **unusable** — +46 yr, ~4 `cv_mae`; **not** explained by gene coverage (89.2 % of weight mass present) |
+| D1 (cross-batch zero-point) | ✅ **confirmed material** — the control arm alone shifts −8.52 yr [−10.13, −6.92] |
+| D2 (unreplicated baseline) | **quantified at last** — replicate SD 5.04 yr |
+| Stage 2's premise (the ±12.7 yr offset is biology) | **NOT strengthened.** My M-E4 bar conflated reproducibility with accuracy; withdrawn above |
+
+### What is NOT claimed
+
+That the clock is calibrated on this data (it is not). That the 53-vs-38 contrast resolves (it does
+not, and it points the wrong way). That these ΔAge values are comparable to the project's
+harmonised figures — **no harmonizer was applied**, by design, so they are directional only. And
+nothing here re-opens Stage 1.5 or touches `p_unsafe`, which regime E settled separately.
