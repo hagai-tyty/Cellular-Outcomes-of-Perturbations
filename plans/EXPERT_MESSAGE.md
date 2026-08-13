@@ -108,7 +108,10 @@ On the dAge half:
    second BULK dataset of that design a sensible buy, and what would you prioritise:
    more donors, wider age range, or more timepoints?
 
-IF YOU DO KNOW OF A DATASET - WHAT IT NEEDS TO HAVE
+REQUIREMENTS FOR Q1 AND Q2 (and the target for Q4) - THE SINGLE-CELL DATASET
+
+This spec is for the SAFETY half only. Q9 is a separate ask with almost the opposite
+requirements - see the short note after the deal-breakers.
 
 Must have, all of them:
 - Human, not mouse. The clock is human; an ortholog mapping reintroduces the confound.
@@ -144,6 +147,16 @@ Deal-breakers:
 I do NOT need any fate or safety annotation, age annotation, cell-type labels,
 clustering, or matched ATAC/methylation - I compute all of that myself. Raw counts
 plus a day label are enough.
+
+SEPARATELY, FOR Q9 - THE dAGE HALF, WHERE THE SPEC IS NEARLY THE OPPOSITE
+
+Bulk is completely fine there; the deal-breaker above applies only to the safety half.
+What matters for dAge is: contemporaneous negative controls REPLICATED at the same
+timepoint as the treated samples (this is the thing GSE165177 has and GSE165176 does
+not, and it is what makes the result above possible); donors of known chronological age
+spanning a WIDE range rather than clustered; and several timepoints. Cell counts and
+single-cell resolution do not matter here at all. If you know of something matching that
+description, it is just as useful to me as an answer to Q1.
 
 Thanks very much for reading this far. Even a partial answer, especially on 3, 5 or 6,
 would save me a lot of wasted effort.
