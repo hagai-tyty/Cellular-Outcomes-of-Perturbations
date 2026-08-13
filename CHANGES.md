@@ -11,6 +11,66 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-12 - AUDIT-2: the 3a diagnosis is right; "the blocker is more data" is not
+
+**Status:** Audit. **`src/` untouched, nothing withdrawn.**
+
+### What is right, including one place I was wrong
+
+The STOP withdrawal and the resolvability study are correct and I agree with both.
+`partC_frac_pred_outside_unit = 0.773` - **77% of Part C's predictions leave [0,1]** on a target that
+is a fraction by construction. And **regime A, the geometry 3a actually ran on, is UNRESOLVABLE at
+every alpha, raw and logit** (pass rates 0.000-0.017 against min_pass 0.95). A correct system could
+never have returned GO. That is a strong finding, properly done - 2000 trials, 4 regimes, both links.
+
+**I was wrong about the mechanism.** My audit blamed dt extrapolation on Y1. Measured:
+`heldout_pairs_outside_train_dt_support = 0` and `z_dt_heldout_absmax = z_dt_train_absmax = 2.4427`,
+identical. The extrapolation is in the **gene block** - `z_gene_heldout_absmax = 39.45` against
+`z_gene_train_absmax = 7.24`. Right conclusion, wrong reason. Recorded, not dropped.
+
+### Where I disagree - the blocking dataset is on disk
+
+The diagnosis names per-timepoint replication and a line/modality shift as binding. Both are true of
+`gill_bulk`; **neither is true of `GSE165177`**, which is on disk, in **no training config**, and has
+been shortlist item #2 - *"95 adult in-range methylation-paired samples, in no training config,
+free"* - since before this arc began. Measured from the raw matrices:
+
+| | gill_bulk (what 3a ran on) | **GSE165177** |
+|---|---|---|
+| donors | 6 | **3** |
+| timepoints | 12 | **4** |
+| **samples per (donor, timepoint)** | **~1.7** | **7.0-8.0** |
+| **controls** | **1 per donor, day 0 only (6 total)** | **2-3 per donor PER TIMEPOINT (33 total)** |
+| condition arms | time course | **6**, incl. explicit `negative_control` |
+
+**Every failure this arc has fought traces to gill_bulk's one unreplicated day-0 control per
+donor** - G-a, C-7/N2_Fib, Group D's self-centring, Group E, §4.7's 16.67 yr instability, rule 4 and
+B2'. **GSE165177 has replicated contemporaneous controls at every timepoint; none of those failure
+modes can arise in it.**
+
+And it fixes the named mechanism directly: `p_unsafe` from 1.7 samples can only be {0, 0.5, 1},
+which is why `saturated_at_bounds = 63` of 70. From 7-8 samples it moves in eighths.
+
+### The honest cost - a trade, not a free upgrade
+
+3 LOO folds not 6; **~6 ordered forward pairs per donor not 66** (4 timepoints vs 12); ~18 total
+pairs against 319. That is a large loss in pairs against 4-5x the replication and real controls -
+319 noisy correlated pairs versus ~18 well-estimated ones. **Nobody has evaluated that trade**, and
+"more data is the blocker" skips it rather than answering it.
+
+### What to do - free, machinery already exists
+
+Add **GSE165177 as regime E** to `experiments/stage3a_bis_resolvability.py` at its real geometry.
+RESOLVABLE means the gate can run for real on data we already hold, with no acquisition and no
+retrain. UNRESOLVABLE means the acquisition claim is **established with a number instead of
+asserted**. Worth costing in the same pass: with 6 condition arms, forward pairs can be built
+**across arms at matched timepoints**, a design that does not depend on the timepoint count at all.
+
+**Do not go to Stage 5, and do not open Stage 6 acquisition, until regime E has been run.**
+
+---
+
+
 ## 2026-08-12 - CORRECTION to 3a-bis: the binding constraint is the LINE/MODALITY shift, not cells per timepoint
 
 **Status:** Run and recorded. READ-ONLY. Found by checking my own claim before registering a bar on
