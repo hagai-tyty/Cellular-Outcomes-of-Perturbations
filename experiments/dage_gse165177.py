@@ -185,6 +185,29 @@ def main() -> int:
         print("      control-relative ΔAge may be used below.")
     print("   the 53-vs-38 contrast is NOT gated (15 yr against a 12.27 yr cv_mae) and is")
     print("   reported as indicative only.")
+
+    # NOT pre-registered. `untreated` pools two very different things -- day-0 fibroblasts that
+    # never saw reprogramming media, and negative controls cultured ALONGSIDE the experiment for
+    # 10-17 days. Splitting them decomposes the bias into a cross-study part and a culture part,
+    # which are different questions with different owners.
+    sp = {}
+    for g in ("day0", "control"):
+        sub = obs[obs.group == g]
+        tm = float(np.mean([TRUE_AGES[d] for d in sub.donor]))
+        sp[g] = {"n": int(len(sub)), "pred": float(sub.age.mean()), "true": tm,
+                 "bias": float(sub.age.mean() - tm)}
+    print("\n   BIAS DECOMPOSED (not pre-registered):")
+    print(f"      day-0 fibroblasts, never in reprogramming media: n={sp['day0']['n']}, "
+          f"predicted {sp['day0']['pred']:.1f} vs true {sp['day0']['true']:.1f} "
+          f"-> bias {sp['day0']['bias']:+.1f} yr")
+    print(f"      negative controls, cultured alongside 10-17 d:   n={sp['control']['n']}, "
+          f"predicted {sp['control']['pred']:.1f} vs true {sp['control']['true']:.1f} "
+          f"-> bias {sp['control']['bias']:+.1f} yr")
+    print(f"      => a ~{sp['day0']['bias']:+.0f} yr CROSS-STUDY floor even on fresh cells, plus a"
+          f" further {sp['control']['bias'] - sp['day0']['bias']:+.1f} yr that tracks TIME IN")
+    print("         CULTURE. The second is why a contemporaneous control matters: it drifts with")
+    print("         the experiment, and measuring ΔAge against the SAME day cancels that drift.")
+    out["M_E1_bias_decomposition"] = sp
     out["M_E1"] = {"pooled_pred": m, "ci": [lo, hi], "n": n, "true_mean": true_mean,
                    "abs_error": delta, "cv_mae": cv_mae,
                    "verdict": "PASS-CALIBRATION" if ok1 else "FAIL-CALIBRATION",

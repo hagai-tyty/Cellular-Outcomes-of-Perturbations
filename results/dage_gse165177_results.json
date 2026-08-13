@@ -15,6 +15,20 @@
   },
   "clock_genes_present": 18928,
   "clock_weight_mass_present": 0.8916501187694653,
+  "M_E1_bias_decomposition": {
+    "day0": {
+      "n": 3,
+      "pred": 78.04660011072411,
+      "true": 48.0,
+      "bias": 30.046600110724114
+    },
+    "control": {
+      "n": 33,
+      "pred": 95.59074217046434,
+      "true": 48.0,
+      "bias": 47.59074217046434
+    }
+  },
   "M_E1": {
     "pooled_pred": 94.12873033215266,
     "ci": [
