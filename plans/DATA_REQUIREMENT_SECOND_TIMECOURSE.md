@@ -4,6 +4,58 @@
 measured that the current corpus cannot answer Stage 3a's question at any effect size.
 **Audience:** an external domain expert. Self-contained — assumes no knowledge of this project.
 
+> ## ⏸️ **ON HOLD — 2026-08-12, hours after being written. DO NOT TAKE THIS TO AN EXPERT YET.**
+>
+> The other machine's `AUDIT-2` (`22de08a`) challenged the step from *"the held-out Gill-bulk
+> geometry is unresolvable"* to *"therefore acquire data"*, and **the challenge is correct.** I
+> verified it against the raw GEO matrix before accepting it.
+>
+> **`GSE165177` is on disk, is in no training config, and has never been tried as a held-out
+> geometry.** Measured from `GSE165177_series_matrix.txt.gz` just now:
+>
+> | | `gill_bulk` — what 3a ran on | **`GSE165177`** |
+> |---|---|---|
+> | donors | 6 | **3** (O1, O2, O3) |
+> | donor ages | 0–53, several out of clock range | **53, 53, 38 — all adult, all inside the clock's [1, 96]** |
+> | samples per (donor, timepoint) | **≈ 1.7** | **6–9** |
+> | **contemporaneous negative controls** | **1 per donor, day 0 only — 6 total** | **2–3 per donor PER TIMEPOINT — 33 total** |
+> | timepoints | 12 | day 0, 10, 13, 15, 17 (+ iPSC at 51) |
+>
+> **Two things this changes about the page below.**
+>
+> 1. **§P2 (adult donors of known age) is already satisfied by data on disk.** I listed it as
+>    merely *preferred* while a dataset meeting it sat unused. That was my error, not the audit's.
+> 2. **The saturated-target mechanism §3 rests on is specific to `gill_bulk`.** At 1.7 samples a
+>    fraction can only be {0, 0.5, 1} — hence 63 of 70 values at the bounds. At 6–9 samples it
+>    moves in sixths to ninths. That is a different target, and it has not been measured.
+>
+> **Where I part from the audit, and it matters for what gets asked:**
+>
+> - The audit says `GSE165177` has **"no modality shift"**. That is **only true of a bulk-trained
+>   variant.** `GSE165177` is bulk RNA-seq, exactly like `gill_bulk`; held out against a model
+>   trained on HFF single-cell, the shift is entirely intact. Both variants must be run and
+>   distinguished, or the result will be misread.
+> - The audit counts **4 timepoints → 6 ordered pairs per donor**. Measured, there are **5 usable
+>   time positions** (day 0, 10, 13, 15, 17) → **10 ordered pairs per donor, ~30 total**, and every
+>   pair ends at a replicated timepoint. The trade is better than the audit's own table claims.
+> - **3 folds is a severe power problem** the audit does not cost: the paired CI uses
+>   `t(0.975, df=2) = 4.303` against 2.776 at 6 folds. Resolvability must be *measured*, not assumed
+>   from the replication improvement.
+> - The audit calls this **"free"**. It is not. `GSE165177` is in **no** training config, so no
+>   fold bundle contains it; a comparable evaluation needs either a dataset build or a read-only
+>   path that recomputes fate labels from the raw matrix and states its own limits.
+>
+> **What must happen before this page is used:** run `GSE165177` as **regime E** through the same
+> §5b null. If it is RESOLVABLE, the gate can be graded on data already held and **there is nothing
+> to acquire.** If it is UNRESOLVABLE, then the ask below is established with a number instead of
+> asserted — and the expert conversation becomes far more precise, because we could then say
+> *"replicated contemporaneous controls at 6–9 samples per timepoint still are not enough"*, which
+> is a much sharper question than the one on this page.
+>
+> **Everything below stands as written and is not edited.** The technical spec (§4–§7) is correct
+> and will be reusable whichever way regime E lands; only the *premise that acquisition is needed*
+> is on hold.
+
 ---
 
 ## 1. What is being built, in three sentences
