@@ -43,6 +43,12 @@ CELLS_PER_RUN = 1000      # densify only this many at a time (bounds RAM)
 REGIME = "holdout"        # hold out ONE Gill donor as test; HFF + rest -> train/val/calib
 HOLDOUT_DONOR: str | None = None   # None -> auto-pick (first 'old' donor, else first). Set e.g. "O1".
 HARMONIZE = True          # cross-modality control-anchoring + Gill Projection (fixes ΔAge scale)
+# Stage 1.5.6 / C-7. OFF here so this runner's default behaviour is unchanged, but it MUST be
+# reachable: without it every retrain silently uses PRE-C-7 labels -- N2's degenerate control back
+# in the harmonizer, its 21 ΔAge labels unmasked -- and produces hours of compute answering the
+# wrong question. `run_loocv.py` sets it from CELLFATE_BULK_GATE, and
+# `tests/test_c7_reaches_the_retrain.py` pins that it actually arrives in DataConfig.
+BULK_INTEGRITY_GATE = False
 N_GENES = 2000
 EPOCHS = 80
 ENSEMBLE = 5
@@ -170,7 +176,8 @@ def main() -> None:
         holdout_cell_lines=(test_donor,), harmonize=HARMONIZE, harmonize_ref_dataset="gill_bulk",
         deconfound=True, seed=0,
         age_shuffle_datasets=frozenset(AGE_SHUFFLE), age_shuffle_seed=AGE_SHUFFLE_SEED,
-        age_shuffle_strata=AGE_SHUFFLE_STRATA),
+        age_shuffle_strata=AGE_SHUFFLE_STRATA,
+        bulk_integrity_gate=BULK_INTEGRITY_GATE),
         sources=[gse, gill])
 
     # ---- composition: how each cell line is distributed across splits ----

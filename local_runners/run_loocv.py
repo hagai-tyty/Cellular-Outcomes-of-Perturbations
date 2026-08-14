@@ -70,6 +70,14 @@ def main() -> None:
     rml.AGE_SHUFFLE_SEED = seed
     rml.AGE_SHUFFLE_STRATA = (arm == "D")     # D = within (cell_line, time_h); C = global
     rml.AGE_WINDOW_K = k
+    # Stage 1.5.6 / C-7. Env-driven so it composes with CELLFATE_FOLD_SUFFIX below, and printed
+    # loudly because a silent OFF here means hours of compute on PRE-C-7 labels.
+    rml.BULK_INTEGRITY_GATE = os.environ.get("CELLFATE_BULK_GATE", "") not in ("", "0", "false")
+    print(f"\n[C-7] bulk_integrity_gate = {'ON' if rml.BULK_INTEGRITY_GATE else 'off'}"
+          f"   (CELLFATE_BULK_GATE={os.environ.get('CELLFATE_BULK_GATE', '') or '(unset)'})")
+    if not rml.BULK_INTEGRITY_GATE:
+        print("      -> labels will be PRE-C-7: N2's degenerate control is back in the")
+        print("         harmonizer and its 21 ΔAge labels are NOT masked.")
     tag = {"A": "gc2_A_keep_hff", "B": "gc2_B_mask_hff",
            "C": f"gc2_C_shuffle_hff_s{seed}",
            "D": f"gc2_D_stratshuffle_hff_s{seed}"}[arm]
