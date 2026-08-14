@@ -11,6 +11,37 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-13 - CORRECTION: M-E3 was pseudoreplicated; the paired contrast does not survive
+
+**Status:** External critique, verified before acceptance, then fixed. **READ-ONLY.** The §6 result
+text is left standing; the correction is §7 of
+`plans/STAGE_1_5_7_DAGE_ON_GSE165177_PREREG.md`.
+
+M-E3's CI was computed over 12 (donor, day) cells. Those come from **3 donors**, 4 timepoints each,
+so they are not independent and the unit a generalisation claim rests on is the DONOR.
+
+| quantity | 12 cells | 3 DONORS | excludes 0 at donor level? |
+|---|---|---|---|
+| dAge(transient) | -17.88 [-21.53, -14.24] | **-17.89 [-26.52, -9.25]** | **YES** |
+| transient - failed | -9.58 [-13.17, -6.00] | **-9.58 [-19.29, +0.12]** | **NO** |
+
+Per-donor: O1 -18.32/-10.62, O2 -21.13/-12.86, O3 -14.21/-5.26.
+
+**M-E3's headline verdict STANDS** - dAge(transient) still excludes zero at n=3 with t(df=2)=4.303,
+so Gill 2022's direction is still reproduced. **The paired transient-failed contrast is
+DOWNGRADED** to "direction consistent in 3/3 donors, interval includes 0 at n=3" and may not be
+quoted as an established effect.
+
+**A second bug found while checking the first, and it is mine:** `ci()` fell back to the NORMAL
+quantile 1.96 for any df > 10. M-E3 runs at n=12 (df=11, t=2.201), so the recorded 12-cell CI was
+~12% too narrow. Fixed to fall through to `scipy.stats.t`. No verdict changes.
+
+The general lesson, twice now in this project: build the interval on the unit the claim generalises
+over. 3a-bis pooled two causes; M-E3 pooled within-donor cells. Both were caught externally, not by
+the bar.
+
+---
+
 ## 2026-08-12 - dAge ON GSE165177: Gill 2022's rejuvenation REPRODUCED; absolute age FAILS; two of my own bars were badly posed
 
 **Status:** Run and recorded, graded against `plans/STAGE_1_5_7_DAGE_ON_GSE165177_PREREG.md`

@@ -52,6 +52,14 @@ CLOCK = REPO / "configs" / "clocks" / "fleischer_clock.json"
 TRUE_AGES = {"O1": 53.0, "O2": 53.0, "O3": 38.0}
 T_CRIT = {1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571, 6: 2.447, 7: 2.365, 8: 2.306,
           9: 2.262, 10: 2.228}
+# The table stops at df=10 and the first version fell back to the NORMAL quantile 1.96 beyond
+# it. M-E3 runs at n=12 (df=11, t=2.201), so the first recorded 12-cell CI was ~12% too narrow.
+# scipy is already a dependency; use it and keep the table only as a fast path.
+def _tcrit(df: int) -> float:
+    if df in T_CRIT:
+        return T_CRIT[df]
+    from scipy.stats import t as _t
+    return float(_t.ppf(0.975, df))
 
 
 def arm_group(arm: str) -> str:
@@ -74,7 +82,7 @@ def ci(vals) -> tuple[float, float, float, int]:
         return (float(v[0]) if n else float("nan"), float("nan"), float("nan"), n)
     m = float(v.mean())
     se = float(v.std(ddof=1)) / np.sqrt(n)
-    t = T_CRIT.get(n - 1, 1.96)
+    t = _tcrit(n - 1)
     return m, m - t * se, m + t * se, n
 
 
@@ -255,19 +263,51 @@ def main() -> int:
                         "trans − fail"], drows, aligns=["l", "r", "r", "r", "r", "r", "r"]))
     mt, lt, ht, nt = ci(trs)
     md, ld, hd, nd = ci(diffs)
+
+    # PSEUDOREPLICATION. Not pre-registered; added after an external reviewer pointed out that
+    # the 12 (donor, day) cells are NOT independent -- they come from 3 donors, and the unit a
+    # generalisation claim rests on is the DONOR. The cell-level CI is reported for continuity
+    # with what was first recorded, but the donor-clustered one is the operative statistic.
+    dtr, ddf = {}, {}
+    for r in drows:
+        dtr.setdefault(r[0], []).append(float(r[4]))
+        ddf.setdefault(r[0], []).append(float(r[6]))
+    donor_t = [float(np.mean(v)) for v in dtr.values()]
+    donor_d = [float(np.mean(v)) for v in ddf.values()]
+    mt2, lt2, ht2, nt2 = ci(donor_t)
+    md2, ld2, hd2, nd2 = ci(donor_d)
     print(f"\n   ΔAge(transient) vs its own control: mean={mt:+.2f} CI=[{lt:+.2f},{ht:+.2f}] "
           f"(n={nt} cells)")
     print(f"   paired transient − failed:            mean={md:+.2f} CI=[{ld:+.2f},{hd:+.2f}] "
           f"(n={nd} cells)")
-    if np.isfinite(ht) and ht < 0:
-        v3 = "REPRODUCED — ΔAge(transient) < 0, CI excludes 0"
-    elif np.isfinite(lt) and lt > 0:
+    print(f"\n   DONOR-CLUSTERED (the operative statistic - n = {nt2} independent donors):")
+    for d in dtr:
+        print(f"      {d}: ΔAge(transient) {np.mean(dtr[d]):+7.2f}   "
+              f"transient−failed {np.mean(ddf[d]):+7.2f}")
+    print(f"   ΔAge(transient)     mean={mt2:+.2f} CI=[{lt2:+.2f},{ht2:+.2f}] (n={nt2} donors)")
+    print(f"   transient − failed  mean={md2:+.2f} CI=[{ld2:+.2f},{hd2:+.2f}] (n={nd2} donors)")
+
+    # graded on the DONOR-clustered interval
+    if np.isfinite(ht2) and ht2 < 0:
+        v3 = "REPRODUCED — ΔAge(transient) < 0, donor-clustered CI excludes 0"
+    elif np.isfinite(lt2) and lt2 > 0:
         v3 = "CONTRADICTED — reads as AGEING; per the pre-registration this ESCALATES"
     else:
-        v3 = "NOT REPRODUCED — CI includes 0 (this is NOT evidence of absence at this n)"
-    print(f"   -> {v3}")
+        v3 = "NOT REPRODUCED — donor-clustered CI includes 0 (NOT evidence of absence at n=3)"
+    v3b = ("SURVIVES donor clustering" if np.isfinite(hd2) and hd2 < 0
+           else "does NOT survive donor clustering — CI includes 0 at n=3")
+    print(f"   -> ΔAge(transient): {v3}")
+    print(f"   -> transient − failed: {v3b}")
+    print(f"      (direction is consistent in {sum(v < 0 for v in donor_d)}/{len(donor_d)} donors "
+          f"for the paired contrast, and {sum(v < 0 for v in donor_t)}/{len(donor_t)} for ΔAge)")
     out["M_E3"] = {"transient_mean": mt, "transient_ci": [lt, ht], "n_cells": nt,
                    "paired_vs_failed_mean": md, "paired_ci": [ld, hd], "n_paired": nd,
+                   "donor_clustered": {
+                       "per_donor_transient": {k: float(np.mean(v)) for k, v in dtr.items()},
+                       "per_donor_paired": {k: float(np.mean(v)) for k, v in ddf.items()},
+                       "transient_mean": mt2, "transient_ci": [lt2, ht2], "n_donors": nt2,
+                       "paired_mean": md2, "paired_ci": [ld2, hd2],
+                       "paired_verdict": v3b},
                    "verdict": v3, "rows": drows}
 
     # ---- M-E4: how noisy is the zero-point? ---------------------------------------------------

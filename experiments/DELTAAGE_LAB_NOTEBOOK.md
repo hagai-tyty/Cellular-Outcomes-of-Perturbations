@@ -4628,3 +4628,21 @@ the zero-point is reproducible to ~5 yr once controls are contemporaneous and re
 **control −8.52 [−10.13, −6.92]**, failed −4.29 [−7.52, −1.06], transient +7.59 [−3.60, +18.77].
 Opposite directions cancel in the pool. The **zero-point** shifts −8.52 yr between batches and,
 being what ΔAge is measured against, does not cancel — **D1 confirmed material**.
+
+### CORRECTION — M-E3 was PSEUDOREPLICATED (2026-08-13)
+
+External critique, verified before accepting. The 12 (donor, day) cells come from **3 donors**, so
+they are not independent; the unit a generalisation claim rests on is the donor.
+
+| quantity | 12 cells | **3 donors** | excludes 0? |
+|---|---|---|---|
+| ΔAge(transient) | −17.88 [−21.53, −14.24] | **−17.89 [−26.52, −9.25]** | ✅ YES |
+| transient − failed | −9.58 [−13.17, −6.00] | **−9.58 [−19.29, +0.12]** | ❌ NO |
+
+Per-donor: O1 −18.32 / −10.62, O2 −21.13 / −12.86, O3 −14.21 / −5.26.
+
+**The headline stands** — ΔAge(transient) still excludes zero at n = 3, so Gill 2022's direction is
+reproduced. **The paired contrast is downgraded** to "consistent in 3/3 donors, interval includes 0".
+
+Separately, a bug of mine found while checking: `ci()` fell back to the normal quantile 1.96 for
+df > 10, so the recorded 12-cell CI was ~12 % too narrow. Now uses `scipy.stats.t`.

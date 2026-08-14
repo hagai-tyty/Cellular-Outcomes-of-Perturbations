@@ -234,3 +234,56 @@ That the clock is calibrated on this data (it is not). That the 53-vs-38 contras
 not, and it points the wrong way). That these ΔAge values are comparable to the project's
 harmonised figures — **no harmonizer was applied**, by design, so they are directional only. And
 nothing here re-opens Stage 1.5 or touches `p_unsafe`, which regime E settled separately.
+
+---
+
+## 7. CORRECTION — 2026-08-13. **M-E3 was PSEUDOREPLICATED.** One of the two headline numbers does not survive.
+
+*Raised by an external reviewer, verified here before being accepted. The §6 text above is left
+exactly as written.*
+
+### The critique, and it is right
+
+M-E3's CI was computed over the **12 (donor, day) cells**. Those 12 are **not independent** — they
+come from **3 donors**, 4 timepoints each. The unit any generalisation claim rests on is the
+**donor**, so treating the 12 as independent is pseudoreplication and the interval is too narrow.
+
+| quantity | unit | mean | 95 % CI | width | excludes 0? |
+|---|---|---|---|---|---|
+| ΔAge(transient) | 12 donor-day cells | −17.88 | [−21.53, −14.24] | 7.3 | YES |
+| **ΔAge(transient)** | **3 donors** | **−17.89** | **[−26.52, −9.25]** | **17.3** | ✅ **YES** |
+| transient − failed | 12 donor-day cells | −9.58 | [−13.17, −6.00] | 7.2 | YES |
+| **transient − failed** | **3 donors** | **−9.58** | **[−19.29, +0.12]** | **19.4** | ❌ **NO** |
+
+Per-donor means: O1 −18.32 / −10.62, O2 −21.13 / −12.86, O3 −14.21 / −5.26.
+
+### What survives and what does not
+
+- **M-E3's headline verdict STANDS.** ΔAge(transient) vs its own contemporaneous control is
+  **−17.89 yr, donor-clustered CI [−26.52, −9.25]** — still excludes zero at n = 3 with
+  `t(0.975, df=2) = 4.303`. **Gill 2022's rejuvenation direction is still reproduced.**
+- **The paired transient − failed contrast does NOT survive.** Donor-clustered CI
+  **[−19.29, +0.12]** includes zero. It may not be quoted as an established effect.
+- **The direction is consistent in 3 of 3 donors for both quantities.** With only three clusters
+  that consistency is the more informative statement than either interval; it is reported instead
+  of the CI for the paired contrast.
+
+### A second, separate bug found while checking the first — mine
+
+`ci()` looked up `T_CRIT` and **fell back to the normal quantile 1.96 for any df > 10**. M-E3 runs
+at n = 12 (df = 11, t = 2.201), so the originally recorded 12-cell CI **[−21.13, −14.64] was ~12 %
+too narrow**; corrected it is [−21.53, −14.24]. No verdict changes, but it is an error in a
+recorded number. Fixed by falling through to `scipy.stats.t`.
+
+### What this changes
+
+| | |
+|---|---|
+| M-E3 "REPRODUCED" | ✅ **stands**, now on the donor-clustered interval |
+| the paired transient − failed figure | ❌ **downgraded** to "direction consistent in 3/3 donors, interval includes 0 at n = 3" |
+| every other CI in this run | **unaffected** — M-E1/M-E4/M-E5 already cluster at or above the donor level |
+| the expert message | must be corrected before sending: it quotes the pseudoreplicated pair |
+
+**The general lesson, and it is the same one twice in this project:** the interval must be built on
+the unit the claim generalises over. 3a-bis got this wrong by pooling two causes; M-E3 got it wrong
+by pooling within-donor cells. Both were caught by someone else, not by the bar.
