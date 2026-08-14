@@ -4662,3 +4662,56 @@ M-E1 FAIL and M-E3 REPRODUCED both stand; M-E4's branch moves to *inconclusive* 
 — the clock renders a 74-year gap as 22. The **Coriell hypothesis is dead** (bias +36.1, not smaller
 than GSE165177's +30), so supplier drops out and ComBat-style harmonisation is the only route left.
 Pseudobulk 0.297 vs per-cell 0.307 now agree, where pre-fix they did not.
+
+---
+
+## WHAT CHANGED, IN BIOLOGY — the plain-language version (2026-08-14)
+
+*Every line below traces to a recorded measurement. This section exists because the biology was
+only ever stated in numbers, and the numbers moved.*
+
+**On what an age clock does outside the data it was trained on**
+*Was:* a transcriptomic age clock applied to fibroblasts from an unfamiliar study reads them too
+old by a roughly constant amount — the error is an offset.
+*Is:* the error is an offset **and a change of scale**. Donors seven decades apart are placed about
+two decades apart.
+
+**On whether a control-relative comparison is safe**
+*Was:* measuring a treated culture against its own untreated control removes the clock's error,
+because a constant offset cancels in a subtraction.
+*Is:* it removes the offset but **not the compressed scale**. The comparison is protected from
+where the zero sits, not from how far apart the year-marks are.
+
+**On which way an uncalibrated clock errs**
+*Was:* an uncalibrated clock understates a rejuvenation effect relative to one recalibrated on the
+same data.
+*Is:* it has **no predictable direction of error**. It can overstate it.
+
+**On ordering versus distance**
+*Was:* a clock that reproduces a published direction and a published optimal timepoint can be
+trusted on magnitude.
+*Is:* **ordering can be right while every distance is wrong.** Reproducing a direction establishes
+nothing about scale.
+
+**On fibroblasts held in reprogramming medium**
+*Was:* dermal fibroblasts kept in reprogramming medium for two weeks accumulate about two decades
+of apparent transcriptomic age.
+*Is:* about **three** decades — the same order as the rejuvenation being measured against it.
+
+**On replicate untreated cultures**
+*Was:* replicate untreated cultures harvested on the same day agree to within about five years,
+comfortably better than the clock's own error, so their tightness argues that between-donor
+differences are biological.
+*Is:* they agree to within about **eight** years, indistinguishable from the clock's own error.
+Their agreement argues nothing.
+
+**On repeating the experiment**
+*Was:* repeating the experiment shifts the untreated baseline's apparent age by under a decade.
+*Is:* by about **fourteen** years, and the shift differs between treated and untreated cultures, so
+it does **not** cancel when they are compared.
+
+---
+
+**The through-line.** The clock was treated as a ruler with a mislabelled zero, and it is actually
+a ruler with **compressed divisions**. A mislabelled zero is harmless in a difference. Compressed
+divisions are not — they shrink the difference too, and no direction-only check can reveal it.
