@@ -13,26 +13,28 @@
 | 7 | P3's progress coordinate could be learned from all cells, leaking the held-out day | **fit on training timepoints only, then project held-out cells into that fixed coordinate** |
 | 8 | "overall safety defined afterwards" invited choosing the rule after seeing results | **pre-specified now: no composite is built** |
 
-**Order: P2 → P1 → P3 → P4 → P5.**
+**Order: ~~P2~~ → P1 → P3 → P4 → P5.** P2 is complete.
 
 **Out of scope, deliberately:** no retrain, no acquisition, no harmonizer change (that one would
 confound P1), 3b/3c/3d unwritten, Stage 5 unentered.
 
 ---
 
-# P2 — Correct the outward-facing message *(first, because it leaves the building)*
+# P2 — ✅ DONE. The outward-facing material is retired, not corrected.
 
-`plans/EXPERT_MESSAGE.md` quotes ΔAge −17.9 with an interval computed on 12 pseudoreplicated
-donor-day cells. Both superseded.
+The expert consultation was dropped, so there is nothing to correct — the question becomes what to
+do with material that carries known-wrong numbers and will not be used.
 
-**Replace with:** ΔAge(transient) **−42.45**, interval **[−67.39, −17.51]**, stated as *"a t-based
-interval on three donor-level estimates, `t(0.975, df=2) = 4.303`"* — **not** described as a
-conventional cluster-robust CI, because with three clusters the construction is doing the work and
-asymptotic results do not apply. The paired transient-vs-failed contrast is reported as *"direction
-consistent in 3/3 donors; interval includes zero at n = 3"*, never as an established effect.
+- `plans/EXPERT_MESSAGE.md` — **deleted.** It was a draft of an action no longer being taken. Git
+  history retains it; nothing that records a *finding* lives only there.
+- `plans/EXPERT_BRIEF.md` — **kept, bannered RETIRED.** Deleting it would lose the provenance index
+  mapping each claim to the artefact that produced it, which is still accurate. The banner states
+  that every ΔAge figure inside is superseded twice — by the pseudoreplication fix and by the
+  double-`log1p` fix — and gives the current values.
+- `plans/DATA_REQUIREMENT_SECOND_TIMECOURSE.md` — **unchanged.** Already marked ON HOLD, and its
+  technical spec is independent of the ΔAge numbers.
 
-Add the two findings that postdate the draft: the clock **compresses** the age axis out of domain,
-and the supplier hypothesis is dead.
+*Records are annotated, not erased; a draft of an abandoned action is deleted.*
 
 ---
 

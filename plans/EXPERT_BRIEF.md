@@ -1,5 +1,31 @@
 # BRIEF FOR AN EXTERNAL EXPERT — one conversation, two separate asks
 
+> ## ⛔ **RETIRED — 2026-08-14. Not sent, and every ΔAge figure below is superseded TWICE.**
+>
+> The expert consultation was dropped; `plans/EXPERT_MESSAGE.md` (the sendable version) is deleted.
+> **This file is kept only for its provenance index**, which records which artefact produced which
+> claim, and which is still accurate.
+>
+> **Do not quote any ΔAge number from this document.** Every one predates two corrections:
+>
+> 1. **Pseudoreplication** — the intervals were computed over 12 donor-day cells that come from
+>    only 3 donors.
+> 2. **A double-`log1p`** — the expression was log-compressed twice, shrinking every magnitude by
+>    roughly 2.4×.
+>
+> | quoted below | current |
+> |---|---|
+> | ΔAge(transient) −17.88 [−21.13, −14.64] | **−42.45 [−67.39, −17.51]**, three donor-level estimates |
+> | transient − failed −9.58 [−12.77, −6.39] | **−24.19 [−49.53, +1.14]** — no longer excludes zero; reported as "direction consistent in 3/3 donors" |
+> | "our −18 sits below Gill's ~30" | **reversed** — at −42.45 we are *above* it |
+>
+> Current records: `plans/STAGE_1_5_7_DAGE_ON_GSE165177_PREREG.md` §6–§9,
+> `plans/STAGE_1_5_8_CLOCK_ON_GSE297234_PREREG.md` §7, and `CHANGES.md`.
+>
+> Also superseded: the *safety*-half framing here predates the finding that a molecular-progress
+> coordinate, not calendar day, is the coordinate worth testing — see
+> `plans/WORK_ORDER_2026_08_14.md` P3.
+
 **Written 2026-08-12.** Supersedes the questions in `DATA_REQUIREMENT_SECOND_TIMECOURSE.md`, which
 were written before the two runs below and would have wasted the conversation.
 **Self-contained** — assumes no knowledge of this project.
