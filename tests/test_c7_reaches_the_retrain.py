@@ -211,6 +211,15 @@ def test_wrong_mask_composition_is_rejected(masked):
     assert m.c7_mismatches(**{**kw, "masked": masked})
 
 
+def test_a_gated_run_does_not_advertise_the_pre_c7_snapshot_tag():
+    """The printed hint said `--tag gc2_A_keep_hff` even with the gate ON. gc2_A_keep_hff IS the
+    pre-C-7 baseline; following the hint would overwrite the only comparator the C-7 diff has."""
+    src = LOOCV.read_text(encoding="utf-8")
+    assert 'tag.replace("gc2_", "c7_"' in src, (
+        "run_loocv.py advertises the gc2_ snapshot tag on a GATED run -- taking it would destroy "
+        "the pre-C-7 baseline that the retrain exists to be compared against")
+
+
 def test_the_runner_actually_calls_the_exact_check():
     """The function existing is not the same as the build path using it."""
     src = RUNNER.read_text(encoding="utf-8")

@@ -81,6 +81,11 @@ def main() -> None:
     tag = {"A": "gc2_A_keep_hff", "B": "gc2_B_mask_hff",
            "C": f"gc2_C_shuffle_hff_s{seed}",
            "D": f"gc2_D_stratshuffle_hff_s{seed}"}[arm]
+    # A GATED run is NOT the gc2_* arm: same arm, different labels. Advertising the gc2_ tag here
+    # invites overwriting the pre-C-7 snapshot, which is the ONLY comparator a C-7 diff has -- the
+    # baseline would be destroyed by the very run that needs it. c7_A_keep_hff is the runbook tag.
+    if rml.BULK_INTEGRITY_GATE:
+        tag = tag.replace("gc2_", "c7_", 1)
     print(f"\n[step6] arm {arm} | AGE_MASKED_DATASETS = {set(rml.AGE_MASKED) or '(empty)'} | "
           f"age_window_k = {k}")
     # Fold roots are arm-suffixed via CELLFATE_FOLD_SUFFIX (below), which scorecard.py honours
