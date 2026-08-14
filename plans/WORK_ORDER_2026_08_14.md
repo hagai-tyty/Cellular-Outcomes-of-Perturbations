@@ -1,184 +1,186 @@
 # WORK ORDER — 2026-08-14. Five steps, in order, with decision rules fixed in advance.
 
-**Supersedes** the informal plan of the same day. Revised after external review, which corrected
-one real error: the first version treated the methylation clock as **ground truth** while the
-project's own records say its agreement ceiling is limited. It is an **independent, imperfect
-yardstick**, and every rule below is written accordingly.
+**Revision 2**, after a second external review. Changes from revision 1, all adopted:
 
-**Order: P2 → P1 → P3 → P4 → P5.** P2 first because it is cheap, externally visible, and currently
-wrong. P1 is the first *scientific* priority.
+| # | what was wrong | fix |
+|---|---|---|
+| 1 | "95 % CI, n = 3" could read as a large-sample robust cluster interval | stated explicitly as a **t-based interval on three donor-level estimates**; with 3 clusters the method matters and asymptotic cluster-robust results do not apply |
+| 2 | CpG coverage reported only as a fraction | also report **which** CpGs — two matrices at 60 % weight coverage can differ biologically |
+| 3 | P1.2 claimed concordance ruled out "a transcriptomic-clock artefact" | softened: it rules out an artefact **unique to one modality**, not a shared one |
+| 4 | the ratio `ΔAge_RNA / ΔAge_Meth` was the primary magnitude test | **demoted to secondary/descriptive.** A near-zero denominator makes it pathological. **Regression is now primary** |
+| 5 | P1.4 regressed **sample-level** points while declaring donor the independent unit | **contradiction removed** — donor-level or mixed-effects with donor as a random effect; no sample-level R² quoted as though n = samples |
+| 6 | "slope stable across donors" implied a test n = 3 cannot power | reworded descriptively |
+| 7 | P3's progress coordinate could be learned from all cells, leaking the held-out day | **fit on training timepoints only, then project held-out cells into that fixed coordinate** |
+| 8 | "overall safety defined afterwards" invited choosing the rule after seeing results | **pre-specified now: no composite is built** |
 
-**Not in scope, deliberately:** no retrain, no data acquisition, no harmonizer change, 3b/3c/3d
-stay unwritten, Stage 5 unentered. The harmonizer especially — changing it now would confound P1.
+**Order: P2 → P1 → P3 → P4 → P5.**
+
+**Out of scope, deliberately:** no retrain, no acquisition, no harmonizer change (that one would
+confound P1), 3b/3c/3d unwritten, Stage 5 unentered.
 
 ---
 
 # P2 — Correct the outward-facing message *(first, because it leaves the building)*
 
-`plans/EXPERT_MESSAGE.md` still quotes ΔAge −17.9 with a CI computed on 12 pseudoreplicated
-donor-day cells. Both numbers are superseded.
+`plans/EXPERT_MESSAGE.md` quotes ΔAge −17.9 with an interval computed on 12 pseudoreplicated
+donor-day cells. Both superseded.
 
-**Replace with:** ΔAge(transient) **−42.45**, donor-clustered 95 % CI **[−67.39, −17.51]** (n = 3
-donors), and the paired transient-vs-failed contrast reported as
-*"direction consistent in 3/3 donors, interval includes zero at n = 3"* rather than as an
-established effect. Add the two findings that did not exist when it was drafted: the clock
-**compresses** the age axis ~3.4× out of domain, and the supplier hypothesis is dead.
+**Replace with:** ΔAge(transient) **−42.45**, interval **[−67.39, −17.51]**, stated as *"a t-based
+interval on three donor-level estimates, `t(0.975, df=2) = 4.303`"* — **not** described as a
+conventional cluster-robust CI, because with three clusters the construction is doing the work and
+asymptotic results do not apply. The paired transient-vs-failed contrast is reported as *"direction
+consistent in 3/3 donors; interval includes zero at n = 3"*, never as an established effect.
 
-**Done when:** no superseded number remains, and the compression finding is stated as an open
-question rather than a result.
+Add the two findings that postdate the draft: the clock **compresses** the age axis out of domain,
+and the supplier hypothesis is dead.
 
 ---
 
 # P1 — Does the transcriptomic ΔAge survive comparison with an independent ageing modality?
 
-**Not** *"is −42 real"*. That question cannot be answered by a second imperfect clock.
+**Not** *"is −42 real"*. A second imperfect clock cannot answer that.
 
-`GSE165179` is the **methylation twin** of `GSE165177`: same three donors, same arms, same days
-(0/10/13/15/17), same sample names. Two Horvath clocks are already in the repo.
-**Primary: skin & blood 2018** (fitted for fibroblasts). Multi-tissue 2013 reported alongside,
-never substituted after the fact.
+`GSE165179` is the methylation twin of `GSE165177`: same three donors, same arms, same days, same
+sample names. **Primary clock: Horvath skin & blood 2018** (fitted for fibroblasts); multi-tissue
+2013 reported alongside, never substituted after the fact.
 
 ## P1.0 — Step zero, before anything is computed
 
-Two things must be settled first, and both are checks on the *instrument*, not the biology.
-
-1. **Re-read what the recorded ρ = 0.568 methylation ceiling actually measured.** It is carried in
-   this project's notes as a limit on methylation-to-methylation agreement, but the contrast it was
-   computed on must be confirmed before it is used as a bar. **Do not cite it until re-read.**
-2. **CpG coverage.** Report how many of each clock's CpGs are present in the matrix and what
-   fraction of total |weight| they carry — the same check that showed 57 % of genes carried 89 % of
-   the transcriptomic clock's weight. Low coverage would confound everything downstream.
+1. **Re-read what the recorded ρ = 0.568 methylation ceiling actually measured** before citing it
+   as a bar. Do not cite it until re-read.
+2. **CpG coverage**: report the fraction of each clock's CpGs present, the fraction of total
+   |weight| they carry, **and the identity of the covered and missing CpGs**. Fractional coverage
+   alone can hide two very different biological pictures.
 
 ## P1.1 — The adjudication floor. **Read before any comparison.**
 
-A yardstick can only settle a question if it is finer than the thing being measured. The
-contemporaneous controls give this directly: within each (donor, day) there are 2–3 untreated
-replicates.
+Within each (donor, day) there are 2–3 untreated replicates.
 
-> **Compute `SD_meth` = pooled SD of methylation age among control replicates within (donor, day).**
+> **`SD_meth` = pooled SD of methylation age among control replicates within (donor, day).**
 
 | condition | consequence |
 |---|---|
-| `SD_meth` ≥ ½ × the mean \|ΔAge_Meth\| being measured | **THE YARDSTICK CANNOT ADJUDICATE.** Report `SD_meth`, stop, and record that the question stays open. **Do not read P1.2–P1.5.** |
-| `SD_meth` < ½ × mean \|ΔAge_Meth\| | proceed, quoting `SD_meth` alongside every number below |
+| `SD_meth` ≥ ½ × mean \|ΔAge_Meth\| | **THE YARDSTICK CANNOT ADJUDICATE.** Report it, stop, record the question as open. **Do not read P1.2–P1.5.** |
+| otherwise | proceed, quoting `SD_meth` beside every number below |
 
-This is the branch the review asked for, and it is the one most likely to fire.
+This is the branch most likely to fire.
 
-## P1.2–P1.5 — Four separate questions, not one
+## P1.2 — DIRECTION
 
-For every non-control sample, in **both** modalities, against its **contemporaneous** control:
-
-```
-ΔAge_X(s) = clock_X(s) − mean( clock_X(controls: same donor, same day) )
-```
-
-Donor is the independent unit throughout — n = 3, `t(0.975, df=2) = 4.303`. Sample-level figures
-are reported for shape only and never carry a generalisation claim.
-
-### P1.2 — DIRECTION. Do both modalities agree the cells move younger?
+For each donor, the sign of mean ΔAge in each modality.
 
 | result | reading |
 |---|---|
-| both modalities negative in **3/3 donors** | **CONCORDANT IN DIRECTION** — evidence the effect is not a transcriptomic-clock artefact |
-| modalities disagree in sign in any donor | **DISCORDANT** — at least one molecular-age measure is responding to something other than rejuvenation. **Escalate; magnitude questions become meaningless** |
+| both modalities negative in 3/3 donors | **CONCORDANT IN DIRECTION** — evidence the shift is **not unique to the transcriptomic modality**. It does **not** exclude an artefact shared by both |
+| signs disagree in any donor | **DISCORDANT** — the modalities do not provide convergent evidence for rejuvenation on this trajectory. Investigate before interpreting magnitude. Disagreement can arise from noise, calibration or modality-specific biology, and this branch does not distinguish them |
 
-### P1.3 — MAGNITUDE. How large is the transcriptomic effect *relative to* the other modality?
+## P1.3 — MAGNITUDE. **Regression primary, ratio secondary.**
 
-Report the donor-level ratio `r = ΔAge_RNA / ΔAge_Meth` with its n = 3 interval, **and** `SD_meth`
-beside it.
-
-| result | reading |
-|---|---|
-| interval on `r` contains 1 | the two modalities are **not distinguishable in magnitude** at this n |
-| interval on `r` lies **above** 1 | the transcriptomic magnitude is **inflated relative to** the methylation modality — *not* proof that it is inflated relative to truth |
-| interval on `r` lies **below** 1 | the transcriptomic magnitude is **attenuated relative to** methylation |
-
-**No branch of this concludes that −42 is correct or incorrect in absolute terms.** Both clocks can
-be wrong together.
-
-### P1.4 — TRAJECTORY. Do the two clocks track the same biological movement?
-
-Not endpoints — the whole course. Plot `day → ΔAge_RNA` and `day → ΔAge_Meth` per donor, then
-regress paired sample-level ΔAge values.
+**Primary:** `ΔAge_RNA = α + β · ΔAge_Meth`, fitted per P1.4's clustering rules.
 
 | result | reading |
 |---|---|
-| positive slope, and the day-ordering of effect size agrees between modalities | the clocks are following **the same movement** |
-| near-zero slope despite both being negative on average | they agree the cells move younger but **disagree about when** — two vaguely similar endpoint numbers, not a shared trajectory |
+| β ≈ 1 | the modalities are on a **similar scale** |
+| β > 1 | the transcriptomic effect is **larger relative to** the methylation modality |
+| β < 1 | **smaller relative to** it |
 
-This is the question a single endpoint comparison cannot answer, and it is the most informative one.
+**Secondary, descriptive only:** the ratio `ΔAge_RNA / ΔAge_Meth`. **It must not drive any
+conclusion** — when the denominator approaches zero the ratio and its interval become pathological,
+which is entirely plausible here. Report it with the denominator beside it, always.
 
-### P1.5 — SCALE. Is the relationship linear, and is there a systematic factor?
+**No branch concludes −42 is correct or incorrect in absolute terms.** Both clocks are fitted on
+chronological age in populations; both could mis-scale acute reprogramming the same way.
 
-From the P1.4 regression: report slope, intercept and R², donor-clustered.
+## P1.4 — TRAJECTORY. Do the clocks track the same movement?
+
+Per donor, `day → ΔAge` in both modalities, then the relationship between them **respecting the
+clustering**:
+
+- **either** regress on the three **donor-level** trajectories,
+- **or** a repeated-measures / mixed-effects model with **donor as a random effect**.
+
+**An ordinary sample-level regression is not reported, and no R² is quoted with n equal to the
+number of samples.** Samples within a donor are not independent; this project has already made that
+error twice and it is not repeated here.
 
 | result | reading |
 |---|---|
-| approximately linear, slope stable across donors | a **systematic scale factor** between modalities — quantifiable and correctable in principle |
-| curved or saturating | the modalities diverge at large effect sizes; no single factor describes the relationship |
-| low R² with a large slope interval | shape is **not established** at this n; report and claim nothing |
+| positive relationship, and the day-ordering of effect size agrees between modalities | the clocks follow **the same movement** |
+| flat despite both being negative on average | they agree the cells move younger but **disagree about when** — two similar endpoints, not a shared trajectory |
 
-## What P1 cannot do, stated in advance
+## P1.5 — SCALE
 
-It cannot establish the true number of years. It cannot rule out that both clocks share a bias —
-they are both fitted on chronological age in populations, and both could mis-scale acute
-reprogramming the same way. And it cannot separate "compression is general" from "compression is
-specific to the chronological axis" — that needs an anchor neither modality provides.
+From P1.4: slope, intercept, and a fit statistic appropriate to the clustered model.
+
+| result | reading |
+|---|---|
+| donor-specific slopes **directionally consistent**, and a pooled model approximately linear | consistent with a **systematic scale factor** between modalities |
+| curved or saturating | the modalities diverge at large effects; no single factor describes them |
+| slopes inconsistent in direction, or a wide pooled interval | shape **not established** at n = 3; report and claim nothing |
+
+*Three donors cannot power a formal test of slope heterogeneity, so no such test is claimed.*
+
+## What P1 cannot do
+
+Establish the true number of years. Exclude a bias shared by both clocks. Or separate "compression
+is general" from "compression is specific to the chronological axis" — that needs an anchor neither
+modality provides.
 
 ---
 
 # P3 — Does molecular progress predict risk better than calendar day? *(within HFF only)*
 
-The reframing: the coordinate for safety should be **where a cell is in the reprogramming
-trajectory**, not how many days have elapsed. Two lines can run the same course at different
-speeds, so day cannot transfer while progress might.
+Two lines can run the same course at different speeds, so calendar day cannot transfer while
+trajectory position might. This also **reinterprets an existing result**: earlier tests found time
+redundant with state along one trajectory and filed it as failure; under this model that is the
+expected observation.
 
-This also **reinterprets an existing result rather than adding one**: earlier tests found time is
-redundant with state along a single trajectory and that was filed as a failure. Under this model it
-is the *expected* observation — the state already encodes the progress.
+**Leakage-proofed design.** Hold out one timepoint. **Fit the progress coordinate on the training
+timepoints only** — including any dimensionality reduction or trajectory construction — then
+**project the held-out cells into that fixed coordinate** and predict their risk. Nothing used to
+build the coordinate may derive from the held-out day, or the "held-out" claim is void.
 
-**Design.** Infer a per-cell progress coordinate on `GSE242423` (9 timepoints, ~42k cells).
-**Leave-one-timepoint-out**: hold out a day, compute progress from the remaining days *without the
-held-out day's labels*, and compare three predictors of risk — day only, progress only, both.
+Compare three predictors: day only, progress only, both.
 
-| result | reading | action |
-|---|---|---|
-| progress beats day, held out | the reframing is **supported within one line** | P5 becomes worth doing |
-| progress ties day | no advantage where it should be easiest | the reframing buys nothing; **do not spend on P5** |
-| progress loses to day | the coordinate is not capturing trajectory position | reconsider how progress is inferred before concluding anything |
+| result | action |
+|---|---|
+| progress beats day, held out | supported within one line → **P5 becomes worth doing** |
+| progress ties day | no advantage where it should be easiest → **do not spend on P5** |
+| progress loses to day | reconsider how progress is inferred before concluding anything |
 
-**Stopping rule:** if it fails within the single line it was designed on, stop. Do not test transfer
-of a construct that does not work at home.
+**Stopping rule:** if it fails within the single line it was designed on, stop.
 
 ---
 
 # P4 — Split identity-loss and apoptosis into separate heads
 
-Currently collapsed into one "unsafe" flag. Our own data says they separate: the transient arm ran
-P(loss) 0.613 / P(death) 0.328 while the failed arms were near-pure loss. Two biologically distinct
-failure modes that need not peak together, and collapsing them discards that.
+Currently collapsed into one flag. Our own data separates them: the transient arm ran P(loss) 0.613
+/ P(death) 0.328 while the failed arms were near-pure loss.
 
-**Deliverable:** P(identity loss) and P(apoptosis) reported and modelled separately across HFF's
-nine timepoints, with overall safety defined *afterwards* from the two, rather than the biology
-being forced into one binary up front.
-
----
-
-# P5 — Cross-line test on `GSE221739` **— gated on P3 succeeding**
-
-8 sampled days (D0–D15), 10x, replicate pools per timepoint, downloadable. Tests whether the
-molecular ordering of unsafe states reproduces on another line and another induction system.
-
-**Honest limit, stated now:** BJ is a neonatal foreskin fibroblast line, like HFF. This tests
-**protocol-and-line transfer, not donor-background transfer.** It cannot answer the question a
-genuinely different adult donor would.
-
-**Do not start P5 unless P3 returns "progress beats day."**
+**Pre-specified now, before any result:** the two risks are reported and modelled **separately**,
+and **no composite endpoint is constructed.** Not `1 − (1 − P_loss)(1 − P_death)`, not a weighted
+sum, not a union. They are biologically distinct failure modes with no reason to peak together, and
+choosing a combination rule after seeing which one looks better is a forking path. **If a downstream
+decision later requires a single number, that combination rule gets its own pre-registration.**
 
 ---
 
-## The standing rule this order enforces
+# P5 — Cross-line test on `GSE221739` — **gated on P3**
 
-Every step's decision rules are written **before** the numbers exist, the donor is the unit for any
-claim that generalises, and no instrument is treated as truth — including the one brought in to
-check the first.
+8 sampled days (D0–D15), 10x, replicate pools per timepoint.
+
+**Stated limit:** BJ is a neonatal foreskin fibroblast line, like HFF. This tests
+**protocol-and-line transfer, not donor-background transfer.**
+
+**Do not start unless P3 returns "progress beats day."** The gate is not relaxed.
+
+---
+
+## The standing rule
+
+> **No clock is treated as truth. Each clock is a noisy, potentially mis-scaled measurement whose
+> generalisability must be demonstrated independently.**
+
+Decision rules are written before the numbers exist; the donor is the unit for any claim that
+generalises; and the instrument brought in to check the first instrument gets the same scrutiny as
+the one under test.
