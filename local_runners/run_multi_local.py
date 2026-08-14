@@ -49,6 +49,27 @@ HARMONIZE = True          # cross-modality control-anchoring + Gill Projection (
 # wrong question. `run_loocv.py` sets it from CELLFATE_BULK_GATE, and
 # `tests/test_c7_reaches_the_retrain.py` pins that it actually arrives in DataConfig.
 BULK_INTEGRITY_GATE = False
+
+# ---- CHANGE C-7: the EXACT artefact a gated build must reproduce ---------------------------- #
+# Frozen from the six `_c7` dataset-only folds, verified IDENTICAL in all six. These are equalities
+# on purpose. A directional check ("something was masked") would accept 42,605 cells with 1 masked
+# label -- not C-7 -- and the failure this guards against was itself a silent discrepancy that
+# looked plausible: 42,605 / 0 under a header that said ON.
+#
+# If a deliberate change to QC, MAX_CELLS, or the corpus moves these numbers, they must be RE-FROZEN
+# from a build verified against the gate's intent. Widening the check to make it pass is the one
+# response that reintroduces the defect.
+C7_EXPECT_REJECTED = frozenset({
+    "N2_Fib_Sendai_Exp2",           # N2's ONLY control -- losing it is what masks N2's labels
+    "N2_d21_CD13_Sendai_Exp2",
+    "N3_d21_SSEA4_Sendai_Exp2",
+    "O2_d9_SSEA4_Sendai_Exp1",
+    "Y1_d7_CD13_Sendai_Exp1",
+})
+C7_EXPECT_N_SAMPLES = 42600         # 42,481 HFF + 119 surviving Gill columns (124 - 5)
+C7_EXPECT_N_LABELED = 42581         # 42,600 - 19
+C7_EXPECT_MASKED = {("N2", "no_control_baseline"): 19}
+
 N_GENES = 2000
 EPOCHS = 80
 ENSEMBLE = 5
@@ -112,6 +133,34 @@ def discover_gill(data_dir: str):
             f"candidates: {[os.path.basename(c) for c in cands]}\n"
             "-> set GILL_EXPR at the top of this script to the right file.")
     return cands[0], series
+
+
+def c7_mismatches(rejected, n_samples, n_age_labeled, masked) -> list[str]:
+    """Every way a gated build fails to BE the frozen C-7 artefact. Empty list == exact match.
+
+    Pure, so it is unit-tested without a build, a GPU, or the data machine -- the checks that
+    matter most are the ones that must not be discovered to be wrong at hour three.
+
+    `rejected`  iterable of rejected bulk column names
+    `masked`    {(cell_line, age_mask_reason): count} over rows whose ΔAge label is NOT valid
+    """
+    out: list[str] = []
+    got = frozenset(rejected)
+    if got != C7_EXPECT_REJECTED:
+        missing, extra = sorted(C7_EXPECT_REJECTED - got), sorted(got - C7_EXPECT_REJECTED)
+        out.append(f"rejected columns wrong: {len(got)} rejected, expected "
+                   f"{len(C7_EXPECT_REJECTED)}"
+                   + (f"; NOT rejected: {missing}" if missing else "")
+                   + (f"; unexpectedly rejected: {extra}" if extra else ""))
+    if n_samples != C7_EXPECT_N_SAMPLES:
+        out.append(f"n_samples = {n_samples}, expected {C7_EXPECT_N_SAMPLES}")
+    if n_age_labeled != C7_EXPECT_N_LABELED:
+        out.append(f"n_age_labeled = {n_age_labeled}, expected {C7_EXPECT_N_LABELED} "
+                   f"({C7_EXPECT_N_SAMPLES - C7_EXPECT_N_LABELED} masked)")
+    if dict(masked) != C7_EXPECT_MASKED:
+        out.append(f"masked labels = {dict(masked) or '{} (NOTHING masked)'}, "
+                   f"expected {C7_EXPECT_MASKED}")
+    return out
 
 
 def main() -> None:
@@ -194,19 +243,21 @@ def main() -> None:
     # scorecard. Only runs that ASKED for the gate are checked, so arms with it off are unaffected.
     if BULK_INTEGRITY_GATE:
         summary = json.loads(Path(ROOT, "dataset_summary.json").read_text(encoding="utf-8"))
-        n, n_lab = summary.get("n_samples"), summary.get("n_age_labeled")
-        if not gill.rejected_samples:
+        _man = pd.read_parquet(Path(ROOT, "manifest.parquet"))
+        _inv = _man[~_man["age_mask"].astype(bool)]     # age_mask is VALIDITY: False == masked
+        _masked = _inv.groupby(["cell_line", "age_mask_reason"]).size().to_dict()
+        problems = c7_mismatches(gill.rejected_samples, summary.get("n_samples"),
+                                 summary.get("n_age_labeled"), _masked)
+        if problems:
             raise SystemExit(
-                "\n[FATAL] bulk_integrity_gate=ON but the bulk source rejected NOTHING.\n"
-                "The gate did not reach the matrix read -- these are PRE-C-7 labels. Do not "
-                "snapshot this build.")
-        if n_lab is None or n is None or n_lab >= n:
-            raise SystemExit(
-                f"\n[FATAL] bulk_integrity_gate=ON but n_age_labeled ({n_lab}) is not below "
-                f"n_samples ({n}).\nRejecting a donor's only control MUST mask its ΔAge labels "
-                "(rule 4). Nothing was masked -- do not snapshot this build.")
-        print(f"   [C-7] gate BIT: rejected {len(gill.rejected_samples)} bulk column(s) "
-              f"{sorted(gill.rejected_samples)}; {n - n_lab} ΔAge label(s) masked of {n} cells")
+                "\n[FATAL] bulk_integrity_gate=ON but this build is NOT the C-7 artefact:\n"
+                + "".join(f"  - {p}\n" for p in problems)
+                + "Do not snapshot this build. If a deliberate change to QC/MAX_CELLS/the corpus\n"
+                  "moved these numbers, re-freeze the C7_EXPECT_* constants from a verified\n"
+                  "build -- do NOT widen the check to make it pass.")
+        print(f"   [C-7] gate BIT (exact match): rejected {sorted(gill.rejected_samples)}; "
+              f"{summary['n_samples'] - summary['n_age_labeled']} ΔAge label(s) masked "
+              f"({_masked}) of {summary['n_samples']} cells")
 
     # ---- composition: how each cell line is distributed across splits ----
     paths = ArtifactPaths.of(ROOT)

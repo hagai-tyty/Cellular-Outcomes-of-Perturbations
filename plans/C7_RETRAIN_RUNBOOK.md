@@ -50,10 +50,28 @@ unambiguous signature of "nothing was masked" regardless of how cells are counte
 2. `run_multi_local.py` sets the gate on the source **before** `plan()`, so the donor list also
    comes from the gated corpus.
 
-**And the check moved into the run.** Three C-7 failures have now been "the flag was on and nothing
-happened", each caught only by inspecting artefacts afterwards. `run_multi_local.py` now **aborts**
-if the gate is on and either no bulk column was rejected or no ΔAge label was masked. §3 below is
-now a confirmation, not the only line of defence.
+**And the check moved into the run — as an EQUALITY.** Three C-7 failures have now been "the flag
+was on and nothing happened", each caught only by inspecting artefacts afterwards.
+`run_multi_local.py` now **aborts** unless the build matches the frozen C-7 artefact exactly:
+
+| invariant | required |
+|---|---|
+| rejected bulk columns | exactly these 5: `N2_Fib_Sendai_Exp2`, `N2_d21_CD13_Sendai_Exp2`, `N3_d21_SSEA4_Sendai_Exp2`, `O2_d9_SSEA4_Sendai_Exp1`, `Y1_d7_CD13_Sendai_Exp1` |
+| `n_samples` | 42,600 |
+| `n_age_labeled` | 42,581 |
+| masked | `{("N2", "no_control_baseline"): 19}` |
+
+A directional check would have been too weak: `n_age_labeled < n_samples` accepts 42,605 cells with
+1 masked label, and accepts 42,605 with 19 masked. Both are wrong, and the failure being guarded
+against was exactly this kind of plausible-looking discrepancy. The comparison is a pure function
+(`c7_mismatches`) so it is unit-tested without a build, and it was validated end-to-end: it accepts
+all six frozen `_c7` folds and rejects all six invalid `_c7t` folds with the precise diagnosis.
+
+Verified equal across all six frozen folds, so one set of constants is correct for every fold. If a
+deliberate change to QC, `MAX_CELLS`, or the corpus moves these numbers, **re-freeze the constants
+from a verified build — widening the check to make it pass reintroduces the defect.**
+
+§3 below is now a confirmation, not the only line of defence.
 
 ---
 
@@ -93,10 +111,12 @@ If it says `off`, stop — the run is worthless.
 that actually proves the gate bit appears at the end of fold 1's build:
 
 ```
-[C-7] gate BIT: rejected 5 bulk column(s) [...]; 19 ΔAge label(s) masked of 42600 cells
+[C-7] gate BIT (exact match): rejected [...5 columns...]; 19 ΔAge label(s) masked
+      ({('N2', 'no_control_baseline'): 19}) of 42600 cells
 ```
 
-If the gate did not bite, the run now aborts on fold 1 within minutes rather than completing.
+Any deviation from the frozen artefact aborts fold 1 right after its build — minutes, not hours —
+with each mismatched invariant listed.
 
 **Cost:** six full builds plus training. The runner's own docstring says *"a few hours; run it
 overnight."*

@@ -57,10 +57,22 @@ is what leaves N2 without a baseline and masks its remaining 19 ΔAge labels und
   runs twice by design). The flag now means the same thing regardless of when it is set.
 - `run_multi_local.py` sets the gate on the source **before** `plan()`, so the donor list is also
   derived from the gated corpus.
-- **The check moved into the run.** All three failures were "flag on, nothing happened", each caught
-  only by inspecting artefacts after the compute was spent. The runner now **aborts** when the gate
-  is on and either no bulk column was rejected or no ΔAge label was masked, and otherwise prints
-  what it actually rejected and masked. A run whose header says ON can no longer finish pre-C-7.
+- **The check moved into the run, as an EQUALITY.** All three failures were "flag on, nothing
+  happened", each caught only by inspecting artefacts after the compute was spent. The runner now
+  **aborts** unless the build matches the frozen C-7 artefact exactly: the 5 named rejected columns,
+  `n_samples` 42,600, `n_age_labeled` 42,581, masked `{("N2","no_control_baseline"): 19}`.
+
+  The first version of this guard was directional (`n_age_labeled < n_samples`) and was **too
+  weak** — externally caught. It would have accepted 42,605 cells with 1 masked label, and 42,605
+  with 19 masked; both are wrong, and this defect's whole signature is a plausible-looking silent
+  discrepancy. The comparison is now a pure function (`c7_mismatches`), unit-tested with no build,
+  and validated end-to-end: it accepts all six frozen `_c7` folds and rejects all six invalid `_c7t`
+  folds with the precise per-invariant diagnosis. The invariant was verified **identical in all six**
+  frozen folds before being frozen as constants.
+
+  Recorded for the next person: if a deliberate QC/`MAX_CELLS`/corpus change moves these numbers,
+  re-freeze the constants from a verified build. Widening the check to make it pass reintroduces
+  the defect.
 
 ### Not claimed
 

@@ -134,13 +134,88 @@ def test_the_runner_sets_the_gate_before_it_plans():
         "caches the unscreened matrix, which is how the C-7 retrain was lost")
 
 
-def test_the_runner_fails_loudly_when_the_gate_bit_nothing():
-    """A gate that reports ON and changes nothing must not survive to a scorecard."""
+# --------------------------------------------------------------------------------------- #
+# The post-build check must be an EQUALITY, not a direction.                                #
+#                                                                                           #
+# "n_age_labeled < n_samples" would accept 42,605 cells with 1 masked label, which is not    #
+# C-7. The failure it guards against was itself a plausible-looking silent discrepancy, so   #
+# the build must match the frozen artefact exactly: 42,600 / 42,581, five named columns      #
+# rejected, 19 labels masked, all N2, reason `no_control_baseline`.                          #
+# --------------------------------------------------------------------------------------- #
+def _runner_module():
+    """run_multi_local.py keeps torch/pandas imports INSIDE main(), so importing is cheap."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("_rml_under_test", RUNNER)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _good():
+    m = _runner_module()
+    return m, dict(rejected=m.C7_EXPECT_REJECTED, n_samples=42600, n_age_labeled=42581,
+                   masked={("N2", "no_control_baseline"): 19})
+
+
+def test_the_frozen_c7_artefact_is_accepted():
+    m, kw = _good()
+    assert m.c7_mismatches(**kw) == []
+
+
+def test_the_actual_lost_retrain_is_rejected():
+    """42,605 / 0 masked / nothing rejected -- what run 1 produced under a header saying ON."""
+    m, _ = _good()
+    bad = m.c7_mismatches(rejected=[], n_samples=42605, n_age_labeled=42605, masked={})
+    assert len(bad) == 4, bad
+
+
+def test_one_masked_label_out_of_42605_is_rejected():
+    """The exact hole a directional `n_age_labeled < n_samples` check would leave open."""
+    m, _ = _good()
+    bad = m.c7_mismatches(rejected=m.C7_EXPECT_REJECTED, n_samples=42605, n_age_labeled=42604,
+                          masked={("N2", "no_control_baseline"): 1})
+    assert bad, "42,605 cells with 1 masked label must NOT pass as C-7"
+
+
+def test_the_right_mask_count_on_the_wrong_cell_total_is_rejected():
+    """19 masked is correct only if 5 columns actually left; 42,605 means they did not."""
+    m, _ = _good()
+    bad = m.c7_mismatches(rejected=m.C7_EXPECT_REJECTED, n_samples=42605, n_age_labeled=42586,
+                          masked={("N2", "no_control_baseline"): 19})
+    assert any("n_samples" in p for p in bad), bad
+
+
+def test_the_right_count_of_rejections_but_the_wrong_ones_is_rejected():
+    m, kw = _good()
+    wrong = (set(m.C7_EXPECT_REJECTED) - {"N2_Fib_Sendai_Exp2"}) | {"O1_d21_CD13_Sendai_Exp2"}
+    assert len(wrong) == 5
+    bad = m.c7_mismatches(**{**kw, "rejected": wrong})
+    assert any("N2_Fib_Sendai_Exp2" in p for p in bad), bad
+
+
+def test_losing_n2s_control_is_what_the_mask_depends_on():
+    """N2's control column is the load-bearing rejection: rule 4 masks N2 only because it goes."""
+    m, kw = _good()
+    kept = set(m.C7_EXPECT_REJECTED) - {"N2_Fib_Sendai_Exp2"}
+    assert m.c7_mismatches(**{**kw, "rejected": kept}), "N2's control surviving must be caught"
+
+
+@pytest.mark.parametrize("masked", [
+    {("N3", "no_control_baseline"): 19},        # right count, wrong donor
+    {("N2", "clock_out_of_range"): 19},         # right donor, wrong reason
+    {("N2", "no_control_baseline"): 21},        # the PRE-C-7 count
+    {},                                         # nothing masked
+])
+def test_wrong_mask_composition_is_rejected(masked):
+    m, kw = _good()
+    assert m.c7_mismatches(**{**kw, "masked": masked})
+
+
+def test_the_runner_actually_calls_the_exact_check():
+    """The function existing is not the same as the build path using it."""
     src = RUNNER.read_text(encoding="utf-8")
-    assert "rejected NOTHING" in src, (
-        "run_multi_local.py must abort when the gate is on and no bulk column was rejected")
-    assert "n_age_labeled" in src, (
-        "run_multi_local.py must abort when the gate is on and no ΔAge label was masked")
+    assert "c7_mismatches(" in src and "NOT the C-7 artefact" in src, (
+        "run_multi_local.py must abort on any mismatch with the frozen C-7 artefact")
 
 
 def test_dataconfig_actually_has_the_field():
