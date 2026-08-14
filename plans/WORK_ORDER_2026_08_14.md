@@ -148,8 +148,11 @@ reproducible to ~3.4 yr on contemporaneous replicates — twice as tight as the 
 (9.82 yr) on the same samples.** Methylation can adjudicate here.
 
 **But the two methylation clocks disagree with each other by RMS 9.07 yr** across 45 matched cells.
-That is the recorded ρ = 0.568 ceiling expressed in years, and it is the real precision limit: any
-RNA-vs-methylation gap smaller than ~9 yr is inside the yardstick's own internal spread.
+This is a **precision / measurement ceiling on the modality** — the recorded ρ = 0.568 limit
+expressed in years — and it should be read as a scale for how much of an RNA-vs-methylation gap
+could be instrumental. It is **not** the uncertainty of any particular ΔAge comparison: it is an
+aggregate across cells, and individual contrasts have their own precision, which is reported
+separately with each one.
 
 ### P1.2–P1.5, donor-clustered (n = 3, `t = 4.303`)
 
@@ -162,8 +165,9 @@ RNA-vs-methylation gap smaller than ~9 yr is inside the yardstick's own internal
 modality, 3/3 across both clocks. The apparent conflict between our earlier −42 and Gill's ~30 was
 never a modality disagreement; it was my own arm pooling.
 
-**MAGNITUDE — RNA is amplified ~2.5–2.9×** on the intermediates, the one stratum where both
-modalities have a solid effect and both denominators are safely away from zero.
+**MAGNITUDE — on the intermediate trajectory, RNA shows a ~2.5–2.9× larger response than
+methylation** — the one stratum where both modalities have a solid effect and both denominators
+are safely away from zero.
 
 **The ratio's instability is now demonstrated, not just anticipated.** For `transient_fib` it reads
 **0.22** against skin & blood and **3.30** against multi-tissue — a 15× swing driven entirely by a
@@ -172,14 +176,14 @@ descriptive was correct, and this is the evidence.
 
 ### 🔑 What P1 establishes
 
-1. **The compression does NOT transfer between axes.** The clock is **compressed ~3.4×** against
-   chronological age (a real 74-yr gap rendered as 22) and **amplified ~2.5–2.9×** against
-   methylation on reprogramming. **Opposite directions, now measured on both axes.** Chronological
+1. **The ~3.4× chronological-axis compression does not transfer to the reprogramming axis; on the
+   intermediate trajectory, RNA shows a ~2.5–2.9× larger response than methylation.** Chronological
    sensitivity says nothing about reprogramming sensitivity — exactly the concern raised in review.
 2. **Gill's actual claim — the RETURNED fibroblasts — is not established by our RNA clock**
    (CI includes zero), **and the two methylation clocks disagree about it** (sb includes zero, mt
    excludes it marginally). **Methylation cannot settle that stratum either.**
-3. **The intermediates are where the effect is unambiguous** — both modalities, every donor.
+3. **The unambiguous molecular-age-associated effect in this dataset is confined to the
+   intermediate stratum** — both modalities, every donor.
 
 ### What P1 does NOT establish
 
