@@ -381,7 +381,7 @@ def main() -> int:
         v4 = "inconclusive at this n"
     print(f"   -> {v4}")
     out["M_E4"] = {"pooled_control_sd": pooled, "n_groups": len(sds), "cv_mae": cv_mae,
-                   "per_group": {f"{d}_d{day:.0f}": v for (d, day), v in ctrl_sd.items()},
+                   "per_group": {f"{d}_d{day:.0f}_{g}": v for (d, day, g), v in ctrl_sd.items()},
                    "verdict": v4}
 
     # ---- M-E5: the exp1/exp2 batch offset -----------------------------------------------------

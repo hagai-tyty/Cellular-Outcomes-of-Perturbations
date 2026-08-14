@@ -130,6 +130,68 @@ modality provides.
 
 ---
 
+## P1 RESULT — 2026-08-14. Floor passed. Direction concordant. **RNA reads ~2.5–2.9× larger than methylation on the reprogramming axis.**
+
+*Artefacts: `experiments/dage_meth_concordance.py`, `results/dage_meth_concordance_results.json`.
+Methylation ages recomputed through `diag_methylation_anchor`'s own verified loader, linear
+predictor, Horvath anti-transform and implied-intercept derivation — nothing re-derived.*
+
+### P1.1 — the adjudication floor **PASSED**, which is not what I expected
+
+| clock | control-replicate SD | mean \|ΔAge_meth\| | blocked if SD ≥ | verdict |
+|---|---|---|---|---|
+| skin & blood | **3.36 yr** | 10.47 | 5.23 | ✅ passed |
+| multi-tissue | **3.41 yr** | 11.70 | 5.85 | ✅ passed |
+
+I flagged this as "the branch most likely to fire." It did not. **The methylation zero-point is
+reproducible to ~3.4 yr on contemporaneous replicates — twice as tight as the RNA zero-point
+(9.82 yr) on the same samples.** Methylation can adjudicate here.
+
+**But the two methylation clocks disagree with each other by RMS 9.07 yr** across 45 matched cells.
+That is the recorded ρ = 0.568 ceiling expressed in years, and it is the real precision limit: any
+RNA-vs-methylation gap smaller than ~9 yr is inside the yardstick's own internal spread.
+
+### P1.2–P1.5, donor-clustered (n = 3, `t = 4.303`)
+
+| stratum | ΔAge RNA | ΔAge meth (sb) | ΔAge meth (mt) | both < 0 | RNA/meth |
+|---|---|---|---|---|---|
+| **transient_int** (in the reprogramming phase) | **−64.67** [−77.8, −51.5] | **−23.50** [−41.2, −5.8] | **−26.14** [−38.5, −13.7] | **3/3** both clocks | **2.92 / 2.52** |
+| **transient_fib** (returned to fibroblast identity) | −24.53 [−50.4, **+1.4**] | −7.57 [−31.0, **+15.9**] | −8.91 [−16.9, −0.9] | 2/3 · 3/3 | 0.22 / 3.30 |
+
+**DIRECTION — concordant where it counts.** On the intermediates every donor is negative in every
+modality, 3/3 across both clocks. The apparent conflict between our earlier −42 and Gill's ~30 was
+never a modality disagreement; it was my own arm pooling.
+
+**MAGNITUDE — RNA is amplified ~2.5–2.9×** on the intermediates, the one stratum where both
+modalities have a solid effect and both denominators are safely away from zero.
+
+**The ratio's instability is now demonstrated, not just anticipated.** For `transient_fib` it reads
+**0.22** against skin & blood and **3.30** against multi-tissue — a 15× swing driven entirely by a
+near-zero, sign-uncertain denominator. The review's insistence that the ratio be demoted to
+descriptive was correct, and this is the evidence.
+
+### 🔑 What P1 establishes
+
+1. **The compression does NOT transfer between axes.** The clock is **compressed ~3.4×** against
+   chronological age (a real 74-yr gap rendered as 22) and **amplified ~2.5–2.9×** against
+   methylation on reprogramming. **Opposite directions, now measured on both axes.** Chronological
+   sensitivity says nothing about reprogramming sensitivity — exactly the concern raised in review.
+2. **Gill's actual claim — the RETURNED fibroblasts — is not established by our RNA clock**
+   (CI includes zero), **and the two methylation clocks disagree about it** (sb includes zero, mt
+   excludes it marginally). **Methylation cannot settle that stratum either.**
+3. **The intermediates are where the effect is unambiguous** — both modalities, every donor.
+
+### What P1 does NOT establish
+
+Any absolute number of years. That both clocks are not wrong together — both are fitted on
+chronological age in populations and could mis-scale acute reprogramming the same way. Or a
+trajectory claim: with 3–4 days per donor and n = 3, P1.4's day-ordering comparison is descriptive
+and no slope-heterogeneity test is claimed.
+
+**P1 is closed. Next: P3.**
+
+---
+
 # P3 — Does molecular progress predict risk better than calendar day? *(within HFF only)*
 
 Two lines can run the same course at different speeds, so calendar day cannot transfer while
