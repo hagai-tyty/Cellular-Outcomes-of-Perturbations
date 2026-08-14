@@ -140,6 +140,13 @@ def main() -> None:
     gse = GSE242423SingleCellSource(gse_samples, gse_genes, cell_line="HFF", min_genes=500,
                                     max_cells_per_sample=MAX_CELLS, cells_per_run=CELLS_PER_RUN, seed=0)
     gill = GillReprogrammingSource(gill_expr, gill_series)
+    # CHANGE C-7. Set BEFORE the plan() below, not only inside the DataConfig at the build call.
+    # `plan()` reads and caches the matrix; the gate's screen lives in that read. Setting the
+    # flag afterwards left the unscreened cache in place and the gate silently did nothing --
+    # 42,605 cells and 0 masked labels instead of 42,600 and 19, through a run whose header said
+    # ON. (The property setter now also drops the cache, so this is belt AND braces; it also
+    # keeps the donor list below consistent with the corpus actually built.)
+    gill.bulk_integrity_gate = BULK_INTEGRITY_GATE
     gill_donors = [c["cell_line"] for c in gill.plan()]        # e.g. ['N2','N3','O1','O2','Y1','Y2']
     # pick the held-out test donor: honour HOLDOUT_DONOR, else prefer an 'old' (O*) donor
     # (rejuvenation signal is largest there), else the first donor.
@@ -179,6 +186,27 @@ def main() -> None:
         age_shuffle_strata=AGE_SHUFFLE_STRATA,
         bulk_integrity_gate=BULK_INTEGRITY_GATE),
         sources=[gse, gill])
+
+    # ---- CHANGE C-7: prove the gate BIT, do not merely report that it was set ---------------- #
+    # Three separate C-7 failures have now been of the form "the flag was on and nothing
+    # happened", each caught only by inspecting artefacts after hours of compute. A build whose
+    # header says ON and whose labels are pre-C-7 must fail HERE, in seconds, not survive to a
+    # scorecard. Only runs that ASKED for the gate are checked, so arms with it off are unaffected.
+    if BULK_INTEGRITY_GATE:
+        summary = json.loads(Path(ROOT, "dataset_summary.json").read_text(encoding="utf-8"))
+        n, n_lab = summary.get("n_samples"), summary.get("n_age_labeled")
+        if not gill.rejected_samples:
+            raise SystemExit(
+                "\n[FATAL] bulk_integrity_gate=ON but the bulk source rejected NOTHING.\n"
+                "The gate did not reach the matrix read -- these are PRE-C-7 labels. Do not "
+                "snapshot this build.")
+        if n_lab is None or n is None or n_lab >= n:
+            raise SystemExit(
+                f"\n[FATAL] bulk_integrity_gate=ON but n_age_labeled ({n_lab}) is not below "
+                f"n_samples ({n}).\nRejecting a donor's only control MUST mask its ΔAge labels "
+                "(rule 4). Nothing was masked -- do not snapshot this build.")
+        print(f"   [C-7] gate BIT: rejected {len(gill.rejected_samples)} bulk column(s) "
+              f"{sorted(gill.rejected_samples)}; {n - n_lab} ΔAge label(s) masked of {n} cells")
 
     # ---- composition: how each cell line is distributed across splits ----
     paths = ArtifactPaths.of(ROOT)

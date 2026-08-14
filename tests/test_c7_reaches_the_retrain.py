@@ -75,6 +75,74 @@ def test_the_env_var_parsing_rule_is_the_one_the_runner_uses(val, want):
     assert (val not in ("", "0", "false")) is want
 
 
+# --------------------------------------------------------------------------------------- #
+# The THIRD incarnation: the flag arrived, and was still too late.                          #
+#                                                                                           #
+# `_load` caches and the gate's screen lives inside it. `run_multi_local.py` called `plan()`  #
+# to list donors ~30 lines before the DataConfig existed, so `apply_source_flags` set a flag  #
+# that read True over an already-cached, unscreened 124-column matrix. The retrain produced   #
+# 42,605 cells with 0 masked labels (pre-C-7) under a header that said ON; correct is 42,600  #
+# with 19 masked. Six folds, several hours.                                                   #
+# --------------------------------------------------------------------------------------- #
+def _bare_source():
+    """A source with nonexistent paths -- __init__ reads nothing, so this needs no data."""
+    import sys
+    sys.path.insert(0, str(ROOT / "src"))
+    from cellfate.data.sources import GillReprogrammingSource
+    return GillReprogrammingSource("no_such_expr.txt.gz", "no_such_series.txt.gz")
+
+
+def test_enabling_the_gate_drops_an_already_cached_read():
+    """Otherwise the screen never re-runs and the gate is inert while reporting ON."""
+    src = _bare_source()
+    src._rpm, src._genes, src._meta = "CACHED", ["g"], {"s": {}}
+    src.bulk_integrity_gate = True
+    assert src._rpm is None, ("enabling the gate left a cached UNSCREENED matrix in place -- "
+                             "the gate cannot fire, exactly as in the lost retrain")
+    assert src._genes is None and src._meta is None
+
+
+def test_disabling_the_gate_also_drops_the_cache():
+    """Symmetric: a screened cache must not leak into a build that asked for the gate OFF,
+    or B4 (bit-identical when disabled) silently stops being true."""
+    src = _bare_source()
+    src.bulk_integrity_gate = True
+    src._rpm, src.rejected_samples = "SCREENED", {"col": "reason"}
+    src.bulk_integrity_gate = False
+    assert src._rpm is None and src.rejected_samples == {}
+
+
+def test_setting_the_same_value_is_idempotent():
+    """`apply_source_flags` runs from BOTH `build_sources` and `run` by design. If an
+    unchanged set invalidated, every build would pay a second full matrix read."""
+    src = _bare_source()
+    src.bulk_integrity_gate = True
+    src._rpm = "CACHED"
+    src.bulk_integrity_gate = True          # same value, second call
+    assert src._rpm == "CACHED"
+
+
+def test_the_runner_sets_the_gate_before_it_plans():
+    """Belt and braces to the property: the donor list must come from the gated corpus too."""
+    src = RUNNER.read_text(encoding="utf-8")
+    set_at = src.find("gill.bulk_integrity_gate")
+    plan_at = src.find("gill.plan()")
+    assert set_at != -1, "run_multi_local.py never sets the gate on the bulk source"
+    assert plan_at != -1, "expected gill.plan() in the runner"
+    assert set_at < plan_at, (
+        "run_multi_local.py calls gill.plan() BEFORE setting bulk_integrity_gate -- plan() "
+        "caches the unscreened matrix, which is how the C-7 retrain was lost")
+
+
+def test_the_runner_fails_loudly_when_the_gate_bit_nothing():
+    """A gate that reports ON and changes nothing must not survive to a scorecard."""
+    src = RUNNER.read_text(encoding="utf-8")
+    assert "rejected NOTHING" in src, (
+        "run_multi_local.py must abort when the gate is on and no bulk column was rejected")
+    assert "n_age_labeled" in src, (
+        "run_multi_local.py must abort when the gate is on and no ΔAge label was masked")
+
+
 def test_dataconfig_actually_has_the_field():
     """If src/ ever drops it, the runner's keyword becomes a TypeError at build time -- better to
     fail here, in milliseconds, than three hours into a retrain."""

@@ -11,6 +11,66 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-15 - C-7 RETRAIN RUN 1 INVALID: the gate reported ON and did nothing (third time)
+
+**Status:** Run 1 executed, VOIDED, root cause found and fixed, full suite green (1041 tests).
+Re-run pending. `src/cellfate/data/sources.py` and `local_runners/run_multi_local.py` changed;
+`tests/test_c7_reaches_the_retrain.py` extended to 17 tests.
+
+### What happened
+
+The six-fold arm-A retrain ran to completion with `CELLFATE_BULK_GATE=1`. The header printed
+`[C-7] bulk_integrity_gate = ON`. **The labels it produced were pre-C-7.**
+
+| | required | run 1 produced |
+|---|---|---|
+| cells | 42,600 | **42,605** |
+| ΔAge labels masked | 19, all N2, `no_control_baseline` | **0** |
+| Gill columns kept | 119 | **124** |
+
+`n_age_labeled` came out **equal to** `n_samples` in all six folds. That is the unambiguous
+signature of "nothing masked", independent of how cells are counted — the specific alternative
+reading that was raised and checked before the run was voided.
+
+### Root cause - the same defect class, a third distinct incarnation
+
+1. (`e6fc183`) the flag was wired into `build_sources`, which `run` skips when sources are injected.
+2. (`ebb2a95`) `run_multi_local.py` built its `DataConfig` without the field at all.
+3. **This one:** the flag arrived correctly and was applied to the right sources — **too late.**
+
+`run_multi_local.py` called `gill.plan()` to list donors ~30 lines before the `DataConfig` existed.
+`plan()` reads and **caches** the matrix, and the gate's screen lives inside that read (`_load`,
+which early-returns on its cache). `apply_source_flags` then set a flag that read `True` over an
+already-cached, unscreened 124-column matrix.
+
+Confirmed directly rather than inferred: constructing the source and setting the flag **before**
+`plan()` rejects 5 columns; setting it **after** rejects 0. Same source, same file, same flag value.
+
+The five columns are `N2_Fib_Sendai_Exp2`, `N2_d21_CD13_Sendai_Exp2`, `N3_d21_SSEA4_Sendai_Exp2`,
+`O2_d9_SSEA4_Sendai_Exp1`, `Y1_d7_CD13_Sendai_Exp1`. The first is **N2's only control** — losing it
+is what leaves N2 without a baseline and masks its remaining 19 ΔAge labels under rule 4.
+
+### Fixes
+
+- `bulk_integrity_gate` is now a **property** on `GillReprogrammingSource`. Its setter drops the
+  cached read when the value **changes**, and is idempotent when it does not (`apply_source_flags`
+  runs twice by design). The flag now means the same thing regardless of when it is set.
+- `run_multi_local.py` sets the gate on the source **before** `plan()`, so the donor list is also
+  derived from the gated corpus.
+- **The check moved into the run.** All three failures were "flag on, nothing happened", each caught
+  only by inspecting artefacts after the compute was spent. The runner now **aborts** when the gate
+  is on and either no bulk column was rejected or no ΔAge label was masked, and otherwise prints
+  what it actually rejected and masked. A run whose header says ON can no longer finish pre-C-7.
+
+### Not claimed
+
+Nothing about C-7's effect on model performance. Run 1's metrics are pre-C-7 arm A and are **not** a
+C-7 result; they were not snapshotted and no comparison was drawn from them. The frozen `_c7`
+dataset-only folds are unaffected and remain correct (42,600 / 19 masked, re-verified here), so
+every recorded analysis built on them stands.
+
+---
+
 ## 2026-08-14 - DOUBLE-log1p BUG: every age in the dAge run was wrong; plus the clock compresses age ~3.4x
 
 **Status:** Bug found, fixed, both runs redone, records corrected. **READ-ONLY**, `src/` untouched.

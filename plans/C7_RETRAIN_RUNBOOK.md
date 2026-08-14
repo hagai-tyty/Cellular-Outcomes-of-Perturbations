@@ -22,6 +22,41 @@ building**. Pinned by `tests/test_c7_reaches_the_retrain.py` (12 static checks, 
 
 ---
 
+### 0b. RUN 1 (2026-08-15) WAS INVALID — the same defect, a third time
+
+The §0 fix was necessary and not sufficient. The flag reached `DataConfig`, `run` applied it to the
+injected sources, the header printed `bulk_integrity_gate = ON` — and **the gate still did nothing.**
+
+`run_multi_local.py` called `gill.plan()` to list donors ~30 lines *before* the `DataConfig`
+carrying the flag existed. `plan()` reads and **caches** the matrix, and the gate's screen lives
+inside that read (`sources.py:_load`, which early-returns on its cache). By the time
+`apply_source_flags` set the flag, the unscreened 124-column matrix was already cached forever.
+
+Measured, all six folds:
+
+| | required | run 1 produced |
+|---|---|---|
+| cells | 42,600 | **42,605** |
+| ΔAge labels masked | 19, all N2, `no_control_baseline` | **0** |
+| Gill columns | 119 | **124** |
+
+`n_age_labeled` came out **equal to** `n_samples` — every cell carried a label, which is the
+unambiguous signature of "nothing was masked" regardless of how cells are counted.
+
+**Fixes (both shipped):**
+1. `bulk_integrity_gate` is now a **property** on `GillReprogrammingSource`; its setter drops the
+   cached read when the value changes (idempotent when it does not). The flag now means the same
+   thing no matter when it is set.
+2. `run_multi_local.py` sets the gate on the source **before** `plan()`, so the donor list also
+   comes from the gated corpus.
+
+**And the check moved into the run.** Three C-7 failures have now been "the flag was on and nothing
+happened", each caught only by inspecting artefacts afterwards. `run_multi_local.py` now **aborts**
+if the gate is on and either no bulk column was rejected or no ΔAge label was masked. §3 below is
+now a confirmation, not the only line of defence.
+
+---
+
 ## 1. Choose the suffix — and do NOT reuse `_c7`
 
 The existing `cellfate_loocv_*_c7` folds are **dataset-only** builds, and every recorded analysis of
@@ -53,6 +88,15 @@ cd /d/cellfate-rx && CELLFATE_FOLD_SUFFIX=_c7t CELLFATE_BULK_GATE=1 \
 ```
 
 If it says `off`, stop — the run is worthless.
+
+**That header is necessary, not sufficient — run 1 printed it and was still pre-C-7.** The line
+that actually proves the gate bit appears at the end of fold 1's build:
+
+```
+[C-7] gate BIT: rejected 5 bulk column(s) [...]; 19 ΔAge label(s) masked of 42600 cells
+```
+
+If the gate did not bite, the run now aborts on fold 1 within minutes rather than completing.
 
 **Cost:** six full builds plus training. The runner's own docstring says *"a few hours; run it
 overnight."*

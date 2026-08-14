@@ -434,8 +434,36 @@ class GillReprogrammingSource(ReprogrammingSource):
         # CHANGE C-7. Set centrally by `build_sources` from ONE DataConfig flag, so the gate
         # and rule 4 cannot be switched independently -- the gate alone would strip a donor's
         # last control and leave its ΔAge unmasked, which is exactly what B2' forbids.
-        self.bulk_integrity_gate: bool = False
+        self._bulk_integrity_gate: bool = False
         self.rejected_samples: dict[str, str] = {}
+
+    # CHANGE C-7, third incarnation of the same defect. The first two were a flag that never
+    # reached `run` (fixed by calling `apply_source_flags` there too) and a flag that never
+    # reached the retrain's DataConfig (fixed in run_multi_local.py). This is the third: the
+    # flag arrived, and was still too late.
+    #
+    # The screen lives in `_load`, which CACHES. `run_multi_local.py` calls `plan()` to list
+    # donors ~30 lines BEFORE the DataConfig carrying this flag even exists, so by the time
+    # `apply_source_flags` sets it the unscreened matrix is already cached and `_load` early-
+    # returns forever. Setting the flag then reads True while all 124 columns survive: a gate
+    # that reports ON and does nothing. It cost a six-fold retrain.
+    #
+    # A property, not an attribute, so the flag means the same thing no matter WHEN it is set.
+    @property
+    def bulk_integrity_gate(self) -> bool:
+        return self._bulk_integrity_gate
+
+    @bulk_integrity_gate.setter
+    def bulk_integrity_gate(self, on: bool) -> None:
+        on = bool(on)
+        if on == self._bulk_integrity_gate:
+            return          # `apply_source_flags` runs twice by design; stay idempotent
+        self._bulk_integrity_gate = on
+        # Drop the cached read so the next one re-screens under the new setting.
+        self._rpm = None
+        self._genes = None
+        self._meta = None
+        self.rejected_samples = {}
 
     # GEO spells the chronological-age characteristic two ways across the four SubSeries of
     # GSE165180: "donor age" (GSE165176 / GSE165178) and "donor age (years)" (GSE165177 /
