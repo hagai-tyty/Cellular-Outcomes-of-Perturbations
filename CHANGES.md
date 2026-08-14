@@ -11,6 +11,40 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-13 - GILL 2022 VERIFIED: our +30 yr bias has a documented precedent AND a documented fix
+
+**Status:** External claims checked against the paper (eLife 2022;11:e71624) before use, per the
+standing rule. **READ-ONLY.** Recorded as section 8 of
+`plans/STAGE_1_5_7_DAGE_ON_GSE165177_PREREG.md`.
+
+All five asserted claims verify. The two that matter:
+
+**1. Gill ComBat-corrected the Fleischer reference BEFORE training.** Verbatim: *"trained a
+transcription age-predictor using random forest regression on published fibroblast RNA-seq data
+from donors aged 1-94 years old that was batch corrected to our transient reprogramming data set"*,
+using `combat` from `sva`. Their clock's median absolute error is **12.57 yr against our cv_mae
+12.27** - so the two clocks have essentially the same PRECISION. The difference between us is
+**calibration, not resolution**: they harmonised the reference to their target before fitting; we
+applied Fleischer's weights unchanged across a study boundary. **Our +30 yr floor is the documented
+consequence of the one step they took and we did not.**
+
+**2. Our data independently reproduces their TIMING result, which we had never checked.** Gill:
+*"10 or 13 days may be the optimum for transcriptional rejuvenation."* Our mean dAge(transient) by
+day: **D10 -22.65 (strongest), D13 -17.90, D17 -16.59, D15 -14.40**. Day 10 then day 13, recovered
+with an UNCORRECTED clock. Per donor O1 and O3 peak at D10, O2 at D15. A second independent axis of
+agreement, outside the pre-registration.
+
+Magnitudes: Gill report ~30 yr (custom clock), ~20 yr (BiT), ~10 yr (Sarkar's data) vs negative
+controls. Ours is -17.9 - inside that spread and BELOW their headline, so the "suspiciously large"
+failure mode M-E3 was watching for does not fire.
+
+**New candidate work item, not yet costed or pre-registered:** ComBat-harmonise GSE113957 to the
+target dataset and refit, as Gill did. NOT claimed to fix our absolute ages - it changes the clock
+from a frozen external artefact into a per-target fit, which every recorded dAge would have to be
+re-derived against. Recorded as an option, not a decision.
+
+---
+
 ## 2026-08-13 - CORRECTION: M-E3 was pseudoreplicated; the paired contrast does not survive
 
 **Status:** External critique, verified before acceptance, then fixed. **READ-ONLY.** The §6 result

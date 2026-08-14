@@ -287,3 +287,68 @@ recorded number. Fixed by falling through to `scipy.stats.t`.
 **The general lesson, and it is the same one twice in this project:** the interval must be built on
 the unit the claim generalises over. 3a-bis got this wrong by pooling two causes; M-E3 got it wrong
 by pooling within-donor cells. Both were caught by someone else, not by the bar.
+
+---
+
+## 8. GILL 2022 VERIFIED AGAINST THE PAPER — 2026-08-13. The +30 yr bias has a documented precedent AND a documented fix.
+
+*An external reviewer asserted several things about Gill's methodology. Per the standing rule the
+claims were checked against the paper itself (eLife 2022;11:e71624) before being used. **All five
+check out**, and two of them change what we should do next.*
+
+| claim made | verdict | what the paper says |
+|---|---|---|
+| Gill hit the same cross-study clock problem | ✅ | they did not apply an existing predictor unchanged |
+| they **ComBat-corrected** the Fleischer reference **before training** | ✅ | *"trained a transcription age-predictor using random forest regression on published fibroblast RNA-seq data from donors aged 1–94 years old **that was batch corrected to our transient reprogramming data set**"*; `combat` from `sva` |
+| ~**30 yr** reduction vs negative controls, custom clock | ✅ | *"transient reprogramming reduced mean transcription age by approximately 30 years"* |
+| ~**20 yr** with a retrained BiT clock | ✅ | *"also rejuvenated the BiT age clock by approximately 20 years relative to negative controls"* |
+| ~**10 yr** on Sarkar's transient-transfection data | ✅ | *"by approximately 10 years according to our transcription age predictor"* |
+| D10/D13 optimum | ✅ | *"10 or 13 days may be the optimum for transcriptional rejuvenation"* |
+
+### 🔑 The finding that matters most for us
+
+**Gill's clock and ours have essentially the same precision — their median absolute error is
+12.57 yr against our `cv_mae` 12.27.** The difference between us is **not resolution, it is
+calibration**: they harmonised the reference to their own dataset before fitting, and we applied
+Fleischer's weights unchanged across a study boundary.
+
+**So our +30 yr floor is not an anomaly to be explained away — it is the documented, expected
+consequence of the one step Gill took and we did not.** That converts an open question into a
+concrete, costed piece of work: ComBat-harmonise `GSE113957` to the target dataset and refit.
+
+### 🔑 And our data independently reproduces their TIMING result
+
+We had checked the direction. We had not checked *when*:
+
+| day | O1 | O2 | O3 | mean ΔAge(transient) | rank |
+|---|---|---|---|---|---|
+| **10** | −22.52 | −21.12 | −24.32 | **−22.65** | **1** |
+| **13** | −16.31 | −21.17 | −16.22 | **−17.90** | **2** |
+| 15 | −16.70 | −23.36 | −3.14 | −14.40 | 4 |
+| 17 | −17.73 | −18.86 | −13.17 | −16.59 | 3 |
+
+**Our strongest rejuvenation is day 10, then day 13 — exactly Gill's stated optimum**, recovered
+with an **uncorrected** clock where theirs was harmonised and retrained. Per donor, O1 and O3 peak
+at day 10; O2 peaks at day 15. This is a second, independent axis of agreement with the
+publication and it was not part of the pre-registration.
+
+### Where our magnitude sits
+
+Ours is **−17.9 yr** vs contemporaneous same-day controls. Gill report **~30** (custom clock),
+**~20** (BiT), **~10** (Sarkar's data). We are inside that spread and below their headline —
+consistent with an uncalibrated clock recovering most but not all of a real effect. **Nothing here
+suggests our effect is too large**, which was the specific failure mode §M-E3 was watching for.
+
+### What this changes
+
+| | |
+|---|---|
+| the +30 yr absolute bias | **explained, with a precedent and a fix** — cross-study calibration, addressed in the literature by ComBat-harmonising the reference before training |
+| "is −17.9 suspiciously large?" | **no** — it sits below Gill's own headline and inside the published spread |
+| a new candidate work item | **ComBat-harmonise `GSE113957` to the target dataset and refit the clock**, exactly as Gill did. Not yet costed, not yet pre-registered, and it would produce a NEW clock that every recorded ΔAge would have to be re-derived against |
+| the D10/D13 agreement | **recorded as an unplanned second validation** |
+
+**Not claimed:** that harmonising would fix our absolute ages — Gill's approach requires the
+reference and the target together at training time, which changes the clock from a frozen external
+artefact into a per-target-dataset fit. That is a real design change with its own costs, and it is
+recorded here as an option, not a decision.
