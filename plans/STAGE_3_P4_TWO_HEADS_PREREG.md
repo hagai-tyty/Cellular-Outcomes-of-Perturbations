@@ -54,3 +54,70 @@ different days even when it is numerically similar.
 
 `results/p4_two_heads_results.json`; write-up to the work order, `CHANGES.md`, the notebook; tests
 in `tests/test_p4_two_heads.py`. Outcomes graded as written, including H1 if it fires.
+
+---
+
+## 6. RESULT — 2026-08-14. **H3 — the two failure modes run in OPPOSITE directions.** The collapsed endpoint is actively misleading.
+
+*Graded against §3 as written. Artefacts: `experiments/p4_two_heads.py`,
+`results/p4_two_heads_results.json`, `tests/test_p4_two_heads.py` (18 tests).*
+42,481 HFF cells, 9 timepoints. Cells labelled both loss and death: **0**, as the argmax requires.
+
+| day | P(identity loss) | P(apoptosis) | union | **apoptosis share of unsafe** |
+|---|---|---|---|---|
+| 0 | 0.0437 | 0.0397 | 0.0835 | **47.6 %** |
+| 2 | 0.3314 | 0.0195 | 0.3509 | 5.6 % |
+| 4 | 0.3248 | 0.0261 | 0.3508 | 7.4 % |
+| 6 | 0.3890 | 0.0335 | 0.4226 | 7.9 % |
+| 8 | 0.4311 | 0.0397 | 0.4708 | 8.4 % |
+| 10 | 0.3621 | 0.0344 | 0.3964 | 8.7 % |
+| 12 | 0.4454 | 0.0205 | 0.4659 | 4.4 % |
+| 14 | 0.6662 | 0.0129 | 0.6791 | 1.9 % |
+| 21 | 0.9967 | 0.0029 | 0.9996 | **0.3 %** |
+
+**Spearman −0.633, Pearson −0.818.** Identity loss peaks at **day 21**; apoptosis peaks at
+**day 0** — **8 timepoints apart, the maximum separation the design allows.**
+
+### 🔒 H3, the strongest branch in the table
+
+**Two heads are mandatory, and the collapsed endpoint is actively misleading.** Not merely lossy —
+misleading, because the union is dominated by whichever mode is larger and the other becomes
+**invisible inside it**.
+
+### The secondary criterion fired too, by a wide margin
+
+The apoptosis share of the unsafe fraction runs **47.6 % → 0.3 %, a 163× range** against a
+pre-registered threshold of 10×.
+
+> **At day 0, apoptosis is nearly half of all unsafe cells. By day 21 it is one part in three
+> hundred.** A single `p_unsafe` number is therefore **a different quantity at different days**,
+> even where it happens to be numerically similar.
+
+### Why this matters for the product, concretely
+
+A withdrawal recommendation gated on one `p_unsafe` would be driven almost entirely by identity
+loss from day 2 onward, and would be **blind to apoptosis risk being highest at the very start**.
+The two curves cross near day 0 and diverge monotonically thereafter, so no single threshold on the
+union can express both.
+
+### What the run cost, and one bug it found in itself
+
+`spearman` originally ranked via `argsort(argsort(...))`, which **breaks ties arbitrarily instead
+of averaging them** — and `P(apoptosis)` is tied at 0.0397 on days 0 and 8, the two timepoints that
+matter most to the verdict. Caught by a unit test asserting a constant vector ranks flat. Fixed to
+average ties; **the Spearman is unchanged at −0.633**, so no conclusion moves — but the function
+was wrong and would have mattered on a different tie pattern.
+
+### What is adopted
+
+`P(identity loss)` and `P(apoptosis)` are **reported and modelled separately**. **No composite
+endpoint is constructed** — not the union, not a weighted sum. If a downstream decision ever needs
+one number, that rule gets its own pre-registration, and it now has to justify itself against a
+163× shift in what the number is made of.
+
+### What is NOT claimed
+
+That the two courses separate this way in another line — one line, untested elsewhere. That the
+apoptosis programme is well measured; it is a five-gene signature. And the exclusivity is **imposed
+by the argmax**, so a cell partway into both programmes is forced to one — that bounds how much the
+heads could overlap and is a property of the labeller, not the biology.

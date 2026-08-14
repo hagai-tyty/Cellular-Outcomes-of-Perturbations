@@ -13,7 +13,7 @@
 | 7 | P3's progress coordinate could be learned from all cells, leaking the held-out day | **fit on training timepoints only, then project held-out cells into that fixed coordinate** |
 | 8 | "overall safety defined afterwards" invited choosing the rule after seeing results | **pre-specified now: no composite is built** |
 
-**Order: ~~P2~~ → ~~P1~~ → ~~P3~~ → P4 → ~~P5~~.** P2, P1 and P3 complete. **P3 returned G2 TIES on both heads, so P5 is CLOSED and does not happen.** P4 remains.
+**Order: ~~P2~~ → ~~P1~~ → ~~P3~~ → ~~P4~~ → ~~P5~~. ALL COMPLETE.** P3 returned G2 TIES on both heads, so **P5 is CLOSED and does not happen**. P4 returned **H3** — the two failure modes run in opposite directions, so the two-head form is mandatory and no composite is built.
 
 **Out of scope, deliberately:** no retrain, no acquisition, no harmonizer change (that one would
 confound P1), 3b/3c/3d unwritten, Stage 5 unentered.
