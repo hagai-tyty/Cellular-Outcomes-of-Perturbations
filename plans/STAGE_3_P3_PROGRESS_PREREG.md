@@ -108,3 +108,71 @@ single line it was designed on, it does not get a second chance on another line.
 
 `results/p3_progress_results.json`; write-up to the work order, `CHANGES.md` and the notebook;
 unit tests in `tests/test_p3_progress.py`. Every outcome graded as written, including failures.
+
+---
+
+## 6. RESULT — 2026-08-14. **G2 TIES on both heads. STOP. P5 does not happen.**
+
+*Graded against §3 exactly as written. Artefacts: `experiments/p3_progress.py`,
+`results/p3_progress_results.json`, `tests/test_p3_progress.py` (13 tests).*
+42,481 HFF cells, 9 timepoints, leave-one-timepoint-out.
+
+### Mean held-out log-loss (lower is better)
+
+| head | day | **progress** | day+prog | day_interp | *context* |
+|---|---|---|---|---|---|
+| identity loss | 0.6573 | **0.6569** | 0.6553 | **0.6096** | *1.2419* |
+| apoptosis | 0.1399 | **0.1191** | 0.1268 | **0.1170** | *0.3769* |
+
+| head | paired (progress − day) | 95 % CI | verdict |
+|---|---|---|---|
+| identity loss | −0.0004 | [−0.0937, +0.0930] | **G2 TIES** |
+| apoptosis | −0.0208 | [−0.0690, +0.0274] | **G2 TIES** |
+
+### 🔒 The gate, applied as written
+
+**Both heads G2 → STOP. P5 does not happen.** The gate was fixed before the run and is not
+adjusted to the result.
+
+### The pre-flagged checks, and neither rescues it
+
+- **The terminal iPSC state was flagged in advance** as a fold that could distort the verdict.
+  Dropping it: identity loss −0.0339 [−0.0948, +0.0271], apoptosis −0.0236 [−0.0791, +0.0320].
+  **Both still include zero.** The tie is not an artefact of that timepoint.
+- **`day_interp` — the strongest fair day arm — BEATS progress on both heads** (0.6096 vs 0.6569;
+  0.1170 vs 0.1191). Given its best form, day is not merely tied with progress but slightly ahead.
+
+### What the context arm revealed, which was not the plan
+
+It was included as a **ceiling**. It is a **floor**: full 2000-gene expression scores **1.2419**
+and **0.3769**, roughly **twice as bad** as a single scalar coordinate. Out of time, a naive
+high-dimensional model is badly calibrated, and **none of these predictors is strong in absolute
+terms** — identity-loss log-loss ~0.66 is close to what predicting a constant base rate achieves.
+
+**The honest summary is not "day wins". It is that at this held-out geometry, none of these
+coordinates predicts per-cell risk well, and progress adds nothing over day.**
+
+### What this does and does not license
+
+| | |
+|---|---|
+| **P5** (`GSE221739` cross-line test) | ❌ **does not happen.** The gate is not relaxed |
+| the reframing *as an idea* | **not refuted in general** — see the limit below |
+| **this construction** of progress | ❌ **fails.** Predicted-day-from-expression carries no risk information beyond day itself |
+| Test 11.1 / Test 18's "time is redundant with state" | **corroborated**, now per-cell, out-of-time, and on a proper scoring rule |
+
+**The limit declared in §4.2 governs the reading.** Progress here is
+*predicted-day-from-expression* — one construction of trajectory position, and one that is
+regularised toward day by design. An unsupervised construction (diffusion pseudotime, an
+independent trajectory fit) is **untested** and this result does not speak to it.
+
+**But the gate does not care.** §3 routes G2 on both heads to STOP, and a different construction
+would need its own pre-registration and its own justification for why it should be tried after
+this one failed — not an extension of this one.
+
+### What is NOT claimed
+
+That per-cell risk is unpredictable in principle — the context arm's poor showing is a statement
+about naive high-dimensional models out of time, not about the biology. That day is a *good*
+predictor; it is merely not worse. Or that any of this transfers to another line, which is exactly
+the question P5 would have asked and now will not.
