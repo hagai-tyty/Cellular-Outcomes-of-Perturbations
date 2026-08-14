@@ -352,3 +352,69 @@ suggests our effect is too large**, which was the specific failure mode §M-E3 w
 reference and the target together at training time, which changes the clock from a frozen external
 artefact into a per-target-dataset fit. That is a real design change with its own costs, and it is
 recorded here as an option, not a decision.
+
+---
+
+## 9. CORRECTION — DOUBLE-log1p. **Every age in §6 was computed on double-logged data.** My bug, caught by my own test.
+
+*Found while writing `tests/test_clock_gse297234.py`: a hand-computed pseudobulk value did not
+match the code. §6 and §7 are left exactly as written.*
+
+### The bug
+
+`normalize_counts` applies **CP10k AND log1p** itself (`normalize.py:29`). Both new scripts wrapped
+it in a **second** `np.log1p`:
+
+```python
+expr = np.log1p(normalize_counts(rpm, target_sum=1e4))   # WRONG — log1p twice
+expr = normalize_counts(rpm, target_sum=1e4)             # right
+```
+
+**Every other script in the project calls it bare** — `build_dataset.py:184`, and `clock_fit.py:61`
+states it outright: `Xn = X if normalized else normalize_counts(X)   # log1p CP10k == predict_age
+input`. The bug is confined to the two scripts written in this arc. `per_cell_ages` in
+`clock_gse297234.py` was **not** affected — it applies `log1p` once, by hand.
+
+### What changed
+
+| quantity | as published (§6) | **corrected** |
+|---|---|---|
+| pooled untreated age | 94.1 (bias +46.1) | **106.8 (bias +58.8)** |
+| day-0 fibroblast bias | +30.0 | **+28.9** |
+| cultured-control bias | +47.6 | **+61.5** |
+| culture drift (controls − day 0) | +17.5 | **+32.6** |
+| **ΔAge(transient), donor-clustered** | −17.89 [−26.52, −9.25] | **−42.45 [−67.39, −17.51]** |
+| transient − failed, donor-clustered | −9.58 [−19.29, +0.12] | **−24.19 [−49.53, +1.14]** |
+| M-E4 control SD | 5.04 | **8.43** |
+| M-E5 control-arm batch shift | −8.52 [−10.13, −6.92] | **−14.33 [−17.43, −11.23]** |
+
+Magnitudes are roughly **2.4× larger** — the second `log1p` was compressing everything.
+
+### What SURVIVES, and what does not
+
+| | |
+|---|---|
+| **M-E0** CLEAN, 0/93 rejected | ✅ unaffected — operates on raw log2, before normalisation |
+| **M-E1** FAIL-CALIBRATION | ✅ **stands, and is worse** (+58.8 vs +46.1) |
+| **M-E3** ΔAge(transient) REPRODUCED | ✅ **stands** — donor-clustered CI still excludes 0 |
+| transient − failed | ✅ still does **not** survive donor clustering |
+| **the D10/D13 optimum** | ✅ **stands** — D10 −46.19, D13 −43.02, D15 −40.55, D17 −40.04. Robust, because `log1p` is monotone |
+| **M-E5** arm-stratified, control CI excludes 0 | ✅ **stands, and is larger** |
+| **M-E4's BRANCH CHANGED** | ⚠️ 5.04 was the "< ½ cv_mae" branch; **8.43 is the *inconclusive* band**. The bar I withdrew the inference from **no longer fires at all** |
+| ❌ **"our −17.9 sits BELOW Gill's ~30 headline"** (§8) | **WRONG NOW.** At **−42.45** we are **ABOVE** Gill's ~30. The "suspiciously large" failure mode M-E3 was watching for is now live and must be asked about, not dismissed |
+
+### The one claim that reverses
+
+§8 concluded *"nothing here suggests our effect is too large."* **That is no longer true.** Gill
+report ~30 yr (custom clock), ~20 (BiT), ~10 (Sarkar). We now report **−42.45**, which is ~1.4×
+their headline and ~4× their Sarkar figure. Direction and order of magnitude still agree; the
+magnitude is now on the **high** side and that is exactly what an uncalibrated, compressed clock
+would be expected to do in an unknown direction. **This is now an open question, not a settled one.**
+
+### Why the test caught it and the run did not
+
+The run produced numbers that *looked* reasonable and reproduced a published direction *and* a
+published timing optimum. None of that was sensitive to the bug, because `log1p` is monotone — it
+compresses magnitudes while preserving every ordering. **Only a hand-computed expected value
+caught it.** That is the argument for unit-testing numeric helpers with values worked out by hand,
+rather than trusting a plausible-looking table.

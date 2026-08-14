@@ -24,9 +24,11 @@ The clock declares `log1p_cp10k`; GSE165177 ships **Log2 RPM**. Feeding Log2 RPM
 mismatch worth ~1/ln2 = 1.44x on every age. The pipeline already solves it for the identically
 formatted `gill_bulk` at `sources.py:506`:
 
-    rpm = 2**log2 - 1.0   ->   normalize_counts(rpm, target_sum=1e4)   ->   log1p
+    rpm = 2**log2 - 1.0   ->   normalize_counts(rpm, target_sum=1e4)
 
 valid because CP10k(RPM) == CP10k(counts). **That exact path is reused here**, not re-derived.
+`normalize_counts` applies CP10k **and log1p** itself (`normalize.py:29`); wrapping it in a second
+`np.log1p` is a bug, and it is the one that corrupted the first version of this run.
 """
 from __future__ import annotations
 
@@ -147,7 +149,9 @@ def main() -> int:
 
     # ---- the pipeline's own normalisation, then the clock ------------------------------------
     rpm = np.power(2.0, log2) - 1.0                      # sources.py:506, verbatim
-    expr = np.log1p(normalize_counts(np.clip(rpm, 0.0, None).T, target_sum=1e4))
+    # `normalize_counts` applies CP10k AND log1p itself (normalize.py:29). The first version of
+    # this run wrapped it in a SECOND np.log1p, so every age was computed on double-logged data.
+    expr = normalize_counts(np.clip(rpm, 0.0, None).T, target_sum=1e4)
     clock = LinearClock.from_json(CLOCK)
     age = clock.predict_age(expr, genes)
     obs["age"] = age
@@ -159,7 +163,8 @@ def main() -> int:
     gset = set(genes)
     w_tot = sum(abs(v) for v in clock.weights.values())
     w_present = sum(abs(v) for g, v in clock.weights.items() if g in gset)
-    print("\n   normalised via 2**log2-1 -> normalize_counts(1e4) -> log1p (sources.py:506)")
+    print("\n   normalised via 2**log2-1 -> normalize_counts(1e4)  (sources.py:506).")
+    print("   normalize_counts applies log1p ITSELF -- there is no outer log1p.")
     print(f"   clock genes present: {present} of {len(clock.weights)} "
           f"({100 * present / len(clock.weights):.1f}%); "
           f"of the clock's total |weight|, {100 * w_present / w_tot:.1f}% is reachable")

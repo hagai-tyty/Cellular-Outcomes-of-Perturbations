@@ -4646,3 +4646,19 @@ reproduced. **The paired contrast is downgraded** to "consistent in 3/3 donors, 
 
 Separately, a bug of mine found while checking: `ci()` fell back to the normal quantile 1.96 for
 df > 10, so the recorded 12-cell CI was ~12 % too narrow. Now uses `scipy.stats.t`.
+
+### CORRECTION — DOUBLE-log1p, and the clock compresses age (2026-08-14)
+
+`normalize_counts` applies CP10k **and log1p** itself; both scripts in this arc wrapped it in a
+second `np.log1p`. Every other script in the project calls it bare. Caught by hand-computing an
+expected value for a unit test — the run could not have caught it, because `log1p` is monotone and
+so preserved every ordering (including the reproduced D10/D13 optimum) while compressing magnitudes.
+
+**ΔAge(transient), donor-clustered: −17.89 [−26.52, −9.25] → −42.45 [−67.39, −17.51]** (~2.4×).
+M-E1 FAIL and M-E3 REPRODUCED both stand; M-E4's branch moves to *inconclusive* (SD 5.04 → 8.43).
+**Reverses** the 2026-08-13 claim that we sit below Gill's ~30 — at −42.45 we are **above** it.
+
+**GSE297234 (22 vs 96 yr):** ordering CORRECT (106.1 > 84.1), calibration FAILS, and **slope 0.297**
+— the clock renders a 74-year gap as 22. The **Coriell hypothesis is dead** (bias +36.1, not smaller
+than GSE165177's +30), so supplier drops out and ComBat-style harmonisation is the only route left.
+Pseudobulk 0.297 vs per-cell 0.307 now agree, where pre-fix they did not.

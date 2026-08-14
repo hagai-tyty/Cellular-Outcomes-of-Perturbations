@@ -122,3 +122,68 @@ Report clock genes present and the fraction of total |weight| reachable, against
 `results/clock_gse297234_results.json`; write-up to `CHANGES.md` and the lab notebook; unit tests
 in `tests/test_clock_gse297234.py`. Every bar in §3 and every expectation in §4 graded as written,
 including those that fail.
+
+---
+
+## 7. RESULT — 2026-08-14. The clock **orders 74 years correctly but compresses them ~3.4×**, and the Coriell hypothesis is dead.
+
+*Graded against §3/§4 as written. Artefacts: `experiments/clock_gse297234.py`,
+`results/clock_gse297234_results.json`, `tests/test_clock_gse297234.py` (13 tests).*
+**Run on the corrected normalisation** — the first version carried the same double-`log1p` bug
+recorded as §9 of the ΔAge pre-registration.
+
+| line | true age | cells | predicted (pseudobulk) | cell-bootstrap 95 % | bias |
+|---|---|---|---|---|---|
+| GM23815 | **22** | 7,782 | **84.1** | [83.6, 84.6] | **+62.1** |
+| GM00731 | **96** | 5,021 | **106.1** | [105.5, 106.6] | **+10.1** |
+
+| # | outcome | verdict |
+|---|---|---|
+| **N1** | ordering at a 74-yr gap | ✅ **CORRECT** — 106.1 > 84.1. The clock does carry real age signal |
+| **N2** | absolute calibration | ❌ **FAIL** — biases +62.1 and +10.1 against `cv_mae` 12.27 |
+| **N3** | is the +30 floor SOURCE-specific? | ❌ **SOURCE IS NOT THE DRIVER** — mean bias **+36.1** here vs `GSE165177`'s +30, inside the ±10 band |
+| **N4** | slope | ⚠️ **0.297** — **COMPRESSED**, not merely shifted |
+| **N5** | coverage | 62.8 % genes / **92.7 %** weight mass, vs 57.1 % / 89.2 % — comparable, so coverage does **not** confound N3 |
+
+### 🔑 The two findings
+
+**1. The Coriell hypothesis is dead — and it was mine.** `P-N3` predicted a smaller bias here
+because `GM23815`/`GM00731` are Coriell stock like Fleischer's own training lines, while
+`GSE165177` used Lonza. **The bias is not smaller — it is slightly larger (+36.1 vs +30).**
+Supplier/source is **not** what drives the offset. That kills a hypothesis cheaply and removes
+"match the supplier" from the acquisition spec. **It also leaves ComBat-style harmonisation — what
+Gill actually did — as the only route on the table.**
+
+**2. The clock COMPRESSES age, it does not merely shift it.** A slope of **0.297** means a real
+74-year difference is rendered as **22 years**. An additive intercept correction — the obvious fix
+for a pure offset — **cannot repair this**; the clock's *sensitivity* to age is down ~3.4× out of
+domain, on top of a large positive offset.
+
+**Independent support that this is real and not another artefact:** pseudobulk gives 0.297 and the
+per-cell route gives **0.307** — two different aggregations agreeing closely. Before the
+double-`log1p` fix they disagreed badly (0.160 vs 0.307), which is what a normalisation bug looks
+like and what its repair looks like.
+
+### The question this raises about ΔAge, stated and NOT answered
+
+If the clock's sensitivity to *chronological* age is ~0.3 out of domain, is its sensitivity to
+*reprogramming-induced* change attenuated too? **This run cannot say** — between-donor
+chronological discrimination and a within-dataset same-day contrast are different quantities. But
+it is now a live question about the magnitude of every ΔAge this project reports, and it is
+recorded as open rather than resolved.
+
+### Expectations, graded: 3 of 4
+
+| | expectation | held? |
+|---|---|---|
+| **P-N1** | orders 22 < 96 correctly | ✅ YES |
+| **P-N2** | calibration FAILS with a positive bias | ✅ YES |
+| **P-N3** | bias smaller than +30 (Coriell hypothesis) | ❌ **NO** — the one flagged as most worth being wrong about |
+| **P-N4** | slope well below 1 | ✅ YES — 0.297 |
+
+### What is NOT claimed
+
+That 2 donors establish a slope with any uncertainty — two points fix a line exactly and the
+cell-bootstrap measures **pseudobulk stability only**, never donor-level error. That the compression
+factor transfers to ΔAge. Or that ordering 22 vs 96 correctly means the clock can order donors
+closer together — at 15 years apart it demonstrably cannot.

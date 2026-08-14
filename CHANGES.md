@@ -11,6 +11,65 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-14 - DOUBLE-log1p BUG: every age in the dAge run was wrong; plus the clock compresses age ~3.4x
+
+**Status:** Bug found, fixed, both runs redone, records corrected. **READ-ONLY**, `src/` untouched.
+New: `experiments/clock_gse297234.py`, `tests/test_clock_gse297234.py` (13 tests),
+`results/clock_gse297234_results.json`, `plans/STAGE_1_5_8_CLOCK_ON_GSE297234_PREREG.md`.
+
+### The bug - mine, caught by my own unit test
+
+`normalize_counts` applies **CP10k AND log1p** itself (`normalize.py:29`). Both scripts written in
+this arc wrapped it in a **second** `np.log1p`. Every other script in the project calls it bare -
+`build_dataset.py:184`, and `clock_fit.py:61` says so outright. Found while hand-computing an
+expected pseudobulk value for a unit test; the run itself could never have caught it, because
+`log1p` is **monotone** - it compressed every magnitude while preserving every ordering, so the
+result still reproduced a published direction AND a published timing optimum on corrupted data.
+
+### What changed in the dAge run (magnitudes ~2.4x larger)
+
+| quantity | as published | corrected |
+|---|---|---|
+| pooled untreated age | 94.1 (bias +46.1) | **106.8 (bias +58.8)** |
+| culture drift (controls - day 0) | +17.5 | **+32.6** |
+| **dAge(transient), donor-clustered** | -17.89 [-26.52, -9.25] | **-42.45 [-67.39, -17.51]** |
+| transient - failed, donor-clustered | -9.58 [-19.29, +0.12] | **-24.19 [-49.53, +1.14]** |
+| M-E4 control SD | 5.04 | **8.43** |
+| M-E5 control-arm batch shift | -8.52 | **-14.33 [-17.43, -11.23]** |
+
+**Survives:** M-E0 CLEAN (operates pre-normalisation); M-E1 FAIL-CALIBRATION (worse); M-E3
+REPRODUCED (donor CI still excludes 0); the D10/D13 optimum (D10 -46.19, D13 -43.02 - robust
+because log1p is monotone); M-E5's arm-stratified control shift.
+
+**Changed:** M-E4's branch - 5.04 was the "< half cv_mae" branch, 8.43 is the INCONCLUSIVE band, so
+the bar whose inference I withdrew no longer fires at all.
+
+**REVERSES:** the 2026-08-13 claim that "our -17.9 sits BELOW Gill's ~30 headline". At **-42.45** we
+are **ABOVE** it, ~1.4x. The "suspiciously large" failure mode M-E3 watched for is now LIVE and must
+be asked about, not dismissed.
+
+### GSE297234: two donors 74 years apart (22 and 96)
+
+Pre-registered before the run. GM23815 (22) -> **84.1** (bias +62.1); GM00731 (96) -> **106.1**
+(bias +10.1). N1 ordering **CORRECT**. N2 **FAIL-CALIBRATION**. N3 **SOURCE IS NOT THE DRIVER** -
+mean bias +36.1 vs GSE165177's +30, inside the +-10 band. N5 coverage 62.8%/92.7% vs 57.1%/89.2%,
+so coverage does not confound N3.
+
+**Two findings.** (1) **The Coriell hypothesis is dead, and it was mine.** P-N3 predicted a smaller
+bias because these are Coriell lines like Fleischer's own training stock while GSE165177 used Lonza.
+The bias is not smaller. Supplier drops out of the acquisition spec and ComBat-style harmonisation -
+what Gill actually did - is the only route left. (2) **The clock COMPRESSES age rather than merely
+shifting it: slope 0.297**, so a real 74-year gap renders as 22 years. An additive intercept
+correction cannot fix that. Independent support: pseudobulk 0.297 and per-cell 0.307 now agree
+closely, where before the fix they disagreed badly (0.160 vs 0.307).
+
+**Open question, recorded not answered:** if sensitivity to CHRONOLOGICAL age is ~0.3 out of domain,
+is sensitivity to reprogramming-induced change attenuated too? Between-donor discrimination and a
+within-dataset same-day contrast are different quantities, so this run cannot say - but it is now a
+live question about the magnitude of every dAge this project reports.
+
+---
+
 ## 2026-08-13 - GILL 2022 VERIFIED: our +30 yr bias has a documented precedent AND a documented fix
 
 **Status:** External claims checked against the paper (eLife 2022;11:e71624) before use, per the

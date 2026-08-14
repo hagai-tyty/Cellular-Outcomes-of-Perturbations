@@ -1,0 +1,61 @@
+{
+  "script": "clock_gse297234",
+  "prereg": "plans/STAGE_1_5_8_CLOCK_ON_GSE297234_PREREG.md",
+  "cv_mae": 12.26879346460328,
+  "samples": [
+    {
+      "gsm": "GSM8986590",
+      "line": "GM23815",
+      "age": 22.0,
+      "file": "GSM8986590_GM23815_D0_filtered_feature_bc_matrix.h5",
+      "n_cells": 7782,
+      "n_genes_raw": 36601,
+      "n_genes_dedup": 36591,
+      "pseudobulk_age": 84.1151222171574,
+      "boot_ci": [
+        83.55959411071947,
+        84.62187050527727
+      ],
+      "bias": 62.115122217157406,
+      "clock_genes_present_frac": 0.6278992610465993,
+      "clock_weight_mass_frac": 0.9273046243572283,
+      "per_cell_mean": 74.92166001426371,
+      "per_cell_median": 74.89075223988942,
+      "per_cell_sd": 20.73967522475955
+    },
+    {
+      "gsm": "GSM8986586",
+      "line": "GM00731",
+      "age": 96.0,
+      "file": "GSM8986586_GM00731_D0_filtered_feature_bc_matrix.h5",
+      "n_cells": 5021,
+      "n_genes_raw": 36601,
+      "n_genes_dedup": 36591,
+      "pseudobulk_age": 106.07736536764071,
+      "boot_ci": [
+        105.46152118249655,
+        106.63965041006325
+      ],
+      "bias": 10.07736536764071,
+      "clock_genes_present_frac": 0.6278992610465993,
+      "clock_weight_mass_frac": 0.9273046243572283,
+      "per_cell_mean": 97.5867522913127,
+      "per_cell_median": 98.0639566936481,
+      "per_cell_sd": 20.150669891955058
+    }
+  ],
+  "outcomes": {
+    "N1_ordering_correct": true,
+    "N2_calibration_pass": false,
+    "N3_verdict": "SOURCE IS NOT THE DRIVER \u2014 a general cross-study/platform failure; ComBat-style harmonisation is the route, and supplier drops out of the spec",
+    "N3_mean_bias": 36.09624379239906,
+    "N4_slope": 0.2967870696011257,
+    "N4_verdict": "COMPRESSED dynamic range \u2014 a scale error as well as an offset; an intercept fix is not enough"
+  },
+  "expectations": {
+    "P-N1 clock orders 22 < 96 correctly": true,
+    "P-N2 calibration FAILS with a positive bias": true,
+    "P-N3 bias smaller than +30 (Coriell hypothesis)": false,
+    "P-N4 slope well below 1": true
+  }
+}
