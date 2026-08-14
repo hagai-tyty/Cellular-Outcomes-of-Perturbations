@@ -65,16 +65,34 @@ def _tcrit(df: int) -> float:
 
 
 def arm_group(arm: str) -> str:
+    """Stratum = TREATMENT x CELL STATE. Both halves matter and the first version dropped one.
+
+    GSE165177 runs each treatment in two states: cells still IN the reprogramming phase
+    ("intermediate") and cells that have RETURNED to fibroblast identity. It supplies a separate
+    negative control for each. Gill's MPTR claim is about the RETURNED fibroblasts.
+
+    The first version pooled them -- `transient` held both intermediates and returned fibroblasts,
+    and `control` held both control states -- so the contrast was not like-for-like on either side.
+    The methylation companion keeps them apart, and measures them ~18 yr apart (intermediates
+    -24 to -27, returned fibroblasts -6 to -9). Pooling is therefore not a harmless simplification.
+    """
     a = arm.lower()
-    if "negative_control" in a:
-        return "control"
+    state = "int" if "intermediate" in a else "fib"
     if a.startswith("day0"):
         return "day0"
+    if "negative_control" in a:
+        return f"control_{state}"
     if "fail" in a:
-        return "failed"
+        return f"failed_{state}"
     if "transient" in a:
-        return "transient"
+        return f"transient_{state}"
     return "other"
+
+
+def control_for(group: str) -> str:
+    """The matched control stratum: fibroblasts against fibroblast controls, intermediates
+    against intermediate controls. Never against a pooled reference."""
+    return "control_int" if group.endswith("_int") else "control_fib"
 
 
 def ci(vals) -> tuple[float, float, float, int]:
@@ -174,7 +192,7 @@ def main() -> int:
 
     # ---- M-E1: absolute calibration on UNTREATED samples --------------------------------------
     cv_mae = 12.26879346460328
-    untreated = obs[obs.group.isin(("control", "day0"))]
+    untreated = obs[obs.group.isin(("control_fib", "control_int", "day0"))]
     m, lo, hi, n = ci(untreated.age)
     true_mean = float(np.mean([TRUE_AGES[d] for d in untreated.donor]))
     delta = abs(m - true_mean)
@@ -204,8 +222,10 @@ def main() -> int:
     # 10-17 days. Splitting them decomposes the bias into a cross-study part and a culture part,
     # which are different questions with different owners.
     sp = {}
-    for g in ("day0", "control"):
+    for g in ("day0", "control_fib", "control_int"):
         sub = obs[obs.group == g]
+        if not len(sub):
+            continue
         tm = float(np.mean([TRUE_AGES[d] for d in sub.donor]))
         sp[g] = {"n": int(len(sub)), "pred": float(sub.age.mean()), "true": tm,
                  "bias": float(sub.age.mean() - tm)}
@@ -213,11 +233,14 @@ def main() -> int:
     print(f"      day-0 fibroblasts, never in reprogramming media: n={sp['day0']['n']}, "
           f"predicted {sp['day0']['pred']:.1f} vs true {sp['day0']['true']:.1f} "
           f"-> bias {sp['day0']['bias']:+.1f} yr")
-    print(f"      negative controls, cultured alongside 10-17 d:   n={sp['control']['n']}, "
-          f"predicted {sp['control']['pred']:.1f} vs true {sp['control']['true']:.1f} "
-          f"-> bias {sp['control']['bias']:+.1f} yr")
+    for g, label in (("control_fib", "control fibroblasts, cultured alongside 10-17 d"),
+                     ("control_int", "control INTERMEDIATES, same days              ")):
+        if g in sp:
+            print(f"      {label}: n={sp[g]['n']}, predicted {sp[g]['pred']:.1f} vs true "
+                  f"{sp[g]['true']:.1f} -> bias {sp[g]['bias']:+.1f} yr")
+    cf = sp.get("control_fib", sp.get("control_int", sp["day0"]))
     print(f"      => a ~{sp['day0']['bias']:+.0f} yr CROSS-STUDY floor even on fresh cells, plus a"
-          f" further {sp['control']['bias'] - sp['day0']['bias']:+.1f} yr that tracks TIME IN")
+          f" further {cf['bias'] - sp['day0']['bias']:+.1f} yr that tracks TIME IN")
     print("         CULTURE. The second is why a contemporaneous control matters: it drifts with")
     print("         the experiment, and measuring ΔAge against the SAME day cancels that drift.")
     out["M_E1_bias_decomposition"] = sp
@@ -227,25 +250,30 @@ def main() -> int:
                    "per_donor": rows}
 
     # ---- M-E2: contemporaneous-control ΔAge ---------------------------------------------------
+    # keyed by (donor, day, CONTROL STRATUM) -- fibroblasts against fibroblast controls,
+    # intermediates against intermediate controls. Never a pooled reference.
     ctrl_mean, ctrl_sd, ctrl_n = {}, {}, {}
-    for (d, day), sub in obs[obs.group == "control"].groupby(["donor", "day"]):
-        ctrl_mean[(d, day)] = float(sub.age.mean())
-        ctrl_sd[(d, day)] = float(sub.age.std(ddof=1)) if len(sub) > 1 else float("nan")
-        ctrl_n[(d, day)] = int(len(sub))
-    obs["dage"] = [ctrl_mean.get((r.donor, r.day), np.nan) for r in obs.itertuples()]
-    obs["dage"] = obs["age"] - obs["dage"]
+    for (d, day, g), sub in obs[obs.group.str.startswith("control_")].groupby(
+            ["donor", "day", "group"]):
+        ctrl_mean[(d, day, g)] = float(sub.age.mean())
+        ctrl_sd[(d, day, g)] = float(sub.age.std(ddof=1)) if len(sub) > 1 else float("nan")
+        ctrl_n[(d, day, g)] = int(len(sub))
+    obs["ctrl_key"] = [control_for(r.group) for r in obs.itertuples()]
+    obs["dage"] = [r.age - ctrl_mean.get((r.donor, r.day, r.ctrl_key), np.nan)
+                   for r in obs.itertuples()]
 
     print("\n" + "-" * 92)
     print("M-E2 — CONTEMPORANEOUS-CONTROL ΔAge  (what gill_bulk could never compute)")
     print("-" * 92)
     rows = []
-    for (d, day, g), sub in obs[obs.group.isin(("failed", "transient"))].groupby(
-            ["donor", "day", "group"]):
+    treated = obs[obs.group.str.startswith(("failed_", "transient_"))]
+    for (d, day, g), sub in treated.groupby(["donor", "day", "group"]):
         if not np.isfinite(sub.dage).any():
             continue
-        rows.append([d, f"{day:.0f}", g, str(len(sub)), str(ctrl_n.get((d, day), 0)),
+        k = (d, day, control_for(g))
+        rows.append([d, f"{day:.0f}", g, str(len(sub)), str(ctrl_n.get(k, 0)),
                      f"{sub.dage.mean():+.2f}",
-                     f"{ctrl_sd.get((d, day), float('nan')):.2f}"])
+                     f"{ctrl_sd.get(k, float('nan')):.2f}"])
     print(render_table(["donor", "day", "arm", "n", "n ctrl", "mean ΔAge (yr)", "ctrl SD (yr)"],
                        rows, aligns=["l", "r", "l", "r", "r", "r", "r"]))
     out["M_E2"] = rows
@@ -254,10 +282,15 @@ def main() -> int:
     print("\n" + "-" * 92)
     print("M-E3 — DOES TRANSIENT REPROGRAMMING REJUVENATE? (vs Gill 2022)")
     print("-" * 92)
+    # STRATIFIED. `fib` = cells that RETURNED to fibroblast identity -- Gill's MPTR claim is about
+    # these. `int` = cells still IN the reprogramming phase. The methylation companion measures
+    # them ~18 yr apart, so they are never pooled.
+    STATE = "fib"
+    print(f"   stratum: `{STATE}` — cells that RETURNED to fibroblast identity (Gill's MPTR claim)")
     diffs, trs, drows = [], [], []
     for (d, day), sub in obs.groupby(["donor", "day"]):
-        t = sub[sub.group == "transient"]["dage"]
-        f = sub[sub.group == "failed"]["dage"]
+        t = sub[sub.group == f"transient_{STATE}"]["dage"]
+        f = sub[sub.group == f"failed_{STATE}"]["dage"]
         if len(t) and np.isfinite(t).any():
             trs.append(float(t.mean()))
         if len(t) and len(f) and np.isfinite(t).any() and np.isfinite(f).any():
@@ -266,6 +299,21 @@ def main() -> int:
                           f"{f.mean():+.2f}", f"{t.mean() - f.mean():+.2f}"])
     print(render_table(["donor", "day", "n trans", "n fail", "ΔAge trans", "ΔAge fail",
                         "trans − fail"], drows, aligns=["l", "r", "r", "r", "r", "r", "r"]))
+
+    # the intermediates, reported beside it and never merged into it
+    int_by_donor: dict[str, list[float]] = {}
+    for (d, _day), sub in obs.groupby(["donor", "day"]):
+        v = sub[sub.group == "transient_int"]["dage"]
+        if len(v) and np.isfinite(v).any():
+            int_by_donor.setdefault(d, []).append(float(v.mean()))
+    if int_by_donor:
+        im = [float(np.mean(v)) for v in int_by_donor.values()]
+        mi, li, hi_, ni = ci(im)
+        print(f"   `int` stratum (still IN the reprogramming phase), donor-clustered: "
+              f"mean={mi:+.2f} CI=[{li:+.2f},{hi_:+.2f}] (n={ni} donors)")
+        out["M_E3_intermediate"] = {"per_donor": {k: float(np.mean(v))
+                                                 for k, v in int_by_donor.items()},
+                                    "mean": mi, "ci": [li, hi_], "n_donors": ni}
     mt, lt, ht, nt = ci(trs)
     md, ld, hd, nd = ci(diffs)
 

@@ -418,3 +418,85 @@ published timing optimum. None of that was sensitive to the bug, because `log1p`
 compresses magnitudes while preserving every ordering. **Only a hand-computed expected value
 caught it.** That is the argument for unit-testing numeric helpers with values worked out by hand,
 rather than trusting a plausible-looking table.
+
+---
+
+## 10. CORRECTION — POOLED ARMS. **M-E3's verdict FLIPS to NOT REPRODUCED**, and the methylation companion agrees.
+
+*Found at the start of P1, by reading what the existing methylation analysis had already done.
+§6–§9 are left as written. This is the **third** independent error in this measurement, after
+pseudoreplication (§7) and the double-`log1p` (§9).*
+
+### The error
+
+`GSE165177` runs every treatment in **two cell states** and supplies a **separate negative control
+for each**:
+
+- **fibroblast** — cells that have **RETURNED** to fibroblast identity. **Gill's MPTR claim is
+  about these.**
+- **intermediate** — cells still **IN** the reprogramming phase.
+
+My `arm_group` pooled them, **on both sides of the contrast**:
+
+| my group | what it actually held |
+|---|---|
+| `transient` | 11 intermediates **+** 13 returned fibroblasts |
+| `control` | 21 fibroblast controls **+** 12 intermediate controls |
+| `failed` | 21 fibroblast **+** 12 intermediate |
+
+So neither the treated arm nor its reference was like-for-like. The pre-registration declared arm
+grouping a limit *"reported so it can be disputed"* — and it is now disputed by data.
+
+### What it cost
+
+| | pooled (as recorded in §6/§9) | **stratified to the returned fibroblasts** |
+|---|---|---|
+| ΔAge(transient), donor-clustered | −42.45 **[−67.39, −17.51]** — excludes 0 | **−24.53 [−50.45, +1.38]** — **includes 0** |
+| transient − failed | −24.19 [−49.53, +1.14] | −15.57 [−38.76, +7.61] |
+| **M-E3 verdict** | **REPRODUCED** | ❌ **NOT REPRODUCED** |
+
+Per donor, returned fibroblasts: O1 −33.94, O2 −26.34, O3 −13.32 — **direction consistent 3/3**,
+interval includes zero at n = 3.
+
+The intermediates, kept separate: **−64.67 [−77.79, −51.55]**, strongly negative.
+**Pooling a −65 population with a −25 population against a mixed reference produced the −42.**
+
+### 🔑 The methylation companion had this right all along, and it agrees
+
+`experiments/diag_methylation_anchor.py` (run 2026-07-31) pairs `Transiently reprogrammed
+fibroblast` against `Negative control fibroblast`, and the intermediates separately — exactly the
+stratification I collapsed. Its recorded results:
+
+| stratum | Horvath skin & blood | Horvath multi-tissue | **our RNA (corrected)** |
+|---|---|---|---|
+| **returned fibroblasts** | **−5.81** [−19.50, +7.88] → NO_EFFECT | **−9.37** [−18.27, −0.48] → fragile | **−24.53** [−50.45, +1.38] → not established |
+| **intermediates** | **−24.05** [−31.12, −16.98] → REJUVENATION | **−27.55** [−33.69, −21.40] → REJUVENATION | **−64.67** [−77.79, −51.55] |
+| failed (negative control) | +0.46 → NO_EFFECT | −2.44 → NO_EFFECT | — |
+
+**Two things follow, and they are the first real answers P1 was built to get.**
+
+1. **DIRECTION is concordant.** Both modalities read the intermediates as strongly younger and
+   both fail to establish the returned-fibroblast effect. The disagreement I was about to
+   investigate between our −42 and Gill's ~30 **was an artefact of my own pooling**, not a
+   modality conflict.
+2. **MAGNITUDE is not.** On the intermediates — the one stratum where both modalities have a solid
+   effect — **RNA reads 2.3–2.7× larger than methylation** (−64.67 against −24.05 / −27.55).
+
+### 🔑 What that does to the compression question
+
+The clock is **compressed ~3.4× on the chronological axis** (a real 74-yr gap rendered as 22) and
+**amplified ~2.5× on the reprogramming axis** relative to methylation. **These point in opposite
+directions.**
+
+That is direct evidence for the concern raised in review: chronological ageing and acute
+reprogramming are different biological processes reported on one axis, and **a clock's sensitivity
+to one says nothing about its sensitivity to the other.** The compression measured on donors of
+different ages must **not** be carried over to ΔAge — and the earlier worry that −42 might imply a
+"true" −143 dissolves, because the transfer it assumed is now measured to be wrong in direction.
+
+### What is still NOT claimed
+
+That −24.53 or −64.67 is correct in absolute years. The methylation numbers quoted here are from a
+July run at **pair level, not donor-clustered** — a like-for-like P1 needs them recomputed with
+donor as the unit, and that is the next step, not a completed one. And methylation remains an
+imperfect yardstick; its own two clocks agree with each other at only ρ = 0.568.

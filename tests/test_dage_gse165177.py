@@ -34,23 +34,49 @@ A = _load("dage_gse165177", "experiments/dage_gse165177.py")
 
 
 # ------------------------------------------------------------------------- arm_group ---- #
-@pytest.mark.parametrize("arm", ["negative_control", "negative_control_intermediate"])
-def test_negative_controls_are_the_zero_point(arm):
-    assert A.arm_group(arm) == "control"
+@pytest.mark.parametrize("arm,want", [("negative_control", "control_fib"),
+                                      ("negative_control_intermediate", "control_int")])
+def test_the_two_control_states_are_kept_apart(arm, want):
+    """Pooling them gave a mixed reference and cost M-E3 its verdict. Regression."""
+    assert A.arm_group(arm) == want
 
 
-@pytest.mark.parametrize("arm", ["failed_to_transiently_reprogram",
-                                 "failing_to_transiently_reprogram_intermediate"])
-def test_failed_arms_group_as_failed_even_though_they_contain_the_word_transiently(arm):
+@pytest.mark.parametrize("arm,want", [
+    ("failed_to_transiently_reprogram", "failed_fib"),
+    ("failing_to_transiently_reprogram_intermediate", "failed_int")])
+def test_failed_arms_group_as_failed_even_though_they_contain_the_word_transiently(arm, want):
     """The branch-order trap: these contain BOTH 'fail' and 'transient'. Grouping them as
     *transient* would move 33 samples into the treatment arm and invert M-E3."""
-    assert A.arm_group(arm) == "failed"
+    assert A.arm_group(arm) == want
 
 
-@pytest.mark.parametrize("arm", ["transiently_reprogrammed", "transient_reprogramming",
-                                 "transient_reprogramming_intermediate"])
-def test_transient_arms_group_as_transient(arm):
-    assert A.arm_group(arm) == "transient"
+@pytest.mark.parametrize("arm,want", [
+    ("transiently_reprogrammed", "transient_fib"),
+    ("transient_reprogramming", "transient_fib"),
+    ("transient_reprogramming_intermediate", "transient_int")])
+def test_returned_fibroblasts_and_intermediates_are_kept_apart(arm, want):
+    """THE regression this file exists for. These two populations differ by ~40 yr in our own
+    data and ~18 yr in the methylation companion. Pooling them produced a -42 that dissolved to
+    -24 once separated, flipping M-E3 from REPRODUCED to NOT REPRODUCED."""
+    assert A.arm_group(arm) == want
+
+
+def test_intermediate_and_fibroblast_never_share_a_group():
+    fib = {A.arm_group(a) for a in ("transiently_reprogrammed", "failed_to_transiently_reprogram",
+                                    "negative_control")}
+    ints = {A.arm_group(a) for a in ("transient_reprogramming_intermediate",
+                                     "failing_to_transiently_reprogram_intermediate",
+                                     "negative_control_intermediate")}
+    assert fib.isdisjoint(ints)
+
+
+@pytest.mark.parametrize("group,want", [
+    ("transient_fib", "control_fib"), ("failed_fib", "control_fib"),
+    ("transient_int", "control_int"), ("failed_int", "control_int")])
+def test_each_treated_stratum_pairs_to_its_own_matched_control(group, want):
+    """Fibroblasts against fibroblast controls, intermediates against intermediate controls.
+    A pooled reference is what made the first run's contrast not like-for-like."""
+    assert A.control_for(group) == want
 
 
 def test_day_zero_fibroblasts_are_their_own_group():
@@ -66,8 +92,9 @@ def test_an_unrecognised_arm_is_not_silently_absorbed():
 
 
 def test_grouping_is_case_insensitive():
-    assert A.arm_group("Negative_Control") == "control"
-    assert A.arm_group("FAILED_to_reprogram") == "failed"
+    assert A.arm_group("Negative_Control") == "control_fib"
+    assert A.arm_group("FAILED_to_reprogram") == "failed_fib"
+    assert A.arm_group("Transient_Reprogramming_INTERMEDIATE") == "transient_int"
 
 
 # -------------------------------------------------------------------------------- ci ---- #
