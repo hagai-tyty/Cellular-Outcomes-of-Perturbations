@@ -11,11 +11,190 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-15 - EARLY->LATE FORWARD TEST: the forward signal is DONOR CHRONOLOGICAL AGE (partial r = -0.064)
+
+**Status:** Executed, READ-ONLY. New: `experiments/diag_early_late_forward.py`,
+`tests/test_diag_early_late_forward.py` (14 tests), `results/diag_early_late_forward_results.json`.
+Suite green, ruff clean.
+
+### Why this was tried
+
+The same-timepoint ΔAge regression is circular (entry below). An early->late formulation escapes
+that by construction: the target is measured from a DIFFERENT, later sample, which the input
+cannot contain. This was the user's proposal and it is the right shape for the project's goal --
+read the early trajectory, call the late outcome.
+
+### It escaped circularity, and then died on a second confound
+
+On RAW clock ages (no control subtraction, so the shared-zero-point artifact cannot apply), with
+N2 restored because a within-donor comparison needs no control, **n = 6**:
+
+| relation | Pearson |
+|---|---|
+| early CD13 -> late | +0.830 |
+| **donor age -> late** | **+0.931** |
+| donor age -> early CD13 | +0.902 |
+| **early CD13 -> late, donor age removed** | **-0.064** |
+
+The partial is **-0.064**. Once donor chronological age is known, the early assay adds NOTHING.
+The textbook mediation signature -- and `test_a_fully_mediating_covariate_drives_the_partial_to_zero`
+simulates exactly this case and requires the partial below 0.2, so the instrument was validated
+against the answer it returned.
+
+The reverse partial, `donor_age ~ late | early_cd13` = +0.759, does not clear the df=3 threshold
+(0.878) either; at n=6 nothing here reaches significance on its own.
+
+### The timing hypothesis PASSED its pre-registered bar -- and is still not a result
+
+Rule, written into the module BEFORE it was computed: `T_day` = the first measured day below the
+donor's own early/late midpoint from which every later day stays below. "Sustained" is
+load-bearing -- the early single samples swing 40-50 yr between adjacent days.
+
+  N2 34, N3 34, Y1 34, Y2 40, O1 40, O2 47  |  **spearman(donor_age, T_day) = +0.906 > 0.886**
+
+Three reasons it is a LEAD, all recorded before the run: the hypothesis was formed BY EYE after
+seeing the trajectories (post-hoc); n=6; and `T_day` takes only 3 distinct values here, so one
+donor moving one timepoint would move it materially. And it is still donor age doing the
+predicting.
+
+### The one donor-age-free scrap
+
+Gill has two same-age pairs. In BOTH, the donor with the higher early CD13 age had the higher late
+age: N2 76.1->42.2 vs N3 81.2->47.4 (both age 0); O1 109.0->65.8 vs O2 120.8->71.4 (both age 53).
+2 of 2, right direction. Sign test p = 0.5 -- **statistically meaningless**, recorded only because
+it is the sole unconfounded evidence available and it does not point the wrong way.
+
+### The constraint this identifies
+
+**Not a modelling problem.** With 6 donors spanning ages 0-53, donor age dominates the variance
+and cannot be separated from reprogramming signal at df=3. No architecture changes that. The
+design that would break it is **more donors at MATCHED chronological ages** -- hold age constant,
+let outcome vary, which is what the two same-age pairs already gesture at. That is a sharper form
+of `plans/DATA_REQUIREMENT_SECOND_TIMECOURSE.md`, currently ON HOLD.
+
+Still untested and cheap: the late residual (after donor age) against early **expression** rather
+than the early clock-age summary, which discards 2,000 dimensions. Power at n=6 is nearly nil.
+
+---
+
+## 2026-08-15 - CIRCULARITY: the ΔAge regression predicts a linear readout of its own input
+
+**Status:** Executed, READ-ONLY. New: `experiments/diag_clock_circularity.py`,
+`tests/test_diag_clock_circularity.py` (16 tests), `results/diag_clock_circularity_results.json`.
+
+### The result: CIRCULAR on all five evaluable C-7 folds
+
+`clock_panel(X) = X @ w` -- the Fleischer clock's OWN weights applied to the model's OWN 2,000-gene
+input.
+
+| fold | T1 clock->label | T2 ridge->clock | T3 ridge->label |
+|---|---|---|---|
+| N3 | 0.9643 | 0.9875 | 0.9653 |
+| O1 | 0.9743 | 0.9788 | 0.9898 |
+| O2 | 0.9704 | 0.9825 | 0.9945 |
+| Y1 | 0.9723 | 0.9603 | 0.9930 |
+| Y2 | 0.9596 | 0.9817 | 0.9938 |
+
+The label is reconstructable from the model's input by the clock at rho ~ 0.96-0.97, and ridge
+reproduces that readout at rho ~ 0.96-0.99. `xonly~clk` matches `T2` to four decimals, consistent
+with the separate finding that the perturbation contributes nothing.
+
+**Ridge is not predicting age. It is re-deriving a linear functional of the vector it was handed.**
+Its good MAE (5.84 yr on Y1 against a target SD of 27.5) measures how well the panel preserves the
+clock's direction -- a compression diagnostic, not a prediction. There is no forward step in it.
+
+### Why the verdict is trustworthy
+
+- **The test can say no.** Pre-C-7 it returned NOT CIRCULAR (N3) and LABEL-RECOVERABLE (O1, O2, Y1).
+- **Not circular by construction**, checked before running: the label comes from the FULL ~33k-gene
+  profile (`build_dataset.py:342-346`), the panel retains only **21.35%** of the clock's |w| mass,
+  and `X` is harmonized while ΔAge is deconfounded and re-anchored. Any of those could have broken
+  the correspondence; none did.
+- **Consistency carries it, not one fold.** At n~20 a single rho of 0.97 has a 95% CI reaching near
+  0.92; five of five in 0.96-0.97 is the evidence.
+
+### Uncomfortable: C-7 made the labels cleaner AND more circular
+
+Pre-C-7 was mixed (1 not circular, 3 label-recoverable, 2 circular); after removing the degenerate
+control all five are circular. Part of what made the task look non-trivial was the corruption.
+
+### Alternative reading NOT excluded
+
+The label may track a dominant expression axis rather than the clock specifically. It does not
+change the verdict -- either way the target is determined by the input -- but it would change the
+mechanism. Separating them needs a PC decomposition.
+
+### Scope
+
+Does NOT invalidate the clock, and does NOT touch C-7, which rests on the degenerate column.
+It DOES invalidate every ΔAge MAE in this project as a measure of predictive skill, including the
+C-7 vs pre-C-7 comparison recorded below.
+
+---
+
+## 2026-08-15 - RES IS DEGENERATE, the fate label is a DAY THRESHOLD, and two scorecard defects
+
+**Status:** Measured from the frozen snapshots and built folds. READ-ONLY. Recorded here because
+each retracts or reframes a previously reported number.
+
+### RES is identically zero, and the "Spearman 0.40" headline was numerical residue
+
+Per-fold `res_max` from the snapshots:
+
+- **`c7_A_keep_hff`: exactly 0.0 on all five folds.**
+- **`gc2_A_keep_hff`: 1.6e-4 (N2), 7.6e-5 (O1), 1.2e-6 (Y2), exactly 0.0 on N3/O2/Y1.**
+
+The three folds with a non-zero `res_max` are EXACTLY the three that produced a Spearman. So the
+pre-C-7 headline -- *"Ranking generalizes across held-out donors: Spearman 0.40 +/- 0.20 (n=3)"* --
+was a rank correlation over RES values whose maximum was 1.6e-4, 7.6e-5 and 1.2e-6. That is
+floating-point residue, not signal.
+
+**Now believed:** RES was effectively constant-zero all along; C-7 removed the last crumbs that let
+the metric compute at all. `res_approvals` and `res_approvals_oracle` are 0 in BOTH snapshots --
+the gate approves nothing, ever. Independently corroborates Stage 3a's "the estimator is not a
+detector". The earlier claim is left standing in its own entry, annotated.
+
+### The fate head's PR-AUC 1.0 is a day threshold
+
+Per-donor fate labels against reprogramming day (Gill bulk, O1 shown; the identical zero-positions
+12-15 across O1/O2/Y2 show the same structure in every donor):
+
+  days 0, 7, 9, 11, 13, 15, 21, 29 -> **safe** (all 17 samples)
+  days 34, 40, 47, 54              -> **loss** (all 4 samples)
+
+A clean step function with no overlap -- and `dose_time`, which encodes day, is a direct model
+INPUT. PR-AUC 1.0 is obtainable by learning "day > 31 -> unsafe". The label is biologically
+sensible (later reprogramming = more identity loss) but statistically redundant with a feature the
+model is handed. **Not a prediction**: knowing it is day 54 of OSKM requires no model.
+
+### Two scorecard defects found while reading the C-7 comparison
+
+1. **Signed metrics are judged lower-is-better.** `level_shift` ranges -28.3 to +15.0 and the
+   scorecard averages the SIGNED values, so C-7 moving all five folds by a consistent +5.03 --
+   TOWARD zero, since most started negative -- was flagged `REGRESSION`. Mean |level shift| actually
+   IMPROVED 12.74 -> 9.62 (ridge: 11.25 -> 11.16, flat). **Neither was a regression.**
+2. **Aggregate columns can span different fold counts.** `gc2` ΔAge MAE averages 6 folds, `c7`
+   averages 5 (N2 has no ΔAge), so "14.291 -> 15.713" is not a before/after pair. Verified by
+   arithmetic; the paired diff (+2.922 over the 5 common folds) is the correct number and the
+   table reports it correctly.
+
+Neither is fixed yet; both need their own change.
+
+---
+
 ## 2026-08-15 - TARGET-PATH AUDIT: nothing normalises ΔAge, and N3's "improvement" is not the model improving
 
 **Status:** Executed, READ-ONLY (inference on ~20 cells/fold). New:
 `experiments/diag_target_path.py`, `tests/test_diag_target_path.py` (14 tests),
 `results/diag_target_path_results.json`. Full suite green (1163).
+
+> **[ANNOTATED 2026-08-15, later the same day -- original left standing.]** The scale-mismatch
+> result below is not retracted, but its IMPORTANCE is now much smaller than stated. The
+> circularity entry above shows the ΔAge regression predicts a linear readout of its own input
+> (rho 0.96-0.99), so "compression of the prediction against the truth" is a statement about how
+> faithfully a linear model reproduces a clock readout across a scale change -- not about
+> predictive skill. The H-SUPPORTED verdict stands on its own numbers; what it MEANS is narrower
+> than this entry implies.
 
 ### The target path, read from source
 
@@ -82,6 +261,14 @@ one. C-7's justification is the degenerate control and none of this bears on it.
 **Status:** Executed, READ-ONLY, no rebuild. New: `experiments/diag_target_shift.py`,
 `tests/test_diag_target_shift.py` (17 tests), `results/diag_target_shift_results.json`.
 Full suite green (1145), ruff clean.
+
+> **[ANNOTATED 2026-08-15, later the same day -- original left standing.]** Everything measured
+> here about the LABEL is unaffected: the target genuinely moved nonlinearly, HFF's spread genuinely
+> halved, and the N2-fold internal control genuinely pins the cause to one column. What has changed
+> is the framing of the MODEL comparison this was serving. The circularity entry above shows the
+> ΔAge regression is a linear readout of its own input, so the "the model got worse / ridge got
+> better" question that motivated this audit was never measuring predictive skill on either side.
+> The label findings stand; the motivation was mis-posed.
 
 ### The question
 

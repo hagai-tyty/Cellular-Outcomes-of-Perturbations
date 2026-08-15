@@ -176,11 +176,22 @@ def main() -> None:
         else:
             print(f"  {label:<22} (no valid folds)")
 
-    # headline line for the paper
+    # This used to print ">>> Ranking generalizes across held-out donors: Spearman 0.40 <<<" as a
+    # headline for the paper. It is no longer allowed to make that claim.
+    #
+    # The RES values it ranks were measured at max 1.6e-4 / 7.6e-5 / 1.2e-6 in the only three folds
+    # that produced a Spearman at all, and exactly 0.0 everywhere else -- so the correlation was
+    # computed over floating-point residue. `ranking_metrics` (metrics.py:94) returns NaN when
+    # std(res)==0, which means a fold silently drops out of the mean instead of reporting that the
+    # estimator is constant. A number that survives only where rounding noise happens to be
+    # non-zero must not be printed as a generalization claim.
     sp = agg("spearman")
     if sp:
-        print(f"\n>>> Ranking generalizes across held-out donors: "
-              f"Spearman {sp[0]:.2f} +/- {sp[1]:.2f} (n={sp[4]} donors) <<<")
+        print(f"\n[ranking] Spearman over RES: {sp[0]:+.2f} +/- {sp[1]:.2f} "
+              f"({sp[4]} of {len(DONORS)} folds computable)")
+        print("          NOT a generalization claim until RES's SCALE is checked: folds where RES "
+              "is\n          constant return NaN and vanish from this mean. See scorecard "
+              "`res_max`.")
     Path("loocv_results", "summary.json").write_text(
         json.dumps({"folds": folds,
                     "aggregate": {k: agg(k) for k in

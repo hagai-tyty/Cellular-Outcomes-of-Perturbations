@@ -1,0 +1,141 @@
+{
+  "clock_meta": {
+    "source": "GSE113957 Fleischer 2018 (Normal human dermal fibroblasts)",
+    "gene_id_space": "HGNC_symbol",
+    "dedup": "highest_expressed",
+    "n_samples": 133,
+    "n_genes": 33155,
+    "cv_mae_years": 12.26879346460328,
+    "cv_pearson": 0.8366443004674854,
+    "alpha": 0.2721338768375307,
+    "age_range": [
+      1.0,
+      96.0
+    ],
+    "normalization": "log1p_cp10k"
+  },
+  "arms": {
+    "pre-C-7": {
+      "N2": {
+        "n": 21,
+        "T1_clockpanel_vs_label": 0.9817531849104232,
+        "T2_ridge_vs_clockpanel": 0.9845855455957839,
+        "T3_ridge_vs_label": 0.9842884808456178,
+        "xonly_vs_clockpanel": 0.9858232409219551,
+        "sd_clockpanel": 88.60257728430246,
+        "sd_label": 19.665088377556362,
+        "verdict": "CIRCULAR"
+      },
+      "N3": {
+        "n": 21,
+        "T1_clockpanel_vs_label": 0.9472770823986332,
+        "T2_ridge_vs_clockpanel": 0.9353547621603351,
+        "T3_ridge_vs_label": 0.9596505665246018,
+        "xonly_vs_clockpanel": 0.9346611372662,
+        "sd_clockpanel": 66.96344173908888,
+        "sd_label": 21.72011068801063,
+        "verdict": "NOT CIRCULAR"
+      },
+      "O1": {
+        "n": 21,
+        "T1_clockpanel_vs_label": 0.9741718445345454,
+        "T2_ridge_vs_clockpanel": 0.9412671150988516,
+        "T3_ridge_vs_label": 0.9629917394417887,
+        "xonly_vs_clockpanel": 0.9438738090770239,
+        "sd_clockpanel": 64.85492149299708,
+        "sd_label": 25.993750619518153,
+        "verdict": "LABEL-RECOVERABLE"
+      },
+      "O2": {
+        "n": 21,
+        "T1_clockpanel_vs_label": 0.9558145794828397,
+        "T2_ridge_vs_clockpanel": 0.9478425400170587,
+        "T3_ridge_vs_label": 0.9869839600370551,
+        "xonly_vs_clockpanel": 0.9510868031223906,
+        "sd_clockpanel": 65.40540038202703,
+        "sd_label": 24.306715754116063,
+        "verdict": "LABEL-RECOVERABLE"
+      },
+      "Y1": {
+        "n": 19,
+        "T1_clockpanel_vs_label": 0.9669403543497744,
+        "T2_ridge_vs_clockpanel": 0.9129478496501483,
+        "T3_ridge_vs_label": 0.9660479864925209,
+        "xonly_vs_clockpanel": 0.9148384840510222,
+        "sd_clockpanel": 86.97526501862984,
+        "sd_label": 24.33540968397319,
+        "verdict": "LABEL-RECOVERABLE"
+      },
+      "Y2": {
+        "n": 21,
+        "T1_clockpanel_vs_label": 0.9663286756431915,
+        "T2_ridge_vs_clockpanel": 0.9686404788995266,
+        "T3_ridge_vs_label": 0.9903893465991742,
+        "xonly_vs_clockpanel": 0.9679267511553263,
+        "sd_clockpanel": 68.9047092445799,
+        "sd_label": 26.280145706650224,
+        "verdict": "CIRCULAR"
+      }
+    },
+    "C-7": {
+      "N2": {
+        "n": 0
+      },
+      "N3": {
+        "n": 20,
+        "T1_clockpanel_vs_label": 0.96426797358139,
+        "T2_ridge_vs_clockpanel": 0.9874730631692495,
+        "T3_ridge_vs_label": 0.9653481430505869,
+        "xonly_vs_clockpanel": 0.9874902726115234,
+        "sd_clockpanel": 83.40741119467651,
+        "sd_label": 22.672229399126294,
+        "verdict": "CIRCULAR"
+      },
+      "O1": {
+        "n": 21,
+        "T1_clockpanel_vs_label": 0.9743418217991295,
+        "T2_ridge_vs_clockpanel": 0.9787805675566787,
+        "T3_ridge_vs_label": 0.9898405473702647,
+        "xonly_vs_clockpanel": 0.9788421713282739,
+        "sd_clockpanel": 88.54791121351477,
+        "sd_label": 27.102442113356712,
+        "verdict": "CIRCULAR"
+      },
+      "O2": {
+        "n": 20,
+        "T1_clockpanel_vs_label": 0.9703568322246436,
+        "T2_ridge_vs_clockpanel": 0.9824780017933672,
+        "T3_ridge_vs_label": 0.994495496100228,
+        "xonly_vs_clockpanel": 0.9806952303645714,
+        "sd_clockpanel": 95.67183618872195,
+        "sd_label": 27.249843068354348,
+        "verdict": "CIRCULAR"
+      },
+      "Y1": {
+        "n": 18,
+        "T1_clockpanel_vs_label": 0.9723047804526315,
+        "T2_ridge_vs_clockpanel": 0.9602739487099493,
+        "T3_ridge_vs_label": 0.993035937153774,
+        "xonly_vs_clockpanel": 0.959741121696809,
+        "sd_clockpanel": 188.8252018890889,
+        "sd_label": 27.536554707644083,
+        "verdict": "CIRCULAR"
+      },
+      "Y2": {
+        "n": 21,
+        "T1_clockpanel_vs_label": 0.9595580884014034,
+        "T2_ridge_vs_clockpanel": 0.9816841944784155,
+        "T3_ridge_vs_label": 0.9938139805447938,
+        "xonly_vs_clockpanel": 0.9813936921547043,
+        "sd_clockpanel": 94.0443515355158,
+        "sd_label": 28.640267574237193,
+        "verdict": "CIRCULAR"
+      }
+    }
+  },
+  "coverage": {
+    "n_panel": 2000,
+    "n_with_weight": 1956,
+    "abs_mass_retained": 0.21350371702446044
+  }
+}
