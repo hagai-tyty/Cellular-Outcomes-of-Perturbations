@@ -11,6 +11,84 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-15 - AGE CAPACITY at n=133: the representation CAN learn age. n was the problem, not the method
+
+**Status:** Executed, READ-ONLY, PRE-REGISTERED. New: `experiments/diag_age_capacity.py`,
+`tests/test_diag_age_capacity.py` (9 tests), `results/diag_age_capacity_results.json`.
+Full suite green (1242), ruff clean.
+
+**This overturns a conclusion stated repeatedly earlier today.** Every negative result was reported
+against 6 reprogramming donors, and the standing framing was "the constraint is n". That framing
+was never tested, and it conflated two different questions. GSE113957 -- 143 dermal fibroblasts,
+declared ages 1-96 -- was on disk the whole time and answers the capacity question at 24x the n.
+
+### Result: CARRIES AGE, 5 of 5 alphas, both feature sets, both cohorts
+
+| cohort | features | best MAE | ratio to baseline | Pearson |
+|---|---|---|---|---|
+| Normal, n=133 | pipeline panel | **11.95 yr** | 0.47 | **0.846** |
+| Normal, n=133 | top-2000 HVG | 12.29 yr | 0.48 | 0.842 |
+| GPL18573 only, n=120 | pipeline panel | 13.29 yr | 0.48 | 0.824 |
+| GPL18573 only, n=120 | top-2000 HVG | 13.09 yr | 0.48 | 0.837 |
+
+Mean-baseline MAE (predict the median age) is 25.37 yr. **The pipeline's own gene panel, with
+plain ridge and donors held out, reaches MAE 11.95 yr against the published `cv_mae` of 12.27** --
+matching a purpose-built clock. It holds on a single platform, so it is not a batch artifact, and
+the pipeline's panel does as well as a panel fit locally.
+
+### NOT circular, and that distinction is load-bearing
+
+The target is the **GEO-declared chronological age of the donor** -- metadata that no transform of
+the expression produced. `diag_clock_circularity` found the ΔAge regression predicts a linear
+readout of its own input; that failure mode cannot arise here. Pinned by a test asserting the
+script never imports a clock.
+
+### The honest caveat
+
+GSE113957 is the cohort the Fleischer clock was FITTED on, so age signal is guaranteed present.
+This is therefore a CAPACITY result -- "the representation can carry age when age signal is there"
+-- and NOT an out-of-cohort generalisation result. It also measures CHRONOLOGICAL age in resting
+fibroblasts, which is a much larger signal than reprogramming-induced ΔAge.
+
+HGPS (progeria, n=10) excluded from the primary: it ages abnormally fast and would inflate the
+result. Its samples carry no parseable age in GEO, so they drop out regardless.
+
+### What this changes
+
+The day's failures were about (a) circularity in how ΔAge was POSED, and (b) n=6 for the
+reprogramming question. **They were not about the representation being incapable.** With adequate
+n and a non-circular target, this pipeline reads age at published-clock accuracy. The reprogramming
+question remains limited by donor count -- but that is now demonstrably a data-collection problem
+rather than a method problem, which is the distinction that was missing.
+
+---
+
+## 2026-08-15 - RNA/methylation concordance: direction agrees, magnitude does not (r ~ 0.87, n=6 cells)
+
+**Status:** Computed from the recorded P1 join (`results/dage_meth_concordance_results.json`), no
+new run. GSE165177 (RNA) x GSE165179 (methylation), the same donors, arms and days.
+
+| clock | Pearson | Spearman | slope RNA~meth |
+|---|---|---|---|
+| Horvath skin & blood 2018 | +0.864 | +0.771 | 1.74 |
+| Horvath multi-tissue 2013 | +0.869 | +0.657 | 1.98 |
+
+An INDEPENDENT molecular assay agrees with the RNA ΔAge on direction and ordering, which is real
+evidence the target is not pure noise.
+
+**But the evidence is thinner than the correlation suggests.** The joined cells are 3 donors x 2
+arms = 6 points, and the correlation is largely carried by one large between-arm separation
+(transient intermediates ~ -65 yr vs transient fibroblasts ~ -25 yr in RNA). Within-donor Spearman
+across arms is undefined -- only 2 arms per donor, and rank correlation needs 3. So this
+establishes "both assays see intermediates rejuvenating more than fibroblasts", not quantitative
+agreement at donor resolution.
+
+The slope of ~1.7-2.0 means **RNA reports roughly twice the magnitude methylation does** -- a
+calibration discrepancy consistent with the previously recorded "RNA 2.5-2.9x larger", and
+unresolved.
+
+---
+
 ## 2026-08-15 - ROBUSTNESS SWEEP: the positive result is FRAGILE (3 of 9, and really 1 of 9)
 
 **Status:** Executed, READ-ONLY, post-hoc, PRE-REGISTERED bar. New:
