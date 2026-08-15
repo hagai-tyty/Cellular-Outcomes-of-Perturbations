@@ -11,6 +11,74 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-15 - PAIRED TARGET AUDIT: C-7 changed HFF's ΔAge target NONLINEARLY, and the N2 fold proves the cause
+
+**Status:** Executed, READ-ONLY, no rebuild. New: `experiments/diag_target_shift.py`,
+`tests/test_diag_target_shift.py` (17 tests), `results/diag_target_shift_results.json`.
+Full suite green (1145), ruff clean.
+
+### The question
+
+The C-7 retrain's ΔAge MAE worsened in 4 of 5 folds while ridge's improved. But C-7 changes the
+LABELS, so pre/post MAE are errors against two different targets. This pairs the label sets
+directly, per cell, within fold. Readings A/OFFSET, B/SCALE, C/NONLINEAR were **pre-registered**
+as module constants before running (`SLOPE_TOL=0.05`, `R2_FLOOR=0.90`, `TIME_TOL=2.0`).
+
+### Result: C, and not marginally
+
+HFF (42,481 cells/fold), pre-C-7 -> C-7: **slope 0.26-0.44** (1.0 would be a pure offset),
+**r2 0.50-0.80** (below the 0.90 floor), and the per-timepoint mean shift **spreads 22.8-28.0 yr**.
+The shift ramps monotonically along the trajectory: ~0 at D0, ~-2 at D2/D4, +2 to +6 by D10/D12,
+**+16 at D14, +20 to +25 at D21**. Independent corroboration: step 3c recorded HFF day-14 moving
++18.558 yr when the degenerate control leaves; this audit measures +15.6 to +17.5 at D14 by a
+different route.
+
+**The target's spread halved.** HFF SD 19.13 -> 8.77 (excluding the N2 fold). Gill's did NOT:
+25.78 -> 27.65, slightly UP, and Gill's own change is nearly a pure offset (slope 1.03-1.09,
+r2 0.98, shift -6 to -7 yr).
+
+### The N2 fold is an internal control, and it attributes the cause exactly
+
+Fold N2 shows **slope 1.000, r2 1.000, mean shift 0.012 +/- 0.022 yr, timepoint spread 0.02 yr** --
+no target change at all. In that fold N2 is the HELD-OUT donor, so its degenerate control was
+already excluded from the harmonizer pre-C-7 (run log: "1 control(s) excluded" before, "0" after,
+the gate having already removed it). The other four rejected columns are treatment samples, and
+the harmonizer fits on CONTROLS only.
+
+So the entire target change is attributable to **one column** -- `N2_Fib_Sendai_Exp2` leaving the
+harmonizer's control set. Not to the other four rejections, not to anything else C-7 does.
+
+### Consequence for the model comparison
+
+Train/test scale ratio (Gill SD / HFF SD) went **1.35 -> 3.15**. The network now trains on a
+target with half the dynamic range and is evaluated on one with the same range as before, so
+compressed predictions carry a guaranteed MAE penalty. That is a stated mechanism consistent with
+the observed direction, **not** a demonstrated cause -- separating it needs its own test.
+
+### A diagnostic bug, caught by its own canary
+
+The first version joined on `cell_id`, which is NOT a key: it indexes WITHIN a chunk, so
+`reprogramming:HFF:0` occurs 45 times (1,100 unique ids over 42,600 rows). The join exploded
+42,600 -> 1,843,299 rows and produced a plausible-looking table of pure noise (slope 0.011-0.034,
+r2 0.001). It was caught by a check built in for free -- `_c7` vs `_c7t` labels, which are the same
+config on the same data and must differ by exactly 0, read **73.77**. Those numbers were discarded
+and never reported as a finding.
+
+Corrected pairing: positional within each (shard, timepoint) group, and ONLY where the group has
+equal size in both builds -- a Gill donor that lost a column has every later index shifted, so
+those 9 cells are dropped rather than guessed at. Every pair is then verified on `cell_line` and
+`time`, which the harmonizer never touches, and a mismatch raises. `_c7` vs `_c7t` now reads
+**0.000e+00** in all six folds, which is also runbook §3 check 3 discharged.
+
+### Not claimed
+
+Which target is scientifically correct. C-7's justification is the degenerate control itself
+(`integrity.py`: library 1.03e8 vs the 1e6 that RPM means, dynamic range 1.74 log2 vs 9.00-15.26
+for every admitted column), and nothing measured here bears on it. A worse fit to cleaner labels
+is not an argument for dirtier labels.
+
+---
+
 ## 2026-08-15 - C-7 RETRAIN RUN 1 INVALID: the gate reported ON and did nothing (third time)
 
 **Status:** Run 1 executed, VOIDED, root cause found and fixed, full suite green (1041 tests).
