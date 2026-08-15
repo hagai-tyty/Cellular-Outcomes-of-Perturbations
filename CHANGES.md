@@ -11,6 +11,72 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-15 - TARGET-PATH AUDIT: nothing normalises ΔAge, and N3's "improvement" is not the model improving
+
+**Status:** Executed, READ-ONLY (inference on ~20 cells/fold). New:
+`experiments/diag_target_path.py`, `tests/test_diag_target_path.py` (14 tests),
+`results/diag_target_path_results.json`. Full suite green (1163).
+
+### The target path, read from source
+
+- `scalers.json` holds `x_mean`, `x_std`, `dt_mean`, `dt_std`, `proliferation_coef` -- and **no
+  age scaler**.
+- `training/dataset.py:58`: `ya = np.where(am, arr["y_age"], 0.0)` -- **raw years**, while `X` and
+  `dose_time` both go through `scalers.transform_*`.
+- `models/losses.py:58`: `F.huber_loss(age_pred[m], age_true[m], delta=2.0)` -- an **unweighted**
+  mean over masked cells, `delta` fixed in **years**.
+
+So there is no target normalisation and no per-source weighting. **Whatever scale HFF's labels
+have is the scale the age head learns**, and HFF is 99.8% of the age-valid training cells
+(33,613 vs 60-77 Gill). A second consequence: `delta=2.0` is absolute, so halving HFF's spread
+moved delta from 0.105 to 0.228 of the target SD -- the loss's shape relative to the data changed
+without anyone touching the loss.
+
+### Scale-mismatch test: H-SUPPORTED by the pre-registered rule, but read the caveat
+
+compression = SD(pred)/SD(true) on the held-out donor. Median **0.826 -> 0.534**; more compressed
+under C-7 in **3 of 5** folds (O1 0.826->0.437, O2 0.880->0.428, Y2 0.905->0.534); N3 (0.609->0.687)
+and Y1 (0.801->0.825) went the other way.
+
+The rule fired, but its majority clause is nearly powerless: with 5 folds, P(>=3 in one direction |
+no effect) = 0.5, a coin flip. **The magnitude carries this, not the count**, and the effect is
+heterogeneous. That caveat is stated in the code beside the rule, not appended after the result.
+
+### The finding that changes an earlier reading
+
+Decomposing MAE into bias (|mean_pred - mean_true|) and spread:
+
+| fold | arm | bias | MAE | bias/MAE |
+|---|---|---|---|---|
+| N3 | pre-C-7 | -29.69 | 29.69 | **1.00** |
+| N3 | C-7 | -21.29 | 21.29 | **1.00** |
+| O1 | C-7 | -0.39 | 12.73 | 0.03 |
+| O2 | C-7 | +1.37 | 13.78 | 0.10 |
+
+**N3's MAE is 100% bias in BOTH arms.** The model predicts ~0 (0.372, then 0.665) against a truth
+of +30.07, then +21.96. So N3's headline "improvement" (MAE 29.70 -> 21.29, the one fold the
+scorecard marked `+ better`) is **not the model improving** -- it is the target moving 8.1 yr
+closer to a flat near-zero prediction the model makes regardless. The model carries no ΔAge signal
+on N3 in either arm.
+
+Conversely O1 and O2 under C-7 have almost no bias, so their doubled MAE is **spread** -- which is
+where the compression result actually bites.
+
+### Also found, NOT caused by C-7, not yet assessed
+
+`splits/holdout.json` has **1,100 entries for 42,600 cells**. Splits are keyed on `cell_id`, which
+indexes WITHIN a chunk, so all ~45 shards share one index->split map and train/val/calib is
+assigned over ~981 HFF index-slots rather than 42,481 cells. Proportions come out right (79.1%
+train), which is why it is invisible. Whether it biases val/calib depends on whether position
+within a chunk correlates with timepoint -- **untested, and it needs its own owner.**
+
+### Not claimed
+
+That normalising the target would make the model correct, or that the pre-C-7 target was the right
+one. C-7's justification is the degenerate control and none of this bears on it.
+
+---
+
 ## 2026-08-15 - PAIRED TARGET AUDIT: C-7 changed HFF's ΔAge target NONLINEARLY, and the N2 fold proves the cause
 
 **Status:** Executed, READ-ONLY, no rebuild. New: `experiments/diag_target_shift.py`,
