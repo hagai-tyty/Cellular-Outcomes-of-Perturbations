@@ -1,0 +1,95 @@
+{
+  "donors": [
+    "N2",
+    "N3",
+    "O1",
+    "O2",
+    "Y1",
+    "Y2"
+  ],
+  "n_features": 1903,
+  "runs": {
+    "POSITIVE CONTROL: raw late age": {
+      "alphas": {
+        "1.0": {
+          "observed": 0.7714285714285715,
+          "null_p95": 0.6,
+          "null_max": 0.942857142857143,
+          "percentile": 96.89999999999999,
+          "pass": true
+        },
+        "10.0": {
+          "observed": 0.7714285714285715,
+          "null_p95": 0.6,
+          "null_max": 0.942857142857143,
+          "percentile": 96.89999999999999,
+          "pass": true
+        },
+        "100.0": {
+          "observed": 0.7714285714285715,
+          "null_p95": 0.6,
+          "null_max": 0.942857142857143,
+          "percentile": 97.25,
+          "pass": true
+        },
+        "1000.0": {
+          "observed": 0.5428571428571429,
+          "null_p95": 0.4285714285714286,
+          "null_max": 0.942857142857143,
+          "percentile": 95.95,
+          "pass": true
+        },
+        "10000.0": {
+          "observed": -0.7142857142857143,
+          "null_p95": -0.6571428571428573,
+          "null_max": -0.4285714285714286,
+          "percentile": 90.35,
+          "pass": false
+        }
+      },
+      "n_pass": 4,
+      "verdict": "SIGNAL"
+    },
+    "TEST: late residual | donor age": {
+      "alphas": {
+        "1.0": {
+          "observed": 0.942857142857143,
+          "null_p95": 0.8285714285714287,
+          "null_max": 1.0,
+          "percentile": 98.6,
+          "pass": true
+        },
+        "10.0": {
+          "observed": 0.942857142857143,
+          "null_p95": 0.8285714285714287,
+          "null_max": 1.0,
+          "percentile": 98.6,
+          "pass": true
+        },
+        "100.0": {
+          "observed": 0.942857142857143,
+          "null_p95": 0.8285714285714287,
+          "null_max": 1.0,
+          "percentile": 98.6,
+          "pass": true
+        },
+        "1000.0": {
+          "observed": 0.942857142857143,
+          "null_p95": 0.8285714285714287,
+          "null_max": 1.0,
+          "percentile": 98.75,
+          "pass": true
+        },
+        "10000.0": {
+          "observed": 0.942857142857143,
+          "null_p95": 0.7714285714285715,
+          "null_max": 0.942857142857143,
+          "percentile": 98.85000000000001,
+          "pass": true
+        }
+      },
+      "n_pass": 5,
+      "verdict": "SIGNAL"
+    }
+  }
+}

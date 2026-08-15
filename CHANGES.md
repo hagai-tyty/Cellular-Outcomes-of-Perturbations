@@ -11,6 +11,74 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-15 - FIRST POSITIVE RESULT: early EXPRESSION predicts the late residual after donor age
+
+**Status:** Executed, READ-ONLY, PRE-REGISTERED. New: `experiments/diag_residual_expression.py`,
+`tests/test_diag_residual_expression.py` (11 tests), `results/diag_residual_expression_results.json`.
+Full suite green (1217), ruff clean.
+
+### Result
+
+Leave-one-donor-out, 6 donors, 1,903 panel genes, donor-age fit REFIT INSIDE EACH FOLD:
+
+| run | LOO Spearman | null p95 | percentile | alphas passing |
+|---|---|---|---|---|
+| POSITIVE CONTROL: raw late age | 0.771 | 0.600 | 96.9 | 4 of 5 |
+| **TEST: late residual \| donor age** | **0.943** | 0.829 | **98.6-98.9** | **5 of 5** |
+
+**SIGNAL** on the pre-registered rule. Early expression predicts the late outcome after donor
+chronological age is removed -- which the early clock-age SUMMARY could not do (partial -0.064,
+entry below). The 2,000 dimensions the summary discards were carrying it.
+
+The residuals being predicted, and why they are not donor age:
+
+| donor | donor age | residual |
+|---|---|---|
+| N2 / **N3** | 0 / 0 | -0.90 / **+4.26** |
+| O1 / **O2** | 53 / 53 | -0.47 / **+5.06** |
+| Y1 / Y2 | 29 / 35 | -5.87 / -2.09 |
+
+In BOTH age-matched pairs the same donor is higher. That is the earlier "2 of 2, sign test p=0.5,
+meaningless but unconfounded" observation -- now recovered by a model that never saw the held-out
+donor, in the one place donor age cannot be the explanation.
+
+### Why the procedure is trusted
+
+- **The positive control passes.** Without it a positive test would be uninterpretable.
+- **The donor-age fit is refit per fold.** Residualising globally first would let a donor help
+  define its own residual. Pinned by a test that constructs an exactly-age-determined target and
+  requires NaN.
+- **No analytic p-value.** At n=6 with 1,903 features none is credible; significance comes from a
+  2,000-draw permutation null running the identical procedure.
+- **The null captures the LOO artifacts.** At alpha=1e4 the control's null sits NEGATIVE (p95
+  -0.657): with a mean-predicting model, leave-one-out makes the train mean anti-correlated with
+  the held-out value by construction. The null reproduces that, so the comparison stays honest --
+  and that is why the control "fails" at that one alpha.
+- **All five alphas reported, none selected.** The effect holds across four orders of magnitude.
+
+### A bug this found in its own instrument, and it is the RES bug again
+
+`test_the_donor_age_fit_is_refit_per_fold_not_once_globally` failed on first run. With a target
+exactly determined by age the residuals are ~1e-14 floating-point dust, and the `std == 0` guard
+tests EXACT zero -- so it computed a Spearman over numerical residue. **Identically the defect that
+turned RES values maxing at 1.6e-4 into "Ranking generalizes: Spearman 0.40."** Fixed with a
+guard relative to the scale of the quantity the residual came from.
+
+Also corrected before the run: the primal ridge solve (2000x2000 per fold, ~120,000 solves, does
+not finish) was replaced by the equivalent dual form (5x5), pinned against an explicit primal
+computation because it is a change to the MATH.
+
+### What is NOT claimed
+
+**n = 6.** Spearman 0.943 is one adjacent transposition from perfect; one donor moving one rank
+changes it materially. Nominal p ~ 0.014, single dataset, after many tests today. This is a
+STRONG LEAD, not an established result, and it needs donors that were not used to find it.
+
+Untested robustness that should come next: a different early window, CD13-only vs all-marker
+input, and a different feature set. If the effect is fragile to those, it is noise.
+
+---
+
 ## 2026-08-15 - EARLY->LATE FORWARD TEST: the forward signal is DONOR CHRONOLOGICAL AGE (partial r = -0.064)
 
 **Status:** Executed, READ-ONLY. New: `experiments/diag_early_late_forward.py`,
