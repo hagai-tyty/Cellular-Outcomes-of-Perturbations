@@ -1,0 +1,321 @@
+{
+  "runs": [
+    {
+      "name": "BASELINE  7-29d, all markers, panel",
+      "n_donors": 6,
+      "n_features": 1903,
+      "median_observed": 0.942857142857143,
+      "n_pass": 5,
+      "verdict": "SIGNAL",
+      "alphas": {
+        "1.0": {
+          "observed": 0.942857142857143,
+          "null_p95": 0.8285714285714287,
+          "pass": true
+        },
+        "10.0": {
+          "observed": 0.942857142857143,
+          "null_p95": 0.8285714285714287,
+          "pass": true
+        },
+        "100.0": {
+          "observed": 0.942857142857143,
+          "null_p95": 0.8285714285714287,
+          "pass": true
+        },
+        "1000.0": {
+          "observed": 0.942857142857143,
+          "null_p95": 0.8285714285714287,
+          "pass": true
+        },
+        "10000.0": {
+          "observed": 0.942857142857143,
+          "null_p95": 0.7714285714285715,
+          "pass": true
+        }
+      }
+    },
+    {
+      "name": "window    7-15d",
+      "n_donors": 6,
+      "n_features": 1903,
+      "median_observed": 0.942857142857143,
+      "n_pass": 5,
+      "verdict": "SIGNAL",
+      "alphas": {
+        "1.0": {
+          "observed": 0.942857142857143,
+          "null_p95": 0.8285714285714287,
+          "pass": true
+        },
+        "10.0": {
+          "observed": 0.942857142857143,
+          "null_p95": 0.8285714285714287,
+          "pass": true
+        },
+        "100.0": {
+          "observed": 0.942857142857143,
+          "null_p95": 0.8285714285714287,
+          "pass": true
+        },
+        "1000.0": {
+          "observed": 0.942857142857143,
+          "null_p95": 0.8285714285714287,
+          "pass": true
+        },
+        "10000.0": {
+          "observed": 0.8857142857142858,
+          "null_p95": 0.8285714285714287,
+          "pass": true
+        }
+      }
+    },
+    {
+      "name": "window    7-21d",
+      "n_donors": 6,
+      "n_features": 1903,
+      "median_observed": 0.942857142857143,
+      "n_pass": 5,
+      "verdict": "SIGNAL",
+      "alphas": {
+        "1.0": {
+          "observed": 0.942857142857143,
+          "null_p95": 0.7714285714285715,
+          "pass": true
+        },
+        "10.0": {
+          "observed": 0.942857142857143,
+          "null_p95": 0.7714285714285715,
+          "pass": true
+        },
+        "100.0": {
+          "observed": 0.942857142857143,
+          "null_p95": 0.7714285714285715,
+          "pass": true
+        },
+        "1000.0": {
+          "observed": 0.942857142857143,
+          "null_p95": 0.7714285714285715,
+          "pass": true
+        },
+        "10000.0": {
+          "observed": 0.942857142857143,
+          "null_p95": 0.7714285714285715,
+          "pass": true
+        }
+      }
+    },
+    {
+      "name": "window    11-29d",
+      "n_donors": 6,
+      "n_features": 1903,
+      "median_observed": 0.4285714285714286,
+      "n_pass": 0,
+      "verdict": "null",
+      "alphas": {
+        "1.0": {
+          "observed": 0.4285714285714286,
+          "null_p95": 0.7714285714285715,
+          "pass": false
+        },
+        "10.0": {
+          "observed": 0.4285714285714286,
+          "null_p95": 0.7714285714285715,
+          "pass": false
+        },
+        "100.0": {
+          "observed": 0.4285714285714286,
+          "null_p95": 0.7714285714285715,
+          "pass": false
+        },
+        "1000.0": {
+          "observed": 0.4285714285714286,
+          "null_p95": 0.7142857142857143,
+          "pass": false
+        },
+        "10000.0": {
+          "observed": 0.4285714285714286,
+          "null_p95": 0.6,
+          "pass": false
+        }
+      }
+    },
+    {
+      "name": "marker    CD13 only",
+      "n_donors": 6,
+      "n_features": 1903,
+      "median_observed": 0.2571428571428572,
+      "n_pass": 0,
+      "verdict": "null",
+      "alphas": {
+        "1.0": {
+          "observed": 0.2571428571428572,
+          "null_p95": 0.8285714285714287,
+          "pass": false
+        },
+        "10.0": {
+          "observed": 0.2571428571428572,
+          "null_p95": 0.8285714285714287,
+          "pass": false
+        },
+        "100.0": {
+          "observed": 0.2571428571428572,
+          "null_p95": 0.8285714285714287,
+          "pass": false
+        },
+        "1000.0": {
+          "observed": 0.2571428571428572,
+          "null_p95": 0.8285714285714287,
+          "pass": false
+        },
+        "10000.0": {
+          "observed": 0.2,
+          "null_p95": 0.7714285714285715,
+          "pass": false
+        }
+      }
+    },
+    {
+      "name": "marker    SSEA4 only",
+      "n_donors": 6,
+      "n_features": 1903,
+      "median_observed": 0.7714285714285715,
+      "n_pass": 0,
+      "verdict": "null",
+      "alphas": {
+        "1.0": {
+          "observed": 0.7714285714285715,
+          "null_p95": 0.8857142857142858,
+          "pass": false
+        },
+        "10.0": {
+          "observed": 0.7714285714285715,
+          "null_p95": 0.8857142857142858,
+          "pass": false
+        },
+        "100.0": {
+          "observed": 0.7714285714285715,
+          "null_p95": 0.8857142857142858,
+          "pass": false
+        },
+        "1000.0": {
+          "observed": 0.7714285714285715,
+          "null_p95": 0.8857142857142858,
+          "pass": false
+        },
+        "10000.0": {
+          "observed": 0.7714285714285715,
+          "null_p95": 0.8285714285714287,
+          "pass": false
+        }
+      }
+    },
+    {
+      "name": "features  clock genes",
+      "n_donors": 6,
+      "n_features": 18928,
+      "median_observed": 0.4285714285714286,
+      "n_pass": 0,
+      "verdict": "null",
+      "alphas": {
+        "1.0": {
+          "observed": 0.4285714285714286,
+          "null_p95": 0.7714285714285715,
+          "pass": false
+        },
+        "10.0": {
+          "observed": 0.4285714285714286,
+          "null_p95": 0.7714285714285715,
+          "pass": false
+        },
+        "100.0": {
+          "observed": 0.4285714285714286,
+          "null_p95": 0.7714285714285715,
+          "pass": false
+        },
+        "1000.0": {
+          "observed": 0.4285714285714286,
+          "null_p95": 0.7714285714285715,
+          "pass": false
+        },
+        "10000.0": {
+          "observed": 0.028571428571428574,
+          "null_p95": 0.7714285714285715,
+          "pass": false
+        }
+      }
+    },
+    {
+      "name": "features  top-500 variable",
+      "n_donors": 6,
+      "n_features": 500,
+      "median_observed": 0.7714285714285715,
+      "n_pass": 1,
+      "verdict": "null",
+      "alphas": {
+        "1.0": {
+          "observed": 0.7714285714285715,
+          "null_p95": 0.8857142857142858,
+          "pass": false
+        },
+        "10.0": {
+          "observed": 0.8857142857142858,
+          "null_p95": 0.8857142857142858,
+          "pass": false
+        },
+        "100.0": {
+          "observed": 0.8857142857142858,
+          "null_p95": 0.8285714285714287,
+          "pass": true
+        },
+        "1000.0": {
+          "observed": 0.6571428571428573,
+          "null_p95": 0.6571428571428573,
+          "pass": false
+        },
+        "10000.0": {
+          "observed": 0.4285714285714286,
+          "null_p95": 0.6571428571428573,
+          "pass": false
+        }
+      }
+    },
+    {
+      "name": "features  random-500",
+      "n_donors": 6,
+      "n_features": 500,
+      "median_observed": 0.028571428571428574,
+      "n_pass": 0,
+      "verdict": "null",
+      "alphas": {
+        "1.0": {
+          "observed": 0.028571428571428574,
+          "null_p95": 0.7714285714285715,
+          "pass": false
+        },
+        "10.0": {
+          "observed": 0.028571428571428574,
+          "null_p95": 0.7714285714285715,
+          "pass": false
+        },
+        "100.0": {
+          "observed": 0.028571428571428574,
+          "null_p95": 0.7714285714285715,
+          "pass": false
+        },
+        "1000.0": {
+          "observed": 0.14285714285714288,
+          "null_p95": 0.7714285714285715,
+          "pass": false
+        },
+        "10000.0": {
+          "observed": 0.14285714285714288,
+          "null_p95": 0.7714285714285715,
+          "pass": false
+        }
+      }
+    }
+  ],
+  "n_signal": 3,
+  "verdict": "FRAGILE"
+}

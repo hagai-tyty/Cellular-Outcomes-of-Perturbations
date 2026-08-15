@@ -11,11 +11,78 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-15 - ROBUSTNESS SWEEP: the positive result is FRAGILE (3 of 9, and really 1 of 9)
+
+**Status:** Executed, READ-ONLY, post-hoc, PRE-REGISTERED bar. New:
+`experiments/diag_residual_robustness.py`, `tests/test_diag_residual_robustness.py` (8 tests),
+`results/diag_residual_robustness_results.json`. Full suite green (1229).
+
+**This demotes the entry below.** The robustness checks named when that result was recorded were
+run, and the result did not survive them.
+
+### Result: FRAGILE
+
+| run | features | median rho | alphas | verdict |
+|---|---|---|---|---|
+| BASELINE 7-29d, all markers, panel | 1903 | 0.943 | 5/5 | **SIGNAL** |
+| window 7-15d | 1903 | 0.943 | 5/5 | SIGNAL |
+| window 7-21d | 1903 | 0.943 | 5/5 | SIGNAL |
+| window 11-29d | 1903 | 0.429 | 0/5 | null |
+| marker CD13 only | 1903 | 0.257 | 0/5 | null |
+| marker SSEA4 only | 1903 | 0.771 | 0/5 | null |
+| features clock genes | 18928 | 0.429 | 0/5 | null |
+| features top-500 variable | 500 | 0.771 | 1/5 | null |
+| features random-500 | 500 | 0.029 | 0/5 | null |
+
+3 of 9 against a pre-registered bar of 6. **And it is weaker than 3 of 9 looks:** the three passing
+runs all return EXACTLY 0.943 -- the identical ranking of the same six donors. They are not three
+independent confirmations, they are one configuration appearing three times. Effectively **one of
+nine** configurations passes.
+
+### What the failures say
+
+- **Dropping days 7-9 kills it** (11-29d: 0.429). The whole effect lives in the two earliest
+  timepoints. Meanwhile dropping days 21-29 changes nothing (7-15d identical). A signal that
+  depends on two samples per donor is not a signal at n=6.
+- **CD13-only collapses to 0.257** -- and CD13 was the marker the earlier clock-age correlation
+  identified as most informative (+0.83). No contradiction, because that analysis predicted RAW
+  late age (donor-age mediated) while this predicts the RESIDUAL, but it does mean the narrative
+  "CD13 carries the signal" does NOT transfer to the residual task.
+- **The clock's own genes do not carry it** (18,928 features, 0.429). Only the 2,000-HVG panel does.
+
+### The one informative positive inside a negative verdict
+
+**random-500 gives 0.029** -- essentially nothing. So IF there is any signal, it is specific to a
+gene set and is NOT merely "donors whose early expression resembles each other end up alike." That
+conditional is worth keeping; it just has nothing to condition on yet.
+
+### Standing verdict
+
+The headline result should NOT be relied on. It holds for one combination -- all markers, the HVG
+panel, and days 7-9 included -- and vanishes under every single-axis change tested. At n=6, with
+Spearman granularity so coarse that 0.943 is one adjacent transposition from perfect, that pattern
+is what a lucky configuration looks like.
+
+It is not affirmatively DISPROVEN either: a real effect could be carried by early timepoints and by
+HVGs specifically, and n=6 has no power to tell those apart. The way to find out is unchanged and
+is now the only route -- **more donors, ideally age-matched pairs**, which is where the residual
+lives.
+
+---
+
 ## 2026-08-15 - FIRST POSITIVE RESULT: early EXPRESSION predicts the late residual after donor age
 
 **Status:** Executed, READ-ONLY, PRE-REGISTERED. New: `experiments/diag_residual_expression.py`,
 `tests/test_diag_residual_expression.py` (11 tests), `results/diag_residual_expression_results.json`.
 Full suite green (1217), ruff clean.
+
+> **[ANNOTATED 2026-08-15, same day -- original left standing.]** **DEMOTED.** The three robustness
+> checks this entry names as untested were run immediately afterwards (entry above) and the result
+> **did not survive them**: 3 of 9 configurations against a pre-registered bar of 6, and the three
+> passers return the identical ranking, so effectively 1 of 9. The effect requires all markers, the
+> HVG panel, AND days 7-9; every single-axis change removes it. The measurement below is correct as
+> executed and the procedure still passes its own controls -- what was wrong was calling it a
+> "strong lead". It is one configuration out of nine at n=6. Not disproven, but not to be relied on.
 
 ### Result
 
