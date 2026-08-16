@@ -193,7 +193,68 @@ both clocks.** §1's 5.36 suggests it may already be met on one. Item 2 settles 
 ---
 
 
+## 2026-08-16 - OUT-OF-COHORT TRANSFER: NOT established. Raw transfer fails catastrophically
+
+**Status:** Executed, READ-ONLY, PRE-REGISTERED. New: `experiments/diag_age_transfer.py`,
+`tests/test_diag_age_transfer.py` (8 tests), `results/diag_age_transfer_results.json`.
+Full suite green (1258), ruff clean.
+
+**This qualifies the entry below.** The capacity result (MAE 11.95, n=133) was measured on the
+cohort the clock was fitted on, and the open question was whether it TRANSFERS. Train on
+GSE113957's 133 donors; predict the chronological age of day-0 fibroblasts in cohorts the model
+never saw. Day-0 only -- a reprogramming sample's miss would be uninterpretable.
+
+### Result
+
+| cohort | n | ages | treatment | best MAE | Spearman | verdict |
+|---|---|---|---|---|---|---|
+| GSE165176 Gill | 5 | 0,29,35,53,53 | raw | 20.97 (worst 118.48) | -0.36 | **does not** |
+| GSE165176 Gill | 5 | | zscore | **14.84** | +0.667 | TRANSFERS (3/5) |
+| GSE165177 | 3 | 38,53,53 | raw | 12.86 | **-0.866** | does not |
+| GSE165177 | 3 | | zscore | 10.48 | **-0.866** | does not |
+
+**The solid finding is the failure.** RAW cross-cohort transfer is catastrophic -- MAE 70-118 yr
+on Gill at low alpha, with NEGATIVE correlation. A batch effect between GSE113957 (raw counts) and
+the Log2-RPM cohorts dominates the age signal completely.
+
+### Why the one PASS should not be leaned on
+
+The pre-registered rule fires for Gill/zscore, but three things weaken it:
+
+1. **n=5**, and Spearman 0.667 needs 1.0 to reach p<0.05 at that n.
+2. **MAE 14.84 against a baseline of 17.60** -- predicting the TRAINING median. A 16% improvement.
+3. **The z-score is TRANSDUCTIVE.** It standardises features using all five test samples, so it
+   needs the whole test cohort in hand. For a single new sample it is not available. Not a label
+   leak, but not deployable either.
+
+### GSE165177 is uninformative, not contrary evidence
+
+Its donors span 38-53 yr -- a **15 yr range against a ~12 yr instrument error**. There is no
+dynamic range to rank, and with n=3 and two tied ages Spearman is close to meaningless. The -0.866
+should NOT be read as evidence against transfer; the cohort cannot test it either way.
+
+### Standing answer to "we just need more donors"
+
+**Not established.** Within a cohort the representation reads age well (n=133, MAE 11.95, r 0.846).
+Across cohorts it does not, without a transductive correction whose supporting evidence is n=5 and
+marginal. The requirement is therefore not simply "more donors" -- it is **more donors PLUS a
+cross-cohort normalisation that works on a single sample**, and neither is demonstrated here.
+
+Two silent-failure bugs found and pinned: GSE165177 ships its samples across two matrices and the
+day-0 fibroblasts are only in `part2`; and its series matrix titles them `O1_Fib` while the
+expression header says `O1 Fib`, so the age join missed and the whole cohort vanished to an empty
+frame with no error.
+
+---
+
 ## 2026-08-15 - AGE CAPACITY at n=133: the representation CAN learn age. n was the problem, not the method
+
+> **[ANNOTATED 2026-08-16 -- original left standing.]** **QUALIFIED.** The transfer test above shows
+> this result does NOT cross cohorts without a transductive correction: raw transfer to Gill's day-0
+> fibroblasts gives MAE 70-118 yr with negative correlation. The capacity claim stands exactly as
+> written -- the representation CAN carry age, measured within cohort with donors held out -- but the
+> sentence "n was the problem, not the method" is too strong. Within-cohort n was *a* problem;
+> cross-cohort batch effect is a second one, and it is not fixed by more donors.
 
 **Status:** Executed, READ-ONLY, PRE-REGISTERED. New: `experiments/diag_age_capacity.py`,
 `tests/test_diag_age_capacity.py` (9 tests), `results/diag_age_capacity_results.json`.
