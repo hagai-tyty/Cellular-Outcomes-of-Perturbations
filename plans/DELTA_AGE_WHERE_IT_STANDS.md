@@ -125,3 +125,67 @@ rather than to a test.
 **The reachable version of the same ambition:** *ΔAge agreement with methylation at or inside the
 inter-clock RMS of 9.07 yr, demonstrated like-for-like on both reference clocks.* §1's 5.36 yr
 suggests that may already be met on one clock. **Item 2 settles it, and it is cheap.**
+
+---
+
+## 5. ✅ 2026-08-16 — THE LIKE-FOR-LIKE COMPARISON, RUN
+
+*`experiments/diag_instrument_floor.py`, read-only, reads `results/dage_ledger.csv` only. Bar
+pre-registered in the docstring before the numbers. 44 non-control conditions carrying **both**
+methylation truths — every pairing below is the **same rows, same statistic, paired per condition.***
+
+### The floor, measured
+
+| | |
+|---|---|
+| **methylation vs methylation (mt − sb)** | **MAE 7.30 yr**, RMS 9.45, mean signed −2.79 |
+| methylation ΔAge SD | mt **12.66**, sb **13.55** |
+| **the floor as a fraction of the truth's own spread** | **54 %** |
+
+**Corroboration:** `dage_meth_concordance` got RMS **9.07** on 9 *control groups*; this gets **9.45**
+on 44 *conditions*. Different row sets, same answer. **The floor is real and it is ~7.3 yr MAE.**
+
+### The result
+
+| variant | vs | MAE | RMS | ΔMAE vs floor | 95 % CI | |
+|---|---|---:|---:|---:|---|---|
+| **`raw` — the SHIPPED dense clock** | mt | **22.69** | 25.51 | **+15.39** | [+12.00, +18.93] | ❌ |
+| `raw` | sb | 25.49 | 29.65 | +18.19 | [+13.48, +22.83] | ❌ |
+| **`top100`** | **mt** | **7.15** | 8.93 | **−0.16** | **[−2.81, +2.38]** | ✅ **PASS** |
+| `top100` | sb | 11.27 | 13.71 | +3.97 | [+1.78, +6.20] | ❌ |
+| `top500` | mt / sb | 16.27 / 19.75 | | +8.96 / +12.45 | | ❌ |
+| `top2000` | mt / sb | 21.62 / 24.88 | | +14.32 / +17.58 | | ❌ |
+
+### Three things this establishes that were not established before
+
+1. **The shipped dense clock is 3× outside the instrument floor** — 22.69 against 7.30. Independent
+   of §0's "worse than predicting a constant", measured on a principled scale rather than against
+   zero. **This is the strongest statement yet about why ΔAge has been hard.**
+2. **`top100` sits ON the floor for multi-tissue.** 7.15 vs 7.30, **CI spanning zero** — statistically
+   indistinguishable from the disagreement between the two gold standards. **That is the strongest
+   positive claim available about ΔAge in this project**, and §1's 5.36 yr can now be read against
+   something.
+3. **The sb/mt SPLIT is quantified for the first time:** `top100` misses skin & blood by **+3.97 yr
+   beyond the floor, CI [+1.78, +6.20] — excluding zero.** §3 said the split "survives"; this says by
+   how much, on a scale with meaning. **§5.13's rejection of the sparse clock is vindicated with a
+   number rather than a rule.**
+
+### What it settles about the accuracy goal
+
+A **10 % target** on a truth whose SD is 12.66 yr is **MAE ≤ 1.36 yr**. The floor is **7.30 yr** —
+**5.4× larger**. **You cannot verify agreement to 1.36 yr using two rulers that disagree with each
+other by 7.30 yr.** The target is not hard; it is unverifiable with these instruments, and that is
+now measured rather than argued.
+
+**The reachable restatement, and `top100` already meets half of it:** *ΔAge agreement with
+methylation at or inside methylation's own self-disagreement.* Met on multi-tissue (−0.16, CI spans
+0). Not met on skin & blood (+3.97, CI excludes 0).
+
+### What it does NOT establish
+
+* **Two instruments agreeing does not make either correct.** 1.5.2's factor-loading arithmetic
+  (`λ_mt = 1.048 > 1`) already showed the three are **not** jointly consistent with one age factor.
+* **It does not rescue same-timepoint ΔAge PREDICTION**, which is circular at ρ 0.96
+  (`diag_clock_circularity`). This is a statement about the **measurement**, not about a model.
+* **Transient arm only, n = 44.** No Sendai condition carries both methylation truths, so `__POOLED__`
+  is the same 44 rows and is **not** an independent check.

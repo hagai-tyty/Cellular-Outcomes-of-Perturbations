@@ -11,6 +11,63 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-16 - THE LIKE-FOR-LIKE COMPARISON: top100 sits ON the instrument floor for multi-tissue
+
+**Status:** Measured. `experiments/diag_instrument_floor.py`, read-only, reads only the ledger.
+**`src/` untouched, no label moved.** Bar pre-registered in the docstring before the numbers.
+
+44 non-control conditions carrying **both** methylation truths - every pairing on the **same rows,
+same statistic, paired per condition**, which is exactly what §2 refused to assert without.
+
+### The floor
+
+**methylation vs methylation (mt - sb): MAE 7.30 yr, RMS 9.45**, mean signed -2.79. Methylation dAge
+SD: mt 12.66, sb 13.55 - so **the floor is 54% of the truth's own spread**.
+
+Corroboration: `dage_meth_concordance` got RMS 9.07 on 9 control groups; this gets 9.45 on 44
+conditions. Different row sets, same answer.
+
+### The result
+
+| variant | vs | MAE | dMAE vs floor | 95% CI | |
+|---|---|---:|---:|---|---|
+| **raw - the SHIPPED dense clock** | mt | **22.69** | **+15.39** | [+12.00,+18.93] | FAIL |
+| raw | sb | 25.49 | +18.19 | [+13.48,+22.83] | FAIL |
+| **top100** | **mt** | **7.15** | **-0.16** | **[-2.81,+2.38]** | **PASS** |
+| top100 | sb | 11.27 | +3.97 | [+1.78,+6.20] | FAIL |
+| top500 / top2000 | both | 16.3-24.9 | +9 to +18 | | FAIL |
+
+### Three things now established that were not
+
+1. **The shipped dense clock is 3x outside the instrument floor** - 22.69 against 7.30. Measured on
+   a principled scale rather than against zero.
+2. **top100 sits ON the floor for multi-tissue** - 7.15 vs 7.30, **CI spanning zero**, statistically
+   indistinguishable from the two gold standards' own disagreement. The strongest positive claim
+   available about dAge in this project.
+3. **The sb/mt SPLIT is quantified for the first time**: top100 misses skin & blood by **+3.97 yr
+   beyond the floor, CI excluding zero**. §5.13's rejection of the sparse clock is vindicated with a
+   number rather than a rule.
+
+### What it settles about the 10% goal
+
+10% of a 12.66 yr SD is **MAE <= 1.36 yr**. The floor is **7.30 yr - 5.4x larger**. **You cannot
+verify agreement to 1.36 yr with two rulers that disagree by 7.30 yr.** Not hard; unverifiable with
+these instruments, now measured rather than argued.
+
+**Reachable restatement, half of it already met:** *dAge agreement at or inside methylation's own
+self-disagreement.* Met on multi-tissue; not met on skin & blood.
+
+### Not established
+
+Two instruments agreeing does not make either correct - 1.5.2's factor-loading arithmetic
+(lambda_mt = 1.048 > 1) showed the three are not jointly consistent with one age factor. It does not
+rescue same-timepoint dAge PREDICTION, circular at rho 0.96. And it is **transient arm only, n = 44**
+- no Sendai condition carries both truths, so `__POOLED__` is the same rows and is not an
+independent check.
+
+---
+
+
 ## 2026-08-16 - AUDIT-3: the work is sound, the model did not get worse, and "10% error" is mis-specified
 
 **Status:** Read-only audit. **`src/` untouched, nothing withdrawn.**

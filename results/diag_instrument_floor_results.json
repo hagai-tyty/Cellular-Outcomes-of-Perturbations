@@ -1,0 +1,257 @@
+{
+  "script": "diag_instrument_floor",
+  "utc": "2026-08-16T10:29:50.650944+00:00",
+  "n_boot": 10000,
+  "seed": 0,
+  "ledger_rows": 90,
+  "by_arm": {
+    "transient": {
+      "n": 44,
+      "floor_mt_vs_sb": {
+        "mae": 7.303318181818181,
+        "rms": 9.454695396756817,
+        "mean_signed": -2.7859090909090907
+      },
+      "meth_dage_mean": {
+        "mt": -10.160977272727273,
+        "sb": -7.3750681818181825
+      },
+      "meth_dage_sd": {
+        "mt": 12.663260960837146,
+        "sb": 13.550737529739637
+      },
+      "variants": {
+        "raw": {
+          "mt": {
+            "mae": 22.68838636363636,
+            "rms": 25.506392645677174,
+            "mean_signed": -21.791022727272725,
+            "delta_mae_vs_floor": 15.38506818181818,
+            "ci95": [
+              11.99666136363636,
+              18.930073295454545
+            ],
+            "pass": false
+          },
+          "sb": {
+            "mae": 25.494840909090907,
+            "rms": 29.64918566220358,
+            "mean_signed": -24.57693181818182,
+            "delta_mae_vs_floor": 18.191522727272726,
+            "ci95": [
+              13.479062499999998,
+              22.827714772727273
+            ],
+            "pass": false
+          },
+          "pass_both_clocks": false
+        },
+        "top100": {
+          "mt": {
+            "mae": 7.146545454545454,
+            "rms": 8.92647712502734,
+            "mean_signed": -2.4911818181818184,
+            "delta_mae_vs_floor": -0.15677272727272662,
+            "ci95": [
+              -2.755944886363637,
+              2.3322051136363617
+            ],
+            "pass": true
+          },
+          "sb": {
+            "mae": 11.270818181818182,
+            "rms": 13.711244368632762,
+            "mean_signed": -5.2770909090909095,
+            "delta_mae_vs_floor": 3.967500000000001,
+            "ci95": [
+              1.7794386363636365,
+              6.197637499999998
+            ],
+            "pass": false
+          },
+          "pass_both_clocks": false
+        },
+        "top500": {
+          "mt": {
+            "mae": 16.265,
+            "rms": 19.859467458299903,
+            "mean_signed": -14.199499999999995,
+            "delta_mae_vs_floor": 8.96168181818182,
+            "ci95": [
+              5.22064488636364,
+              12.786193181818183
+            ],
+            "pass": false
+          },
+          "sb": {
+            "mae": 19.752363636363636,
+            "rms": 24.214526505047264,
+            "mean_signed": -16.985409090909087,
+            "delta_mae_vs_floor": 12.449045454545455,
+            "ci95": [
+              8.151331249999998,
+              16.847690340909093
+            ],
+            "pass": false
+          },
+          "pass_both_clocks": false
+        },
+        "top2000": {
+          "mt": {
+            "mae": 21.619704545454542,
+            "rms": 25.07594741933538,
+            "mean_signed": -20.429386363636365,
+            "delta_mae_vs_floor": 14.316386363636362,
+            "ci95": [
+              10.424916477272724,
+              18.22889431818182
+            ],
+            "pass": false
+          },
+          "sb": {
+            "mae": 24.880704545454545,
+            "rms": 29.406494931546852,
+            "mean_signed": -23.215295454545455,
+            "delta_mae_vs_floor": 17.577386363636364,
+            "ci95": [
+              12.723626136363634,
+              22.486723295454542
+            ],
+            "pass": false
+          },
+          "pass_both_clocks": false
+        }
+      }
+    },
+    "__POOLED__": {
+      "n": 44,
+      "floor_mt_vs_sb": {
+        "mae": 7.303318181818181,
+        "rms": 9.454695396756817,
+        "mean_signed": -2.7859090909090907
+      },
+      "meth_dage_mean": {
+        "mt": -10.160977272727273,
+        "sb": -7.3750681818181825
+      },
+      "meth_dage_sd": {
+        "mt": 12.663260960837146,
+        "sb": 13.550737529739637
+      },
+      "variants": {
+        "raw": {
+          "mt": {
+            "mae": 22.68838636363636,
+            "rms": 25.506392645677174,
+            "mean_signed": -21.791022727272725,
+            "delta_mae_vs_floor": 15.38506818181818,
+            "ci95": [
+              11.985243750000002,
+              18.845777840909086
+            ],
+            "pass": false
+          },
+          "sb": {
+            "mae": 25.494840909090907,
+            "rms": 29.64918566220358,
+            "mean_signed": -24.57693181818182,
+            "delta_mae_vs_floor": 18.191522727272726,
+            "ci95": [
+              13.460306249999999,
+              22.783180681818173
+            ],
+            "pass": false
+          },
+          "pass_both_clocks": false
+        },
+        "top100": {
+          "mt": {
+            "mae": 7.146545454545454,
+            "rms": 8.92647712502734,
+            "mean_signed": -2.4911818181818184,
+            "delta_mae_vs_floor": -0.15677272727272662,
+            "ci95": [
+              -2.813095454545453,
+              2.381163636363635
+            ],
+            "pass": true
+          },
+          "sb": {
+            "mae": 11.270818181818182,
+            "rms": 13.711244368632762,
+            "mean_signed": -5.2770909090909095,
+            "delta_mae_vs_floor": 3.967500000000001,
+            "ci95": [
+              1.7713176136363635,
+              6.1995801136363635
+            ],
+            "pass": false
+          },
+          "pass_both_clocks": false
+        },
+        "top500": {
+          "mt": {
+            "mae": 16.265,
+            "rms": 19.859467458299903,
+            "mean_signed": -14.199499999999995,
+            "delta_mae_vs_floor": 8.96168181818182,
+            "ci95": [
+              5.23952159090909,
+              12.671140909090907
+            ],
+            "pass": false
+          },
+          "sb": {
+            "mae": 19.752363636363636,
+            "rms": 24.214526505047264,
+            "mean_signed": -16.985409090909087,
+            "delta_mae_vs_floor": 12.449045454545455,
+            "ci95": [
+              8.207610795454546,
+              16.80797840909091
+            ],
+            "pass": false
+          },
+          "pass_both_clocks": false
+        },
+        "top2000": {
+          "mt": {
+            "mae": 21.619704545454542,
+            "rms": 25.07594741933538,
+            "mean_signed": -20.429386363636365,
+            "delta_mae_vs_floor": 14.316386363636362,
+            "ci95": [
+              10.393636363636366,
+              18.246311931818184
+            ],
+            "pass": false
+          },
+          "sb": {
+            "mae": 24.880704545454545,
+            "rms": 29.406494931546852,
+            "mean_signed": -23.215295454545455,
+            "delta_mae_vs_floor": 17.577386363636364,
+            "ci95": [
+              12.756423295454548,
+              22.40028522727272
+            ],
+            "pass": false
+          },
+          "pass_both_clocks": false
+        }
+      }
+    }
+  },
+  "verdict": {
+    "variants_inside_floor_on_BOTH_clocks": [],
+    "variants_inside_floor_per_clock": {
+      "raw": [],
+      "top100": [
+        "mt"
+      ],
+      "top500": [],
+      "top2000": []
+    },
+    "interpretation": "PASS means the RNA readout disagrees with that methylation clock no more than the two methylation clocks disagree with each other, on the SAME conditions with the SAME statistic. It does NOT mean the RNA clock is correct, and it does not rescue same-timepoint dAge PREDICTION, which is circular at rho 0.96."
+  }
+}
