@@ -193,6 +193,42 @@ both clocks.** §1's 5.36 suggests it may already be met on one. Item 2 settles 
 ---
 
 
+## 2026-08-16 - FATE AUDIT: the head is PARTLY riding day, but not only day -- and my earlier claim was wrong
+
+**Status:** Executed, READ-ONLY, computed from `scorecard/c7_A_keep_hff.json` (`_fate_S`/`_fate_y`)
+and the built shards. No new build.
+
+**Correcting my own claim first.** The 2026-08-15 entry stating "the fate label is a DAY THRESHOLD"
+was generalised from ONE donor's shard (O1), which happens to have a clean split. It does not hold
+across the cohort and should not have been stated as a general finding.
+
+Tested properly -- if the label were a day threshold and `dose_time` is a model input, then DAY
+ALONE should score as well as the model:
+
+| fold | n | model AUC | day-only AUC | label separation |
+|---|---|---|---|---|
+| N3 | 20 | 1.000 | **0.760** | unsafe from d11 -- overlaps |
+| O1 | 21 | 1.000 | **1.000** | clean split d29/d34 |
+| O2 | 20 | 1.000 | **1.000** | clean split d29/d34 |
+| Y1 | 18 | 0.838 | **0.669** | unsafe from d9 -- overlaps |
+| Y2 | 21 | 1.000 | **0.969** | unsafe from d21 |
+
+Mean model 0.968, mean day-only 0.880.
+
+**Verdict: mixed, and materially better than the ΔAge head.** In O1 and O2 the label IS a clean day
+threshold and the model adds nothing over a calendar. In N3, Y1 and Y2 the label genuinely overlaps
+days and the model beats day-only by 0.24, 0.17 and 0.03. So the headline number is INFLATED by the
+day correlation, but there is real separation underneath that a day threshold cannot produce.
+
+**This is NOT the ΔAge circularity repeating.** There, the target is a linear readout of the input
+at rho 0.96-0.99. Here the label is not recoverable from the input by construction, and the margin
+over day-only is genuine signal.
+
+Caveats: n=18-21 per fold, all Gill bulk; AUC 1.000 over ~20 points with ~4 positives is easy to
+reach; and this pits a 33k-cell-trained model against a single feature.
+
+---
+
 ## 2026-08-16 - OUT-OF-COHORT TRANSFER: NOT established. Raw transfer fails catastrophically
 
 **Status:** Executed, READ-ONLY, PRE-REGISTERED. New: `experiments/diag_age_transfer.py`,
