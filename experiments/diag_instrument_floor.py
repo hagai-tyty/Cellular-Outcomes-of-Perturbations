@@ -34,15 +34,28 @@ against itself by construction and would deflate every number identically.
 
 THE BAR, PRE-REGISTERED BEFORE THE NUMBERS
 -------------------------------------------
-**PASS** for a given RNA variant and reference clock R:
+**PASS** for a given RNA variant and reference clock R requires BOTH:
 
-    MAE(rna, R)  <=  MAE(mt, sb)
+    (i)   MAE(rna, R)  <=  MAE(mt, sb)         inside the floor
+    (ii)  MAE(rna, R)  <   MAE(0, R)           beats a CONSTANT-ZERO predictor
 
-i.e. the RNA readout disagrees with that methylation clock **no more than the two methylation clocks
-disagree with each other**. A 95 % bootstrap CI (10 000 resamples over conditions, paired) is
-reported on the difference `MAE(rna,R) - MAE(mt,sb)`; **PASS requires the point estimate to clear
-and the CI to be reported, not to be significant** — with n this size, demanding significance would
-be a bar no correct system could clear (§5b).
+**(ii) is not optional and the test is close to worthless without it.** A predictor that collapses
+toward zero scores a low MAE while carrying no information, and §0 caught exactly that on the Sendai
+arm: `top100`'s apparent gain there was the prediction sliding onto the clock's intercept
+b0 = 72.43, its SD falling to 6.50 against truth's 14.75. So a constant-zero predictor is scored
+against both references on the SAME rows, and a variant inside the floor that does NOT beat it is
+reported as `shrinkage!` rather than as a pass.
+
+Reported per variant, ungraded but diagnostic: **SD ratio** against the truth (a shrunk predictor
+has SD << 1) and **Spearman rho** — because §2's lesson was that a correlation cannot see a bias,
+and its inverse is equally true: an MAE cannot see a lost ordering.
+
+A 95 % bootstrap CI (10 000 resamples over conditions, paired) is reported on
+`MAE(rna,R) - MAE(mt,sb)`; **PASS requires the point estimate to clear, NOT the CI to exclude
+zero** — at n = 44 demanding significance would be a bar no correct system could clear (§5b).
+
+**All nine ledger variants are scored, not a subset.** Choosing which to report after seeing the
+numbers is how a family-wise result becomes a cherry-picked one.
 
 WHAT A PASS WOULD AND WOULD NOT MEAN
 -------------------------------------
@@ -71,8 +84,10 @@ _RESULTS.mkdir(exist_ok=True)
 LEDGER = ROOT / "results" / "dage_ledger.csv"
 N_BOOT = 10000
 SEED = 0
-# The RNA variants worth the comparison: the shipped clock, and §1's sparse candidate.
-VARIANTS = ("raw", "top100", "top500", "top2000")
+# ALL nine ledger variants, not a chosen subset -- picking which to score after seeing the
+# numbers is how a family-wise result becomes a cherry-picked one.
+VARIANTS = ("raw", "top100", "top500", "top2000", "covnorm", "ranknorm",
+            "resid_cc", "resid_pluri", "resid_both")
 
 
 def _f(row: dict, key: str) -> float:
@@ -143,37 +158,60 @@ def main() -> int:
         mt = np.array([_f(r, "TRUTH_meth_dage_mt") for r in sub])
         sb = np.array([_f(r, "TRUTH_meth_dage_sb") for r in sub])
         floor = mt - sb                                   # the reference self-disagreement
+        # ---- THE SHRINKAGE CONTROL, without which the floor test is gameable ---------- #
+        # A predictor that collapses toward zero scores a LOW MAE while carrying no
+        # information. §0 caught exactly this on the Sendai arm, where top100's "improvement"
+        # was the prediction sliding onto the clock's intercept. So a constant-zero predictor
+        # is scored against the floor on the SAME rows, and any variant that fails to beat it
+        # is disqualified no matter how well it does against the floor.
+        zero = np.zeros(len(sub))
+        z_mt, z_sb = zero - mt, zero - sb
         rec: dict = {"n": len(sub),
                      "floor_mt_vs_sb": {"mae": mae(floor), "rms": rms(floor),
                                         "mean_signed": float(np.mean(floor))},
                      "meth_dage_mean": {"mt": float(mt.mean()), "sb": float(sb.mean())},
                      "meth_dage_sd": {"mt": float(mt.std(ddof=1)), "sb": float(sb.std(ddof=1))},
+                     "constant_zero_control": {"mae_vs_mt": mae(z_mt), "mae_vs_sb": mae(z_sb)},
                      "variants": {}}
 
-        print(f"\n{'='*78}\n[{arm}]  n = {len(sub)} conditions")
+        print(f"\n{'='*100}\n[{arm}]  n = {len(sub)} conditions")
         print(f"  THE FLOOR — methylation vs methylation (mt − sb): "
               f"MAE {mae(floor):6.2f}   RMS {rms(floor):6.2f}   mean {np.mean(floor):+6.2f}")
-        print(f"\n  {'variant':>9} {'vs':>3} {'MAE':>7} {'RMS':>7} {'ΔMAE vs floor':>14} "
-              f"{'95% CI':>20}  {'':>6}")
+        print(f"  truth SD: mt {mt.std(ddof=1):5.2f}  sb {sb.std(ddof=1):5.2f}    "
+              f"CONSTANT-ZERO control: MAE {mae(z_mt):5.2f} (mt)  {mae(z_sb):5.2f} (sb)")
+        print(f"\n  {'variant':>11} {'vs':>3} {'MAE':>7} {'Δ floor':>8} {'95% CI':>18} "
+              f"{'SDratio':>8} {'rho':>6} {'beats0':>7}  {'verdict':>9}")
 
         for v in VARIANTS:
             col = f"ACTUAL_rna_dage_{v}"
             if col not in sub[0]:
+                print(f"  {v:>11}  -- column absent from the ledger, skipped")
                 continue
             rna = np.array([_f(r, col) for r in sub])
             if not np.isfinite(rna).all():
-                print(f"  {v:>9}  -- non-finite values, skipped")
+                print(f"  {v:>11}  -- non-finite values, skipped")
                 continue
-            vrec = {}
-            for name, ref in (("mt", mt), ("sb", sb)):
+            vrec: dict = {"sd": float(rna.std(ddof=1)), "mean": float(rna.mean())}
+            for name, ref, zc in (("mt", mt, z_mt), ("sb", sb, z_sb)):
                 d = rna - ref
                 lo, hi = boot_ci(d, floor, rng)
                 dm = mae(d) - mae(floor)
-                ok = mae(d) <= mae(floor)
+                inside = mae(d) <= mae(floor)
+                beats0 = mae(d) < mae(zc)
+                sd_ratio = float(rna.std(ddof=1) / ref.std(ddof=1))
+                # Spearman without scipy: Pearson on ranks.
+                ra = np.argsort(np.argsort(rna)).astype(float)
+                rb = np.argsort(np.argsort(ref)).astype(float)
+                rho = float(np.corrcoef(ra, rb)[0, 1])
+                ok = bool(inside and beats0)
                 vrec[name] = {"mae": mae(d), "rms": rms(d), "mean_signed": float(np.mean(d)),
-                              "delta_mae_vs_floor": dm, "ci95": [lo, hi], "pass": bool(ok)}
-                print(f"  {v:>9} {name:>3} {mae(d):7.2f} {rms(d):7.2f} {dm:+14.2f} "
-                      f"  [{lo:+7.2f},{hi:+7.2f}]  {'PASS' if ok else 'fail':>6}")
+                              "delta_mae_vs_floor": dm, "ci95": [lo, hi],
+                              "inside_floor": bool(inside), "beats_constant_zero": bool(beats0),
+                              "sd_ratio_vs_truth": sd_ratio, "spearman": rho, "pass": ok}
+                verdict = "PASS" if ok else ("shrinkage!" if inside and not beats0 else "fail")
+                print(f"  {v:>11} {name:>3} {mae(d):7.2f} {dm:+8.2f} "
+                      f"[{lo:+6.2f},{hi:+6.2f}] {sd_ratio:8.2f} {rho:+6.2f} "
+                      f"{'yes' if beats0 else 'NO':>7}  {verdict:>9}")
             vrec["pass_both_clocks"] = bool(vrec["mt"]["pass"] and vrec["sb"]["pass"])
             rec["variants"][v] = vrec
         out["by_arm"][arm] = rec

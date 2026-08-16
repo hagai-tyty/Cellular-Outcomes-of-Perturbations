@@ -189,3 +189,79 @@ methylation at or inside methylation's own self-disagreement.* Met on multi-tiss
   (`diag_clock_circularity`). This is a statement about the **measurement**, not about a model.
 * **Transient arm only, n = 44.** No Sendai condition carries both methylation truths, so `__POOLED__`
   is the same 44 rows and is **not** an independent check.
+
+---
+
+## 6. 2026-08-16 — ALL NINE VARIANTS, WITH THE SHRINKAGE CONTROL. And the split explains itself.
+
+*Same 44 conditions, same statistic. **All nine ledger variants**, not a subset. Bar amended before
+the run to require beating a constant-zero predictor — §0 caught a shrinkage artefact once already.*
+
+```
+THE FLOOR      methylation vs methylation (mt-sb)   MAE  7.30    RMS 9.45
+TRUTH SD       mt 12.66   sb 13.55
+CONSTANT-ZERO  MAE 11.71 (mt)   9.89 (sb)      <- any variant must beat THIS to count
+```
+
+| variant | vs | MAE | Δ floor | 95 % CI | SD ratio | rho | beats 0? | |
+|---|---|---:|---:|---|---:|---:|:---:|---|
+| **`raw` (shipped)** | mt | **22.69** | +15.39 | [+12.00,+18.93] | 1.66 | +0.77 | **NO** | ❌ |
+| `raw` | sb | 25.49 | +18.19 | [+13.48,+22.83] | 1.55 | +0.47 | **NO** | ❌ |
+| **`top100`** | **mt** | **7.15** | **−0.16** | **[−2.76,+2.33]** | **0.98** | **+0.81** | **yes** | ✅ **PASS** |
+| `top100` | sb | 11.27 | +3.97 | [+1.78,+6.20] | 0.91 | +0.45 | NO | ❌ |
+| `top500` | mt / sb | 16.27 / 19.75 | +8.96 / +12.45 | | 1.74 | +0.76 | NO | ❌ |
+| `top2000` | mt / sb | 21.62 / 24.88 | +14.32 / +17.58 | | 1.78 | +0.77 | NO | ❌ |
+| `covnorm` | mt / sb | 26.53 / 29.34 | +19.22 / +22.03 | | 1.86 | +0.77 | NO | ❌ |
+| ⚠️ `ranknorm` | mt / sb | 10.15 / 9.10 | +2.85 / +1.80 | **CI spans 0 on both** | **0.30 / 0.28** | **+0.14** | yes | ❌ |
+| `resid_cc` | mt / sb | 23.65 / 26.46 | +16.35 / +19.15 | | 1.67 | +0.77 | NO | ❌ |
+| `resid_pluri` | mt / sb | 13.00 / 12.78 | +5.69 / +5.48 | | 1.14 | +0.35 | NO | ❌ |
+| `resid_both` | mt / sb | 12.91 / 12.84 | +5.61 / +5.54 | | 1.14 | +0.38 | NO | ❌ |
+
+### Four findings, and the last one is the important one
+
+**1. The shipped dense clock LOSES to predicting nothing — on BOTH references.** 22.69 against a
+constant-zero 11.71, and 25.49 against 9.89. **Roughly twice as bad as a predictor that outputs 0.**
+§0 said this for one clock and one statistic; it now holds on both references, like-for-like.
+
+**2. `top100` is the only pass, and the controls confirm it is not an artefact.** SD ratio **0.98**
+(spread preserved, not shrunk) and rho **+0.81**. Both diagnostics had to come out right; both did.
+
+**3. The shrinkage control earned its place on the first run.** `ranknorm` beats constant-zero on
+**both** clocks and its Δfloor CI **spans zero on both** — on the headline numbers it looks like the
+best all-rounder in the family. Its SD ratio is **0.30 / 0.28** and its rho is **+0.14**. **It is a
+collapsed predictor.** Without the SD and rho diagnostics it would have been reported as a second
+candidate.
+
+### 4. 🔑 The skin-and-blood failure is fully explained by that clock's disagreement with multi-tissue
+
+| | Spearman |
+|---|---:|
+| **reference vs reference — mt vs sb** | **+0.613** |
+| `top100` vs **mt** | **+0.810** |
+| `top100` vs sb | +0.450 |
+| **predicted if sb reaches the RNA readout ONLY through mt** (0.810 × 0.613) | **+0.497** |
+| **observed** | **+0.450** — gap **−0.046** |
+
+> **`top100` orders multi-tissue (0.810) better than skin & blood orders multi-tissue (0.613).** The
+> RNA readout agrees with one gold standard more closely than the two gold standards agree with each
+> other — on ordering, not merely on error.
+
+> **And its agreement with skin & blood is within 0.05 of exactly what pure mediation through
+> multi-tissue predicts.** No residual failure remains to attribute to the RNA side.
+
+**The family-wise evidence says the same thing.** Across all nine variants, rho against **mt** spans
+**+0.14 → +0.81** (0.67 wide); rho against **sb** spans **+0.29 → +0.48** (0.19 wide). **Nine
+variants ranging from excellent to useless on multi-tissue move skin & blood's ordering by 0.19.**
+Whatever sb measures beyond mt is **invariant to everything tried on the RNA side.**
+
+### What this does and does not license
+
+* It does **not** license narrowing the estimand to multi-tissue. 1.5.2 refuted that on the
+  factor-loading arithmetic (`λ_mt = 1.048 > 1`), and **this analysis independently agrees with
+  1.5.2**: ρ(mt,sb) = 0.613 beside ρ(rna,mt) = 0.810 is exactly what "three instruments not
+  consistent with one common factor" looks like.
+* It **does** establish a bounded negative: **the sb-specific component is not accessible from RNA
+  in this dataset, across the entire nine-variant family.** A measured limit, not a preference.
+* **§5.13's rejection of the sparse clock stands** — `top100` does not clear both references. What
+  changes is the *reason on record*: not "the RNA readout is too weak", but **"the two reference
+  clocks agree with each other at ρ 0.613, and the RNA readout tracks one of them at 0.810."**

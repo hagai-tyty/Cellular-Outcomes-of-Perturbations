@@ -11,6 +11,64 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-16 - ALL NINE VARIANTS vs the instrument floor, with a shrinkage control
+
+**Status:** Measured. `experiments/diag_instrument_floor.py`, read-only, ledger only. **`src/`
+untouched, no label moved.** Bar amended **before** the run to require beating a constant-zero
+predictor.
+
+Floor MAE 7.30 (mt-sb). Truth SD mt 12.66 / sb 13.55. **Constant-zero control: MAE 11.71 (mt),
+9.89 (sb).**
+
+### Four findings
+
+**1. The shipped dense clock LOSES to predicting nothing, on BOTH references** - 22.69 against
+11.71 (mt) and 25.49 against 9.89 (sb), roughly 2x worse than outputting 0. §0 said this for one
+clock and one statistic; it now holds on both, like-for-like.
+
+**2. top100 is the only pass, and it is not an artefact** - MAE 7.15 vs floor 7.30 (CI spans 0),
+**SD ratio 0.98**, **rho +0.81**.
+
+**3. The shrinkage control earned its place on the first run.** `ranknorm` beats constant-zero on
+**both** clocks and its delta-floor CI **spans zero on both** - on headline numbers, the best
+all-rounder in the family. **SD ratio 0.30 / 0.28, rho +0.14.** A collapsed predictor. Without the
+SD and rho diagnostics it would have been reported as a second candidate.
+
+**4. THE SKIN-AND-BLOOD FAILURE IS FULLY EXPLAINED BY THAT CLOCK'S DISAGREEMENT WITH MULTI-TISSUE.**
+
+| | Spearman |
+|---|---|
+| **mt vs sb (reference vs reference)** | **+0.613** |
+| top100 vs mt | **+0.810** |
+| top100 vs sb | +0.450 |
+| predicted if sb reaches the RNA readout only through mt (0.810 x 0.613) | **+0.497** |
+| observed | **+0.450**, gap **-0.046** |
+
+**top100 orders multi-tissue (0.810) better than skin and blood orders multi-tissue (0.613)** - the
+RNA readout agrees with one gold standard more closely than the two gold standards agree with each
+other. **And its sb agreement is within 0.05 of pure mediation through mt, so no residual failure
+remains to attribute to the RNA side.**
+
+Family-wise: rho against mt spans **+0.14 to +0.81** (0.67 wide); rho against sb spans **+0.29 to
++0.48** (0.19 wide). **Nine variants ranging from excellent to useless on mt move sb's ordering by
+0.19.** Whatever sb measures beyond mt is invariant to everything tried on the RNA side.
+
+### What it licenses
+
+**Not** narrowing the estimand - 1.5.2 refuted that on factor loadings (lambda_mt = 1.048 > 1), and
+this **independently agrees with 1.5.2**: rho(mt,sb) = 0.613 beside rho(rna,mt) = 0.810 is exactly
+what "three instruments not consistent with one common factor" looks like.
+
+**Does** establish a bounded negative: **the sb-specific component is not accessible from RNA in
+this dataset across the entire nine-variant family.** A measured limit, not a preference.
+
+**§5.13's rejection stands.** What changes is the reason on record: not "the RNA readout is too
+weak" but **"the two references agree with each other at rho 0.613, and the RNA tracks one at
+0.810."**
+
+---
+
+
 ## 2026-08-16 - THE LIKE-FOR-LIKE COMPARISON: top100 sits ON the instrument floor for multi-tissue
 
 **Status:** Measured. `experiments/diag_instrument_floor.py`, read-only, reads only the ledger.
