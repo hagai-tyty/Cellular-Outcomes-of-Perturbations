@@ -1,0 +1,174 @@
+{
+  "n_trajectories": 17,
+  "median_abs_move": 3.6036797958868148,
+  "trajectories": [
+    {
+      "donor": "O1",
+      "arm": "failed_to_transiently_reprogram",
+      "early": 12.31761560735797,
+      "late": 4.880758351839948
+    },
+    {
+      "donor": "O1",
+      "arm": "failing_to_transiently_reprogram_intermediate",
+      "early": -5.754795129630381,
+      "late": -0.8039772844010638
+    },
+    {
+      "donor": "O1",
+      "arm": "negative_control",
+      "early": 13.235313514121794,
+      "late": 11.048073426149482
+    },
+    {
+      "donor": "O1",
+      "arm": "negative_control_intermediate",
+      "early": 10.819418777700259,
+      "late": 4.266563575668942
+    },
+    {
+      "donor": "O1",
+      "arm": "transient_reprogramming_intermediate",
+      "early": -17.248952661126005,
+      "late": -14.002588951557001
+    },
+    {
+      "donor": "O1",
+      "arm": "transiently_reprogrammed",
+      "early": 9.416493869692466,
+      "late": 1.7164138148087988
+    },
+    {
+      "donor": "O2",
+      "arm": "failed_to_transiently_reprogram",
+      "early": 23.940098480141195,
+      "late": 17.27904770910547
+    },
+    {
+      "donor": "O2",
+      "arm": "failing_to_transiently_reprogram_intermediate",
+      "early": -0.43864301333917055,
+      "late": 1.2914316548453493
+    },
+    {
+      "donor": "O2",
+      "arm": "negative_control",
+      "early": 24.004158574286134,
+      "late": 23.41890402515459
+    },
+    {
+      "donor": "O2",
+      "arm": "negative_control_intermediate",
+      "early": 17.54497732625966,
+      "late": 13.64816482949188
+    },
+    {
+      "donor": "O2",
+      "arm": "transient_reprogramming_intermediate",
+      "early": -13.395090814789931,
+      "late": -10.450775191675799
+    },
+    {
+      "donor": "O2",
+      "arm": "transiently_reprogrammed",
+      "early": 17.514580486201684,
+      "late": 18.904084412913356
+    },
+    {
+      "donor": "O3",
+      "arm": "failed_to_transiently_reprogram",
+      "early": 20.177261284451284,
+      "late": 15.268167589029774
+    },
+    {
+      "donor": "O3",
+      "arm": "failing_to_transiently_reprogram_intermediate",
+      "early": -0.8005611868419698,
+      "late": 2.803118609044845
+    },
+    {
+      "donor": "O3",
+      "arm": "negative_control",
+      "early": 21.509518654027595,
+      "late": 20.21892170956831
+    },
+    {
+      "donor": "O3",
+      "arm": "negative_control_intermediate",
+      "early": 14.587915052201817,
+      "late": 11.20991245195472
+    },
+    {
+      "donor": "O3",
+      "arm": "transiently_reprogrammed",
+      "early": 13.30503561666491,
+      "late": 8.189714664113634
+    }
+  ],
+  "forward": {
+    "alphas": {
+      "1.0": {
+        "observed": 0.6838235294117648,
+        "null_p95": 0.43394607843137245,
+        "pass": true
+      },
+      "10.0": {
+        "observed": 0.6838235294117648,
+        "null_p95": 0.4584558823529411,
+        "pass": true
+      },
+      "100.0": {
+        "observed": 0.6470588235294119,
+        "null_p95": 0.4683823529411763,
+        "pass": true
+      },
+      "1000.0": {
+        "observed": 0.590686274509804,
+        "null_p95": 0.3849264705882352,
+        "pass": true
+      },
+      "10000.0": {
+        "observed": 0.44117647058823534,
+        "null_p95": 0.29191176470588215,
+        "pass": true
+      }
+    },
+    "n_pass": 5
+  },
+  "control_persistence": {
+    "early_only_best": 0.9681372549019608,
+    "full_best": 0.6838235294117648,
+    "expression_adds": false
+  },
+  "control_within_donor_null": {
+    "alphas": {
+      "1.0": {
+        "observed": 0.6838235294117648,
+        "null_p95": 0.28921568627450983,
+        "pass": true
+      },
+      "10.0": {
+        "observed": 0.6838235294117648,
+        "null_p95": 0.3138480392156862,
+        "pass": true
+      },
+      "100.0": {
+        "observed": 0.6470588235294119,
+        "null_p95": 0.27941176470588236,
+        "pass": true
+      },
+      "1000.0": {
+        "observed": 0.590686274509804,
+        "null_p95": 0.16678921568627442,
+        "pass": true
+      },
+      "10000.0": {
+        "observed": 0.44117647058823534,
+        "null_p95": -0.041299019607843476,
+        "pass": true
+      }
+    },
+    "n_pass": 5
+  },
+  "verdict": "NULL"
+}

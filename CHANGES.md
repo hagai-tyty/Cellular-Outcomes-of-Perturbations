@@ -193,6 +193,110 @@ both clocks.** §1's 5.36 suggests it may already be met on one. Item 2 settles 
 ---
 
 
+## 2026-08-16 - THREE TESTS (+ a Phase 0 nobody asked for): every one lands NEGATIVE, and two of my own hypotheses died
+
+**Status:** Executed, READ-ONLY, pre-registered in `plans/THREE_TESTS_PREREG.md` BEFORE any run.
+New: `experiments/diag_clock_difference_capacity.py`, `diag_phase1_top100.py`,
+`diag_phase2_harmonized_transfer.py`, `diag_phase3_within_donor_forward.py`,
+`tests/test_three_phases.py` (12 tests), four results JSONs. Suite green (1286), ruff clean.
+
+### PHASE 0 -- which clock, and the two hypotheses it killed (both mine)
+
+The brief was "redo everything on top100". That hides an assumption, and testing it changed what
+every later phase used.
+
+**Part A was INVALID and is recorded as such.** Scoring the shipped clock on GSE113957 gave
+**MAE 0.13 yr, r = 1.000** against a published `cv_mae` of **12.27** -- a 94x gap. The clock was
+FITTED on those 133 donors; that is memorisation, not capacity. The pre-registration flagged this
+cohort as "optimistic for raw by construction" -- right in direction, wrong by two orders of
+magnitude. Kept, not deleted: it quantifies how overfit the shipped dense clock is.
+
+**Part B (refit inside CV folds, truncate the refit, score out of fold) -- MECHANISM NOT SUPPORTED.**
+My hypothesis was that dense noise-weights cancel in absolute age but compound in a DIFFERENCE, so
+sparsity should help ΔAge. It does not:
+
+| level | MAE_abs | MAE_diff | (alpha=10) |
+|---|---|---|---|
+| full | **12.36** | **17.80** | reproduces the published cv_mae 12.27 -- the refit is sound |
+| top2000 | 12.67 | 18.19 | |
+| top100 | 20.24 | 27.73 | clearly worse on BOTH |
+
+Absolute and difference winners are identical in 4/4 alphas. Two by-products worth keeping:
+`MAE_diff ~ sqrt(2) x MAE_abs` throughout (17.80 vs 17.48 predicted), so **the earlier ΔAge noise
+estimate was right** -- errors compound as independent; and the refit reproducing 12.27 validates
+the procedure.
+
+**Part C -- my replacement hypothesis died too.** "Truncation removes cohort-specific overfitting,
+so it helps OUT of cohort." On Gill's day-0 fibroblasts (n=5, ages 0-53): raw rho **0.872**,
+top2000 0.872, top500 0.616, **top100 0.616**. Truncation does not help out of cohort either.
+(GSE165177 rho 0.000 at every level -- 38/53/53, no dynamic range, exactly as pre-registered.)
+
+**What actually explains top100's instrument-floor win: the PERTURBATION.** From the ledger, 44
+reprogramming conditions vs multi-tissue methylation:
+
+| variant | MAE | SD ratio | removes |
+|---|---|---|---|
+| raw | 22.69 | 1.66 | nothing |
+| resid_cc | 23.65 | 1.67 | cell cycle -- **no help** |
+| **resid_pluri** | **13.00** | **1.14** | **pluripotency** |
+| top2000 -> top500 -> top100 | 21.62 -> 16.27 -> **7.15** | 1.78 -> 1.74 -> **0.98** | progressively more |
+
+Regressing out pluripotency alone nearly halves the error and removes most of the 66% magnitude
+inflation; cell cycle does nothing. Combined with Parts B and C -- where truncation HURTS on resting
+samples -- the mechanism is that **the dense clock reads the reprogramming programme on top of age**.
+
+**Licensed rule, replacing "use top100 everywhere": dense for RESTING samples, top100 for PERTURBED
+ones.**
+
+### PHASE 1 -- both ΔAge forward tests on top100. UNCHANGED, and one gets WORSE
+
+- **early -> late partial given donor age: -0.064 -> -0.443.** A large move, still short of the
+  df=3 bar (|r| > 0.878). Verdict **UNCHANGED**, magnitude reported as the plan required.
+  Notably the dense clock's headline correlations largely evaporate on the clean instrument
+  (`early_cd13 ~ late`: +0.830 -> **-0.063**), consistent with them having been contamination.
+- **late residual from early expression: SIGNAL -> NULL, 0/5 alphas** (LOO rho 0.657 vs null p95
+  0.771). The 2026-08-15 "first positive result" was an artifact of the contaminated clock. The
+  robustness sweep already said FRAGILE; a better instrument now kills the baseline outright. Two
+  independent lines, same answer.
+
+### PHASE 2 -- transfer through the project's own Harmonizer. DOES NOT WORK
+
+Gill, n=5: best MAE **14.84**, Spearman **0.667**, **2/5 alphas** -- short of a majority.
+Baseline (predict the training median) is 17.60.
+
+**The Harmonizer is no better than the crude z-score** it was meant to replace (z-score got 3/5 at
+the same 14.84 / 0.667). So the earlier "transductive correction" caveat was not the issue: the
+project's own cross-cohort machinery does not rescue transfer either. GSE165177 excluded from the
+verdict as pre-registered (no dynamic range).
+
+### PHASE 3 -- the within-donor forward test. RAW SIGNAL, then NULL on control
+
+GSE165177's design holds donor age constant by construction: 17 (donor, arm) trajectories over
+d10->d17, 3 donor clusters. Precondition met (median |move| 3.60). Raw result: **LODO Spearman
+0.684, beats the permutation null 5/5 alphas** -- and it also beats a **structure-preserving**
+(within-donor) null 5/5, so it is not merely reading donor offsets.
+
+**Then the persistence control killed it:**
+
+```
+spearman(early, late) directly     : +0.971
+early SCORE alone, 1 feature, LODO : +0.968
+full 1903-gene expression, LODO    : +0.684
+```
+
+The trajectory barely moves across the window, so "predict late from early" is predicting a nearly
+unchanged number -- and **1,903 genes do WORSE than one number**. FINAL: **NULL**. Without that
+control this would have been reported as a forward result with the donor-age confound removed.
+
+### The honest summary of the four
+
+Every phase landed negative, two of my own mechanistic hypotheses were refuted by my own tests, and
+the one thing that survived is a **mechanism**: ΔAge under reprogramming is contaminated by
+pluripotency, and both truncation and explicit residualisation reduce it. That is the finding
+worth keeping.
+
+---
+
 ## 2026-08-16 - FATE AUDIT: the head is PARTLY riding day, but not only day -- and my earlier claim was wrong
 
 **Status:** Executed, READ-ONLY, computed from `scorecard/c7_A_keep_hff.json` (`_fate_S`/`_fate_y`)
