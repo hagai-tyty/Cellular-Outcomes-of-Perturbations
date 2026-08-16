@@ -11,6 +11,73 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-16 - AUDIT-3: the work is sound, the model did not get worse, and "10% error" is mis-specified
+
+**Status:** Read-only audit. **`src/` untouched, nothing withdrawn.**
+
+### Three findings decide everything, and all three are his
+
+**A. CIRCULARITY - the most valuable result of the arc.** Of the model's 2,000-gene panel, **1,956
+carry Fleischer clock weights**, retaining **21.4%** of the clock's absolute weight mass. The
+clock's own weights on that panel reconstruct the label at **rho 0.96-0.97**; ridge reproduces it at
+**0.96-0.99** on all five evaluable folds. **The label is a linear functional of the input.** So the
+5.84 yr MAE measures panel fidelity, not prediction. **A 10% target here is achievable and
+meaningless** - add clock genes to the panel and it falls toward zero having learned nothing.
+
+**B. "early dAge -> late dAge" is already dead.** Early->late Pearson 0.741, but **donor age ->
+late is 0.931 (Spearman 0.971)**, and early->late **partialling out donor age is -0.064**. Donor age
+does all the work and is known at t=0. The follow-up (early EXPRESSION -> late residual after age)
+is **FRAGILE: 3 of 9, effectively 1 of 9**.
+
+**C. Regime E fired P0, and my GSE165177 recommendation was WRONG.** I argued 7-8 samples per
+timepoint would fix `p_unsafe`'s saturation. It cannot, for a structural reason: *"p_unsafe is a
+fraction of CELLS; a bulk sample is already a population average, so a per-sample hard label
+collapses the fraction to 0/1."* Measured `unsafe_sd_by_donor`: O1 0.10, O2 **0.00**, O3 **0.00**.
+I confused replication at the SAMPLE level with resolution at the CELL level. **He is right.** What
+GSE165177 does still fix - replicated contemporaneous controls - stands, and is why
+`dage_gse165177` reproduced Gill 2022.
+
+### The ceiling, and it is not the model
+
+`dage_meth_concordance`: **inter-clock RMS between Horvath skin&blood and Horvath multi-tissue on
+the same samples = 9.07 yr.** Typical HFF day-14 dAge after C-7 is ~-6.5 yr. **The two reference
+instruments disagree with each other by more than the effect being measured.** A 10% target on
+-6.5 yr is +/-0.65 yr. **No architecture, dataset or loss moves that.**
+
+§1's RNA-vs-methylation MAE of **5.36 yr** should be read against 9.07, not against zero - on its
+face the RNA readout agrees with one methylation clock better than the two clocks agree with each
+other. **NOT yet established like-for-like** (MAE on 68 conditions vs RMS on 9 control groups -
+§0's ERROR 2 was exactly this mistake), **but one cheap analysis from being established, and it is
+the highest-value number left.**
+
+### Did the model get worse? No.
+
+`diag_target_path` shows median compression 0.826 -> 0.534 after C-7. That reads as worse and is
+not: **C-7 removed a contaminant that inflated HFF's labels ~3x** (fold spread 16.67 -> 3.69 yr), so
+a model partly fitting an artefact now has less artefact to fit. His own audit says it: *"N3's
+'improvement' is not the model improving."* **Degrading against a contaminated baseline is the
+expected sign of a real correction.**
+
+### What to do - dAge STAYS; what changes is which claim is defensible
+
+1. **Stop optimising same-timepoint dAge accuracy.** Circular at rho 0.96. Biggest change of
+   direction available.
+2. **Establish the instrument-floor comparison like-for-like** - RNA vs each methylation clock and
+   clock vs clock, same conditions, same statistic, same pairing. If RNA sits inside the 9.07 yr
+   envelope the honest headline is *"agreement at the limit of methylation's own reproducibility"* -
+   a strong claim, not a scoped-down one, and possibly already true.
+3. **Drop early-dAge -> late-dAge.** Partial -0.064.
+4. **Keep what works:** `fate_roc` 0.983, within-donor ranking 0.925-0.983.
+
+**On the 10% goal:** against the RNA clock's own output it is trivial (circular); against methylation
+it is below the references' mutual disagreement. Neither is clearable by a correct system - which is
+§5b applied, this once, to a project goal rather than a test. **The reachable version of the same
+ambition: dAge agreement with methylation at or inside 9.07 yr RMS, demonstrated like-for-like on
+both clocks.** §1's 5.36 suggests it may already be met on one. Item 2 settles it, cheaply.
+
+---
+
+
 ## 2026-08-15 - AGE CAPACITY at n=133: the representation CAN learn age. n was the problem, not the method
 
 **Status:** Executed, READ-ONLY, PRE-REGISTERED. New: `experiments/diag_age_capacity.py`,
