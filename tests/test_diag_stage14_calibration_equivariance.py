@@ -57,7 +57,7 @@ def test_the_least_squares_k_is_the_one_that_shrinks():
 
 
 # ---- E2: the arithmetic that inverted the expected answer ------------------------------------ #
-def test_shrinking_a_target_can_only_move_residuals_INSIDE_a_fixed_knee():
+def test_shrinking_a_target_can_only_move_residuals_inside_a_fixed_knee():
     """Monotone, so the DIRECTION of E2 holds regardless of which estimator's residuals are
     used. Only the magnitude depends on that choice."""
     rng = np.random.default_rng(14)
