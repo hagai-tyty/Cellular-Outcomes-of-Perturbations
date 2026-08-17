@@ -1,0 +1,48 @@
+{
+  "n_samples": 90,
+  "signature_present": [
+    "NANOG",
+    "POU5F1",
+    "LIN28A",
+    "SOX2",
+    "ZFP42"
+  ],
+  "A": {
+    "gaps": [
+      {
+        "donor": "O1",
+        "raw": -46.65838280068798,
+        "resid": -15.327393133656862,
+        "shrink": 0.6714975484870243
+      },
+      {
+        "donor": "O2",
+        "raw": -47.69623276674069,
+        "resid": -20.15258269967429,
+        "shrink": 0.577480619942651
+      },
+      {
+        "donor": "O3",
+        "raw": -29.583757055235793,
+        "resid": -16.104344485584075,
+        "shrink": 0.45563558896472567
+      }
+    ],
+    "median_shrink": 0.577480619942651,
+    "verdict": "MEDIATION"
+  },
+  "B": {
+    "rho_controls": NaN,
+    "rho_oskm": -0.6360616422542749,
+    "n_controls": 33,
+    "control_signature_sd": 0.0,
+    "verdict": "MEDIATION"
+  },
+  "C": {
+    "spearman_raw": 0.7701198026779422,
+    "spearman_resid_pluri": 0.3544749823819591,
+    "n": 44,
+    "verdict": "MEDIATION"
+  },
+  "verdict": "MEDIATION"
+}

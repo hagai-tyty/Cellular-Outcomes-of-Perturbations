@@ -193,6 +193,75 @@ both clocks.** §1's 5.36 suggests it may already be met on one. Item 2 settles 
 ---
 
 
+## 2026-08-17 - STAGE 10: pluripotency is MEDIATION, not contamination. The removal recommendation is WITHDRAWN
+
+**Status:** Executed, READ-ONLY. Pre-registered in
+`plans/STAGE_10_PLURIPOTENCY_CONTAMINATION_OR_MEDIATION.md` BEFORE the run. New:
+`experiments/diag_stage10_pluri.py`, `tests/test_diag_stage10_pluri.py` (14 tests),
+`results/diag_stage10_pluri_results.json`. Suite green (1304), ruff clean. **`src/` untouched.**
+
+### The recommendation being withdrawn
+
+The previous session concluded "pluripotency has to come out of the ΔAge readout" from a single
+number (`resid_pluri` 22.69 -> 13.00 MAE vs methylation). **That was wrong**, and the objection
+raised against it was right: OSKM INDUCES pluripotency, so pluripotency induction may BE the
+mechanism of rejuvenation, in which case regressing it out deletes the signal.
+
+### What is actually being removed (10.1)
+
+The signature is 5 genes carrying **0.0005% of the clock's |w| mass**, ranked 17,829-26,826 of
+33,155. **The clock barely reads them.** So `resid_pluri` does not remove a direct reading -- it
+removes the component of ΔAge that CO-VARIES with a pluripotency score, a far more invasive
+operation. Two of the five (`POU5F1`=OCT4, `SOX2`) are **OSKM transgenes**, so the score partly
+measures vector dose. `top100` excludes all five by construction (all rank > 17,000), so truncation
+and residualisation are NOT the same operation.
+
+### Three tests, all MEDIATION
+
+| test | result | reading |
+|---|---|---|
+| **A** transient-vs-control gap after residualising | shrinks **58%** (O1 0.67, O2 0.58, O3 0.46) | bar >50% -> **MEDIATION**: removing it destroys the outcome signal |
+| **B** pluripotency among CONTROLS | signature is **exactly constant, sd = 0** | the genes are OFF without OSKM, so there is NO baseline covariation for contamination to act through -> **MEDIATION** |
+| **C** agreement with methylation | rho **0.770 -> 0.354** | methylation cannot see RNA pluripotency, yet removing it HALVES agreement -> the component carried real signal -> **MEDIATION** |
+
+**Verdict: MEDIATION, 3 of 3.**
+
+Test B is worth stating plainly: the five genes are not expressed in untreated fibroblasts at all,
+so the score has zero variance until OSKM is delivered. A covariate that does not exist without the
+treatment cannot be a baseline confound. (The first version of Test B used ΔAge and returned NaN --
+ΔAge is DEFINED relative to the controls, so controls carry ~zero ΔAge by construction. Fixed to
+raw clock age; the NaN then turned out to be the answer rather than a failure.)
+
+### Why the original number was misleading -- and it is the shrinkage trap again
+
+| variant | MAE | SD ratio | rho vs methylation |
+|---|---|---|---|
+| raw | 22.69 | 1.66 | **0.770** |
+| resid_pluri | 13.00 | 1.14 | **0.354** |
+| ranknorm | 10.15 | 0.30 | 0.138 |
+| **top100** | **7.15** | **0.98** | **0.810** |
+
+`resid_pluri` improved MAE by **halving the ordering**. That is the same failure mode the
+shrinkage control caught for `ranknorm` -- but it slipped through, because an SD ratio of 1.14 does
+not LOOK collapsed. The tell is rho, not SD.
+
+**So `raw`'s problem was never pluripotency. It was SCALE** -- right ordering (0.770), 66%
+over-magnitude. `top100` fixes the scale (0.98) while IMPROVING the ordering (0.810), and it does so
+without deleting the pluripotency-mediated signal. That is why top100 is the right variant and
+`resid_pluri` is not.
+
+### Standing
+
+The earlier recommendation is withdrawn, not amended. No `src/` change is licensed by this stage
+under any outcome (plan 10.5), and none was made.
+
+**Not settled:** partial mediation cannot be excluded -- if ΔAge = a(true rejuvenation) +
+b(spurious pluripotency) and the true effect is itself partly pluripotency-driven, all three tests
+can read MEDIATION while some spurious component remains. And with OCT4/SOX2 in the signature,
+"pluripotency" and "vector dose" are not separable in this data. n = 3 donors.
+
+---
+
 ## 2026-08-16 - THREE TESTS (+ a Phase 0 nobody asked for): every one lands NEGATIVE, and two of my own hypotheses died
 
 **Status:** Executed, READ-ONLY, pre-registered in `plans/THREE_TESTS_PREREG.md` BEFORE any run.
