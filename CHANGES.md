@@ -11,6 +11,117 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-17 - STAGE 13: the scorecard judged the wrong quantity, and it favoured the shuffle controls
+
+**Status:** EXECUTED. `plans/STAGE_13_SCORECARD_VERDICT_CORRECTNESS.md`. Changes `scorecard.py`
+**aggregation, verdict and printing only**. `measure_fold` untouched, **no snapshot rewritten, no
+rebuild, no retrain, no model touched**. New: `experiments/diag_stage13_retro_verdicts.py`,
+`results/diag_stage13_retro_verdicts_results.json`, 42 tests
+(`tests/test_stage13_scorecard_verdicts.py`, `tests/test_diag_stage13_retro_verdicts.py`).
+
+This discharges the two defects recorded on 2026-08-15 as *"Neither is fixed yet; both need their
+own change"* (this file, §"Two scorecard defects found while reading the C-7 comparison"). **Both
+of those notes stand as written and are not edited.** Re-measuring them from the snapshots found
+that defect 1 has **three** faces, and that the note named the least important one.
+
+### A1 — the aggregate cancelled instead of accumulating (NOT previously recorded)
+
+`abs()` was applied to the **mean**, so for a per-donor bias whose sign varies by donor the column
+measured how far the **panel cancels**, not how large the error is.
+
+| snapshot | metric | printed | true `mean(\|.\|)` | understated |
+|---|---|---|---|---|
+| `gc2_A_keep_hff` | `level_shift_ridge` | **0.230** | **12.723** | **55.2x** |
+| `gc2_B_mask_hff` | `level_shift_ridge` | 0.873 | 16.299 | 18.7x |
+| `gc2_A_keep_hff` | `level_shift_model` | 5.713 | 13.120 | 2.3x |
+
+**±12.7 yr per-donor level shift is the founding measurement of Stage 2** (`MASTER_PLAN.md:81,
+387, 452`) and the whole justification for k≈3 reference cells. The scorecard printed that exact
+quantity as **0.230** — i.e. as *"there is no level shift"*. The corrected statistic, 12.72,
+reproduces the project's own independently-derived number from Test 7.4.3; the printed one erased
+it.
+
+### A2/A3 — the verdict was computed on signed differences
+
+`_paired` ran before the display-time `abs()`, so the CI was built on signed values, and
+`_verdict`'s `better_is_down` then read `-28 -> -22` (a 6 yr **improvement** in magnitude) as an
+increase. On the C-7 comparison:
+
+| metric | as printed | correct |
+|---|---|---|
+| `level_shift_model` | `+5.030` [+1.218,+8.842] **REGRESSION** | `-3.118` [-9.100,+2.865] **noise** |
+| `level_shift_ridge` | `+4.389` [+2.805,+5.972] **REGRESSION** | `-0.084` [-5.399,+5.231] **noise** |
+
+### B — the two columns could average different fold sets
+
+`_agg` aggregated each snapshot over whatever folds were valid **in itself**, while `_paired` used
+the intersection. N2 errors out in `c7_A` only, so **13 of 18 rows printed a 6-fold mean beside a
+5-fold one**. `dage_mae_model` showed `14.291 -> 15.713` (a visible +1.42) with a verdict driven by
+**+2.922** — more than double the visible number, with nothing on the row saying why.
+
+### THE FINDING: the defect was biased, not merely noisy
+
+Because the per-fold data on disk is intact, **every past comparison could be re-judged with no
+rebuild** — the thing Stage 12 could not do. Over the 9 committed snapshots (5 distinct on these
+metrics; `baseline == A_xdonor == B_fatecal == B_fatecal_pooled == gc2_A_keep_hff`):
+
+**12 of 20 distinct verdicts change — and 8 of the 12 are comparisons in which a SHUFFLE CONTROL
+scored `ACCEPT (better)`.**
+
+    arm A -> arm C (full label shuffle)   level_shift_model   ACCEPT (better)  ->  REGRESSION
+    arm A -> arm D (stratified shuffle)   level_shift_model   ACCEPT (better)  ->  noise
+
+A shuffle destroys the donor structure the level shift measures; it cannot improve it. Mean
+|level shift| in the raw data: **A 13.12 -> D 16.25 -> C 23.24**, monotone worsening exactly as a
+negative control should. The old rule called that an improvement because the signed mean fell
+(-5.71 -> -20.28) and `better_is_down` rewards falling. **The error had a systematic direction: it
+flattered destroyed-label controls.**
+
+A1 and A3 are **different mechanisms** and neither explains the other — A1 is about the printed
+column (cancellation), A3 about the verdict (`better_is_down` on a signed quantity). A test
+constructs a panel where A1 is inert (ratio 1.0) and A3 still inverts the verdict in both
+directions.
+
+Also recorded: **8 unchanged verdicts does not mean 8 sound rows.** 5 of the 8 had the *sign of
+their point estimate flip* (e.g. `-5.388 -> +1.610`) and still read `noise` — the same verdict for
+the opposite reason.
+
+### The fix
+
+- `"abs"` metrics aggregate as `mean(|per-fold|)` and pair on `|B_d| - |A_d|`. **Per-fold cells
+  stay signed** — the direction of a donor's shift is real information, is read by
+  `experiments/diag_zero_point.py:447`, and taking `abs()` at measurement time would destroy it
+  permanently and make every snapshot unreadable in its own terms.
+- The signed mean is **kept as its own row**, marked `(context, never judged)`. It answers a
+  different, still-useful question (is there a *global* offset, or do donors cancel?), and
+  replacing one number with another would have lost it.
+- Comparison columns are averaged over the **paired fold set**, and dropped donors are named.
+- The RES over-approval block uses one fold set for all four terms.
+- `_print_snapshot`'s `mean` column for an `"abs"` metric is now `mean(|.|)` and is labelled `|.|`.
+
+**The invariant that makes this testable:** `col_B - col_A == mean diff`, to floating point, for
+**every** metric and direction. False for 13 of 18 rows before; holds for 18 of 18 after. For an
+`"abs"` metric it can only hold if the columns and the paired statistic take the magnitude at the
+same point in the computation — so one assertion pins both fixes at once.
+
+### Why this is not a judgement call dressed as a fix
+
+It implements intent already written in the source (`"judge |level shift|, not signed"`,
+`scorecard.py:378`); it reproduces the project's own 12.7 yr number; and it is **not
+directionally convenient** — it converts two `REGRESSION`s into `noise`, but it also raises the
+reported level shift from 0.230 to 12.72 (worse), restores `dage_mae_model`'s true `+2.922`
+degradation in place of a visible `+1.422` (worse), and turns the shuffle controls from
+improvements into regressions.
+
+### Not claimed
+
+No model result changes — this stage re-judges, it does not re-measure. Which *decisions* in the
+record were actually taken on a flipped verdict has not been audited; the retro-table is recorded
+so that audit is now possible. The 2026-08-03 note (this file, *"A reader trusting that row would
+draw the opposite conclusion"*) shows the row misled at least twice before it was fixed.
+
+---
+
 ## 2026-08-16 - ALL NINE VARIANTS vs the instrument floor, with a shrinkage control
 
 **Status:** Measured. `experiments/diag_instrument_floor.py`, read-only, ledger only. **`src/`

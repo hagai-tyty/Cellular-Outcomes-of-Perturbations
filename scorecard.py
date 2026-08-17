@@ -244,10 +244,30 @@ def cmd_snapshot(tag: str):
     _print_snapshot(snap)
 
 
-def _agg(folds, key):
-    vals = [f[key] for f in folds.values()
-            if isinstance(f, dict) and f.get(key) is not None and "_error" not in f]
-    return float(np.mean(vals)) if vals else None
+def _fold_ok(f, key) -> bool:
+    return isinstance(f, dict) and "_error" not in f and f.get(key) is not None
+
+
+def _agg(folds, key, only=None, magnitude=False):
+    """Mean of `key` across folds.
+
+    STAGE 13. Two parameters, each repairing a defect that inverted a decision:
+
+    `only` restricts to a fold set. Without it the two columns of a comparison each average
+    over whatever folds ARE VALID IN THEIR OWN SNAPSHOT, so they can describe different donors
+    while sitting side by side. In the C-7 comparison N2 errors out in one snapshot but not the
+    other, and 13 of 18 rows printed a 6-fold mean next to a 5-fold mean.
+
+    `magnitude` averages |value| instead of the caller taking |mean|. For a metric whose sign
+    VARIES BY DONOR -- level shift is a per-donor bias -- the signed mean measures how far the
+    donor panel CANCELS, not how large the error is. It printed 0.230 for a shift whose true
+    mean magnitude is 12.72 yr: the founding measurement of Stage 2, rendered as zero.
+    """
+    names = list(folds) if only is None else only
+    vals = [float(folds[d][key]) for d in names if d in folds and _fold_ok(folds[d], key)]
+    if not vals:
+        return None
+    return float(np.mean([abs(v) for v in vals] if magnitude else vals))
 
 
 def pooled_fate_ece(folds, trials: int = 4000, seed: int = 0):
@@ -298,32 +318,43 @@ def _print_snapshot(snap):
     ok = [d for d in DONORS if d in folds and "_error" not in folds[d]]
     print(f"\n  SNAPSHOT '{snap['tag']}' — {len(ok)} folds")
     rows = []
-    for key, (_, label) in METRICS.items():
+    for key, (direction, label) in METRICS.items():
+        # STAGE 13: per-fold cells stay SIGNED -- the direction of a donor's shift is real
+        # information. Only the aggregate becomes a magnitude, and says so in its label.
+        mag = direction == "abs"
         cells = []
         for d in ok:
             v = folds[d].get(key)
             cells.append("n/a" if v is None else (f"{v:.3f}" if isinstance(v, float) else str(v)))
-        a = _agg(folds, key)
-        rows.append([label] + cells + ["n/a" if a is None else f"{a:.3f}"])
+        a = _agg(folds, key, magnitude=mag)
+        rows.append([f"|{label}|" if mag else label] + cells
+                    + ["n/a" if a is None else f"{a:.3f}"])
     print(render_table(["metric"] + ok + ["mean"], rows,
                        aligns=["l"] + ["r"] * (len(ok) + 1)))
+    print("  per-fold cells are SIGNED; the mean of a |metric| row is mean(|per-fold|), which for")
+    print("  a per-donor bias is the size of the error rather than how far the panel cancels.")
     _print_pooled(snap)
 
 
-def _paired(A_folds, B_folds, key):
+def _common_folds(A_folds, B_folds, key):
+    """Folds where BOTH snapshots carry a usable value for `key` — the only set on which a
+    paired statistic, or a before/after pair of column means, is defined."""
+    return [d for d in DONORS
+            if _fold_ok(A_folds.get(d), key) and _fold_ok(B_folds.get(d), key)]
+
+
+def _paired(A_folds, B_folds, key, magnitude=False):
     """Per-fold paired differences (B - A) and their 95% CI. This is the accept/reject
-    statistic: a change is REAL only if the CI excludes zero."""
-    diffs = []
-    for d in DONORS:
-        fa, fb = A_folds.get(d), B_folds.get(d)
-        if not isinstance(fa, dict) or not isinstance(fb, dict):
-            continue
-        if "_error" in fa or "_error" in fb:
-            continue
-        va, vb = fa.get(key), fb.get(key)
-        if va is None or vb is None:
-            continue
-        diffs.append(float(vb) - float(va))
+    statistic: a change is REAL only if the CI excludes zero.
+
+    STAGE 13: `magnitude` takes |value| PER FOLD before differencing. For an "abs" metric this
+    is the difference between judging a real quantity and judging noise -- the old signed form
+    read `-28 -> -22` (a 6 yr improvement in magnitude) as a `+6` INCREASE, and then
+    `_verdict`'s better_is_down turned that into `REGRESSION`.
+    """
+    t = (lambda v: abs(float(v))) if magnitude else float
+    diffs = [t(B_folds[d][key]) - t(A_folds[d][key])
+             for d in _common_folds(A_folds, B_folds, key)]
     n = len(diffs)
     if n < 2:
         return None, (None, None), n
@@ -368,22 +399,46 @@ def cmd_compare(tag_a: str, tag_b: str):
     print("  hurts others can be large in the mean and still read as noise -- check the")
     print("  per-fold column before trusting an aggregate verdict.")
 
+    # STAGE 13. Both columns are now averaged over the SAME folds that the paired test uses, so
+    # `col_B - col_A == mean diff` exactly, on every row. That identity was false for 13 of 18
+    # rows before this change (a 6-fold mean printed beside a 5-fold one), and it is the
+    # invariant the tests assert -- it can only hold if the column means and the paired
+    # statistic take the magnitude at the same point in the computation.
     rows = []
     for key, (direction, label) in METRICS.items():
-        va, vb = _agg(A["folds"], key), _agg(B["folds"], key)
+        mag = direction == "abs"
+        common = _common_folds(A["folds"], B["folds"], key)
+        va = _agg(A["folds"], key, only=common, magnitude=mag)
+        vb = _agg(B["folds"], key, only=common, magnitude=mag)
         if va is None or vb is None:
-            rows.append([label, "n/a", "n/a", "", "", "n/a"])
+            rows.append([label, "n/a", "n/a", "", "", "", "n/a"])
             continue
-        md, (lo, hi), n = _paired(A["folds"], B["folds"], key)
-        if direction == "abs":       # judge |level shift|, not signed
-            va, vb = abs(va), abs(vb)
+        md, (lo, hi), n = _paired(A["folds"], B["folds"], key, magnitude=mag)
         ci = "" if md is None else f"[{lo:+.3f},{hi:+.3f}]"
-        rows.append([label, f"{va:.3f}", f"{vb:.3f}",
-                     "" if md is None else f"{md:+.3f}", ci,
+        rows.append([f"|{label}|" if mag else label, f"{va:.3f}", f"{vb:.3f}",
+                     "" if md is None else f"{md:+.3f}", ci, str(n),
                      _verdict(direction, md, lo, hi)])
-    print("\n  AGGREGATE + PAIRED TEST (n folds)")
-    print(render_table(["metric", tag_a, tag_b, "mean diff", "95% CI", "verdict"], rows,
-                       aligns=["l", "r", "r", "r", "r", "l"]))
+        if mag:
+            # The signed mean answers a DIFFERENT question -- "is there a global offset, or do
+            # donors cancel?" -- and is worth keeping. It is context, never a verdict: judging
+            # it is the defect this stage removes.
+            sa = _agg(A["folds"], key, only=common)
+            sb = _agg(B["folds"], key, only=common)
+            rows.append([f"   ^ signed mean ({label})", f"{sa:+.3f}", f"{sb:+.3f}",
+                         "", "", str(len(common)), "(context, never judged)"])
+    print("\n  AGGREGATE + PAIRED TEST")
+    print(render_table(["metric", tag_a, tag_b, "mean diff", "95% CI", "folds", "verdict"], rows,
+                       aligns=["l", "r", "r", "r", "r", "r", "l"]))
+    dropped = sorted({d for key in METRICS
+                      for d in DONORS
+                      if _fold_ok(A["folds"].get(d), key) != _fold_ok(B["folds"].get(d), key)})
+    if dropped:
+        print(f"\n  NOTE: {', '.join(dropped)} carry a usable value in one snapshot but not the")
+        print("  other for at least one metric, and are excluded from that metric's row in BOTH")
+        print("  columns. Per-metric fold counts are in the 'folds' column.")
+    print("\n  Rows shown as |metric| are judged on the PER-FOLD MAGNITUDE. Level shift is a")
+    print("  per-donor bias whose sign varies by donor, so a signed mean measures how far the")
+    print("  panel cancels, not how large the error is -- it read 0.230 for a 12.72 yr shift.")
 
     print("\n  PER-FOLD ΔAge MAE (model) — where did the change land?")
     ok = [d for d in DONORS if d in A["folds"] and d in B["folds"]
@@ -398,10 +453,16 @@ def cmd_compare(tag_a: str, tag_b: str):
     print(render_table(["fold", tag_a, tag_b, "delta", "verdict"], rows,
                        aligns=["l", "r", "r", "r", "l"]))
 
-    ra = _agg(A["folds"], "res_approvals")
-    ro = _agg(A["folds"], "res_approvals_oracle")
-    rb = _agg(B["folds"], "res_approvals")
-    rob = _agg(B["folds"], "res_approvals_oracle")
+    # STAGE 13: the same fold set for all four terms, or the over-approval GAP is a difference
+    # between two different donor panels.
+    res_folds = [d for d in DONORS
+                 if all(_fold_ok(F.get(d), k)
+                        for F in (A["folds"], B["folds"])
+                        for k in ("res_approvals", "res_approvals_oracle"))]
+    ra = _agg(A["folds"], "res_approvals", only=res_folds)
+    ro = _agg(A["folds"], "res_approvals_oracle", only=res_folds)
+    rb = _agg(B["folds"], "res_approvals", only=res_folds)
+    rob = _agg(B["folds"], "res_approvals_oracle", only=res_folds)
     if None not in (ra, ro, rb, rob):
         print(f"\n  RES over-approval (approvals - oracle):  {tag_a}: {ra - ro:+.2f}   "
               f"{tag_b}: {rb - rob:+.2f}   (closer to 0 is better)")
