@@ -205,7 +205,13 @@ class SyntheticSource(DataSource):
             rate = np.exp(log_rate) * lib
             rows.append(rng.poisson(rate).astype(np.float32))
             obs_records.append({
-                "cell_id": f"{self.name}:{chunk['cell_line']}:{k}",
+                # STAGE 12. The CHUNK id is in the key. Without it, `source:cell_line:index`
+                # collides across every chunk of the same line -- HFF is planned as 45 chunks, so
+                # `reprogramming:HFF:0` existed 45 times and 42,481 cells carried 981 ids. Splits
+                # are keyed on cell_id, so one index-slot decision was applied to all 45 shards:
+                # the effective split n was 981, not 42,481. `CellChunk.id` is already guaranteed
+                # globally unique (chunking.py:33) and was simply not used here.
+                "cell_id": f"{chunk['id']}:{k}",
                 "cell_line": chunk["cell_line"],
                 "pert_id": "control" if is_ctrl else pert["pert_id"],
                 "smiles": "" if is_ctrl else pert["smiles"],
@@ -360,7 +366,9 @@ class ReprogrammingSource(DataSource):
             # path gives a distinct, deterministic feature per cocktail.
             token = "" if (is_ctrl or not factor_as_token) else factor
             recs.append({
-                "cell_id": f"{source}:{cell_line}:{i}",
+                # STAGE 12, see the note at the other construction site. `chunk_id` is globally
+                # unique and was already in scope here (this function raises with it above).
+                "cell_id": f"{chunk_id}:{i}",
                 "cell_line": cell_line,
                 "pert_id": "control" if is_ctrl else factor,
                 "smiles": token,

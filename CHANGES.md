@@ -193,6 +193,72 @@ both clocks.** §1's 5.36 suggests it may already be met on one. Item 2 settles 
 ---
 
 
+## 2026-08-17 - STAGE 12: `cell_id` was not unique, and the split map was keyed on it. FIXED in src/
+
+**Status:** Executed. Pre-registered in `plans/STAGE_12_CELL_ID_UNIQUENESS.md`.
+**This stage CHANGES `src/`** -- the first in this arc that does. New:
+`tests/test_stage12_cell_id_uniqueness.py` (11 tests). Suite green (1336), ruff clean.
+
+### The defect
+
+`cell_id` was `f"{source}:{cell_line}:{index_within_chunk}"` -- **the chunk was not in the key**.
+HFF is planned as 45 chunks, so `reprogramming:HFF:0` existed 45 times: **42,481 cells carried 981
+distinct ids**, and `splits/holdout.json` held **1,100 entries for 42,600 cells**.
+
+`make_splits` keys the split on cell_id. So ONE index-slot decision was applied to all 45 shards.
+
+### The harm -- measured, not assumed
+
+Each shard holds all 9 timepoints, and within a shard **D0 occupies indices 0-111 exclusively**
+(the other 8 days interleave from index 112). D0's split assignment was therefore decided by
+**~112 index-slots**, not ~4,700 cells:
+
+| split | share of D0 |
+|---|---|
+| calib | **9.0 %** |
+| train | 11.9 % |
+| val | **13.3 %** |
+
+`calib` is depleted of the control timepoint by ~23 % relative to `val` -- and **calib is what the
+conformal intervals are computed on**. The ±4 % spread is exactly the sampling noise of n=112,
+which is what identifies the mechanism rather than merely correlating with it.
+
+Effective split sample size: **981, not 42,481**. For D0: **112**.
+
+### The fix
+
+`CellChunk.id` is already guaranteed globally unique (`chunking.py:33` raises on a collision) and
+was simply not used. Both construction sites now key on it:
+
+    before  f"{source}:{cell_line}:{i}"   ->  reprogramming:HFF:0      (x45)
+    after   f"{chunk_id}:{i}"             ->  reprogramming:HFF:b0:0   (unique)
+
+**BOTH sites were wrong** (`sources.py:208` synthetic, `sources.py:363` reprogramming); fixing one
+would have left the other colliding, and a test pins both.
+
+### The guard
+
+A build-time assertion before `make_splits` -- the consumer of the bad key -- raising with the
+collision count. This defect survived because **nothing ever checked**.
+
+**Build-time only, deliberately.** Folds already on disk carry colliding ids; a read-time assertion
+would make every recorded artefact unloadable. Tests pin that the read paths carry no such check.
+
+### What this does NOT do
+
+**No rebuild, no re-score, no retrain. No recorded result is revised.** Existing folds remain
+readable -- their shards and splits were written together and stay mutually consistent. The fix is
+**forward-only**: it changes what the NEXT build writes.
+
+**The size of the effect on model metrics is UNKNOWN and is not claimed.** Quantifying it needs a
+rebuild under the fix and a paired comparison -- its own Change, separately pre-registered.
+
+Validated end to end: four existing suites (`test_correctness`, `test_evaluation`, `test_inference`,
+`test_tf_encoder`) call `build_dataset.run`, so the new guard executes on real builds. It does not
+fire -- the ids are now unique.
+
+---
+
 ## 2026-08-17 - STAGE 11: the dense clock was never broken -- it was MIS-SCALED. One parameter closes the gap
 
 **Status:** Executed, READ-ONLY. Pre-registered in `plans/STAGE_11_DAGE_SCALE_CALIBRATION.md`

@@ -497,6 +497,22 @@ def run(cfg: DataConfig, sources: list[DataSource] | None = None,
 
     io.consolidate_manifest(paths)
     rows = io.manifest_rows(io.load_manifest(paths))
+    # CHANGE STAGE 12. `make_splits` keys the split on cell_id, so a colliding id silently makes
+    # ONE decision stand for every cell sharing it. That is what happened: cell_id omitted the
+    # chunk, HFF spans 45 chunks, and 42,481 cells carried 981 ids -- the effective split n was
+    # 981, and for D0 (which occupies indices 0-111 of every shard) it was 112. calib ended up
+    # depleted of the control timepoint, 9.0% against val's 13.3%, and calib is what the conformal
+    # intervals are computed on. Nothing checked, so it survived. Now it cannot.
+    #
+    # BUILD-time only, deliberately. Folds already on disk carry colliding ids; a read-time
+    # assertion would make every recorded artefact unloadable.
+    _ids = [r.cell_id for r in rows]
+    if len(set(_ids)) != len(_ids):
+        dup = Counter(_ids).most_common(3)
+        raise ValueError(
+            f"cell_id is not unique: {len(_ids)} cells carry {len(set(_ids))} distinct ids "
+            f"(worst offenders {dup}). Splits are keyed on cell_id, so this would apply one "
+            "assignment to every cell sharing an id. The key must include the chunk id.")
     splits = make_splits(rows, tuple(cfg.split_fracs), tuple(cfg.split_regimes), cfg.seed,
                          holdout_cell_lines=tuple(cfg.holdout_cell_lines),
                          fate_test_line=cfg.fate_test_line, fate_test_frac=cfg.fate_test_frac)
