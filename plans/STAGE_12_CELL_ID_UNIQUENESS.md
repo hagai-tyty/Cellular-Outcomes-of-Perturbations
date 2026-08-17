@@ -121,9 +121,63 @@ load-bearing numbers (calib 9.0% vs val 13.3%) reproduce exactly.
 
 Written **before** the run, per the ground rules.
 
-**Procedure.** Rebuild all six LOOCV folds with `local_runners/build_c7_folds.py` unchanged except
-that `src/` now carries the Stage 12 fix, retrain, then
-`scorecard.py snapshot --tag c7t_stage12` and `compare c7t c7t_stage12`.
+**Procedure.** Rebuild and retrain all six LOOCV folds with the same runner and flags that produced
+`_c7t`, unchanged except that `src/` now carries the Stage 12 fix, then snapshot and compare.
+
+> *Corrected 2026-08-17 at execution time:* this paragraph originally named
+> `local_runners/build_c7_folds.py`. That script is **dataset-only** (no training, no bundle), so
+> it cannot produce a scorecard. The runner that built `_c7t` is `local_runners/run_loocv.py`,
+> per `plans/C7_RETRAIN_RUNBOOK.md:98`. The original wording is left above the correction rather
+> than edited away.
+
+```bash
+CELLFATE_FOLD_SUFFIX=_s12 CELLFATE_BULK_GATE=1 python local_runners/run_loocv.py "D:\GSE242423" "D:\Gill" --arm A
+CELLFATE_FOLD_SUFFIX=_s12 python scorecard.py snapshot --tag c7t_stage12
+python scorecard.py compare c7_A_keep_hff c7t_stage12
+```
+
+**A NEW suffix `_s12`, never `_c7t`.** `_c7t` and its snapshot `c7_A_keep_hff` are the **only**
+comparator this Change has; the runner's own comment (`run_loocv.py:84-86`) records that a
+previous run destroyed the baseline it needed. Neither may be overwritten.
+
+> **DEFECT FOUND AT LAUNCH — `run_loocv.py` advertises a tag that would destroy the baseline.**
+> The runner derives its snapshot tag from *arm + gate only*, so a **second run of the same arm**
+> prints the *same* tag as the first. This run printed:
+>
+>     [step6] snapshot after this run: python scorecard.py snapshot --tag c7_A_keep_hff
+>
+> Following that would overwrite `scorecard/c7_A_keep_hff.json` — the very comparator the Change
+> is judged against. This is the same class of defect as the one `run_loocv.py:84-86` already
+> records and fixes for the `gc2_` → `c7_` case; that fix does not cover re-running an arm. The
+> tag does not know about `CELLFATE_FOLD_SUFFIX`, even though the fold roots do.
+>
+> **The correct tag here is `c7t_stage12`.** Recorded rather than patched: the runner is not part
+> of this Change, and changing it mid-run would break the one-change rule.
+
+## 12.10 Pre-flight, run BEFORE launching the compute
+
+The arm-D lesson (`CHANGES.md` 2026-08-07: *validate a data transform intrinsically within one
+build*) applied here. One fold, dataset-only, `MAX_CELLS=200`:
+
+| check | result |
+|---|---|
+| cell_ids unique | **1868 distinct / 1868 cells** — PASS |
+| split map has one entry per cell | **1868 / 1868** — PASS (it was 1100 for 42,600) |
+| build-time guard fires spuriously | no — build completed |
+| key format | `reprogramming:HFF:b0:0` — the chunk id is in the key |
+
+It also reproduced the expected C-7 behaviour independently (`c7.no_control_lines: ["N2"]`, N2
+baseline `source: self_fallback`, `n_control: 0`), so the gate is still doing its job under the
+Stage 12 build.
+
+*Note:* the guard makes the full run partly self-checking anyway — colliding ids raise inside the
+first fold's build, before `make_splits`, so a broken fix would surface in minutes rather than
+after hours. The pre-flight adds the split-map size check, which the guard does not make.
+
+**Validity precondition, verified before launch:** the `_c7t` folds were built 2026-08-15
+02:01–05:59, **after** the gate fix `18b0c49` (01:30). `git log -- src/` shows exactly two commits
+since 2026-08-14: that gate fix and Stage 12 (`72c0981`). So `src/` differs between `_c7t` and the
+rebuild **by Stage 12 alone**, and the comparison is one change.
 
 **This is a paired comparison of one change.** Nothing else may move: same seed, same fracs, same
 gate, same donors. If anything else changes, the comparison is void — the arm-B lesson.
