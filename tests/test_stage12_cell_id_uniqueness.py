@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from cellfate.data import build_dataset, sources
+from cellfate.data import build_dataset
 
 ROOT = Path(__file__).resolve().parents[1]
 
