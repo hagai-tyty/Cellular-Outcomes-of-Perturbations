@@ -11,6 +11,84 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-17 - STAGE 14 PRE-FLIGHT: rescaling the ΔAge target is NOT a units change, and I had that backwards
+
+**Status:** MEASURED + PRE-REGISTERED. `experiments/diag_stage14_calibration_equivariance.py`,
+read-only, trains nothing, `results/diag_stage14_calibration_equivariance_results.json`, 14 tests.
+Plan: `plans/STAGE_14_ADOPT_CALIBRATED_DAGE.md`. **`src/` untouched. Nothing adopted yet.**
+
+Stage 11 found the dense clock was never broken, only mis-scaled. The obvious next move is to
+adopt `y_age -> k * y_age`. This ran the checks first, and one of them came back the opposite way
+from what I predicted in writing.
+
+### E1 — the linear path is exactly equivariant (as expected)
+
+Ridge refitted on `k*y` gives predictions equal to `k` times the original to **1e-12** on all five
+available folds: `MAE(k*y) = k*MAE(y)` exactly, `Δρ = 0.00e+00` exactly. **For the linear path,
+calibration buys units and nothing else** — measured on real folds, not argued from algebra.
+
+### E2 — the neural path is NOT, and my prediction was wrong
+
+**I expected** `huber_delta = 2.0` yr to sit far below a ΔAge SD of 13-23, making essentially every
+residual outside the knee, the loss effectively L1, and a rescale a near-pure units change.
+
+**Measured** (ridge in-sample training residuals, 5 folds): median |residual| is **1.36-2.40 yr** —
+*comparable to* the knee, not far beyond it. Fraction of residuals inside the quadratic region:
+
+| fold | now | after x k |
+|---|---|---|
+| N3 | 44.9% | **87.2%** |
+| O1 | 42.9% | **85.0%** |
+| O2 | 43.2% | **85.4%** |
+| Y1 | 66.6% | **97.3%** |
+| Y2 | 42.9% | **85.1%** |
+
+The loss today is a genuine Huber mix; after rescaling it becomes **85-97% quadratic — effectively
+plain MSE.** So rescaling the training target silently converts a robust loss into an
+outlier-sensitive one *at the same time* as changing units, and the two would be inseparable in the
+result. **A two-change experiment wearing the costume of a one-change experiment.**
+
+*Limitation stated in the plan:* the percentages come from ridge in-sample residuals standing in
+for the network's; the exact values depend on the network's fit. The direction is monotone and a
+test pins that, so only the magnitude is indicative.
+
+### What this changes about the recommendation
+
+Rescaling the **training target** is now **NOT RECOMMENDED**. It needs a rebuild + retrain + full
+re-score, restarts the guard record, changes the loss regime as a side effect (and would require
+rescaling `huber_delta` by the same `k` to avoid confounding), and buys nothing the cheap option
+does not — because the model learns the same function up to scale.
+
+**Recommended instead: calibrate at the REPORTING boundary.** Apply `k` to `mu_age`, the conformal
+half-width, and any ΔAge quoted in years. No rebuild, no retrain, no guard-record restart, trivially
+reversible, and it achieves the entire actual goal — absolute ΔAge claims and interval widths become
+honest. Since ρ is rank-invariant, every ranking result stands unchanged and needs no re-audit.
+
+### Two calls recorded in advance
+
+**Which `k`: the variance-matched 0.599, not the least-squares 0.364.** `k_LS = ρ·SD(truth)/SD(pred)`
+is strictly smaller and wins on MAE by *under-reporting magnitude* (SD ratio 0.597 — it shrinks the
+spread 40%). That is the shrinkage trap this project already hit. For a reporting transform the
+objective is unbiased magnitude, not minimal MAE, so 10.68 is the honest number and 6.78 is the
+flattering one.
+
+**A 63% drop in ΔAge MAE must never be reported as an improvement.** It is a change of units. The
+`compare` table will print a large ACCEPT and that verdict is meaningless here. A guard table of the
+exact per-fold values a pure rescale must produce is recorded in the plan (§14.5), with
+`rank_model_dage` required to be bit-identical — any deviation means the change did more than
+convert units.
+
+### The transfer problem, stated rather than buried
+
+`k` was fitted on donors **O1/O2/O3 of the transient arm only** — the only rows in
+`results/dage_ledger.csv` carrying `TRUTH_meth_dage_mt` (68 of 90; the Sendai cohort carries none).
+The cohort with methylation truth and the cohort the model trains on are **disjoint**. Stage 11
+§11.4 forbade claiming transfer and that stands: calibrated ΔAge is to be reported **alongside**
+raw, never silently in place of it, carrying the caveat that transfer to Sendai/HFF is untested.
+§14.7 records what would license it.
+
+---
+
 ## 2026-08-17 - STAGE 12 EFFECT: the split-composition half, measured exactly with no rebuild
 
 **Status:** MEASURED. `experiments/diag_stage12_split_effect.py`, read-only,
