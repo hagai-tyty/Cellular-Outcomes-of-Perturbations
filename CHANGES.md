@@ -11,6 +11,87 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-17 - STAGE 15: RES is zero because the model has no confidence, and it is over-determined
+
+**Status:** MEASURED, question CLOSED. `experiments/diag_stage15_res_zero.py`, read-only (inference
+on ~20 held-out cells x 6 folds), `results/diag_stage15_res_zero_results.json`, 19 tests. **`src/`
+untouched — this is a diagnosis, not a fix.**
+
+`res_median`, `res_max` and `res_approvals` have read 0.000 in every snapshot ever taken and the
+cause was never established. It is now, by attribution rather than inference.
+
+### Which factor is zero — all four checked, on all 119 cells
+
+`RES = φ(S) · S^k · g(R_eff) · exp(−λ·P_loss)`
+
+| factor | result |
+|---|---|
+| `φ(S)` = sigmoid | **> 0 for all 119 cells** — a sigmoid has no zero |
+| `S^k` | **> 0 for all 119** |
+| `exp(−λ·P_loss)` | **exactly 1.000** — `lam: 0.0` ships, so this factor is inert |
+| **`g(R_eff)`** | **zero for 119 of 119** |
+
+So the zero is **`g(R_eff)` alone**, exhaustively, not "probably".
+
+### Why R_eff = 0: σ dwarfs μ
+
+`R_eff = max(0, −(μ_age + z_conf·σ_age))` — credit only for *confident* rejuvenation.
+
+| fold | μ min | \|μ\| med | σ med | σ/\|μ\| | min(μ+zσ) | z needed |
+|---|---|---|---|---|---|---|
+| N2 | −19.85 | 14.75 | 44.46 | 3.01 | +10.72 | 0.416 |
+| N3 | −19.62 | 15.10 | 30.04 | 1.99 | **+2.00** | **0.898** |
+| O1 | −12.48 | 11.56 | 52.41 | 4.53 | +27.32 | 0.235 |
+| O2 | −12.57 | 11.31 | 26.08 | 2.31 | +7.64 | 0.455 |
+| Y1 | −19.17 | 19.04 | 82.57 | 4.34 | +5.40 | 0.350 |
+| Y2 | −16.13 | 14.75 | 31.23 | 2.12 | +13.96 | 0.381 |
+
+**The model's uncertainty is 2.0–4.5× its signal.** No cell in any fold comes within 2 years of
+the credit threshold. **RES is not broken — it is working exactly as designed, and correctly
+reporting that there is no confident rejuvenation to credit.**
+
+The σ values are not spuriously inflated: conformal coverage is 0.714–1.000 against a nominal 0.90,
+so the intervals are honest-to-conservative. The model genuinely does not know.
+
+**Re-tuning the gate would not rescue this.** `z needed` — the largest `z_conf` at which *any*
+cell would qualify — is 0.235–0.898 against a shipped 1.0. Even `z_conf = 0.9` would light up
+**one cell in one fold**. This is not a near miss for the system.
+
+### Second finding: RES ≡ 0 is OVER-DETERMINED — three gates, all closed
+
+| gate | cells hit |
+|---|---|
+| `R_eff = 0` (no confident rejuvenation) | **119 of 119** |
+| `REJECTED_UNSAFE` (S < τ−3w = 0.76) | 11–12 of ~20 in five of six folds |
+| `REJECTED_OOD` | 6–7 per fold; **16 of 18 for Y1** |
+
+**Fixing any one would still leave RES at zero.** This is structural, not a bug.
+
+### Third finding: the status field understates the failure it reports
+
+`compute_res_batch` applies precedence OOD → UNSAFE → NO_REJUVENATION, so only cells passing the
+first two gates get labelled with the third. The status counts show **1–3 cells per fold** as
+`REJECTED_NO_REJUVENATION` when in fact **100 % of cells** have `R_eff = 0`. A reader trusting
+those counts would conclude rejuvenation was a minor issue. Pinned by a test so it cannot mislead
+later.
+
+### Observation, with its hypothesis marked as untested
+
+Over half of held-out cells are `REJECTED_UNSAFE` in five of six folds, yet `fate_prauc` is
+0.965–0.992 — the head **ranks** well while its probabilities sit low (median S 0.60–0.72 against
+a 0.76 floor). That is consistent with **miscalibration** rather than genuinely unsafe cells, and
+it connects to the pooled-ECE work. **Not tested here; recorded as a hypothesis.**
+
+### What this closes and what it opens
+
+**Closed:** why RES is zero. Fully attributed.
+**Opened:** RES cannot become non-zero until σ_age falls below |μ_age| for at least some cells.
+That is a statement about the model's uncertainty, not about the RES formula — and it is the same
+wall as the ΔAge work: the signal does not exceed the noise. No change to `src/` is proposed,
+because there is no defect here to fix.
+
+---
+
 ## 2026-08-17 - STAGE 14 PRE-FLIGHT: rescaling the ΔAge target is NOT a units change, and I had that backwards
 
 **Status:** MEASURED + PRE-REGISTERED. `experiments/diag_stage14_calibration_equivariance.py`,

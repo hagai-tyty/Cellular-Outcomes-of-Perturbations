@@ -1,0 +1,235 @@
+{
+  "params": {
+    "tau_safe": 0.85,
+    "w": 0.03,
+    "k": 2.0,
+    "kappa": 5.0,
+    "z_conf": 1.0,
+    "lam": 0.0
+  },
+  "folds": {
+    "N2": {
+      "res_max": 0.0,
+      "res_median": 0.0,
+      "res_all_zero": true,
+      "factors": {
+        "phi_min": 8.844757433190176e-12,
+        "phi_median": 0.0002778926030542232,
+        "s_k_min": 0.007476042943105025,
+        "s_k_median": 0.365251085472293,
+        "loss_term_min": 1.0,
+        "loss_term_max": 1.0,
+        "g_min": 0.0,
+        "g_max": 0.0,
+        "n_phi_zero": 0,
+        "n_s_k_zero": 0,
+        "n_g_zero": 19,
+        "n_cells": 19
+      },
+      "headroom": {
+        "min_upper_bound": 10.721757411956787,
+        "n_upper_bound_negative": 0,
+        "n_mu_negative": 10,
+        "z_required_for_any_cell": 0.41620975662857296,
+        "z_conf_shipped": 1.0,
+        "sigma_median": 44.46077346801758,
+        "sigma_max": 123.33692169189453,
+        "mu_min": -19.8546085357666,
+        "abs_mu_median": 14.753466606140137,
+        "sigma_over_abs_mu_median": 3.0135814622384256
+      },
+      "status_counts": {
+        "REJECTED_NO_REJUVENATION": 1,
+        "REJECTED_OOD": 6,
+        "REJECTED_UNSAFE": 12
+      },
+      "n_out_of_distribution": 6
+    },
+    "N3": {
+      "res_max": 0.0,
+      "res_median": 0.0,
+      "res_all_zero": true,
+      "factors": {
+        "phi_min": 8.908940269813026e-12,
+        "phi_median": 0.016964677000507168,
+        "s_k_min": 0.007513600171256623,
+        "s_k_median": 0.5225298667687457,
+        "loss_term_min": 1.0,
+        "loss_term_max": 1.0,
+        "g_min": 0.0,
+        "g_max": 0.0,
+        "n_phi_zero": 0,
+        "n_s_k_zero": 0,
+        "n_g_zero": 20,
+        "n_cells": 20
+      },
+      "headroom": {
+        "min_upper_bound": 1.9979267120361328,
+        "n_upper_bound_negative": 0,
+        "n_mu_negative": 11,
+        "z_required_for_any_cell": 0.8982449671043652,
+        "z_conf_shipped": 1.0,
+        "sigma_median": 30.03538417816162,
+        "sigma_max": 89.65705108642578,
+        "mu_min": -19.618152618408203,
+        "abs_mu_median": 15.102211952209473,
+        "sigma_over_abs_mu_median": 1.9888069557762633
+      },
+      "status_counts": {
+        "REJECTED_NO_REJUVENATION": 1,
+        "REJECTED_OOD": 7,
+        "REJECTED_UNSAFE": 12
+      },
+      "n_out_of_distribution": 7
+    },
+    "O1": {
+      "res_max": 0.0,
+      "res_median": 0.0,
+      "res_all_zero": true,
+      "factors": {
+        "phi_min": 3.170801135611688e-12,
+        "phi_median": 0.00021118665665722608,
+        "s_k_min": 0.0031012530180862885,
+        "s_k_median": 0.3553629776717905,
+        "loss_term_min": 1.0,
+        "loss_term_max": 1.0,
+        "g_min": 0.0,
+        "g_max": 0.0,
+        "n_phi_zero": 0,
+        "n_s_k_zero": 0,
+        "n_g_zero": 21,
+        "n_cells": 21
+      },
+      "headroom": {
+        "min_upper_bound": 27.322670936584473,
+        "n_upper_bound_negative": 0,
+        "n_mu_negative": 5,
+        "z_required_for_any_cell": 0.23482428951936504,
+        "z_conf_shipped": 1.0,
+        "sigma_median": 52.41074752807617,
+        "sigma_max": 121.1357421875,
+        "mu_min": -12.481517791748047,
+        "abs_mu_median": 11.562002182006836,
+        "sigma_over_abs_mu_median": 4.533016574727817
+      },
+      "status_counts": {
+        "REJECTED_NO_REJUVENATION": 2,
+        "REJECTED_OOD": 7,
+        "REJECTED_UNSAFE": 12
+      },
+      "n_out_of_distribution": 7
+    },
+    "O2": {
+      "res_max": 0.0,
+      "res_median": 0.0,
+      "res_all_zero": true,
+      "factors": {
+        "phi_min": 2.5944839946683063e-12,
+        "phi_median": 0.0005286828957024086,
+        "s_k_min": 0.0024672078484029403,
+        "s_k_median": 0.3861659639880526,
+        "loss_term_min": 1.0,
+        "loss_term_max": 1.0,
+        "g_min": 0.0,
+        "g_max": 0.0,
+        "n_phi_zero": 0,
+        "n_s_k_zero": 0,
+        "n_g_zero": 20,
+        "n_cells": 20
+      },
+      "headroom": {
+        "min_upper_bound": 7.643670380115509,
+        "n_upper_bound_negative": 0,
+        "n_mu_negative": 3,
+        "z_required_for_any_cell": 0.45489633641359173,
+        "z_conf_shipped": 1.0,
+        "sigma_median": 26.07813835144043,
+        "sigma_max": 57.693485260009766,
+        "mu_min": -12.567791938781738,
+        "abs_mu_median": 11.309618949890137,
+        "sigma_over_abs_mu_median": 2.305837046056601
+      },
+      "status_counts": {
+        "REJECTED_NO_REJUVENATION": 1,
+        "REJECTED_OOD": 7,
+        "REJECTED_UNSAFE": 12
+      },
+      "n_out_of_distribution": 7
+    },
+    "Y1": {
+      "res_max": 0.0,
+      "res_median": 0.0,
+      "res_all_zero": true,
+      "factors": {
+        "phi_min": 2.468832149877186e-08,
+        "phi_median": 0.014430481571176365,
+        "s_k_min": 0.10529501599197919,
+        "s_k_median": 0.5075981148281419,
+        "loss_term_min": 1.0,
+        "loss_term_max": 1.0,
+        "g_min": 0.0,
+        "g_max": 0.0,
+        "n_phi_zero": 0,
+        "n_s_k_zero": 0,
+        "n_g_zero": 18,
+        "n_cells": 18
+      },
+      "headroom": {
+        "min_upper_bound": 5.402379512786865,
+        "n_upper_bound_negative": 0,
+        "n_mu_negative": 8,
+        "z_required_for_any_cell": 0.34995077431620353,
+        "z_conf_shipped": 1.0,
+        "sigma_median": 82.5684585571289,
+        "sigma_max": 229.0177764892578,
+        "mu_min": -19.17303466796875,
+        "abs_mu_median": 19.037153244018555,
+        "sigma_over_abs_mu_median": 4.337227184062922
+      },
+      "status_counts": {
+        "REJECTED_NO_REJUVENATION": 1,
+        "REJECTED_OOD": 16,
+        "REJECTED_UNSAFE": 1
+      },
+      "n_out_of_distribution": 16
+    },
+    "Y2": {
+      "res_max": 0.0,
+      "res_median": 0.0,
+      "res_all_zero": true,
+      "factors": {
+        "phi_min": 3.4979811390705864e-12,
+        "phi_median": 0.018091869115531407,
+        "s_k_min": 0.0034380568997127185,
+        "s_k_median": 0.5331612931655414,
+        "loss_term_min": 1.0,
+        "loss_term_max": 1.0,
+        "g_min": 0.0,
+        "g_max": 0.0,
+        "n_phi_zero": 0,
+        "n_s_k_zero": 0,
+        "n_g_zero": 21,
+        "n_cells": 21
+      },
+      "headroom": {
+        "min_upper_bound": 13.962321281433105,
+        "n_upper_bound_negative": 0,
+        "n_mu_negative": 6,
+        "z_required_for_any_cell": 0.38114904292572876,
+        "z_conf_shipped": 1.0,
+        "sigma_median": 31.23007583618164,
+        "sigma_max": 81.92518615722656,
+        "mu_min": -16.130512237548828,
+        "abs_mu_median": 14.754961013793945,
+        "sigma_over_abs_mu_median": 2.116581386218888
+      },
+      "status_counts": {
+        "REJECTED_NO_REJUVENATION": 3,
+        "REJECTED_OOD": 7,
+        "REJECTED_UNSAFE": 11
+      },
+      "n_out_of_distribution": 7
+    }
+  },
+  "errors": {}
+}
