@@ -43,9 +43,24 @@ def _scorecard():
     return mod
 
 
-def load_snapshots(snap_dir: Path = SNAP_DIR) -> dict[str, dict]:
+# The retro pass audits comparisons that were JUDGED BY THE BROKEN RULE. That is a closed,
+# historical set: the nine snapshots that existed when Stage 13 shipped on 2026-08-17. A snapshot
+# taken afterwards (`c7t_stage12`, from the Stage 12 rebuild) was never judged by the old rule, so
+# including it would inflate the flip count with comparisons that never happened. Globbing the
+# directory made this scope silently grow the moment a new snapshot landed -- which it did, hours
+# later, and the pinned counts failed. Frozen deliberately, not to keep a test green.
+RETRO_SNAPSHOTS = (
+    "A_xdonor", "B_fatecal", "B_fatecal_pooled", "baseline", "c7_A_keep_hff",
+    "gc2_A_keep_hff", "gc2_B_mask_hff", "gc2_C_shuffle_hff_s0", "gc2_D_stratshuffle_hff_s0",
+)
+
+
+def load_snapshots(snap_dir: Path = SNAP_DIR, names=RETRO_SNAPSHOTS) -> dict[str, dict]:
+    """The snapshots in scope for the retro audit. Pass `names=None` to take whatever is on disk."""
+    paths = (sorted(snap_dir.glob("*.json")) if names is None
+             else [snap_dir / f"{n}.json" for n in names])
     return {p.stem: json.loads(p.read_text(encoding="utf-8"))["folds"]
-            for p in sorted(snap_dir.glob("*.json"))}
+            for p in paths if p.exists()}
 
 
 def abs_metrics(sc) -> list[str]:

@@ -181,3 +181,24 @@ def test_run_does_not_touch_any_snapshot():
 
 def test_results_are_json_serialisable():
     json.dumps(s13.run())
+
+
+# ---- the audit's SCOPE is a closed historical set, not whatever is on disk ------------------- #
+def test_the_retro_audit_covers_only_snapshots_the_broken_rule_actually_judged():
+    """Originally this globbed `scorecard/*.json`, so its scope grew the moment a new snapshot
+    landed -- which happened hours later when the Stage 12 rebuild wrote `c7t_stage12`, and the
+    pinned counts failed. That snapshot was produced AFTER Stage 13 shipped, so it was never
+    judged by the old rule; counting it would invent comparisons that never happened. The set is
+    frozen for that reason, not to keep a test green."""
+    assert len(s13.RETRO_SNAPSHOTS) == 9
+    assert "c7t_stage12" not in s13.RETRO_SNAPSHOTS
+    for name in s13.RETRO_SNAPSHOTS:
+        assert (ROOT / "scorecard" / f"{name}.json").exists(), f"{name} is in scope but missing"
+
+
+def test_snapshots_taken_after_stage_13_exist_but_are_out_of_scope():
+    """Guards the claim above: the file really is on disk and really is excluded."""
+    on_disk = {p.stem for p in (ROOT / "scorecard").glob("*.json")}
+    assert "c7t_stage12" in on_disk, "the Stage 12 rebuild snapshot should exist by now"
+    assert set(s13.load_snapshots()) == set(s13.RETRO_SNAPSHOTS)
+    assert "c7t_stage12" in set(s13.load_snapshots(names=None)), "names=None still takes all"

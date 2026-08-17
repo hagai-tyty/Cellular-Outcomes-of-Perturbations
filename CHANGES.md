@@ -11,6 +11,101 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-18 - STAGE 12 CLOSED: the rebuild ran, the split changed exactly as predicted, the metrics did not
+
+**Status:** EXECUTED, §12.9 discharged, **Stage 12 CLOSED**. Six folds rebuilt + retrained (~5 h),
+`scorecard/c7t_stage12.json`, `experiments/diag_stage12_rebuild_verdict.py`,
+`results/diag_stage12_rebuild_verdict_results.json`. **No `src/` change in this entry.**
+
+### The comparison is genuinely one change — verified before launch
+
+`_c7t` was built 2026-08-15 02:01-05:59, **after** the gate fix `18b0c49` (01:30). `git log -- src/`
+shows exactly two commits since 2026-08-14: that gate fix and Stage 12 (`72c0981`). So `src/`
+differs between baseline and rebuild **by Stage 12 alone**.
+
+Confirmed again by the run itself: the C-7 exact-match guard fired and passed — same 5 rejected Gill
+samples, same 19 masked ΔAge labels, 42,600 cells, 42,581 labelled. **The labels are identical; only
+the key differs.**
+
+### Pre-flight before spending the compute (the arm-D lesson)
+
+One fold, dataset-only, `MAX_CELLS=200`: cell_ids 1868/1868 unique, split map 1868/1868 entries,
+guard silent, key format `reprogramming:HFF:b0:0`. Clear to launch.
+
+### The split changed exactly as predicted — every number
+
+`diag_stage12_split_effect` predicted these from artefacts alone, with no rebuild. Against the real
+rebuild:
+
+| quantity | predicted | actual |
+|---|---|---|
+| train / val / calib | 34,079 / 4,325 / 4,177 | **34,079 / 4,325 / 4,177** |
+| D0 share train / val / calib | 11.8 / 11.7 / 11.4 % | **11.755 / 11.699 / 11.396 %** |
+| distinct cell_ids | 42,600 | **42,600** (was 1,100) |
+| split-map entries | 42,600 | **42,600** (was 1,100) |
+
+Fixed as a side effect: `dataset_summary.json`'s `split_sizes` used to read
+`{train: 850, calib: 115, val: 116, test: 19}` — **map entries, not cells**. It now reports cells.
+
+### THE RESULT — the pre-registered null, on every metric
+
+Target `|conformal_coverage − 0.90|` paired over 5 folds: **+0.0095, 95 % CI [−0.0169, +0.0360]**,
+includes 0 → **NO DETECTABLE MOVE**, which is §12.9's pre-registered outcome #2.
+
+**All 18 rows of `compare` read `noise (CI incl. 0)`.** Guards clean (`fate_prauc` −0.007,
+`fate_roc` −0.013, `rank_model_dage` −0.001). RES still exactly 0, as Stage 15 predicted and
+Stage 16 said in advance it would be.
+
+§12.9 said what to do with this outcome: *"record it, do not re-run looking for a win."* Recorded.
+**Stage 12 is CORRECT-BUT-INERT on model metrics.**
+
+### The honest limit on that null
+
+`conformal_coverage` is a fraction of ~20 held-out cells, so it is **quantised in steps of ~0.05
+per fold**. Per fold: N3 19/20 → 19/20, O1 20/21 → 20/21, O2 20/20 → 20/20, Y1 18/18 → 18/18,
+Y2 **15/21 → 14/21**. **The entire observed change is one cell in one fold**, and two folds sit
+saturated at 1.000 where movement toward nominal is impossible without narrowing the intervals.
+
+The null is real, but it is a null **at this resolution**. It must not be quoted as "Stage 12
+provably changes nothing".
+
+*Directional, NOT significant, not claimed:* interval width −6.97 yr [−19.93, +5.98]; OOD flag rate
+0.451 → 0.343. Both point the way a better-composed calib set would; neither clears the bar.
+
+### A metric the scorecard still judges the wrong way
+
+§12.9's target needed a statistic `scorecard.py` does not compute. `conformal_coverage` is
+registered `("higher", ...)`, but coverage is **target-seeking**: 1.000 is not better than 0.900, it
+means the intervals are too wide — which is exactly why `conformal_width` sits at 63-81 years and
+why O2 and Y1 both read 1.000. So `diag_stage12_rebuild_verdict.py` judges `|coverage − nominal|`,
+the same shape Stage 13 established for `level_shift`. **The scorecard row itself is left alone and
+this is logged as a known defect**, not silently patched mid-Change.
+
+### Two defects found while running this
+
+1. **`run_loocv.py` advertises a tag that would destroy the baseline.** It derives the snapshot tag
+   from *arm + gate only*, so re-running the same arm prints the same tag as the first run — here,
+   `c7_A_keep_hff`, the very comparator. Same class as the defect its own comment at lines 84-86
+   records and fixes for the `gc2_` → `c7_` case, which does not cover re-running an arm. Recorded,
+   not patched (the runner is not part of this Change); a background task is filed.
+2. **The Stage 13 retro-audit's scope was a directory glob.** Writing `c7t_stage12.json` silently
+   enlarged it and broke three pinned counts hours after Stage 13 shipped. Fixed properly rather
+   than by updating the numbers: the retro pass audits comparisons **judged by the broken rule**,
+   which is a closed historical set of nine snapshots. A post-Stage-13 snapshot was never judged by
+   the old rule, so counting it would invent comparisons that never happened. The set is now frozen
+   and two tests pin the scope.
+
+### Status
+
+**Stage 12 is CLOSED.** The defect was real and is fixed; the split composition changed exactly as
+measured in advance; the model-metric effect is a null at the available resolution. The fix stands
+on **correctness** — a unique key is unambiguously right — which is what §12.6 said in advance it
+would have to stand on.
+
+1506 tests pass, ruff clean.
+
+---
+
 ## 2026-08-17 - STAGE 16: the safety gate rejects 70% of demonstrably safe cells, and calibration fixes it
 
 **Status:** MEASURED, hypothesis CONFIRMED, Change pre-registered but **NOT executed**.

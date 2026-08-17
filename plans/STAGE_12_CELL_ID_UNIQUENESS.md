@@ -206,3 +206,79 @@ per-fold column must be inspected before any aggregate verdict is trusted.
 
 **Not to be done:** re-running with a different seed if the first result is null. One run, one
 verdict, recorded either way.
+
+
+---
+
+# ANNOTATION 2 — 2026-08-18, THE RUN. §12.9 EXECUTED AND CLOSED.
+
+*§12.9 above is the pre-registration as written before the run and is left unedited.*
+
+## 12.11 What was run
+
+    CELLFATE_FOLD_SUFFIX=_s12 CELLFATE_BULK_GATE=1 python local_runners/run_loocv.py ... --arm A
+    CELLFATE_FOLD_SUFFIX=_s12 python scorecard.py snapshot --tag c7t_stage12
+    python scorecard.py compare c7_A_keep_hff c7t_stage12
+
+Six folds, ~5 h, exit 0. `_c7t` and `scorecard/c7_A_keep_hff.json` untouched (verified before the
+snapshot). The C-7 exact-match guard fired on the rebuild and passed: the same 5 rejected Gill
+samples, the same 19 masked ΔAge labels, 42,600 cells, 42,581 labelled — **so the labels are
+identical to the baseline and the only difference is the key.**
+
+## 12.12 The split changed exactly as predicted — every number
+
+The `diag_stage12_split_effect` predictions, made from artefacts alone, against the real rebuild:
+
+| quantity | predicted | actual (`_s12`) |
+|---|---|---|
+| train / val / calib | 34,079 / 4,325 / 4,177 | **34,079 / 4,325 / 4,177** |
+| D0 share, train | 11.8 % | **11.755 %** |
+| D0 share, val | 11.7 % | **11.699 %** |
+| D0 share, calib | 11.4 % | **11.396 %** |
+| distinct cell_ids | 42,600 | **42,600** (was 1,100) |
+| split-map entries | 42,600 | **42,600** (was 1,100) |
+
+Also fixed as a side effect: `dataset_summary.json`'s `split_sizes` used to read
+`{train: 850, calib: 115, val: 116, test: 19}` — it was reporting **map entries, not cells**.
+It now reports cells.
+
+## 12.13 THE RESULT — the pre-registered NULL
+
+**Verdict: NO DETECTABLE MOVE.** Target `|conformal_coverage − 0.90|`, paired over 5 folds:
+**+0.0095, 95 % CI [−0.0169, +0.0360]** — includes 0.
+
+**And every other metric agrees.** All 18 rows of `compare` read `noise (CI incl. 0)`. Guards
+(`fate_prauc` −0.007, `fate_roc` −0.013, `rank_model_dage` −0.001) — no breach. RES still exactly
+0, as Stage 15 predicted and Stage 16 said it would be.
+
+This is pre-registered outcome #2, and §12.9 says what to do with it: *"record it, do not re-run
+looking for a win."* Recorded. **Stage 12 is CORRECT-BUT-INERT on model metrics.**
+
+## 12.14 The honest limit on that null — the instrument is coarse
+
+`conformal_coverage` is a fraction of ~20 held-out cells, so it is **quantised in steps of
+1/n ≈ 0.05 per fold**:
+
+| fold | baseline | rebuild |
+|---|---|---|
+| N3 | 19/20 | 19/20 |
+| O1 | 20/21 | 20/21 |
+| O2 | 20/20 | 20/20 |
+| Y1 | 18/18 | 18/18 |
+| Y2 | **15/21** | **14/21** |
+
+**The entire observed change is one cell in one fold**, and two folds sit saturated at 1.000 where
+movement toward nominal is impossible without narrowing the intervals. So this test could not have
+detected a sub-cell effect: the null is real, but it is a null *at this resolution*, and it should
+not be quoted as "Stage 12 provably changes nothing".
+
+*Directionally, and NOT significant:* interval width −6.97 yr [−19.93, +5.98] and OOD flag rate
+0.451 → 0.343. Both point the way a better-composed calib set would, neither clears the bar. Not
+claimed.
+
+## 12.15 Status
+
+**Stage 12 is CLOSED.** The defect was real and is fixed; the split composition changed exactly as
+measured in advance; the model-metric effect is a null at the available resolution. The fix stands
+on correctness — a unique key is unambiguously right — not on a metric win, which is what §12.6
+said it would have to do.
