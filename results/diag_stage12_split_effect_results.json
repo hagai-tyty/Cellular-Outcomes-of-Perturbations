@@ -1,0 +1,63 @@
+{
+  "fold": "cellfate_loocv_N2_c7t",
+  "canary": {
+    "stored_entries": 1100,
+    "rebuilt_entries": 1100,
+    "identical": true
+  },
+  "ABORTED": false,
+  "n_cells": 42600,
+  "n_distinct_ids_old": 1100,
+  "n_distinct_ids_new": 42600,
+  "split_map_entries_old": 1100,
+  "split_map_entries_new": 42600,
+  "d0_cells": 4988,
+  "d0_distinct_ids_old": 117,
+  "composition_old": {
+    "calib": {
+      "n": 4490,
+      "d0_n": 404,
+      "d0_share": 0.08997772828507795
+    },
+    "train": {
+      "n": 33686,
+      "d0_n": 4000,
+      "d0_share": 0.11874369174137624
+    },
+    "val": {
+      "n": 4405,
+      "d0_n": 584,
+      "d0_share": 0.13257661748013622
+    }
+  },
+  "composition_new": {
+    "calib": {
+      "n": 4177,
+      "d0_n": 476,
+      "d0_share": 0.11395738568350491
+    },
+    "train": {
+      "n": 34079,
+      "d0_n": 4006,
+      "d0_share": 0.11755039760556354
+    },
+    "val": {
+      "n": 4325,
+      "d0_n": 506,
+      "d0_share": 0.11699421965317919
+    }
+  },
+  "cells_that_change_split": 14334,
+  "split_sizes_old": {
+    "train": 33686,
+    "calib": 4490,
+    "val": 4405,
+    "test": 19
+  },
+  "split_sizes_new": {
+    "train": 34079,
+    "val": 4325,
+    "calib": 4177,
+    "test": 19
+  }
+}

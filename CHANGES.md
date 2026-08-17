@@ -11,6 +11,69 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-17 - STAGE 12 EFFECT: the split-composition half, measured exactly with no rebuild
+
+**Status:** MEASURED. `experiments/diag_stage12_split_effect.py`, read-only,
+`results/diag_stage12_split_effect_results.json`, 17 tests
+(`tests/test_diag_stage12_split_effect.py`). **No rebuild, no retrain, no `src/` change.**
+
+Stage 12 fixed the colliding `cell_id` and deliberately claimed **nothing** about the size of the
+effect. That claim splits in two, and one half needs no compute at all:
+
+- **the split map itself** — measurable now, exactly, from artefacts already on disk;
+- **the effect on model metrics** — still needs a rebuild + retrain + re-score. **Not claimed
+  here.**
+
+A built fold stores everything the split depends on: `manifest.parquet` carries `cell_id` (the old
+colliding key) alongside `shard_id` and `row_idx` (which together *are* the fixed key), in build
+order. So both split maps can be re-derived with the real `holdout_split`, the real seed, and the
+real rows.
+
+### The canary, because a re-derivation is worth nothing unless it is faithful
+
+The script reproduces the **old** map first and requires it to equal `splits/holdout.json`
+**exactly**, aborting if not. It does: **1100 stored entries, 1100 rebuilt, identical.** So the
+numbers below are measured against the build that actually ran, not simulated. (A test corrupts
+the stored map and confirms the run aborts — a check that cannot fail is not a check.)
+
+### The measurement
+
+**42,600 cells carried 1,100 distinct ids.** D0 — the control anchor — is **4,988 cells sharing
+117 ids**, so the control timepoint's split was decided **117 times, not 4,988.**
+
+| split | n (old) | D0% (old) | n (new) | D0% (new) | shift |
+|---|---|---|---|---|---|
+| train | 33,686 | 11.9% | 34,079 | 11.8% | −0.1% |
+| val | 4,405 | **13.3%** | 4,325 | 11.7% | −1.6% |
+| calib | 4,490 | **9.0%** | 4,177 | **11.4%** | **+2.4%** |
+
+**The finding:** under the colliding key the three splits scatter across **4.3 points**; under the
+fixed key they converge to within **0.4 points** of each other and of the population rate (11.7%) —
+a **>10× reduction in spread**. That is the signature of the sample size changing from ~117
+decisions to 42,600, and it identifies the mechanism rather than merely correlating with it.
+
+`calib` — the split conformal intervals are computed on, and the one most depleted of the control
+timepoint — is the split that gains most from the fix (+2.4 points).
+
+**33.6% of all cells (14,334) land in a different split** under the fixed key. The split map is
+materially different, which is why the model-metric consequence is worth a rebuild rather than
+being waved off as negligible.
+
+### Correction to the Stage 12 record (the original entry stands as written)
+
+Stage 12 recorded *"D0 occupies indices 0–111 exclusively"* and put the D0 decision count at
+**112**. Measured across the union of all chunks it is **117** — 112 was the count in shard `b0`
+alone, and chunks differ slightly in size, so D0 spans indices 0–116 over the union. The
+load-bearing numbers are unchanged and reproduce exactly: **calib 9.0% vs val 13.3%**, and the
+effective split size being ~10² rather than ~10⁴.
+
+### Not claimed
+
+The effect on any model metric. That requires the rebuild + retrain + re-score, pre-registered as
+its own Change (see the annotation appended to `plans/STAGE_12_CELL_ID_UNIQUENESS.md`).
+
+---
+
 ## 2026-08-17 - STAGE 13: the scorecard judged the wrong quantity, and it favoured the shuffle controls
 
 **Status:** EXECUTED. `plans/STAGE_13_SCORECARD_VERDICT_CORRECTNESS.md`. Changes `scorecard.py`
