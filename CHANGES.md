@@ -193,6 +193,63 @@ both clocks.** §1's 5.36 suggests it may already be met on one. Item 2 settles 
 ---
 
 
+## 2026-08-17 - STAGE 11: the dense clock was never broken -- it was MIS-SCALED. One parameter closes the gap
+
+**Status:** Executed, READ-ONLY. Pre-registered in `plans/STAGE_11_DAGE_SCALE_CALIBRATION.md`
+BEFORE the run. New: `experiments/diag_stage11_scale.py`,
+`tests/test_diag_stage11_scale.py` (17 tests), `results/diag_stage11_scale_results.json`.
+Suite green (1325). **`src/` untouched.**
+
+### The result
+
+`k` fitted LEAVE-ONE-DONOR-OUT against methylation ΔAge, 44 conditions, 3 donors.
+
+| | uncalibrated | | least squares | | **variance-matched** | | |
+|---|---|---|---|---|---|---|---|
+| variant | MAE | SD | MAE | SD | **MAE** | **SD** | rho |
+| raw | 22.69 | 1.66 | 6.78 | 0.60 | **10.68** | **0.99** | 0.770 |
+| top100 | 7.15 | 0.98 | 6.17 | 0.77 | **7.50** | **0.99** | 0.810 |
+| **top500** | 16.27 | 1.74 | 5.62 | 0.75 | **7.28** | **0.98** | 0.757 |
+| top2000 | 21.62 | 1.78 | 6.45 | 0.65 | 9.41 | 0.99 | 0.771 |
+| resid_pluri | 13.00 | 1.14 | 10.25 | 0.63 | 12.39 | 1.04 | 0.354 |
+
+**Verdict: SCALE IS THE PROBLEM.** `raw` goes 22.69 -> 6.78 on a ONE-PARAMETER rescale, closing
+**102 %** of its 15.5 yr gap to top100. `k` = 0.37 / 0.33 / 0.39 across donors, spread **1.19x**,
+well inside the 2x transferability bar.
+
+### What this reframes
+
+**top100 was never a better instrument -- it was an accidentally well-scaled one.** Its
+uncalibrated SD ratio is 0.98 while raw's is 1.66, which is the entire source of its apparent
+15.5 yr advantage. Once both are calibrated, the sparse variants land 7.3-7.5 and raw lands 10.7:
+sparsity still buys ~3 yr, not 15.5.
+
+The dense clock's ORDERING was correct all along (rho 0.770). It reported the right story in the
+wrong units, roughly 2.7x too large.
+
+### The trade, stated rather than buried
+
+Least squares reaches MAE 6.78 -- **below the 7.30 methylation floor** -- but at SD ratio **0.60**.
+It gets there by SHRINKING: `k_LS = rho * SD(truth)/SD(pred)`, so with imperfect correlation it
+deliberately under-shoots. That is the same trade that flattered `ranknorm` and `resid_pluri`.
+
+A number reported as "these cells got N years younger" must therefore use the **variance-matched**
+calibration, where raw reaches **10.68 at SD 0.99** and **top500 reaches 7.28 at SD 0.98 -- at the
+methylation floor with magnitude preserved.** Any MAE below the floor should be treated as
+shrinkage, not accuracy.
+
+### Not settled
+
+n = 3 donors for the LODO calibration; transient arm only (no Sendai condition carries both
+methylation truths, so there is no independent cohort to confirm `k` on); whether `k` transfers to
+a new dataset is untestable here and is not claimed. And a correct scale does NOT rescue
+same-timepoint ΔAge PREDICTION, which is circular (rho 0.96-0.99) whatever the target's units.
+
+`src/` is not changed by this stage. The most this licenses is PROPOSING a calibrated-ΔAge Change,
+separately pre-registered (plan 11.0, same rule as Stage 10).
+
+---
+
 ## 2026-08-17 - STAGE 10: pluripotency is MEDIATION, not contamination. The removal recommendation is WITHDRAWN
 
 **Status:** Executed, READ-ONLY. Pre-registered in
