@@ -11,6 +11,93 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-17 - STAGE 16: the safety gate rejects 70% of demonstrably safe cells, and calibration fixes it
+
+**Status:** MEASURED, hypothesis CONFIRMED, Change pre-registered but **NOT executed**.
+`plans/STAGE_16_SAFETY_FLOOR_MISCALIBRATION.md`, `experiments/diag_stage16_safety_floor.py`,
+read-only, `results/diag_stage16_safety_floor_results.json`, 35 tests. **`src/` untouched.**
+
+Stage 15 logged as an untested hypothesis that the `REJECTED_UNSAFE` rate looked like
+miscalibration rather than danger. Tested now.
+
+### The gate that could have killed it
+
+A high rejection rate proves nothing if the cells are genuinely unsafe, so that was measured
+first, with the power to end the stage. **It did not.** Pooled over six folds: **91 of 119
+held-out cells are TRUE SAFE.** N2 is decisive — **19 of 19 truly safe, 15 rejected as unsafe.**
+There is no reading of that fold in which the rejections are correct.
+
+*(This gate was measured before the plan was written and is therefore not pre-registered; §16.3's
+tests all were. Same convention as Stage 14 §14.3.)*
+
+### The cost, and the repair
+
+Median S is **0.704** for truly-safe cells and **0.217** for truly-unsafe — the head separates
+cleanly, and its safe class simply sits below the 0.76 bar. **70.3 % of truly-safe cells fall
+below it.**
+
+| arm | false rej | drop | false appr | sens | spec | bal acc |
+|---|---|---|---|---|---|---|
+| raw (as shipped) | **64** | — | 2 | **0.297** | 0.929 | 0.613 |
+| Platt on `calib` **[DEPLOYABLE]** | **26** | **−59.4 %** | 5 | **0.714** | 0.821 | 0.768 |
+| Platt on `test` *[ORACLE, not deployable]* | 27 | −57.8 % | 0 | 0.703 | 1.000 | 0.852 |
+
+Pre-registered bar was a ≥50 % drop in false rejections. **The deployable arm clears it at 59.4 %.**
+
+**THE HEADLINE: shipped safety sensitivity is 0.297.** The gate approves under a third of
+genuinely safe cells while the head behind it scores PR-AUC 0.965–0.992. **The fate head's quality
+is not reaching the decision it exists to make.**
+
+### H4 (prior/cohort shift) is REFUTED — and the deployable arm is the stronger one
+
+The two-way fit was the point of the design: if calibration worked but did not transfer, the
+oracle would repair it and the deployable arm would not. **The deployable arm matches the oracle
+(26 vs 27 false rejections)** — calibration transfers from `calib` to a held-out donor.
+
+Better than that: the oracle is **undefined on N2** (19/19 safe → unidentifiable Platt boundary →
+passes through unchanged, which is why N2's oracle column equals its raw column). The deployable
+calibrator is fitted on all six folds, because `calib` always carries both classes. **The
+"deployable" arm is not a compromise; it is the better estimator here.**
+
+### The trap was checked, not assumed
+
+A calibrator could "fix" false rejections by shoving every probability upward. False approvals rise
+only **2 → 5** while false rejections fall **64 → 26**, and balanced accuracy rises **0.613 →
+0.768**. A favourable trade, not a shifted operating point.
+
+### H3 also contributes, and is the same fact seen sideways
+
+The oracle-best threshold on **raw** scores is **0.495** against the shipped **0.76** (balanced
+accuracy 0.832). So "the probabilities are too low" and "the bar is too high" are one phenomenon.
+Recalibrating the probabilities is the principled repair; **lowering the safety bar would be
+fitting a safety policy to data**, and the plan rules it out in advance (§16.5).
+
+### Post-hoc, explicitly not pre-registered
+
+Training prior is **53.2 % safe**; test priors run 44.4–100 %. The false-rejection rate tracks the
+gap between them: Spearman **+0.771**, n = 6, against a two-sided critical ρ of **0.886** —
+**suggestive, NOT significant.** Y1 (prior closest to training, 44.4 %) has the lowest
+false-rejection rate, 2 of 8; N2 (furthest, 100 %) among the highest, 15 of 19. Recorded as a
+mechanism candidate, not a finding.
+
+### What this does NOT buy
+
+**RES stays 0.** Stage 15 established `R_eff = 0` for 119 of 119 cells, and that gate is
+independent of the safety gate. This was stated in the plan before the run (§16.0) so no one reads
+a 59 % repair as movement on the headline metric. What it buys is a safety verdict that can be
+trusted — the fate head is the half of the project that is still alive.
+
+### The Change this licenses (pre-registered, not executed)
+
+Apply the `calib`-fitted Platt calibrator to `S` before the safety gate, behind a default-off flag.
+Target: pooled sensitivity ≥ 0.60 (measured 0.714). Guards: false approvals ≤ 7; balanced accuracy
+must rise; `fate_prauc`/`fate_roc` **unchanged** (Platt is monotone, so ranking is invariant by
+construction — any movement means the implementation is wrong); RES must stay 0. `τ_safe` and `w`
+are untouched — the floor is a policy, and this fixes the probabilities fed to it, not the floor.
+Full text: `plans/STAGE_16_SAFETY_FLOOR_MISCALIBRATION.md` §16.8.
+
+---
+
 ## 2026-08-17 - STAGE 15: RES is zero because the model has no confidence, and it is over-determined
 
 **Status:** MEASURED, question CLOSED. `experiments/diag_stage15_res_zero.py`, read-only (inference
