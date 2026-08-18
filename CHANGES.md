@@ -11,6 +11,89 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-18 - STAGE 16 DIAGNOSIS CORRECTED: S is calibrated to the SOFT label; the gate wants a HARD one
+
+**Status:** MEASURED, read-only. Found during the pre-build diagnostics the user asked for before
+implementing 16.8. **`src/` untouched.** This **corrects the mechanism recorded in the Stage 16
+entry of 2026-08-17**, which stands as written. The empirical findings there are unchanged; the
+explanation is now wrong and is superseded here.
+
+### What Stage 16 got right, and what it got wrong
+
+**Right, and unchanged:** 91 of 119 held-out cells are truly safe; 70.3% of them fall below the
+0.76 bar; shipped sensitivity is 0.297; a hard-label-fitted correction lifts it to 0.714.
+
+**Wrong:** the diagnosis "H1 - plain miscalibration". Two things I did not check before concluding:
+
+1. **Platt is ALREADY applied at inference.** `predictor.py:176` calls `apply_platt` whenever the
+   bundle carries coefficients, and every fold ships them (`platt_a` 2.54-2.69, `platt_b`
+   0.38-0.52). So the `S` Stage 16 measured was **already calibrated**, and its "deployable
+   Platt" arm was a SECOND Platt stacked on the first. Because
+   `platt_safe(p,a,b) = sigmoid(a*logit(p)+b)`, two Platts compose exactly into one
+   (`a = a1*a2`, `b = a2*b1 + b2`) -- so that arm was really measuring *a different single
+   calibrator*, not "calibration vs none".
+
+2. **The shipped calibrator is fitted against the SOFT class target, not the hard label.**
+   `train_model.py:207-215` fits on `cal_target[:, SAFE_IDX]` -- the soft distribution stored in
+   `y_cls` -- while the safety gate, `scorecard.fate_ece`, and Stage 16's own analysis all score
+   it against `argmax(y_cls)`.
+
+### The measurement that settles it
+
+On `calib`, per fold, shipped `S` against the two targets:
+
+| fold | mean S | soft mean | hard mean | **ECE vs SOFT** | **ECE vs HARD** |
+|---|---|---|---|---|---|
+| N3 | 0.502 | 0.500 | 0.540 | **0.009** | 0.110 |
+| O1 | 0.500 | 0.500 | 0.540 | **0.012** | 0.106 |
+| O2 | 0.500 | 0.500 | 0.540 | **0.011** | 0.110 |
+| Y1 | 0.501 | 0.500 | 0.540 | **0.009** | 0.109 |
+| Y2 | 0.502 | 0.500 | 0.540 | **0.013** | 0.113 |
+
+**The calibrator is doing its job almost perfectly -- against the soft target.** Mean `S` tracks
+the soft mean to three decimals and misses the hard base rate by exactly the soft-vs-hard gap.
+
+And the causal link to the rejections, on the held-out cells themselves:
+
+> **46 of 91 hard-SAFE cells carry a SOFT safe target below the 0.76 bar.**
+
+A perfectly soft-calibrated `S` is therefore *expected* to sit under the gate for **half** of the
+genuinely safe cells. That is not a calibration failure; it is the gate and the estimate answering
+two different questions.
+
+### The corrected diagnosis
+
+Not "the head is miscalibrated" (it is well calibrated), not prior/cohort shift (already refuted
+by the oracle/deployable agreement). It is a **TARGET MISMATCH**:
+
+* `S` estimates **P(soft label = safe)**.
+* `tau_safe = 0.85` is a statement about **P(identity is actually preserved)** -- a hard event.
+* The two differ by enough that half the truly-safe cells legitimately fall below the bar.
+
+### What this changes about the fix
+
+The 16.8 proposal -- "apply a Platt calibrator to `S` before the safety gate" -- would have shipped
+a **second calibrator to compensate for the first being fitted against the wrong target**. It would
+have worked numerically and hidden the root cause.
+
+The correct fix is to fit the shipped calibrator on the **hard** label, so `S` means what every
+consumer already assumes. Because Platts compose, this is expressible as **corrected coefficients
+on a single calibrator**, not a stack.
+
+Deliberately NOT chosen: moving `tau_safe` to suit a soft-scale `S`. That is fitting a safety
+policy to data, and the Stage 16 plan ruled it out in advance (16.5).
+
+### Open question this raises, recorded not answered
+
+Which target is *right* for a safety gate is a genuine question, not a formality. The soft label is
+the more honest description of an ambiguous cell; the hard label is what "identity preserved" means
+operationally. This work adopts **hard**, because `tau_safe` is written as a statement about the
+event, and because every existing consumer already reads `S` that way. The alternative -- keep `S`
+soft and define the gate on the soft scale -- is coherent but would require re-deriving `tau_safe`
+from evidence rather than inheriting it.
+
+---
+
 ## 2026-08-18 - STAGE 17: the scorecard rewarded over-coverage, and hid whether the folds agreed
 
 **Status:** EXECUTED. `plans/STAGE_17_COVERAGE_DIRECTION_AND_FOLD_CONSISTENCY.md`. Changes
