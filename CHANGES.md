@@ -11,6 +11,90 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-18 - STAGE 14 + STAGE 16 BUILT: calibrated dAge at the reporting boundary, and a fate calibrator fitted on the right target
+
+**Status:** EXECUTED, both. Decisions taken by the user after the trade-offs were laid out.
+`src/` changes: `inference/dage_calibration.py` (new), `inference/schema.py`,
+`inference/service.py`, `training/train_model.py`. 30 tests. Full suite 1558 green, ruff clean.
+
+The user asked for the plans to be improved and for diagnostics to run **before** building. That
+sequencing changed Stage 16's fix entirely -- see the diagnosis-correction entry above.
+
+### STAGE 14 -- k_var = 0.5991, at the reporting boundary, alongside raw
+
+**Where:** `build_response` in `service.py`, and nowhere else. A test enumerates every `src/` file
+importing `dage_calibration` and requires the list to be exactly `["service.py"]`.
+
+**Why not upstream.** `res.py`'s `kappa = 5.0` is a rejuvenation half-saturation **in years**, so
+calibrating before RES would silently reinterpret it -- the same class of defect as the
+`huber_delta` knee that ruled out rescaling the training target. RES still sees raw
+`mu_age`/`sigma_age`, and a test slices the `compute_res` call to prove it. The scorecard and
+every evaluation path stay raw too, so **a 1/k drop in dAge MAE cannot appear anywhere** and be
+mistaken for an improvement.
+
+**Which factor.** `k_var = 0.5991` over `k_LS = 0.3637`. `k_LS` reaches MAE 6.78 against the
+7.30 yr instrument floor -- the quotable headline -- but its SD ratio is 0.597: it wins partly by
+under-reporting magnitude 40%. For a reporting transform the objective is unbiased magnitude, so
+10.68 ships as the honest number. Both constants carry provenance and are pinned against the
+recorded Stage 11 LODO fits so neither can drift.
+
+**Alongside, never instead.** `delta_age_mean` / `_interval` / `epistemic_std` keep their raw
+values. Four new fields (`delta_age_calibrated`, `_interval_calibrated`,
+`epistemic_std_calibrated`, `delta_age_calibration_k`) default to `None`, so every existing
+Response stays valid. `k` was fitted on O1/O2/O3 of the transient arm and that cohort is
+**disjoint** from the training one, so a caller must be able to see both numbers. The caveat says
+UNTESTED and DISJOINT in those words, and the pre-existing "do not read the number as years"
+warning is **not** weakened.
+
+**On the interval:** scaling both endpoints preserves the nominal coverage exactly, because the
+RNA-clock label scales with them. It does **not** establish coverage against methylation truth,
+which has never been measured. Stated in the caveat rather than implied by the units.
+
+Reported dAge magnitudes now fall ~1.7x and interval width goes 63.4 -> 38.0 yr. **That is a
+change of units, not an improvement**, and nothing in the scorecard will suggest otherwise.
+
+### STAGE 16 -- fit the fate calibrator on the HARD class
+
+`train_model.py` fitted Platt on `cal_target[:, SAFE_IDX]`, the **soft** probability in `y_cls`.
+The calibrator was excellent at that (ECE 0.009-0.013 on calib) and wrong for every consumer,
+all of which read `S` as P(hard class = safe).
+
+The fix is one expression -- `_hard_safe(t) = (argmax(t) == SAFE_IDX)` -- applied to the shipped
+fit **and** to the cross-donor diagnostic beside it, since two calibrators fitted against
+different targets cannot be compared and that block exists to compare them.
+
+**What was deliberately NOT done:**
+
+* **No second calibrator stacked at inference.** That was the original 16.8 proposal. Because
+  `platt_safe(p,a,b) = sigmoid(a*logit(p)+b)`, two Platts compose exactly into one
+  (`a1*a2`, `a2*b1+b2`) -- so stacking would have worked numerically while leaving the root cause
+  in place. A test pins the composition identity, and another pins that inference performs
+  exactly one calibration step.
+* **`tau_safe` was not moved.** The empirically optimal threshold on raw scores is 0.495 against
+  a shipped 0.85, and lowering the bar to suit a soft-scale `S` would be fitting a safety policy
+  to data. A test pins 0.85.
+
+### FORWARD-ONLY, and this matters
+
+Platt is fitted during training. **Bundles already on disk -- including the `_s12` folds built
+today -- still carry soft-fitted coefficients.** The fix takes effect on the next training run;
+it does not retro-correct anything, and a green suite must not be read as "the shipped folds are
+now calibrated". Realising the measured gain (sensitivity 0.297 -> ~0.714) requires re-running
+training, or a recalibration pass that re-fits the coefficients from the existing members.
+
+### The safety posture, stated plainly
+
+The user chose to make this the **default** rather than ship it behind a flag, with the trade in
+front of them: the gate today catches **92.9%** of unsafe cells and approves **29.7%** of safe
+ones; hard-calibrated it catches **82.1%** and approves **71.4%**. In counts, false rejections
+64 -> 26 against false approvals 2 -> 5. That is a deliberate loosening of a safety gate, taken
+knowingly, and it is recorded here so it is never mistaken for an incidental side effect.
+
+Nothing about RES changes: it stays exactly 0, for the independent `R_eff` reason Stage 15
+established.
+
+---
+
 ## 2026-08-18 - STAGE 16 DIAGNOSIS CORRECTED: S is calibrated to the SOFT label; the gate wants a HARD one
 
 **Status:** MEASURED, read-only. Found during the pre-build diagnostics the user asked for before

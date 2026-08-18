@@ -204,7 +204,27 @@ def run(cfg: TrainConfig) -> dict:
     from cellfate.common.schemas import TemperatureParams
 
     cal_probs = ensemble_probs(members, cal_ds, device).numpy() if len(cal_ds) else None
-    fate_parts = [(p[:, C.SAFE_IDX], t[:, C.SAFE_IDX]) for p, t in (
+    # STAGE 16: fit the calibrator on the HARD class, not the soft target.
+    #
+    # This line used to pass `t[:, C.SAFE_IDX]` -- the SOFT probability stored in `y_cls`. The
+    # resulting calibrator was excellent at what it was asked to do (ECE 0.009-0.013 against the
+    # soft target on calib) and wrong for every consumer, all of which read `S` as P(hard class
+    # = safe): `res.py`'s safety gate compares it to `tau_safe = 0.85`, `scorecard.fate_ece`
+    # scores it against `argmax(y_cls)`, and the served `p_identity_preserved` is read the same
+    # way. Measured on calib: ECE against HARD labels was 0.106-0.113, and mean S sat at 0.500
+    # -- the soft mean -- against a hard base rate of 0.540.
+    #
+    # The cost was not academic. On the held-out donors, 46 of 91 genuinely safe cells carry a
+    # SOFT safe target BELOW the 0.76 gate, so a perfectly soft-calibrated S is EXPECTED to sit
+    # under the bar for half of them. Shipped safety sensitivity was 0.297.
+    #
+    # Not fixed by moving `tau_safe`: that would fit a safety policy to data. The gate is a
+    # statement about whether identity is actually preserved, so the estimate must be a hard-
+    # class probability. See CHANGES.md 2026-08-18 "STAGE 16 DIAGNOSIS CORRECTED".
+    def _hard_safe(soft: np.ndarray) -> np.ndarray:
+        return (np.argmax(soft, axis=1) == C.SAFE_IDX).astype(np.float64)
+
+    fate_parts = [(p[:, C.SAFE_IDX], _hard_safe(t)) for p, t in (
         (cal_probs, cal_target),
         (None if xstats is None else xstats.probs_mean, None if xstats is None else xstats.targets),
     ) if p is not None and len(p)]
@@ -240,7 +260,9 @@ def run(cfg: TrainConfig) -> dict:
     fate_alt = {}
     if xstats is not None and len(xstats.probs_mean):
         p_xd = xstats.probs_mean[:, C.SAFE_IDX]
-        y_xd = xstats.targets[:, C.SAFE_IDX]
+        # STAGE 16: hard, matching the shipped fit above -- otherwise the two calibrators are
+        # fitted against different targets and the comparison below is meaningless.
+        y_xd = _hard_safe(xstats.targets)
         a_xd, b_xd = fit_platt_binary(p_xd, y_xd)
         fate_alt = {
             "xdonor_only_platt_a": a_xd,
