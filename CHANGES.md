@@ -11,6 +11,98 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-18 - STAGE 16 VERIFIED ON REAL ARTEFACTS: recalibrated, evaluated, and the feared safety loss did NOT occur
+
+**Status:** the hard-label calibrator is now **implemented, tested, AND empirically validated on
+recalibrated artefacts**. New: `local_runners/recalibrate_folds.py`, folds
+`cellfate_loocv_*_s16`, snapshot `scorecard/c7t_stage16.json`,
+`results/stage16_recalibration_results.json`,
+`results/diag_stage16_safety_floor_results_{s12,s16}.json`, 12 tests.
+
+The previous entry ended with the fix in `src/` and the honest caveat that no artefact had been
+recalibrated. **A code fix plus unit tests is not evidence that shipped behaviour changed.** This
+closes that gap.
+
+### How it was recalibrated without retraining
+
+Platt is fitted during training, so a rerun of training would have cost ~5 h. Only that one step
+needed redoing. `recalibrate_folds.py` reproduces the shipped calibration block exactly --
+`fit_platt_binary(concat(calib P(safe), xdonor P(safe)), concat(hard, hard))` -- taking the
+cross-donor pool from the bundle's own `xdonor_stats.npz` (the same 100 cells training used) and
+recovering the raw calib probabilities by **inverting** the shipped Platt, which is exact and
+asserted to 1e-9 before anything is fitted.
+
+`_s16` is produced by HARDLINKING `_s12` (so 242 MB of shards per fold cost nothing) and replacing
+only `bundle/temperature.json`, unlinked first so the original is untouched. **`_s12` and the
+`c7t_stage12` snapshot taken from it remain valid**, and a test asserts both fold sets still carry
+their own distinct coefficients.
+
+Slopes roughly doubled, as the composed-coefficient prediction said they would: **2.54-2.69 ->
+4.82-5.09**.
+
+### THE VERIFICATION -- held-out safety evaluation, same instrument, both fold sets
+
+Pooled over 119 held-out cells (91 truly safe / 28 truly unsafe):
+
+| | `_s12` soft-fit | `_s16` hard-fit | **I predicted** |
+|---|---|---|---|
+| safety sensitivity | 0.275 | **0.670** | 0.714 |
+| **specificity** | 0.929 | **0.929** | 0.821 |
+| balanced accuracy | 0.602 | **0.799** | 0.768 |
+| false rejections | 66 | **30** | 26 |
+| **false approvals** | **2** | **2** | 5 |
+| median S, truly safe | 0.703 | **0.874** | -- |
+| % truly-safe below the 0.76 bar | 72.5 % | **33.0 %** | -- |
+
+**THE FEARED TRADE DID NOT HAPPEN.** The decision to ship was taken on an expected specificity
+drop of **0.929 -> 0.821** and false approvals **2 -> 5**. On the real artefacts specificity is
+**unchanged** and false approvals are **unchanged at 2**. The safety posture did not loosen at
+all; sensitivity simply more than doubled. **Every fold improved or held; none got worse.**
+
+The earlier prediction came from a Platt fitted on calib alone and STACKED on the shipped one. The
+actual recalibration fits on calib + the cross-donor pool from the raw probabilities -- a different
+and, as it turns out, strictly better estimator. Predicting the wrong trade-off was the cost of
+not having done this run first.
+
+*(`_s12`'s baseline reads 0.275 / 66 where the original `_c7t` Stage 16 run read 0.297 / 64. Those
+are different fold builds -- `_s12` is post-Stage-12 -- so the small difference is expected.)*
+
+### Every pre-registered guard, checked on the scorecard
+
+`compare c7t_stage12 c7t_stage16`:
+
+| guard | result |
+|---|---|
+| `fate_prauc` | 0.958 -> 0.958, **diff exactly 0.000** |
+| `fate_roc` | 0.954 -> 0.954, **diff exactly 0.000** |
+| every ΔAge metric | **bit-identical** |
+| `conformal_coverage`, `conformal_width`, `ood_rate` | **bit-identical** |
+| RES | **still zero** (approvals 0 on every fold) |
+| **`fate_ece`** | **0.276 -> 0.182, CI [-0.156, -0.033], 5/0\* unanimous -> ACCEPT (better)** |
+
+**`fate_ece` is the only metric whose aggregate moved, and it moved the right way, decisively.**
+Rank preservation is confirmed to 1e-12 on real data rather than argued from monotonicity.
+
+Two details worth recording rather than rounding away:
+
+* **Y1's `res_max` is floating-point DUST, not a score** -- 8.1e-11 before, 1.2e-12 after. That is
+  the same residue behind the retracted "Spearman 0.40 over RES" headline, so the test asserts it
+  as dust (`< 1e-9`, approvals 0) instead of asserting an exact zero that was never true.
+* **`fate_ece_platt` moves per fold but its aggregate does not** (0.180 -> 0.180, CI includes 0).
+  That is the expected signature of a second calibrator that had been partly compensating for the
+  defect this fix removes.
+
+### Status, stated precisely
+
+**Stage 16 is deployed and empirically validated on the `_s16` folds.** The `train_model.py` fix
+makes every FUTURE training run correct by construction, and `recalibrate_folds.py` brings
+existing bundles up to date without retraining.
+
+**It is not retroactively true of every artefact on disk.** `_c7t`, `_s12` and any other bundle
+not passed through recalibration still carry soft-fitted coefficients and still behave as before.
+
+---
+
 ## 2026-08-18 - STAGE 14 + STAGE 16 BUILT: calibrated dAge at the reporting boundary, and a fate calibrator fitted on the right target
 
 **Status:** EXECUTED, both. Decisions taken by the user after the trade-offs were laid out.

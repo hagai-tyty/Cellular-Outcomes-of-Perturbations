@@ -1,0 +1,397 @@
+{
+  "folds": {
+    "N2": {
+      "threshold": 0.76,
+      "raw": {
+        "false_rejections": 12,
+        "false_approvals": 0,
+        "true_approvals": 7,
+        "true_rejections": 0,
+        "n_safe": 19,
+        "n_unsafe": 0,
+        "n": 19,
+        "false_rejection_rate": 0.631578947368421,
+        "sensitivity": 0.3684210526315789,
+        "specificity": NaN,
+        "balanced_accuracy": 0.3684210526315789
+      },
+      "deployable": {
+        "false_rejections": 8,
+        "false_approvals": 0,
+        "true_approvals": 11,
+        "true_rejections": 0,
+        "n_safe": 19,
+        "n_unsafe": 0,
+        "n": 19,
+        "false_rejection_rate": 0.42105263157894735,
+        "sensitivity": 0.5789473684210527,
+        "specificity": NaN,
+        "balanced_accuracy": 0.5789473684210527
+      },
+      "oracle": {
+        "false_rejections": 12,
+        "false_approvals": 0,
+        "true_approvals": 7,
+        "true_rejections": 0,
+        "n_safe": 19,
+        "n_unsafe": 0,
+        "n": 19,
+        "false_rejection_rate": 0.631578947368421,
+        "sensitivity": 0.3684210526315789,
+        "specificity": NaN,
+        "balanced_accuracy": 0.3684210526315789
+      },
+      "platt_fitted_deployable": true,
+      "platt_fitted_oracle": false,
+      "median_S_true_safe": 0.7144852567059563,
+      "median_S_true_unsafe": null,
+      "priors": {
+        "train_safe_frac": 0.5298570967457965,
+        "calib_safe_frac": 0.539621738089538,
+        "test_safe_frac": 1.0
+      }
+    },
+    "N3": {
+      "threshold": 0.76,
+      "raw": {
+        "false_rejections": 2,
+        "false_approvals": 0,
+        "true_approvals": 13,
+        "true_rejections": 5,
+        "n_safe": 15,
+        "n_unsafe": 5,
+        "n": 20,
+        "false_rejection_rate": 0.13333333333333333,
+        "sensitivity": 0.8666666666666667,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.9333333333333333
+      },
+      "deployable": {
+        "false_rejections": 2,
+        "false_approvals": 0,
+        "true_approvals": 13,
+        "true_rejections": 5,
+        "n_safe": 15,
+        "n_unsafe": 5,
+        "n": 20,
+        "false_rejection_rate": 0.13333333333333333,
+        "sensitivity": 0.8666666666666667,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.9333333333333333
+      },
+      "oracle": {
+        "false_rejections": 2,
+        "false_approvals": 0,
+        "true_approvals": 13,
+        "true_rejections": 5,
+        "n_safe": 15,
+        "n_unsafe": 5,
+        "n": 20,
+        "false_rejection_rate": 0.13333333333333333,
+        "sensitivity": 0.8666666666666667,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.9333333333333333
+      },
+      "platt_fitted_deployable": true,
+      "platt_fitted_oracle": true,
+      "median_S_true_safe": 0.9393854922775392,
+      "median_S_true_unsafe": 0.03351495616057637,
+      "priors": {
+        "train_safe_frac": 0.5299900228886671,
+        "calib_safe_frac": 0.5398611443619823,
+        "test_safe_frac": 0.75
+      }
+    },
+    "O1": {
+      "threshold": 0.76,
+      "raw": {
+        "false_rejections": 7,
+        "false_approvals": 0,
+        "true_approvals": 10,
+        "true_rejections": 4,
+        "n_safe": 17,
+        "n_unsafe": 4,
+        "n": 21,
+        "false_rejection_rate": 0.4117647058823529,
+        "sensitivity": 0.5882352941176471,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.7941176470588236
+      },
+      "deployable": {
+        "false_rejections": 5,
+        "false_approvals": 0,
+        "true_approvals": 12,
+        "true_rejections": 4,
+        "n_safe": 17,
+        "n_unsafe": 4,
+        "n": 21,
+        "false_rejection_rate": 0.29411764705882354,
+        "sensitivity": 0.7058823529411765,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.8529411764705883
+      },
+      "oracle": {
+        "false_rejections": 1,
+        "false_approvals": 0,
+        "true_approvals": 16,
+        "true_rejections": 4,
+        "n_safe": 17,
+        "n_unsafe": 4,
+        "n": 21,
+        "false_rejection_rate": 0.058823529411764705,
+        "sensitivity": 0.9411764705882353,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.9705882352941176
+      },
+      "platt_fitted_deployable": true,
+      "platt_fitted_oracle": true,
+      "median_S_true_safe": 0.8741135838300607,
+      "median_S_true_unsafe": 0.07102212312608362,
+      "priors": {
+        "train_safe_frac": 0.5299019895533775,
+        "calib_safe_frac": 0.5395114942528736,
+        "test_safe_frac": 0.8095238095238095
+      }
+    },
+    "O2": {
+      "threshold": 0.76,
+      "raw": {
+        "false_rejections": 5,
+        "false_approvals": 0,
+        "true_approvals": 11,
+        "true_rejections": 4,
+        "n_safe": 16,
+        "n_unsafe": 4,
+        "n": 20,
+        "false_rejection_rate": 0.3125,
+        "sensitivity": 0.6875,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.84375
+      },
+      "deployable": {
+        "false_rejections": 3,
+        "false_approvals": 0,
+        "true_approvals": 13,
+        "true_rejections": 4,
+        "n_safe": 16,
+        "n_unsafe": 4,
+        "n": 20,
+        "false_rejection_rate": 0.1875,
+        "sensitivity": 0.8125,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.90625
+      },
+      "oracle": {
+        "false_rejections": 3,
+        "false_approvals": 0,
+        "true_approvals": 13,
+        "true_rejections": 4,
+        "n_safe": 16,
+        "n_unsafe": 4,
+        "n": 20,
+        "false_rejection_rate": 0.1875,
+        "sensitivity": 0.8125,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.90625
+      },
+      "platt_fitted_deployable": true,
+      "platt_fitted_oracle": true,
+      "median_S_true_safe": 0.8599797779814975,
+      "median_S_true_unsafe": 0.007595100891989415,
+      "priors": {
+        "train_safe_frac": 0.5299313339984741,
+        "calib_safe_frac": 0.5398611443619823,
+        "test_safe_frac": 0.8
+      }
+    },
+    "Y1": {
+      "threshold": 0.76,
+      "raw": {
+        "false_rejections": 2,
+        "false_approvals": 2,
+        "true_approvals": 6,
+        "true_rejections": 8,
+        "n_safe": 8,
+        "n_unsafe": 10,
+        "n": 18,
+        "false_rejection_rate": 0.25,
+        "sensitivity": 0.75,
+        "specificity": 0.8,
+        "balanced_accuracy": 0.775
+      },
+      "deployable": {
+        "false_rejections": 1,
+        "false_approvals": 4,
+        "true_approvals": 7,
+        "true_rejections": 6,
+        "n_safe": 8,
+        "n_unsafe": 10,
+        "n": 18,
+        "false_rejection_rate": 0.125,
+        "sensitivity": 0.875,
+        "specificity": 0.6,
+        "balanced_accuracy": 0.7375
+      },
+      "oracle": {
+        "false_rejections": 8,
+        "false_approvals": 0,
+        "true_approvals": 0,
+        "true_rejections": 10,
+        "n_safe": 8,
+        "n_unsafe": 10,
+        "n": 18,
+        "false_rejection_rate": 1.0,
+        "sensitivity": 0.0,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.5
+      },
+      "platt_fitted_deployable": true,
+      "platt_fitted_oracle": true,
+      "median_S_true_safe": 0.9393225383404651,
+      "median_S_true_unsafe": 0.662068828333193,
+      "priors": {
+        "train_safe_frac": 0.530062501833974,
+        "calib_safe_frac": 0.5401005506344266,
+        "test_safe_frac": 0.4444444444444444
+      }
+    },
+    "Y2": {
+      "threshold": 0.76,
+      "raw": {
+        "false_rejections": 2,
+        "false_approvals": 0,
+        "true_approvals": 14,
+        "true_rejections": 5,
+        "n_safe": 16,
+        "n_unsafe": 5,
+        "n": 21,
+        "false_rejection_rate": 0.125,
+        "sensitivity": 0.875,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.9375
+      },
+      "deployable": {
+        "false_rejections": 1,
+        "false_approvals": 0,
+        "true_approvals": 15,
+        "true_rejections": 5,
+        "n_safe": 16,
+        "n_unsafe": 5,
+        "n": 21,
+        "false_rejection_rate": 0.0625,
+        "sensitivity": 0.9375,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.96875
+      },
+      "oracle": {
+        "false_rejections": 1,
+        "false_approvals": 0,
+        "true_approvals": 15,
+        "true_rejections": 5,
+        "n_safe": 16,
+        "n_unsafe": 5,
+        "n": 21,
+        "false_rejection_rate": 0.0625,
+        "sensitivity": 0.9375,
+        "specificity": 1.0,
+        "balanced_accuracy": 0.96875
+      },
+      "platt_fitted_deployable": true,
+      "platt_fitted_oracle": true,
+      "median_S_true_safe": 0.8968659459798562,
+      "median_S_true_unsafe": 0.08147558583845847,
+      "priors": {
+        "train_safe_frac": 0.5299313339984741,
+        "calib_safe_frac": 0.5399904214559387,
+        "test_safe_frac": 0.7619047619047619
+      }
+    }
+  },
+  "pooled": {
+    "raw": {
+      "false_rejections": 30,
+      "false_approvals": 2,
+      "true_approvals": 61,
+      "true_rejections": 26,
+      "n_safe": 91,
+      "n_unsafe": 28,
+      "n": 119,
+      "false_rejection_rate": 0.32967032967032966,
+      "sensitivity": 0.6703296703296703,
+      "specificity": 0.9285714285714286,
+      "balanced_accuracy": 0.7994505494505495
+    },
+    "deployable": {
+      "false_rejections": 20,
+      "false_approvals": 4,
+      "true_approvals": 71,
+      "true_rejections": 24,
+      "n_safe": 91,
+      "n_unsafe": 28,
+      "n": 119,
+      "false_rejection_rate": 0.21978021978021978,
+      "sensitivity": 0.7802197802197802,
+      "specificity": 0.8571428571428571,
+      "balanced_accuracy": 0.8186813186813187
+    },
+    "oracle": {
+      "false_rejections": 27,
+      "false_approvals": 0,
+      "true_approvals": 64,
+      "true_rejections": 28,
+      "n_safe": 91,
+      "n_unsafe": 28,
+      "n": 119,
+      "false_rejection_rate": 0.2967032967032967,
+      "sensitivity": 0.7032967032967034,
+      "specificity": 1.0,
+      "balanced_accuracy": 0.8516483516483517
+    },
+    "threshold": 0.76,
+    "oracle_threshold_raw": {
+      "oracle_threshold": 0.3406111696611333,
+      "oracle_balanced_accuracy": 0.8255494505494505
+    },
+    "frac_true_safe_below_threshold": 0.32967032967032966,
+    "median_S_true_safe": 0.8741135838300607,
+    "median_S_true_unsafe": 0.09068759643635249,
+    "deployable_fr_drop": 0.3333333333333333,
+    "deployable_clears_bar": false,
+    "oracle_fr_drop": 0.1,
+    "oracle_clears_bar": false
+  },
+  "errors": {},
+  "bar_false_rejection_drop": 0.5,
+  "prior_gap_correlation_POST_HOC": {
+    "n": 6,
+    "folds": [
+      "N2",
+      "N3",
+      "O1",
+      "O2",
+      "Y1",
+      "Y2"
+    ],
+    "prior_gaps": [
+      0.4701429032542035,
+      0.22000997711133286,
+      0.279621819970432,
+      0.2700686660015259,
+      -0.08561805738952954,
+      0.23197342790628772
+    ],
+    "false_rejection_rates": [
+      0.631578947368421,
+      0.13333333333333333,
+      0.4117647058823529,
+      0.3125,
+      0.25,
+      0.125
+    ],
+    "spearman": 0.7714285714285715,
+    "critical_rho_n6_alpha05": 0.886,
+    "significant": false,
+    "note": "POST-HOC, not pre-registered; n=6 is underpowered"
+  },
+  "verdict": "H3 OR STRUCTURAL (calibration is not the lever)"
+}

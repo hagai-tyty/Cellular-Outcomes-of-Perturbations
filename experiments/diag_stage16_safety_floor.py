@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -35,13 +36,17 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 _RESULTS = Path(__file__).resolve().parents[1] / "results"
-OUT = _RESULTS / "diag_stage16_safety_floor_results.json"
 
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "src"))
 
 DONORS = ["N2", "N3", "O1", "O2", "Y1", "Y2"]
-SUFFIX = "_c7t"
+# STAGE 16 VERIFICATION: the fold set is selectable so the SAME evaluation can be run against the
+# soft-fitted bundles (`_s12`) and the hard-refitted ones (`_s16`) without editing the script --
+# two runs of one instrument rather than two instruments. Default unchanged.
+SUFFIX = os.environ.get("CELLFATE_FOLD_SUFFIX", "_c7t")
+
+OUT = _RESULTS / f"diag_stage16_safety_floor_results{'' if SUFFIX == '_c7t' else SUFFIX}.json"
 
 # Pre-registered in plans/STAGE_16_SAFETY_FLOOR_MISCALIBRATION.md §16.4, before the run.
 FALSE_REJECTION_DROP_BAR = 0.50
