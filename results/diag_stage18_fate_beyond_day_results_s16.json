@@ -1,0 +1,165 @@
+{
+  "suffix": "_s16",
+  "folds": {
+    "N2": {
+      "n": 19,
+      "n_safe": 19,
+      "n_strata": 11,
+      "n_mixed_strata": 0,
+      "model_prauc": null,
+      "model_roc": null,
+      "baselines": {
+        "time_only": {
+          "prauc": null,
+          "roc": null
+        },
+        "expr_only": {
+          "prauc": null,
+          "roc": null
+        },
+        "expr_plus_time": {
+          "prauc": null,
+          "roc": null
+        }
+      },
+      "stratified_auc_model": null,
+      "stratified_pairs": 0
+    },
+    "N3": {
+      "n": 20,
+      "n_safe": 15,
+      "n_strata": 12,
+      "n_mixed_strata": 1,
+      "model_prauc": 1.0,
+      "model_roc": 1.0,
+      "baselines": {
+        "time_only": {
+          "prauc": 0.8915815121697475,
+          "roc": 0.76
+        },
+        "expr_only": {
+          "prauc": 0.9921568627450981,
+          "roc": 0.9733333333333334
+        },
+        "expr_plus_time": {
+          "prauc": 0.9921568627450981,
+          "roc": 0.9733333333333334
+        }
+      },
+      "stratified_auc_model": 1.0,
+      "stratified_pairs": 4
+    },
+    "O1": {
+      "n": 21,
+      "n_safe": 17,
+      "n_strata": 12,
+      "n_mixed_strata": 0,
+      "model_prauc": 0.9938080495356038,
+      "model_roc": 0.9705882352941176,
+      "baselines": {
+        "time_only": {
+          "prauc": 1.0,
+          "roc": 1.0
+        },
+        "expr_only": {
+          "prauc": 0.9967320261437909,
+          "roc": 0.9852941176470589
+        },
+        "expr_plus_time": {
+          "prauc": 0.9967320261437909,
+          "roc": 0.9852941176470589
+        }
+      },
+      "stratified_auc_model": null,
+      "stratified_pairs": 0
+    },
+    "O2": {
+      "n": 20,
+      "n_safe": 16,
+      "n_strata": 12,
+      "n_mixed_strata": 0,
+      "model_prauc": 1.0,
+      "model_roc": 1.0,
+      "baselines": {
+        "time_only": {
+          "prauc": 1.0,
+          "roc": 1.0
+        },
+        "expr_only": {
+          "prauc": 1.0,
+          "roc": 1.0
+        },
+        "expr_plus_time": {
+          "prauc": 1.0,
+          "roc": 1.0
+        }
+      },
+      "stratified_auc_model": null,
+      "stratified_pairs": 0
+    },
+    "Y1": {
+      "n": 18,
+      "n_safe": 8,
+      "n_strata": 11,
+      "n_mixed_strata": 5,
+      "model_prauc": 0.7955357142857142,
+      "model_roc": 0.8,
+      "baselines": {
+        "time_only": {
+          "prauc": 0.6604166666666667,
+          "roc": 0.6687500000000001
+        },
+        "expr_only": {
+          "prauc": 0.5417124542124542,
+          "roc": 0.55
+        },
+        "expr_plus_time": {
+          "prauc": 0.5473942723942724,
+          "roc": 0.5625
+        }
+      },
+      "stratified_auc_model": 0.8571428571428571,
+      "stratified_pairs": 7
+    },
+    "Y2": {
+      "n": 21,
+      "n_safe": 16,
+      "n_strata": 12,
+      "n_mixed_strata": 1,
+      "model_prauc": 1.0,
+      "model_roc": 1.0,
+      "baselines": {
+        "time_only": {
+          "prauc": 0.9884803921568628,
+          "roc": 0.96875
+        },
+        "expr_only": {
+          "prauc": 1.0,
+          "roc": 1.0
+        },
+        "expr_plus_time": {
+          "prauc": 1.0,
+          "roc": 1.0
+        }
+      },
+      "stratified_auc_model": 1.0,
+      "stratified_pairs": 1
+    }
+  },
+  "pooled": {
+    "n": 119,
+    "n_safe": 91,
+    "model_prauc": 0.9312919674115683,
+    "model_roc": 0.8681318681318682,
+    "time_only_prauc": null,
+    "time_only_roc": null,
+    "n_strata": 70,
+    "n_mixed_strata": 7,
+    "stratified_model": {
+      "observed": 0.9166666666666666,
+      "p": 0.009099545022748862,
+      "n_pairs": 12
+    }
+  },
+  "errors": {}
+}

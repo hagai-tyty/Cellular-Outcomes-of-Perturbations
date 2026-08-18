@@ -11,6 +11,76 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-18 - STAGE 18: the fate head IS partly reading a clock -- and there is real signal underneath, on 12 pairs
+
+**Status:** MEASURED, read-only. `experiments/diag_stage18_fate_beyond_day.py`,
+`results/diag_stage18_fate_beyond_day_results_s16.json`, 17 tests. Run on `_s16` (the recalibrated
+folds). **`src/` untouched.**
+
+`fate_prauc` 0.958 is the only strong number the project has. `dose_time` is a MODEL INPUT and it
+encodes the timepoint, so this asks how much of that survives once the clock is taken away.
+
+### The structural fact that makes every marginal metric suspect
+
+On the held-out donors, **fate is very nearly a function of timepoint**:
+
+| fold | timepoints | carrying >1 class | time-only PR-AUC | model PR-AUC |
+|---|---|---|---|---|
+| N2 | 11 | **0** | n/a (19/19 safe) | n/a |
+| N3 | 12 | 1 | 0.892 | 1.000 |
+| **O1** | 12 | **0** | **1.000** | 0.994 |
+| **O2** | 12 | **0** | **1.000** | 1.000 |
+| Y1 | 11 | **5** | 0.660 | 0.796 |
+| Y2 | 12 | 1 | 0.988 | 1.000 |
+
+**Only 7 of 70 timepoints carry more than one class.** On O1 and O2 the timepoint ALONE reaches
+PR-AUC **1.000** -- a lookup table on the hour, using no genes at all, is unbeatable there. Any
+model metric on those folds is measuring a calendar.
+
+### The decisive test: within-timepoint concordance
+
+Inside a timepoint `dose_time` is constant and cannot help, so anything the model gets right there
+came from expression. Over every (safe, unsafe) pair drawn from the SAME timepoint of the SAME
+donor:
+
+> **stratified AUC 0.917 over 12 pairs, permutation p = 0.0091**
+> (scores shuffled WITHIN strata, 20,000 draws -- a global shuffle would also destroy the
+> between-timepoint structure the model is not being credited for, and would be trivially beaten)
+
+Per fold: N3 1.000 (4 pairs), Y1 0.857 (7 pairs), Y2 1.000 (1 pair). N2/O1/O2 contribute **zero**
+pairs -- they have no within-timepoint contrast to offer.
+
+### The verdict, both halves stated
+
+**The marginal 0.93-0.96 is very largely the clock.** That is now measured, not suspected.
+
+**But there IS signal underneath it.** 11 of 12 same-timepoint pairs ranked correctly is
+significant against a proper within-stratum null. The fate head is not only reading a calendar.
+
+**And the entire evidence base for that is 12 pairs, from 7 strata, across 3 donors.** It is a
+real result on a very thin base, and the honest phrasing is exactly that. This is not a number to
+build a headline on until more mixed-timepoint data exists.
+
+### The fold that carries it is the one that looks worst
+
+Y1 supplies **7 of the 12 pairs** and has **5 of the 7 mixed timepoints** -- and it is also the
+fold with the WORST marginal PR-AUC (0.796 against 1.000 elsewhere). Those are the same fact seen
+twice: Y1 is the only donor whose fate does not track its clock, so it is simultaneously the
+hardest fold for a clock-reader and the only fold that can test one.
+
+**Consequence for the LOOCV design:** the aggregate `fate_prauc` is dominated by folds that cannot
+discriminate the hypothesis. A future evaluation should weight, or at least report, folds by how
+much within-timepoint contrast they actually contain.
+
+### What this does NOT say
+
+It does not say the fate head is worthless -- it says its headline metric is inflated by an input
+it was handed. It does not settle whether the within-timepoint signal generalises: 12 pairs cannot.
+And it does not touch ΔAge, which was already established as circular for a different reason
+(`diag_clock_circularity`, rho 0.96-0.99).
+
+---
+
 ## 2026-08-18 - STAGE 16 VERIFIED ON REAL ARTEFACTS: recalibrated, evaluated, and the feared safety loss did NOT occur
 
 **Status:** the hard-label calibrator is now **implemented, tested, AND empirically validated on
