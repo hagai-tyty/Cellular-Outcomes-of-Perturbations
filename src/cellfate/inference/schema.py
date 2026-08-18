@@ -44,4 +44,12 @@ class Response(BaseModel):
     # a bundle that does not declare its provenance reports "not validated", which is true.
     age_validated: bool = False        # False => delta_age_* is for WITHIN-donor ranking only
     age_basis: str = "unknown"         # what the label rests on; see schemas.AgeProvenance
+    # STAGE 14. The scale correction is reported ALONGSIDE the raw values above, never in place
+    # of them: `k` was fitted on a cohort DISJOINT from the one this model trains on, so the
+    # transfer is untested and a caller must be able to see both numbers. Defaulted to None so
+    # every existing construction site and every stored Response stays valid.
+    delta_age_calibrated: float | None = None
+    delta_age_interval_calibrated: list[float] | None = None
+    epistemic_std_calibrated: float | None = None
+    delta_age_calibration_k: float | None = None
     warning: str | None = None

@@ -17,6 +17,14 @@ from cellfate.common import io
 from cellfate.common.errors import ContractViolation
 
 from .conformal import interval
+from .dage_calibration import (
+    CAVEAT as DAGE_CAVEAT,
+)
+from .dage_calibration import (
+    K_VAR,
+    calibrate,
+    calibrate_interval,
+)
 from .predictor import Predictor
 from .res import compute_res
 from .schema import Request, Response
@@ -42,6 +50,13 @@ def build_response(pred: Predictor, s: dict) -> Response:
             "delta_age is NOT validated in absolute terms (Stage 1.5.2: the transcriptomic "
             "clock is not calibratable against methylation). Use it to RANK conditions within "
             "this donor; do not read the number as years.")
+    # STAGE 14: the ΔAge scale correction, applied HERE and nowhere else. `res.py` above has
+    # already run on the RAW values on purpose -- `kappa` is a half-saturation in years, so
+    # calibrating upstream of RES would silently reinterpret it (the same class of defect as the
+    # Huber knee that ruled out rescaling the training target). The scorecard and every
+    # evaluation path also stay raw, which is why no ΔAge metric can appear to "improve" by
+    # 1/k without anyone having changed the model.
+    notes.append(DAGE_CAVEAT)
     return Response(
         status=status,
         rejuvenation_efficacy_score=round(10.0 * res, 2),
@@ -52,6 +67,10 @@ def build_response(pred: Predictor, s: dict) -> Response:
         delta_age_interval=[round(lo, 2), round(hi, 2)],
         in_distribution=s["in_dist"],
         epistemic_std=round(s["sigma_age"], 3),
+        delta_age_calibrated=round(calibrate(s["mu_age"]), 2),
+        delta_age_interval_calibrated=[round(v, 2) for v in calibrate_interval(lo, hi)],
+        epistemic_std_calibrated=round(calibrate(s["sigma_age"]), 3),
+        delta_age_calibration_k=K_VAR,
         predictive_entropy=round(s["entropy"], 3),
         age_validated=age_ok,
         age_basis=(prov.basis if prov is not None else "unknown"),
