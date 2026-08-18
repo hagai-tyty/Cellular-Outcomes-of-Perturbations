@@ -11,6 +11,98 @@ log, `experiments/score + test 18.docx`) are noted where relevant but are not en
 
 ---
 
+## 2026-08-18 - STAGE 17: the scorecard rewarded over-coverage, and hid whether the folds agreed
+
+**Status:** EXECUTED. `plans/STAGE_17_COVERAGE_DIRECTION_AND_FOLD_CONSISTENCY.md`. Changes
+`scorecard.py` (metric direction, aggregation, printing) only. **No model change, no rebuild, no
+snapshot rewritten, no verdict rule changed.** 22 tests
+(`tests/test_stage17_coverage_direction.py`).
+
+Both defects were found while executing Stage 12 12.9 and deliberately left unpatched until that
+measurement finished -- changing the instrument mid-measurement invalidates the measurement.
+
+### D1 - `conformal_coverage` was judged "higher is better"
+
+Coverage is **target-seeking**: it should approach `conformal_level` (0.90, stored per fold), not
+climb. Coverage 1.000 is not a triumph, it means the intervals are too wide -- which is precisely
+why `conformal_width` sits at **63-81 years**.
+
+**Under the old direction, a change that simply widened every interval until nothing escaped would
+have scored ACCEPT.** A test now constructs exactly that and requires it to read REGRESSION.
+
+Not hypothetical: across the committed snapshots **4-5 of 6 folds are OVER-covering**. Mean
+coverage looks respectable (0.85-0.92) while the mean *distance from nominal* is 0.10-0.18.
+
+`conformal_coverage` is now direction `"target"`, judged on `|coverage - conformal_level|` per
+fold. The target is read **per fold**, never hard-coded -- 0.90 is data. The raw coverage is kept
+as a `(context, never judged)` row, because the distance alone cannot say **which side** of nominal
+a fold sits on, and that is the actionable half.
+
+**Retro pass: 4 of 21 distinct coverage verdicts change.**
+
+### D2 - the table never showed whether the folds AGREED
+
+`scorecard.py`'s own header says: *"check the per-fold column before trusting an aggregate
+verdict."* **There was no per-fold column.** Only `dage_mae_model` ever printed one; the other 17
+metrics printed a mean and a CI and nothing else. The instrument asked the reader to perform a
+check it did not make available.
+
+Every row now carries a `b/w` tally -- folds better / worse -- with `*` marking a unanimous
+direction across >= 4 folds.
+
+### The two fixes are load-bearing TOGETHER, which the retro pass shows
+
+`baseline -> c7_A_keep_hff` flips `ACCEPT (better)` -> `noise` under the corrected statistic. Taken
+alone that looks like a loss of information: coverage really did improve, 0.401 -> 0.923. But the
+tally on the same row reads **5/0\*** -- unanimous. The old rule got that pair right *by accident*
+(it was under-covering, so "higher" happened to align); the new statistic is correct but
+underpowered at n=5; **the tally carries the signal neither one preserves alone.**
+
+### CORRECTION owed to the Stage 12 entry (2026-08-18, which stands as written)
+
+That entry recorded `conformal_width` **-6.97 yr [-19.93, +5.98]** as *"directional, NOT
+significant, not claimed"*. **That remains true and the verdict is unchanged.** What the table
+could not show at the time, and now can:
+
+> the change was **unanimous across all five folds (5/0)**.
+
+A 5/5 unanimous direction is a near miss, not a shrug. It is still **not significant** by the
+pre-registered rule, Stage 12's verdict -- the pre-registered null -- is **unchanged**, and nothing
+is claimed from it. What changes is only how strong the unclaimed directional hint was. Across all
+21 distinct comparisons this is the **only** unanimous-but-noise width row.
+
+### The guard that keeps the tally honest
+
+A direction tally is a hair's breadth from a second significance test, and a second test on the
+same data is how a project talks itself into findings the first test rejected.
+
+- **It never produces a verdict.** `_verdict` still takes only `(direction, md, lo, hi)`; a test
+  asserts that signature and that the tally cannot reach it. The accept/reject rule is unchanged.
+- **It prints counts, never a p-value.** With 5 paired folds the smallest achievable two-sided
+  sign-test p is **2/2^5 = 0.0625** -- a unanimous result can *never* clear 0.05 at this n.
+  Printing it would invite the exact misreading the tally exists to prevent. Tests assert no
+  p-value machinery is present.
+- **It is symmetric**: unanimous regressions are flagged as loudly as unanimous improvements.
+- **Ties are not agreement.** A row of ties is not unanimous, and unanimity needs >= 4 folds.
+
+### Deliberately NOT changed
+
+`conformal_width` stays `("lower", ...)`. Narrower **is** genuinely better at equal coverage, and
+coverage is judged separately. Recorded as a decision, with a test pinning it, rather than left as
+an oversight.
+
+### A tripwire that fired
+
+Stage 12's helper carried a test asserting `METRICS["conformal_coverage"][0] == "higher"` with the
+note *"if the scorecard is ever fixed, this should be REVISITED rather than silently left
+passing."* It fired on this Change. Revisited into a stronger assertion: the helper and the
+scorecard are now two independent implementations of the same statistic and must **agree per fold
+on real data**.
+
+1528 tests pass, ruff clean.
+
+---
+
 ## 2026-08-18 - STAGE 12 CLOSED: the rebuild ran, the split changed exactly as predicted, the metrics did not
 
 **Status:** EXECUTED, §12.9 discharged, **Stage 12 CLOSED**. Six folds rebuilt + retrained (~5 h),

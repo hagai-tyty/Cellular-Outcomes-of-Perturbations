@@ -44,11 +44,30 @@ def test_perfect_coverage_scores_zero():
     assert s12v.coverage_gap(_folds({"A": 0.90}), ["A"])["A"] == pytest.approx(0.0)
 
 
-def test_the_scorecard_still_judges_coverage_directionally_which_is_why_this_exists():
-    """If the scorecard is ever fixed to treat coverage as target-seeking, this helper becomes
-    redundant and the test should be revisited rather than silently left passing."""
+def test_the_scorecard_has_since_been_fixed_and_now_agrees_with_this_helper():
+    """This test used to assert `METRICS["conformal_coverage"][0] == "higher"`, with a note that
+    if the scorecard were ever fixed the test should be REVISITED rather than left silently
+    passing. Stage 17 fixed it, and the note fired. Revisited here.
+
+    The helper is no longer the only thing computing distance-to-target, so the useful assertion
+    is now the stronger one: two independently written implementations of the same statistic must
+    agree, on real data. If they ever diverge, one of them is wrong."""
     sc = s12v._sc()
-    assert sc.METRICS["conformal_coverage"][0] == "higher"
+    assert sc.METRICS["conformal_coverage"][0] == "target"
+
+    A = json.loads((ROOT / "scorecard" / "c7_A_keep_hff.json").read_text("utf-8"))["folds"]
+    B = json.loads((ROOT / "scorecard" / "c7t_stage12.json").read_text("utf-8"))["folds"]
+
+    mine, _, n_mine, common = s12v.paired(s12v.coverage_gap(A, sc.DONORS),
+                                          s12v.coverage_gap(B, sc.DONORS))
+    theirs, _, n_theirs = sc._paired(A, B, "conformal_coverage", target=True)
+    assert n_mine == n_theirs == 5
+    assert mine == pytest.approx(theirs, abs=1e-12)
+
+    # and the per-fold distances agree one by one, not merely in the mean
+    for d in common:
+        assert s12v.coverage_gap(A, [d])[d] == pytest.approx(
+            sc._judged(A[d], "conformal_coverage", target=True), abs=1e-12)
 
 
 def test_errored_and_missing_folds_are_skipped():

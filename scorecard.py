@@ -57,7 +57,14 @@ SNAP_DIR = Path("scorecard")
 T_CRIT = {5: 2.571, 4: 2.776, 3: 3.182, 2: 4.303, 1: 12.706}
 APPROVED = "APPROVED"
 
-# metric -> ("lower"|"higher"|"neutral", pretty label)
+# metric -> ("lower"|"higher"|"abs"|"target"|"neutral", pretty label)
+#
+# STAGE 17. "target" means the metric should APPROACH a per-fold target rather than climb or
+# fall. `conformal_coverage` was registered ("higher", ...), but coverage 1.000 is not better
+# than 0.900 -- it means the intervals are too wide, which is why `conformal_width` sits at
+# 63-81 years. Under "higher is better" a change that simply widened every interval until
+# nothing escaped would have scored ACCEPT. Across the committed snapshots 4-5 of 6 folds are
+# OVER-covering, so this was not hypothetical.
 METRICS = {
     "dage_mae_model":      ("lower",  "ΔAge MAE (model)"),
     "dage_mae_ridge":      ("lower",  "ΔAge MAE (ridge)"),
@@ -74,11 +81,18 @@ METRICS = {
     "res_max":             ("neutral", "RES max"),
     "res_approvals":       ("neutral", "RES approvals"),
     "res_approvals_oracle": ("neutral", "RES approvals (oracle)"),
-    "conformal_coverage":  ("higher", "conformal coverage"),
+    "conformal_coverage":  ("target", "conformal coverage"),
+    # NOT changed to "target": narrower IS genuinely better at equal coverage, and coverage is
+    # judged separately above. Noted in plans/STAGE_17_... §17.5 rather than altered.
     "conformal_width":     ("lower",  "interval width"),
     "ood_rate":            ("neutral", "OOD flag rate"),
     "n_cells":             ("neutral", "held-out cells"),
 }
+
+
+# STAGE 17: a "target" metric names the per-fold key holding its target. Read from the fold,
+# never hard-coded -- 0.90 is data, and a future run may set a different conformal level.
+TARGET_OF = {"conformal_coverage": "conformal_level"}
 
 
 def resolve_root(name: str) -> str:
@@ -245,10 +259,28 @@ def cmd_snapshot(tag: str):
 
 
 def _fold_ok(f, key) -> bool:
-    return isinstance(f, dict) and "_error" not in f and f.get(key) is not None
+    if not (isinstance(f, dict) and "_error" not in f and f.get(key) is not None):
+        return False
+    # STAGE 17: a "target" metric is only usable if its per-fold target is present too. An old
+    # snapshot missing `conformal_level` must drop out of that row rather than crash it.
+    tk = TARGET_OF.get(key)
+    return tk is None or f.get(tk) is not None
 
 
-def _agg(folds, key, only=None, magnitude=False):
+def _judged(fold, key, magnitude=False, target=False) -> float:
+    """The scalar a row is judged on.
+
+    STAGE 17 adds `target`: distance from the fold's own target, so 1.000 and 0.800 both score
+    0.100 against a 0.900 nominal. Under the old "higher is better" the first outranked the
+    second, and widening every interval until nothing escaped would have read as ACCEPT.
+    """
+    v = float(fold[key])
+    if target:
+        return abs(v - float(fold[TARGET_OF[key]]))
+    return abs(v) if magnitude else v
+
+
+def _agg(folds, key, only=None, magnitude=False, target=False):
     """Mean of `key` across folds.
 
     STAGE 13. Two parameters, each repairing a defect that inverted a decision:
@@ -264,10 +296,9 @@ def _agg(folds, key, only=None, magnitude=False):
     mean magnitude is 12.72 yr: the founding measurement of Stage 2, rendered as zero.
     """
     names = list(folds) if only is None else only
-    vals = [float(folds[d][key]) for d in names if d in folds and _fold_ok(folds[d], key)]
-    if not vals:
-        return None
-    return float(np.mean([abs(v) for v in vals] if magnitude else vals))
+    vals = [_judged(folds[d], key, magnitude, target)
+            for d in names if d in folds and _fold_ok(folds[d], key)]
+    return float(np.mean(vals)) if vals else None
 
 
 def pooled_fate_ece(folds, trials: int = 4000, seed: int = 0):
@@ -322,13 +353,14 @@ def _print_snapshot(snap):
         # STAGE 13: per-fold cells stay SIGNED -- the direction of a donor's shift is real
         # information. Only the aggregate becomes a magnitude, and says so in its label.
         mag = direction == "abs"
+        tgt = direction == "target"
         cells = []
         for d in ok:
             v = folds[d].get(key)
             cells.append("n/a" if v is None else (f"{v:.3f}" if isinstance(v, float) else str(v)))
-        a = _agg(folds, key, magnitude=mag)
-        rows.append([f"|{label}|" if mag else label] + cells
-                    + ["n/a" if a is None else f"{a:.3f}"])
+        a = _agg(folds, key, magnitude=mag, target=tgt)
+        shown = f"|{label}|" if mag else (f"{label} (dist. to target)" if tgt else label)
+        rows.append([shown] + cells + ["n/a" if a is None else f"{a:.3f}"])
     print(render_table(["metric"] + ok + ["mean"], rows,
                        aligns=["l"] + ["r"] * (len(ok) + 1)))
     print("  per-fold cells are SIGNED; the mean of a |metric| row is mean(|per-fold|), which for")
@@ -343,7 +375,7 @@ def _common_folds(A_folds, B_folds, key):
             if _fold_ok(A_folds.get(d), key) and _fold_ok(B_folds.get(d), key)]
 
 
-def _paired(A_folds, B_folds, key, magnitude=False):
+def _paired(A_folds, B_folds, key, magnitude=False, target=False):
     """Per-fold paired differences (B - A) and their 95% CI. This is the accept/reject
     statistic: a change is REAL only if the CI excludes zero.
 
@@ -352,8 +384,8 @@ def _paired(A_folds, B_folds, key, magnitude=False):
     read `-28 -> -22` (a 6 yr improvement in magnitude) as a `+6` INCREASE, and then
     `_verdict`'s better_is_down turned that into `REGRESSION`.
     """
-    t = (lambda v: abs(float(v))) if magnitude else float
-    diffs = [t(B_folds[d][key]) - t(A_folds[d][key])
+    diffs = [_judged(B_folds[d], key, magnitude, target)
+             - _judged(A_folds[d], key, magnitude, target)
              for d in _common_folds(A_folds, B_folds, key)]
     n = len(diffs)
     if n < 2:
@@ -365,6 +397,40 @@ def _paired(A_folds, B_folds, key, magnitude=False):
     return md, (md - t * se, md + t * se), n
 
 
+def fold_tally(A_folds, B_folds, key, direction, magnitude=False, target=False) -> dict:
+    """STAGE 17 -- how many folds moved which way. DESCRIPTIVE ONLY; never a verdict.
+
+    `scorecard.py`'s own header tells the reader to "check the per-fold column before trusting an
+    aggregate verdict" -- but only `dage_mae_model` ever printed one, so for 17 of 18 metrics the
+    check was impossible. In the Stage 12 comparison `conformal_width` moved the same way on
+    ALL FIVE folds (-6.97 yr mean) and still read `noise`, because the paired t is driven by the
+    consistency of MAGNITUDE, not of direction. Nothing in the table showed that.
+
+    Deliberately reports COUNTS and no p-value. With 5 paired folds the smallest achievable
+    two-sided sign-test p is 2/2**5 = 0.0625, so a unanimous result can NEVER clear 0.05 at this
+    n; printing a p-value would invite exactly the "second bite at the apple" this is meant to
+    prevent. The accept/reject rule remains the paired 95% CI, unchanged.
+    """
+    if direction == "neutral":
+        return {"better": 0, "worse": 0, "same": 0, "n": 0, "unanimous": False}
+    down_is_better = direction in ("lower", "abs", "target")
+    better = worse = same = 0
+    for d in _common_folds(A_folds, B_folds, key):
+        diff = (_judged(B_folds[d], key, magnitude, target)
+                - _judged(A_folds[d], key, magnitude, target))
+        if diff == 0:
+            same += 1
+        elif (diff < 0) == down_is_better:
+            better += 1
+        else:
+            worse += 1
+    n = better + worse + same
+    # Unanimity is only meaningful once there are enough folds to be surprised by; and a row of
+    # ties is not agreement about anything.
+    unanimous = n >= 4 and (better == n or worse == n)
+    return {"better": better, "worse": worse, "same": same, "n": n, "unanimous": unanimous}
+
+
 def _verdict(direction, md, lo, hi):
     """Pre-committed decision rule: accept only if the paired CI excludes 0 in the
     improving direction. Everything else is noise or a regression."""
@@ -372,7 +438,7 @@ def _verdict(direction, md, lo, hi):
         return "n/a"
     if direction == "neutral":
         return "(context)"
-    better_is_down = direction in ("lower", "abs")
+    better_is_down = direction in ("lower", "abs", "target")
     if lo > 0:                       # significantly increased
         return "REGRESSION" if better_is_down else "ACCEPT (better)"
     if hi < 0:                       # significantly decreased
@@ -407,17 +473,30 @@ def cmd_compare(tag_a: str, tag_b: str):
     rows = []
     for key, (direction, label) in METRICS.items():
         mag = direction == "abs"
+        tgt = direction == "target"
         common = _common_folds(A["folds"], B["folds"], key)
-        va = _agg(A["folds"], key, only=common, magnitude=mag)
-        vb = _agg(B["folds"], key, only=common, magnitude=mag)
+        va = _agg(A["folds"], key, only=common, magnitude=mag, target=tgt)
+        vb = _agg(B["folds"], key, only=common, magnitude=mag, target=tgt)
         if va is None or vb is None:
-            rows.append([label, "n/a", "n/a", "", "", "", "n/a"])
+            rows.append([label, "n/a", "n/a", "", "", "", "", "n/a"])
             continue
-        md, (lo, hi), n = _paired(A["folds"], B["folds"], key, magnitude=mag)
+        md, (lo, hi), n = _paired(A["folds"], B["folds"], key, magnitude=mag, target=tgt)
         ci = "" if md is None else f"[{lo:+.3f},{hi:+.3f}]"
-        rows.append([f"|{label}|" if mag else label, f"{va:.3f}", f"{vb:.3f}",
-                     "" if md is None else f"{md:+.3f}", ci, str(n),
+        ft = fold_tally(A["folds"], B["folds"], key, direction, magnitude=mag, target=tgt)
+        bw = ("" if direction == "neutral"
+              else f"{ft['better']}/{ft['worse']}" + ("*" if ft["unanimous"] else ""))
+        shown = f"|{label}|" if mag else (f"{label} vs target" if tgt else label)
+        rows.append([shown, f"{va:.3f}", f"{vb:.3f}",
+                     "" if md is None else f"{md:+.3f}", ci, str(n), bw,
                      _verdict(direction, md, lo, hi)])
+        if tgt:
+            # Signed, so over- vs under-coverage stays visible. The distance alone cannot say
+            # WHICH SIDE of nominal a fold sits on, and that is the actionable half.
+            sa = _agg(A["folds"], key, only=common)
+            sb = _agg(B["folds"], key, only=common)
+            lv = next((A["folds"][d][TARGET_OF[key]] for d in common), None)
+            rows.append([f"   ^ raw {label} (target {lv})", f"{sa:.3f}", f"{sb:.3f}",
+                         "", "", str(len(common)), "", "(context, never judged)"])
         if mag:
             # The signed mean answers a DIFFERENT question -- "is there a global offset, or do
             # donors cancel?" -- and is worth keeping. It is context, never a verdict: judging
@@ -425,10 +504,16 @@ def cmd_compare(tag_a: str, tag_b: str):
             sa = _agg(A["folds"], key, only=common)
             sb = _agg(B["folds"], key, only=common)
             rows.append([f"   ^ signed mean ({label})", f"{sa:+.3f}", f"{sb:+.3f}",
-                         "", "", str(len(common)), "(context, never judged)"])
+                         "", "", str(len(common)), "", "(context, never judged)"])
     print("\n  AGGREGATE + PAIRED TEST")
-    print(render_table(["metric", tag_a, tag_b, "mean diff", "95% CI", "folds", "verdict"], rows,
-                       aligns=["l", "r", "r", "r", "r", "r", "l"]))
+    print(render_table(["metric", tag_a, tag_b, "mean diff", "95% CI", "folds", "b/w", "verdict"],
+                       rows, aligns=["l", "r", "r", "r", "r", "r", "r", "l"]))
+    print("  'b/w' = folds BETTER / WORSE; '*' marks a UNANIMOUS direction across >=4 folds.")
+    print("  CONTEXT, never a verdict -- the rule is still the paired 95% CI. A unanimous")
+    print("  run of 5 folds is a sign-test p of 0.0625 and can NEVER clear 0.05 at this n,")
+    print("  so no p-value is printed: it would invite a second bite at the apple. It exists")
+    print("  because the note below asks you to check per-fold agreement, and until now only")
+    print("  ONE metric printed a per-fold table.")
     dropped = sorted({d for key in METRICS
                       for d in DONORS
                       if _fold_ok(A["folds"].get(d), key) != _fold_ok(B["folds"].get(d), key)})
