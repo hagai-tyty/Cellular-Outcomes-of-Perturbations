@@ -50,7 +50,7 @@ any real lineage/clone linkage, and can `GSE165176`'s SSEA4/CD13 sorting define 
   independent trajectories
 
 **B. `GSE165176` → `ORTHOGONAL_BUT_CONTEMPORANEOUS_ONLY`**
-- the sort **is** the fate call and is orthogonal to RNA: CD13 → *"Failing to reprogram
+- the sort is an **orthogonal phenotype/state call measured independently of RNA**: CD13 → *"Failing to reprogram
   fibroblast"*, SSEA4 → *"Reprogramming fibroblast"* / *"iPSC"*, unsorted → *"Dermal fibroblast"*
 - **47 of 71** donor × day × experiment cultures yield **both** fractions → marker identity is a
   within-culture subpopulation label, not a culture outcome
@@ -84,7 +84,12 @@ inventing geometry the experiments never had.
 Nothing here is `UNKNOWN`. No further download changes either answer.
 
 ## Next action
-Both local routes are closed, so per the plan the next action is **Stage 21B public Role-A /
-Role-B dataset qualification** — not another attempt on local data. Before searching, pre-register
-a fixed search budget and stopping rule (finite candidate set or defined number of passes), with
-Role-B scoped down rather than allowed to hold the paper hostage.
+Both local routes are closed, so per the plan the next action is **Stage 21C — Public
+Prospective Dataset Qualification** — not another attempt on local data. Before searching,
+pre-register a fixed search budget and stopping rule (finite candidate set or defined number of
+passes), with Role-B scoped down rather than allowed to hold the paper hostage.
+
+*Corrected 2026-08-21: this originally read "Stage 21B public Role-A / Role-B dataset
+qualification", written before the 21C/21D split existed. Keeping it would have left two different
+things called 21B. Sequence now frozen in
+`STAGE_21_EXECUTION_AMENDMENT_AFTER_21B.md`.*
