@@ -26,6 +26,17 @@ needs = pytest.mark.skipif(
     not all(p.exists() for p in (RECAL, EV_S12, EV_S16, SNAP_A, SNAP_B)),
     reason="recalibration/verification artefacts not present")
 
+# The fold BUILDS are gitignored (~260 MB each), so they exist on the data machine and never on
+# CI. The results/snapshot JSONs above ARE committed, so `needs` alone is true on CI and the two
+# tests that open `cellfate_loocv_*/bundle/` would raise FileNotFoundError there. They get their
+# own guard; every other test in this file reads committed artefacts and still runs in CI, which
+# is where most of the value is.
+FOLDS = [ROOT / f"cellfate_loocv_{d}{sfx}" / "bundle" / "temperature.json"
+         for d in ("N2", "N3", "O1", "O2", "Y1", "Y2") for sfx in ("_s12", "_s16")]
+needs_folds = pytest.mark.skipif(
+    not all(p.exists() for p in FOLDS),
+    reason="fold builds are gitignored; present only on the data machine")
+
 
 def _pooled(p: Path):
     return json.loads(p.read_text(encoding="utf-8"))["pooled"]["raw"]
@@ -45,6 +56,7 @@ def test_every_fold_was_recalibrated_and_the_slope_roughly_doubled():
 
 
 @needs
+@needs_folds
 def test_the_original_folds_were_not_mutated():
     """`_s12` and the `c7t_stage12` snapshot taken from it must stay valid: the recalibration
     writes a NEW fold set and only replaces bundle/temperature.json inside it."""
@@ -60,6 +72,7 @@ def test_the_original_folds_were_not_mutated():
 
 
 @needs
+@needs_folds
 def test_each_recalibrated_bundle_records_its_own_provenance():
     for d in ("N2", "O1", "Y2"):
         j = json.loads((ROOT / f"cellfate_loocv_{d}_s16" / "bundle" /
