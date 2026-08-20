@@ -10,7 +10,9 @@ any real lineage/clone linkage, and can `GSE165176`'s SSEA4/CD13 sorting define 
   downloaded for this stage) plus the existing barcode/matrix files
 - `D:\Gill\GSE165176_series_matrix.txt.gz` — 124 samples
 - frozen commits: 21A at `f6a0056`, CI fix `392b69d`; executed at `3b8b644`
-- plan: `(newer)practical plans/STAGE_21_PROSPECTIVE_DATA_QUALIFICATION_V2.md`
+- plan: `(newer)practical plans/arcive/STAGE_21_PROSPECTIVE_DATA_QUALIFICATION_V2.md`
+  — path updated 2026-08-21 when V2 was archived and superseded by
+  `STAGE_21_PROSPECTIVE_DATA_QUALIFICATION_V3.md`; the archived file is byte-unchanged
 - model: `_s16` frozen, not loaded
 
 ## Files added
@@ -73,11 +75,12 @@ any real lineage/clone linkage, and can `GSE165176`'s SSEA4/CD13 sorting define 
 ## Scientific interpretation
 **Proves:** neither local dataset can pose a prospective `X_before + U -> Y_future` task.
 `GSE242423` is one unlinked, destructively-sampled trajectory. `GSE165176` carries a genuinely
-orthogonal antibody fate call, but it is a same-timepoint subpopulation split with no proportions,
-no unsorted early population beyond day 0, and no terminal outcome variation.
+orthogonal antibody **phenotype/state call measured independently of RNA**, but it is a
+same-timepoint subpopulation split with no proportions, no unsorted early population beyond day 0,
+and no terminal outcome variation.
 
 **Does NOT prove:** that the sorting data are worthless — the SSEA4/CD13 call remains the only
-non-RNA fate readout in the project and stays available for *contemporaneous* analyses. It also
+non-RNA phenotype readout in the project and stays available for *contemporaneous* analyses. It also
 says nothing about public datasets; only that manufacturing a task from local data would require
 inventing geometry the experiments never had.
 
@@ -89,7 +92,16 @@ Prospective Dataset Qualification** — not another attempt on local data. Befor
 pre-register a fixed search budget and stopping rule (finite candidate set or defined number of
 passes), with Role-B scoped down rather than allowed to hold the paper hostage.
 
-*Corrected 2026-08-21: this originally read "Stage 21B public Role-A / Role-B dataset
+*Corrected 2026-08-21 (terminology): every place that called the SSEA4/CD13 sort a "fate call" or
+"fate readout" — the Result section and both halves of the Scientific interpretation — now reads "orthogonal
+phenotype/state call measured independently of RNA". The sort is orthogonal to RNA, which is
+the real finding; calling it a *fate* call overstates it, because 21B's own evidence shows it
+is contemporaneous, not a future outcome. The evidence strings in
+`results/diag_stage21b_source_design_results.json` are left frozen as executed.*
+
+*Corrected 2026-08-21 (next action): this originally read "Stage 21B public Role-A / Role-B dataset
 qualification", written before the 21C/21D split existed. Keeping it would have left two different
 things called 21B. Sequence now frozen in
-`STAGE_21_EXECUTION_AMENDMENT_AFTER_21B.md`.*
+`STAGE_21_PROSPECTIVE_DATA_QUALIFICATION_V3.md` §2 — briefly held in a standalone
+`STAGE_21_EXECUTION_AMENDMENT_AFTER_21B.md`, since folded into V3 so there is one plan file, not
+a plan plus a patch.*

@@ -1,6 +1,7 @@
 """STAGE 21A — local dataset geometry audit for a PROSPECTIVE fate task.
 
-Pre-registered in `plans/(newer)practical plans/STAGE_21_PROSPECTIVE_DATA_QUALIFICATION_V2.md`.
+Pre-registered in `plans/(newer)practical plans/arcive/STAGE_21_PROSPECTIVE_DATA_QUALIFICATION_V2.md`
+(archived when V3 folded in the post-21B amendment; the pre-registration this ran against is unchanged).
 **Fits no model. Reads no expression values. `src/` is not imported for anything but paths.**
 
 WHAT THIS DECIDES

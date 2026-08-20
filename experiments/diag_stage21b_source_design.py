@@ -1,6 +1,7 @@
 """STAGE 21B — source/design audit. Resolves the two questions Stage 21A left open.
 
-Pre-registered in `plans/(newer)practical plans/STAGE_21_PROSPECTIVE_DATA_QUALIFICATION_V2.md`.
+Pre-registered in `plans/(newer)practical plans/arcive/STAGE_21_PROSPECTIVE_DATA_QUALIFICATION_V2.md`
+(archived when V3 folded in the post-21B amendment; the pre-registration this ran against is unchanged).
 **Additive: the frozen Stage 21A result is neither read for its verdict nor rewritten.**
 **Fits no model. Reads no expression values. `src/` byte-unchanged.**
 

@@ -10,7 +10,10 @@ level. Fit nothing.
   `GSE165179`, `GSE113957`, `GSE297234` — local metadata and filenames only, no expression values
 - frozen commits: plan `8e7f8ff` (pre-registration), archive `8ed6288`; executed at `f6a0056`,
   CI follow-up `392b69d`
-- plan: `(newer)practical plans/STAGE_21_PROSPECTIVE_DATA_QUALIFICATION_V2.md` §§2, 5, 6, 11, 19, 20
+- plan: `(newer)practical plans/arcive/STAGE_21_PROSPECTIVE_DATA_QUALIFICATION_V2.md`
+  §§2, 5, 6, 11, 19, 20 — path updated 2026-08-21 when V2 was archived and superseded by
+  `STAGE_21_PROSPECTIVE_DATA_QUALIFICATION_V3.md`. Section numbers here are V2's; the
+  archived file is byte-unchanged, so they still resolve
 - model: `_s16` frozen, not loaded
 
 ## Files added
