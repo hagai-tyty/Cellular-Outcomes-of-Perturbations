@@ -23,6 +23,11 @@ pipeline.
 - [9. Entry points](#9-entry-points)
 - [10. Cross-cutting invariants](#10-cross-cutting-invariants)
 - [**11. Where the project actually stands — 2026-08-18**](#11-where-the-project-actually-stands--2026-08-18)
+- [12. The data — every corpus, and what it can and cannot answer](#12-the-data--every-corpus-and-what-it-can-and-cannot-answer)
+- [13. The result ledger — Stages 10–18](#13-the-result-ledger--stages-1018)
+- [14. Failure modes this project has actually hit](#14-failure-modes-this-project-has-actually-hit)
+- [15. Reading the experiments directory](#15-reading-the-experiments-directory)
+- [16. If you are picking this up cold](#16-if-you-are-picking-this-up-cold)
 
 ---
 
@@ -591,6 +596,12 @@ clock-density thread (Stage 1.5.6), not another shuffle. Full write-up: `results
 ./run_step6_arm.sh C 0               # HFF age labels globally shuffled, seed 0
 ./run_step6_arm.sh D 0               # HFF age labels shuffled WITHIN (line,time), seed 0
 
+# The current line (C-7 gate ON, fold set selected by suffix)
+CELLFATE_FOLD_SUFFIX=_s16 CELLFATE_BULK_GATE=1   python local_runners/run_loocv.py "D:\GSE242423" "D:\Gill" --arm A
+
+# Re-fit the fate calibrator on existing bundles, no retraining   (~2 min/fold)
+python local_runners/recalibrate_folds.py          # _s12 -> _s16
+
 # One fold only
 python local_runners/run_multi_local.py "D:\GSE242423" "D:\Gill"
 
@@ -606,9 +617,13 @@ python plan_tests/register_*_bar.py          # register a bar BEFORE its run
 python scripts/build_dataset.py  |  scripts/train.py  |  scripts/evaluate.py  |  scripts/serve.py
 
 # Tests
-python -m pytest -q                          # ~780 tests
+python -m pytest -q                          # 1583 tests
 ruff check src/ tests/ scripts/ plan_tests/  # the CI lint scope
 ```
+
+> ⚠️ **Pick the snapshot tag by hand.** `run_loocv.py` derives the tag it advertises from
+> arm + gate only, so re-running an arm prints the tag of the *previous* run — which would
+> overwrite the only comparator the new run has. See §14 trap 10.
 
 > ⚠️ **`retrain_stage1.py` reuses existing shards and has no build step.** It is correct for
 > training-path changes only. A change to any *data* config (masks, policies, the clock) will not
@@ -694,3 +709,155 @@ established. It is deliberately blunt; `CHANGES.md` carries the full evidence fo
 prediction; fate classification has real within-timepoint signal resting on twelve pairs; and RES,
 the product's headline output, is structurally zero until the model's uncertainty falls below its
 signal.
+
+---
+
+## 12. The data — every corpus, and what it can and cannot answer
+
+The `DataSource` adapters live in `data/sources.py`. Only two are load-bearing; the rest are
+scaffolding or unused.
+
+| adapter | corpus | shape | role |
+|---|---|---|---|
+| **`GSE242423SingleCellSource`** | GSE242423 | HFF single cells, 9 timepoints, chunked into **45** blocks (~42.5 k cells at `MAX_CELLS = 5000`) | **the training mass.** Supplies train/val/calib. Every fold shares it |
+| **`GillReprogrammingSource`** | GSE165176 (Gill 2022, Sendai) | 6 donors × ~20 **bulk** samples | **the held-out donors.** One donor per LOOCV fold is the test set |
+| `ReprogrammingSource` | base class | — | shared parsing: `time_h`, `cell_type`, control detection |
+| `SyntheticSource` | generated | arbitrary | tests and smoke builds |
+| `TahoeSource`, `SciplexSource` | perturbation atlases | — | **not used in any recorded result.** Present for the chem modality, which the reprogramming line never exercises |
+
+### Corpora used in analysis but NOT in any build
+
+| corpus | used for | why it never enters a build |
+|---|---|---|
+| **GSE165177** (Gill transient arm, donors O1/O2/O3) | the **ΔAge ledger** — the only rows carrying methylation truth (68 of 90). Source of `k_var = 0.5991` | different protocol; and per-sample labels cannot supply a per-cell `p_unsafe` |
+| **GSE165178 / GSE165179** | the two **methylation twins** — Horvath skin&blood and multi-tissue. They define the **instrument floor** | reference measurements, not model inputs |
+| **GSE113957** (143 donors, ages 1–96) | the Fleischer clock's own training cohort | scoring the clock here is circular — measured at MAE **0.13** against a published `cv_mae` of **12.27**, a 94× gap |
+| **GSE297234** (2 donors, D0 only) | a clock sanity check | no timecourse, so no fate labels |
+
+### The five structural limits this data imposes
+
+1. **Six donors.** Every paired comparison is n ≤ 6, so the minimum detectable mean is ≈ 1.05 × SD
+   of the effect. A change that helps some folds and hurts others is invisible by construction.
+2. **~20 held-out cells per fold.** `conformal_coverage` is therefore quantised in steps of ~0.05,
+   and a change smaller than one cell cannot be seen. Stage 12's null is a null *at that
+   resolution* — not proof that nothing changed.
+3. **The held-out sets are bulk.** A bulk sample is already a population average, so any per-cell
+   *fraction* (`p_unsafe`) collapses to 0/1 before it can be estimated. This is why Stage 3a's
+   `P0` is void, and why sample replication cannot fix it.
+4. **Fate is nearly a function of timepoint.** Only **7 of 70** held-out timepoints carry more than
+   one class. This is the binding constraint on the entire fate claim (§11.3), and it is a property
+   of the experimental design, not of the model.
+5. **The methylation cohort is disjoint from the training cohort.** No Sendai condition carries
+   methylation truth, so every cross-instrument number is transient-arm only, n = 44 — and the
+   ΔAge calibration factor inherits that as an untested transfer.
+
+---
+
+## 13. The result ledger — Stages 10–18
+
+*One line per stage: the question, the answer, and whether it moved `src/`. Full evidence in
+`CHANGES.md`; each stage has a plan in `plans/`.*
+
+| stage | question | answer | `src/`? |
+|---|---|---|---|
+| **10** | Is pluripotency contaminating ΔAge? | **No — MEDIATION** (3/3 tests). Removing it deletes signal, ρ 0.770 → 0.354. Recommendation **withdrawn** | no |
+| **11** | Is the ΔAge scale error calibratable? | **Yes — SCALE IS THE PROBLEM.** The dense clock was never broken, only mis-scaled. LODO `k` stable across donors (spread 1.19×, bar was 2×) | no |
+| **12** | Is `cell_id` unique? | **No.** 42,600 cells carried **1,100** ids; the split map held 1,100 entries. Fixed, plus a build-time guard. The rebuild changed the split **exactly as predicted** and moved **no model metric** | **yes** |
+| **13** | Does the scorecard judge `level_shift` correctly? | **No.** `abs()` applied to the aggregate measured *cancellation* — it printed **0.230** for a shift whose magnitude is **12.72 yr** — and the CI was built on signed values. **12 of 20 past verdicts changed; 8 were shuffle controls scored as improvements** | scorecard |
+| **14** | Should we adopt a calibrated ΔAge? | **Yes — at the reporting boundary only.** Rescaling the *target* would also change the loss regime (Huber quadratic share 43–67 % → 85–97 %). Ships `k_var = 0.5991` **alongside** raw | **yes** |
+| **15** | Why is RES zero? | **`g(R_eff)` alone, 119 of 119 cells.** σ_age is 2.0–4.5× \|µ_age\|. Not a bug, and **over-determined** by three independent gates | no |
+| **16** | Why does the safety gate reject safe cells? | **Target mismatch.** Platt was fitted on the **soft** label while every consumer reads `S` as P(**hard** = safe). Fixed and verified on recalibrated folds: sensitivity 0.275 → **0.670**, specificity **unchanged** | **yes** |
+| **17** | Does the scorecard judge coverage correctly? | **No.** `conformal_coverage` was `("higher", …)`, so widening every interval to 1.0 would have scored ACCEPT. Added the `target` direction and the `b/w` fold tally | scorecard |
+| **18** | Is the fate head biology or a clock? | **Both — the clock is most of it.** Marginal 0.93–0.96 is largely `dose_time`; within-timepoint AUC **0.917**, p = 0.0091, on **12 pairs** | no |
+
+### Predictions this arc got wrong, and what corrected them
+
+Kept, because a method that records only its successes is not a method.
+
+| predicted | actual | corrected by |
+|---|---|---|
+| Rescaling ΔAge is a pure units change | residuals are *comparable* to the Huber knee; the quadratic share more than doubles | Stage 14 pre-flight |
+| The fate gate is plainly miscalibrated | Platt was **already applied** — the real defect was the *target* it was fitted against | Stage 16 diagnosis correction |
+| Shipping Stage 16 costs specificity 0.929 → 0.821 | specificity **unchanged**; false approvals unchanged at 2 | Stage 16 verification |
+| The pluripotency signature should be removed | mediation, not contamination | Stage 10 |
+| D0 occupies 112 index slots | 117 across the union of chunks; 112 was one shard | Stage 12 effect |
+| Only `fate_ece` would move under recalibration | `fate_ece_platt` moves per fold too (aggregate unchanged) | Stage 16 verification |
+
+---
+
+## 14. Failure modes this project has actually hit
+
+*Each of these cost real time and is now guarded. They are listed because they recur.*
+
+| # | trap | how it showed up | guard now in place |
+|---|---|---|---|
+| 1 | **A metric that measures sample size** | per-fold `fate_ece` on ~21 cells in 10 bins: a *perfectly* calibrated model scores 0.183 and clears a 0.169 bar only **26.9 %** of the time | `pooled_fate_ece` + `audit_metrics.bar_verdict`; a bar must be shown *resolvable* before it is registered |
+| 2 | **A correlation over floating-point dust** | "Ranking generalizes: Spearman 0.40" — computed where RES was 0 everywhere except residue at 1e-11 | headline retracted in `run_loocv.py`; tests assert dust as `< 1e-9`, never `== 0.0` |
+| 3 | **A guard that cannot fail** | `verify_1a` graded PASS on a warning it had itself printed | every gate now has a test that *constructs a failure* and requires it to raise |
+| 4 | **A flag that silently does nothing** | the C-7 gate printed ON and did nothing **three times** — the source had cached its matrix before the flag arrived | cache-invalidating property setter; exact-match constants (`C7_EXPECT_REJECTED`, counts) asserted at run time |
+| 5 | **A many-to-many join** | `diag_target_shift` joined on `cell_id`, giving a 43× explosion and entirely *plausible* fake numbers | positional pairing, plus a canary comparing a known-identical pair — it read 73.77 instead of 0 |
+| 6 | **A near-zero std passing an `== 0` check** | residuals of ~1e-14 sailed through and produced a Spearman over dust | scale-relative guards, never exact-zero |
+| 7 | **A shrinkage trap** | MAE improves while ordering degrades, because `k_LS = ρ·SD(y)/SD(p) < 1` | variance-matched `k` preferred for reporting; SD ratio reported beside every MAE |
+| 8 | **A circular test** | scoring the clock on its own training cohort: MAE 0.13 against a published `cv_mae` of 12.27 | cohort provenance stated for every clock number |
+| 9 | **A comparison spanning two changes** | arm B changed the target *and* reweighted donors 400× | "one change per experiment"; the validity precondition is checked from `git log -- src/` before a rebuild |
+| 10 | **A tag that destroys its own baseline** | `run_loocv.py` derives its snapshot tag from arm + gate only, so re-running an arm overwrites the comparator | recorded in `plans/STAGE_12_CELL_ID_UNIQUENESS.md` §12.9; a fresh tag is chosen deliberately |
+| 11 | **A directory glob as an audit scope** | writing a new snapshot silently enlarged Stage 13's retro-audit and broke three pinned counts hours after it shipped | scope frozen to the nine snapshots the broken rule actually judged |
+| 12 | **Validating a transform by diffing two builds** | build-to-build value comparison at reduced scale carries confounds unrelated to the transform under test | validate **intrinsically within one build** — the arm-D lesson |
+| 13 | **Judging a target-seeking metric directionally** | `conformal_coverage` as "higher is better": widening every interval to 1.0 would have scored ACCEPT | the `target` direction, with the target read **per fold** from the data |
+| 14 | **Believing unit tests are deployment evidence** | Stage 16's fix passed 13 tests while every bundle on disk still carried the old coefficients | a stage is "implemented and tested" until artefacts are rebuilt; only then "empirically validated" |
+
+---
+
+## 15. Reading the experiments directory
+
+86 read-only scripts. They are not a pile — they follow four conventions, and the conventions are
+what make them auditable.
+
+1. **Pure functions, then a printed table, then one JSON dump.** `.write_text(` appears exactly
+   once per script, and a test asserts that.
+2. **Bars in the docstring, before the numbers.** A `verdict_from` function applies the
+   pre-registered rule *mechanically*, so nobody picks a branch by hand after seeing the result.
+3. **`_RESULTS = Path(__file__).resolve().parents[N] / "results"`** — enforced by
+   `tests/test_results_paths.py`, which exists because a regex rewrite once produced
+   `_RESULTS / "x.json".write_text(...)` in 20 places (`.` binds tighter than `/`, so the method
+   bound to the *string*).
+4. **Every script has a `tests/test_<name>.py`** pinning its decision branches on constructed
+   input, so a branch that never fires in production is still exercised.
+
+### The scripts carrying current conclusions
+
+| script | conclusion |
+|---|---|
+| `diag_clock_circularity.py` | ΔAge prediction is circular — ρ 0.96–0.99 |
+| `diag_early_late_forward.py` | early→late ΔAge is donor age — partial −0.064 |
+| `diag_instrument_floor.py` | the floor is 7.30 yr; `top100` sits on it, the dense clock is 3× outside |
+| `diag_stage10_pluri.py` | pluripotency is mediation, not contamination |
+| `diag_stage11_scale.py` | the clock is mis-scaled, not broken; `k` is stable across donors |
+| `diag_stage12_split_effect.py` | the split-composition harm, measured with no rebuild |
+| `diag_stage12_rebuild_verdict.py` | §12.9's pre-registered null, applied mechanically |
+| `diag_stage13_retro_verdicts.py` | 12 of 20 past verdicts changed; 8 flattered shuffle controls |
+| `diag_stage14_calibration_equivariance.py` | rescaling the target is not a units change |
+| `diag_stage15_res_zero.py` | RES = 0 attributed to `g(R_eff)` alone |
+| `diag_stage16_safety_floor.py` | the safety gate rejects 70 % of demonstrably safe cells |
+| `diag_stage18_fate_beyond_day.py` | the fate head is partly a clock; 0.917 on 12 within-timepoint pairs |
+
+### Naming
+
+`diag_*` — a question. `repro_*` — re-runs a recorded result against a current build and grades it
+against a pre-registered bar, importing the original script **unmodified** and redirecting only the
+run directory, so the arithmetic is identical on both sides. `test*.py` inside `experiments/` are
+historical numbered tests (`test7_4_*`), **not** pytest files.
+
+---
+
+## 16. If you are picking this up cold
+
+1. Read **§11**. It is the only section that says what is true.
+2. Run `pytest -q`. 1583 tests, and they encode most of what was learned the hard way.
+3. Use **`_s16`** folds. `_c7t` and `_s12` are baselines, not working artefacts.
+4. Grade every change with `scorecard.py compare`, never by eye — and read the `b/w` column before
+   trusting an aggregate verdict.
+5. Before spending hours of compute, check the validity precondition: `git log -- src/` between the
+   baseline build and now must show **exactly one** change.
+6. The binding constraint is **data, not code**: 7 of 70 timepoints carry mixed fate, and 12 pairs
+   is the entire evidence base for the one live claim.
