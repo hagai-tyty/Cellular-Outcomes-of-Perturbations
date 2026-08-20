@@ -1,0 +1,191 @@
+{
+  "stage": "21B",
+  "phase": "source_design_audit",
+  "additive_to": "results/diag_stage21_data_audit_results.json",
+  "stage_21a_result_modified": false,
+  "GSE242423": {
+    "verdict": "LINEAGE_ABSENT_PROVEN",
+    "verdict_reason": "Series Matrix and MINiML together carry no lineage/clone/CellTag vocabulary, no replicate or culture identifier among the per-sample characteristic tags, and no supplementary file that could hold an external mapping. The only cell identifiers are ordinary 10x barcodes, which are per-run and cannot link across days",
+    "findings": {
+      "series_matrix": {
+        "value": "GSE242423_series_matrix.txt.gz",
+        "status": "PRESENT",
+        "evidence": "GSE242423_series_matrix.txt.gz: 69 metadata lines"
+      },
+      "miniml_family": {
+        "value": "GSE242423_family.xml.tgz",
+        "status": "PRESENT",
+        "evidence": "GSE242423_family.xml.tgz: 1 XML member(s)"
+      },
+      "lineage_vocabulary": {
+        "value": [],
+        "status": "ABSENT_PROVEN",
+        "evidence": "none of ['clone', 'lineage', 'celltag', 'cell tag', 'larry', 'hashtag', 'hto', 'multiplex', 'demultiplex', 'cmo', 'sister', 'barcoded', 'lentibarcode'] appears in ['GSE242423_series_matrix.txt.gz', 'GSE242423_family.xml'] (50648 chars scanned)"
+      },
+      "barcode_mentions_are_10x_only": {
+        "value": true,
+        "status": "ABSENT_PROVEN",
+        "evidence": "24 distinct 'barcode' contexts; none couples it to clone/lineage/CellTag"
+      },
+      "sample_characteristic_tags": {
+        "value": [
+          "cell type",
+          "genotype"
+        ],
+        "status": "PRESENT",
+        "evidence": "per-sample characteristic tags: ['cell type', 'genotype'] \u2014 a replicate/culture/clone id would appear here"
+      },
+      "n_samples": {
+        "value": 9,
+        "status": "PRESENT",
+        "evidence": "9 !Sample_title entries: ['D0, scRNA-seq', 'D2, scRNA-seq', 'D4, scRNA-seq', 'D6, scRNA-seq']\u2026"
+      },
+      "overall_design": {
+        "value": "In this study, we profiled chromatin accessibility and gene expression at single cell resolution across a finely sampled, 14 day time course of OSKM induced reprogramming of human fibroblasts. In addition, we jointly profiled chromatin accessibility and gene expression at single nucleus resolution a",
+        "status": "PRESENT",
+        "evidence": "In this study, we profiled chromatin accessibility and gene expression at single cell resolution across a finely sampled, 14 day time course of OSKM induced reprogramming of human fibroblasts. In addition, we jointly profiled chromatin accessibility and gene expression at single nucleus resolution a"
+      },
+      "destructive_sampling": {
+        "value": true,
+        "status": "PRESENT",
+        "evidence": "extract protocol trypsinises the cells at collection, so each day is a DESTRUCTIVE sample \u2014 the same cells are not carried to the next timepoint"
+      },
+      "supplementary_lineage_file": {
+        "value": null,
+        "status": "ABSENT_PROVEN",
+        "evidence": "20 supplementary files, kinds ['barcodes.tsv.gz', 'matrix.mtx.gz', 'tar', 'tsv.gz']; none named for a lineage/clone map"
+      },
+      "replicate_structure": {
+        "value": null,
+        "status": "ABSENT_PROVEN",
+        "evidence": "no replicate token in any of 9 sample titles, and characteristic tags are ['cell type', 'genotype'] \u2014 one sample per timepoint, single growth and treatment protocol"
+      },
+      "n_independent_units": {
+        "value": 1,
+        "status": "PRESENT",
+        "evidence": "one continuously-cultured trajectory: one line, one OSKM protocol, one sample per timepoint, destructively sampled. The ~42,500 cells are NOT independent trajectories"
+      }
+    }
+  },
+  "GSE165176": {
+    "verdict": "ORTHOGONAL_BUT_CONTEMPORANEOUS_ONLY",
+    "verdict_reason": "The sort is genuinely orthogonal to RNA and IS the fate call, but 47 of 71 cultures yield BOTH fractions at the same timepoint, so marker identity is a within-culture subpopulation label rather than a culture outcome. No FACS proportions exist to build a culture-level quantity instead, only 6 unsorted early samples exist (all day 0), and every donor reaches day 54 with the same marker \u2014 no outcome variation. A future culture-level target cannot be defined from these files",
+    "findings": {
+      "series_matrix": {
+        "value": "GSE165176_series_matrix.txt.gz",
+        "status": "PRESENT",
+        "evidence": "124 samples"
+      },
+      "n_samples_parsed": {
+        "value": 124,
+        "status": "PRESENT",
+        "evidence": "124 of 124 titles matched donor_day_marker_Exp"
+      },
+      "q1_what_was_sorted": {
+        "value": {
+          "CD13|cell type: Failing to reprogram fibroblast": 47,
+          "SSEA4|cell type: Reprogramming fibroblast": 65,
+          "SSEA4|cell type: iPSC": 6,
+          "UNSORTED|cell type: Dermal fibroblast": 6
+        },
+        "status": "PRESENT",
+        "evidence": "antibody surface-marker sort; the cell-type characteristic tracks the marker 1:1 (['CD13 -> cell type: Failing to reprogram fibroblast', 'SSEA4 -> cell type: Reprogramming fibroblast', 'SSEA4 -> cell type: iPSC', 'UNSORTED -> cell type: Dermal fibroblast']), so the SORT IS the fate assignment and is measured independently of RNA"
+      },
+      "q2_q3_both_fractions_same_culture": {
+        "value": {
+          "both": 47,
+          "single": 24
+        },
+        "status": "PRESENT",
+        "evidence": "47 of 71 donor x day x experiment cultures yield BOTH an SSEA4 and a CD13 fraction. The culture does not BECOME one of them \u2014 it contains both at once, so the marker is a WITHIN-CULTURE SUBPOPULATION label, not a culture-level outcome"
+      },
+      "q4_q5_sampling": {
+        "value": "destructive_or_parallel",
+        "status": "PRESENT",
+        "evidence": "each sample is a sorted harvest at one day; nothing in the protocols links a harvested population forward to a later harvest of the same cells"
+      },
+      "q6_q8_unsorted_early_samples": {
+        "value": [
+          "N2_Fib_Sendai_Exp2",
+          "N3_Fib_Sendai_Exp2",
+          "O1_Fib_Sendai_Exp2",
+          "O2_Fib_Sendai_Exp2",
+          "Y1_Fib_Sendai_Exp2",
+          "Y2_Fib_Sendai_Exp2"
+        ],
+        "status": "PRESENT",
+        "evidence": "6 unsorted samples, all day [0] \u2014 these are the ONLY prediction-time-valid early observations, because every other sample is already marker-sorted"
+      },
+      "q7_early_input_already_sorted": {
+        "value": true,
+        "status": "PRESENT",
+        "evidence": "118 of 124 samples are already SSEA4/CD13 sorted. Using a later marker identity as the target for a sorted early input is LEAKAGE: the input was selected on the very phenotype being predicted"
+      },
+      "q9_facs_proportions": {
+        "value": null,
+        "status": "ABSENT_PROVEN",
+        "evidence": "no percentage/proportion/frequency/FACS-count quantity anywhere in the series metadata; the corpus ships RNA matrices FROM the two sorted fractions, not the sort statistics. So a culture-level target such as `early RNA -> later %SSEA4+` cannot be constructed"
+      },
+      "q10_terminal_outcome": {
+        "value": null,
+        "status": "ABSENT_PROVEN",
+        "evidence": "no colony count, reprogramming efficiency, survival or other terminal assay in the metadata; the only orthogonal readout is the sort itself"
+      },
+      "q11_effective_n": {
+        "value": {
+          "donors": [
+            "N2",
+            "N3",
+            "O1",
+            "O2",
+            "Y1",
+            "Y2"
+          ],
+          "exp1_days": [
+            7,
+            9,
+            11,
+            13,
+            15
+          ],
+          "exp2_days": [
+            0,
+            11,
+            21,
+            29,
+            34,
+            40,
+            47,
+            54
+          ],
+          "overlap_days": [
+            11
+          ],
+          "effective_n": 6
+        },
+        "status": "PRESENT",
+        "evidence": "Exp1 covers days [7, 9, 11, 13, 15] and Exp2 days [0, 11, 21, 29, 34, 40, 47, 54], overlapping only at [11]. They are TIME BLOCKS of one study, not independent replicates of the same experiment, so donors x experiments OVERSTATES the unit count. Effective n = 6 donors"
+      },
+      "terminal_day_outcome_variation": {
+        "value": {
+          "day": 54,
+          "donors": [
+            "N2",
+            "N3",
+            "O1",
+            "O2",
+            "Y1",
+            "Y2"
+          ],
+          "markers": [
+            "SSEA4"
+          ]
+        },
+        "status": "PRESENT",
+        "evidence": "at day 54 all 6 donors appear and only ['SSEA4'] is present \u2014 every donor reaches the terminal timepoint with the same marker, so there is NO outcome contrast to predict"
+      }
+    }
+  },
+  "src_modified": false,
+  "model_fitted": false
+}
