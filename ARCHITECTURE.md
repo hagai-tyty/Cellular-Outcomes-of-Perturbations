@@ -761,7 +761,7 @@ scaffolding or unused.
 | stage | question | answer | `src/`? |
 |---|---|---|---|
 | **10** | Is pluripotency contaminating ΔAge? | **No — MEDIATION** (3/3 tests). Removing it deletes signal, ρ 0.770 → 0.354. Recommendation **withdrawn** | no |
-| **11** | Is the ΔAge scale error calibratable? | **Yes — SCALE IS THE PROBLEM.** The dense clock was never broken, only mis-scaled. LODO `k` stable across donors (spread 1.19×, bar was 2×) | no |
+| **11** | Is the ΔAge scale error calibratable? | **Scale is a major component of dense-clock error — not the whole of it.** Variance-preserving calibration reduces raw MAE **22.69 → 10.68** but **does not reach the 7.30 yr methylation floor**. LODO `k` is stable across donors (spread 1.19×, bar was 2×), but **transfer of the reporting calibration outside its methylation cohort remains untested** | no |
 | **12** | Is `cell_id` unique? | **No.** 42,600 cells carried **1,100** ids; the split map held 1,100 entries. Fixed, plus a build-time guard. The rebuild changed the split **exactly as predicted** and moved **no model metric** | **yes** |
 | **13** | Does the scorecard judge `level_shift` correctly? | **No.** `abs()` applied to the aggregate measured *cancellation* — it printed **0.230** for a shift whose magnitude is **12.72 yr** — and the CI was built on signed values. **12 of 20 past verdicts changed; 8 were shuffle controls scored as improvements** | scorecard |
 | **14** | Should we adopt a calibrated ΔAge? | **Yes — at the reporting boundary only.** Rescaling the *target* would also change the loss regime (Huber quadratic share 43–67 % → 85–97 %). Ships `k_var = 0.5991` **alongside** raw | **yes** |
@@ -832,7 +832,7 @@ what make them auditable.
 | `diag_early_late_forward.py` | early→late ΔAge is donor age — partial −0.064 |
 | `diag_instrument_floor.py` | the floor is 7.30 yr; `top100` sits on it, the dense clock is 3× outside |
 | `diag_stage10_pluri.py` | pluripotency is mediation, not contamination |
-| `diag_stage11_scale.py` | the clock is mis-scaled, not broken; `k` is stable across donors |
+| `diag_stage11_scale.py` | scale is a major component of dense-clock error; calibration reaches 10.68 against a 7.30 floor, so a residual gap remains |
 | `diag_stage12_split_effect.py` | the split-composition harm, measured with no rebuild |
 | `diag_stage12_rebuild_verdict.py` | §12.9's pre-registered null, applied mechanically |
 | `diag_stage13_retro_verdicts.py` | 12 of 20 past verdicts changed; 8 flattered shuffle controls |
@@ -859,5 +859,7 @@ historical numbered tests (`test7_4_*`), **not** pytest files.
    trusting an aggregate verdict.
 5. Before spending hours of compute, check the validity precondition: `git log -- src/` between the
    baseline build and now must show **exactly one** change.
-6. The binding constraint is **data, not code**: 7 of 70 timepoints carry mixed fate, and 12 pairs
+6. **Stages 21–23 are fate-only** — ΔAge and RES are not prerequisites and not prospective
+   targets; nothing in them depends on the aging clock (`plans/THE_PATH.md`).
+7. The binding constraint is **data, not code**: 7 of 70 timepoints carry mixed fate, and 12 pairs
    is the entire evidence base for the one live claim.

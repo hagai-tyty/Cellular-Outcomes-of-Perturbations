@@ -34,6 +34,8 @@ to run, what to send back, and what decision follows**.
 >
 > **Current fold set: `_s16`.** Grade every change with
 > `python scorecard.py compare c7t_stage16 <tag>`.
+>
+> **🟩 Stages 21–23 are FATE-ONLY.** ΔAge and RES are **not** prerequisites and are **not** used as prospective targets in them; no Stage 21–23 result depends on the aging clock. Full declaration: `THE_PATH.md`.
 
 ---
 

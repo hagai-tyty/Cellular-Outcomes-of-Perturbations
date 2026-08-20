@@ -103,3 +103,52 @@ references' mutual disagreement rather than by the RNA readout.
 
 **That is a data question, not a modelling one**, and it is the only acquisition on this page that
 would move the ΔAge claim itself rather than the tool.
+
+---
+
+## 🟩 ROADMAP DECLARATION — added 2026-08-20
+
+### Stages 21–23 are FATE-ONLY
+
+**ΔAge and RES are NOT prerequisites for Stages 21–23, and are NOT used as prospective targets in
+them.**
+
+This is a scoping decision, stated in advance so it cannot be quietly relaxed later:
+
+* **The target is fate**, and only fate: identity preserved / lost / apoptotic.
+* **No ΔAge quantity may enter as a feature, a label, a filter, or a success criterion.**
+* **RES may not be used** — it is structurally zero (Stage 15: `R_eff = 0` for 119/119 cells,
+  σ_age is 2.0–4.5× |µ_age|), so any Stage 21–23 result that depended on it would be undefined.
+* **No result in Stages 21–23 depends on the aging clock.** The Fleischer clock, the methylation
+  references, `k_var`, the instrument floor and the ΔAge ledger are all **out of scope**.
+
+### Why the scope is drawn here
+
+The age side has accumulated enough measurement and transfer problems that it cannot carry a
+prospective claim right now:
+
+| | |
+|---|---|
+| same-timepoint ΔAge prediction | **circular** — ρ 0.96–0.99 |
+| early ΔAge → late ΔAge | partial **−0.064** after donor age |
+| dense-clock calibration | reduces MAE 22.69 → 10.68, **does not reach** the 7.30 floor |
+| the reporting calibration `k_var` | fitted on a cohort **disjoint** from training; transfer **untested** |
+| RES | **identically zero**, over-determined by three gates |
+
+Every one of those is a *measurement* problem. None of them is an obstacle to asking whether early
+RNA predicts later fate, because that question needs no clock at all.
+
+### The question Stages 21–23 exist to answer
+
+> **Does early RNA improve prediction of later fate over metadata alone?**
+
+Stage 18 is the reason this is now the highest-value line: the fate head's marginal PR-AUC
+(0.93–0.96) is **very largely `dose_time`**, but a within-timepoint signal does exist — stratified
+AUC **0.917**, permutation p = 0.0091 — resting on **12 pairs**. A genuinely prospective fate
+result is the cleanest route to a defensible claim, and it does not touch the aging clock.
+
+### What this declaration does NOT do
+
+It does not retire ΔAge. `top100` sitting on the methylation floor and within-donor ΔAge ranking
+(ρ 0.942) both stand, and both remain worth reporting **as measurements**. It scopes Stages 21–23,
+nothing else.

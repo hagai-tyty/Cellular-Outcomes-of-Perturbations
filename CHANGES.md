@@ -1250,6 +1250,30 @@ same-timepoint ΔAge PREDICTION, which is circular (rho 0.96-0.99) whatever the 
 `src/` is not changed by this stage. The most this licenses is PROPOSING a calibrated-ΔAge Change,
 separately pre-registered (plan 11.0, same rule as Stage 10).
 
+### ⚠️ CORRECTION APPENDED 2026-08-20 — the headline above overstates the result
+
+*The entry above stands as written; this qualification is appended, not substituted.*
+
+**The title claims "one parameter closes the gap". It does not close it.** The load-bearing
+numbers, restated:
+
+* Variance-preserving calibration takes raw MAE **22.69 → 10.68**. That is a large reduction and it
+  is real.
+* **It does not reach the 7.30 yr methylation-vs-methylation floor.** A gap of ~3.4 yr remains.
+* The **6.78** figure that does beat the floor is the *least-squares* `k`, which wins partly by
+  under-reporting magnitude (SD ratio 0.597). It is **not** the factor that shipped — Stage 14
+  chose the variance-matched `k_var = 0.5991` precisely to avoid that shrinkage.
+
+**The accurate summary is therefore:** *scale is a **major component** of dense-clock error, not the
+whole of it.* Variance-preserving calibration reduces raw MAE 22.69 → 10.68 but does not reach the
+7.30 methylation floor, and **transfer of the reporting calibration outside its methylation cohort
+remains untested**.
+
+The "Not settled" paragraph above already recorded the n = 3 / transient-arm-only / untested-transfer
+caveats. What is corrected here is the **headline**, which read as if the gap had been closed.
+`ARCHITECTURE.md` §13 has been updated to the wording above.
+
+
 ---
 
 ## 2026-08-17 - STAGE 10: pluripotency is MEDIATION, not contamination. The removal recommendation is WITHDRAWN
