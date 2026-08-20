@@ -24,6 +24,19 @@ s12v = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(s12v)
 
 RESULTS = ROOT / "results" / "diag_stage12_rebuild_verdict_results.json"
+def _find_plan(name: str) -> Path:
+    """Locate a plan by FILENAME, wherever it currently sits under plans/.
+
+    Plans were reorganised into `(older)base plans/` and `(newer)practical plans/` on 2026-08-20,
+    which broke every test that read one by a fixed path. Searching by name survives the next
+    reshuffle too.
+    """
+    hits = sorted(ROOT.joinpath("plans").rglob(name))
+    if not hits:
+        raise AssertionError(f"plan {name!r} not found anywhere under plans/")
+    return hits[0]
+
+
 has_results = pytest.mark.skipif(not RESULTS.exists(), reason="rebuild verdict not yet computed")
 
 
@@ -121,7 +134,7 @@ def test_an_undetermined_comparison_says_so():
 
 # ---- the guards ------------------------------------------------------------------------------- #
 def test_the_registered_guards_are_the_ones_the_plan_names():
-    plan = (ROOT / "plans" / "STAGE_12_CELL_ID_UNIQUENESS.md").read_text(encoding="utf-8")
+    plan = _find_plan("STAGE_12_CELL_ID_UNIQUENESS.md").read_text(encoding="utf-8")
     for g in s12v.GUARDS:
         assert g in plan, f"{g} is checked but not named in the plan"
     assert set(s12v.GUARDS) == {"fate_prauc", "fate_roc", "rank_model_dage"}

@@ -25,6 +25,19 @@ s16 = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(s16)
 
 RESULTS = ROOT / "results" / "diag_stage16_safety_floor_results.json"
+def _find_plan(name: str) -> Path:
+    """Locate a plan by FILENAME, wherever it currently sits under plans/.
+
+    Plans were reorganised into `(older)base plans/` and `(newer)practical plans/` on 2026-08-20,
+    which broke every test that read one by a fixed path. Searching by name survives the next
+    reshuffle too.
+    """
+    hits = sorted(ROOT.joinpath("plans").rglob(name))
+    if not hits:
+        raise AssertionError(f"plan {name!r} not found anywhere under plans/")
+    return hits[0]
+
+
 has_results = pytest.mark.skipif(not RESULTS.exists(), reason="diagnostic has not been run")
 
 
@@ -123,7 +136,7 @@ def test_best_threshold_is_undefined_with_only_one_class():
 
 # ---- the pre-registered verdict rule --------------------------------------------------------- #
 def test_the_bar_matches_the_plan():
-    plan = (ROOT / "plans" / "STAGE_16_SAFETY_FLOOR_MISCALIBRATION.md").read_text("utf-8")
+    plan = _find_plan("STAGE_16_SAFETY_FLOOR_MISCALIBRATION.md").read_text("utf-8")
     assert "50 % reduction" in plan or "50 %" in plan
     assert s16.FALSE_REJECTION_DROP_BAR == 0.50
 

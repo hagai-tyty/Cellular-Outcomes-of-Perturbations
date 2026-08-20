@@ -1,0 +1,643 @@
+{
+  "stage": 21,
+  "phase": "data_audit",
+  "rule_not_found_is_not_absent": true,
+  "datasets": [
+    {
+      "dataset": "GSE242423",
+      "path": "D:\\GSE242423",
+      "present": true,
+      "level": "TRAJECTORY_FORWARD_PENDING_SOURCE_AUDIT",
+      "level_reason": "9 distinct timepoints support a population trajectory; no higher level established; UNRESOLVED: lineage_link",
+      "ruled_out": {
+        "STRICT_LINEAGE": "NOT RULED OUT \u2014 lineage structure is unknown locally",
+        "CULTURE_FORWARD": "ruled out: independent_outcome=False, n_independent_units=1"
+      },
+      "findings": {
+        "location": {
+          "value": "D:\\GSE242423",
+          "status": "PRESENT",
+          "evidence": "directory found at D:\\GSE242423"
+        },
+        "n_files": {
+          "value": 19,
+          "status": "PRESENT",
+          "evidence": "19 files"
+        },
+        "n_gsm": {
+          "value": 9,
+          "status": "PRESENT",
+          "evidence": "9 GSM prefixes in filenames: ['GSM7763419', 'GSM7763420', 'GSM7763421', 'GSM7763422']\u2026"
+        },
+        "timepoint_labels": {
+          "value": [
+            "D0",
+            "D10",
+            "D12",
+            "D14",
+            "D2",
+            "D4",
+            "D6",
+            "D8",
+            "iPSC"
+          ],
+          "status": "PRESENT",
+          "evidence": "parsed from filenames: ['D0', 'D10', 'D12', 'D14', 'D2', 'D4', 'D6', 'D8', 'iPSC']"
+        },
+        "donors": {
+          "value": [],
+          "status": "ABSENT_PROVEN",
+          "evidence": "no donor prefix in filenames \u2014 single line"
+        },
+        "n_timepoints": {
+          "value": 9,
+          "status": "PRESENT",
+          "evidence": "9 distinct timepoint/state tokens after stripping donor prefix: ['D0', 'D10', 'D12', 'D14', 'D2', 'D4', 'D6', 'D8', 'iPSC']"
+        },
+        "replicates_per_timepoint": {
+          "value": 1,
+          "status": "PRESENT",
+          "evidence": "9 GSMs for 9 distinct labels \u2014 one sample per timepoint"
+        },
+        "barcode_encoding": {
+          "value": "PLAIN_10X",
+          "status": "PRESENT",
+          "evidence": "GSM7763419_D0.barcodes.tsv.gz: first barcode 'AAACCCAAGAAACACT-1' matches ^[ACGT]{14,20}(-N)?$"
+        },
+        "clone_id_in_barcode": {
+          "value": false,
+          "status": "ABSENT_PROVEN",
+          "evidence": "GSM7763419_D0.barcodes.tsv.gz barcodes are plain 10x; no lineage token is encoded"
+        },
+        "series_matrix": {
+          "value": null,
+          "status": "UNKNOWN_REQUIRES_SOURCE_AUDIT",
+          "evidence": "no *series_matrix* file on disk \u2014 sample-level metadata was never downloaded"
+        },
+        "lineage_link": {
+          "value": null,
+          "status": "UNKNOWN_REQUIRES_SOURCE_AUDIT",
+          "evidence": "cannot be established: the series matrix that would carry clone/lineage annotation is not present locally. The plain-10x barcode encoding proves only that the BARCODE FILE carries no tag, not that the STUDY lacked lineage tracing"
+        },
+        "independent_outcome": {
+          "value": false,
+          "status": "ABSENT_PROVEN",
+          "evidence": "directory holds only expression matrices/barcodes; no imaging, colony, sorting or viability file, and no surface-marker token in any filename. Every fate label in this project is computed from RNA (src/cellfate/data/labels.py::fate_labels)"
+        },
+        "outcome_is_rna_surrogate": {
+          "value": true,
+          "status": "PRESENT",
+          "evidence": "y_cls is derived by fate_labels() from marker-program scores on the cell's own expression vector"
+        },
+        "n_independent_units": {
+          "value": 1,
+          "status": "PRESENT",
+          "evidence": "one sample per timepoint from a single line implies ONE culture; timepoints from one culture are serially dependent, not independent units"
+        },
+        "cell_count_is_not_n": {
+          "value": true,
+          "status": "PRESENT",
+          "evidence": "plan \u00a76: effective n counts independent donors/cultures/clones/experiments, not cells"
+        }
+      }
+    },
+    {
+      "dataset": "GSE165176",
+      "path": "D:\\Gill",
+      "present": true,
+      "level": "CULTURE_FORWARD",
+      "level_reason": "independent outcome with 12 independent units",
+      "ruled_out": {
+        "STRICT_LINEAGE": "ruled out: lineage_link=False (372 characteristics + 124 titles, none mentioning clone/lineage/barcode/CellTag; and bulk RNA has no per-cell identity to link)"
+      },
+      "findings": {
+        "location": {
+          "value": "D:\\Gill",
+          "status": "PRESENT",
+          "evidence": "directory found at D:\\Gill"
+        },
+        "n_files": {
+          "value": 2,
+          "status": "PRESENT",
+          "evidence": "2 files"
+        },
+        "matrix_files": {
+          "value": [
+            "GSE165176_Log2_RPM_Sendai_reprogramming (1).txt.gz"
+          ],
+          "status": "PRESENT",
+          "evidence": "1 matrix file(s)"
+        },
+        "series_matrix": {
+          "value": "GSE165176_series_matrix.txt.gz",
+          "status": "PRESENT",
+          "evidence": "124 sample titles, 372 characteristics fields"
+        },
+        "n_samples": {
+          "value": 124,
+          "status": "PRESENT",
+          "evidence": "124 !Sample_title entries"
+        },
+        "modality": {
+          "value": "RNA",
+          "status": "PRESENT",
+          "evidence": "library_strategy/title indicates RNA-Seq"
+        },
+        "n_timepoints": {
+          "value": 11,
+          "status": "PRESENT",
+          "evidence": "day tokens parsed from sample titles: [7, 9, 11, 13, 15, 21, 29, 34, 40, 47, 54]"
+        },
+        "donors": {
+          "value": [
+            "N2",
+            "N3",
+            "O1",
+            "O2",
+            "Y1",
+            "Y2"
+          ],
+          "status": "PRESENT",
+          "evidence": "6 donor prefixes: ['N2', 'N3', 'O1', 'O2', 'Y1', 'Y2']"
+        },
+        "experiment_replicates": {
+          "value": [
+            "Exp1",
+            "Exp2"
+          ],
+          "status": "PRESENT",
+          "evidence": "experiment tokens in titles: ['Exp1', 'Exp2']"
+        },
+        "n_independent_units": {
+          "value": 12,
+          "status": "PRESENT",
+          "evidence": "6 donors x 2 experiment(s) = 12"
+        },
+        "independent_outcome": {
+          "value": true,
+          "status": "PRESENT",
+          "evidence": "surface-marker SORT present in sample titles: ['CD13', 'SSEA4']. These are ANTIBODY phenotypes, measured independently of the RNA vector -- unlike y_cls, which fate_labels() computes from expression"
+        },
+        "outcome_is_rna_surrogate": {
+          "value": false,
+          "status": "PRESENT",
+          "evidence": "['CD13', 'SSEA4'] sorting is orthogonal to RNA"
+        },
+        "outcome_is_contemporaneous": {
+          "value": true,
+          "status": "PRESENT",
+          "evidence": "the sort is performed AT COLLECTION, so it is an orthogonal phenotype at the sample's own timepoint -- not yet a FUTURE outcome. Building a forward task requires pairing an early sample with a LATER sorted sample of the same culture"
+        },
+        "lineage_link": {
+          "value": false,
+          "status": "ABSENT_PROVEN",
+          "evidence": "372 characteristics + 124 titles, none mentioning clone/lineage/barcode/CellTag; and bulk RNA has no per-cell identity to link"
+        }
+      }
+    },
+    {
+      "dataset": "GSE165177",
+      "path": "D:\\GSE165177",
+      "present": true,
+      "level": "TRAJECTORY_FORWARD",
+      "level_reason": "4 distinct timepoints support a population trajectory; no higher level established",
+      "ruled_out": {
+        "STRICT_LINEAGE": "ruled out: lineage_link=False (285 characteristics + 95 titles, none mentioning clone/lineage/barcode/CellTag; and bulk RNA has no per-cell identity to link)",
+        "CULTURE_FORWARD": "ruled out: independent_outcome=False, n_independent_units=6"
+      },
+      "findings": {
+        "location": {
+          "value": "D:\\GSE165177",
+          "status": "PRESENT",
+          "evidence": "directory found at D:\\GSE165177"
+        },
+        "n_files": {
+          "value": 3,
+          "status": "PRESENT",
+          "evidence": "3 files"
+        },
+        "matrix_files": {
+          "value": [
+            "GSE165177_Log2_RPM_Transient_reprogramming.txt.gz",
+            "GSE165177_Log2_RPM_Transient_reprogramming_part2_170621.txt.gz"
+          ],
+          "status": "PRESENT",
+          "evidence": "2 matrix file(s)"
+        },
+        "series_matrix": {
+          "value": "GSE165177_series_matrix.txt.gz",
+          "status": "PRESENT",
+          "evidence": "95 sample titles, 285 characteristics fields"
+        },
+        "n_samples": {
+          "value": 95,
+          "status": "PRESENT",
+          "evidence": "95 !Sample_title entries"
+        },
+        "modality": {
+          "value": "RNA",
+          "status": "PRESENT",
+          "evidence": "library_strategy/title indicates RNA-Seq"
+        },
+        "n_timepoints": {
+          "value": 4,
+          "status": "PRESENT",
+          "evidence": "day tokens parsed from sample titles: [10, 13, 15, 17]"
+        },
+        "donors": {
+          "value": [
+            "O1",
+            "O2",
+            "O3"
+          ],
+          "status": "PRESENT",
+          "evidence": "3 donor prefixes: ['O1', 'O2', 'O3']"
+        },
+        "experiment_replicates": {
+          "value": [
+            "exp1",
+            "exp2"
+          ],
+          "status": "PRESENT",
+          "evidence": "experiment tokens in titles: ['exp1', 'exp2']"
+        },
+        "n_independent_units": {
+          "value": 6,
+          "status": "PRESENT",
+          "evidence": "3 donors x 2 experiment(s) = 6"
+        },
+        "independent_outcome": {
+          "value": false,
+          "status": "ABSENT_PROVEN",
+          "evidence": "no surface-marker or orthogonal-phenotype token in 95 titles / 285 characteristics; only expression matrices present"
+        },
+        "outcome_is_rna_surrogate": {
+          "value": true,
+          "status": "PRESENT",
+          "evidence": "any fate/age label for this corpus is computed from its own expression"
+        },
+        "lineage_link": {
+          "value": false,
+          "status": "ABSENT_PROVEN",
+          "evidence": "285 characteristics + 95 titles, none mentioning clone/lineage/barcode/CellTag; and bulk RNA has no per-cell identity to link"
+        }
+      }
+    },
+    {
+      "dataset": "GSE165178",
+      "path": "D:\\GSE165178",
+      "present": true,
+      "level": "CULTURE_FORWARD",
+      "level_reason": "independent outcome with 4 independent units",
+      "ruled_out": {
+        "STRICT_LINEAGE": "ruled out: lineage_link=False (66 characteristics + 22 titles, none mentioning clone/lineage/barcode/CellTag; and bulk RNA has no per-cell identity to link)"
+      },
+      "findings": {
+        "location": {
+          "value": "D:\\GSE165178",
+          "status": "PRESENT",
+          "evidence": "directory found at D:\\GSE165178"
+        },
+        "n_files": {
+          "value": 2,
+          "status": "PRESENT",
+          "evidence": "2 files"
+        },
+        "matrix_files": {
+          "value": [
+            "GSE165178_Matrix_processed_sendai.txt.gz"
+          ],
+          "status": "PRESENT",
+          "evidence": "1 matrix file(s)"
+        },
+        "series_matrix": {
+          "value": "GSE165178_series_matrix.txt.gz",
+          "status": "PRESENT",
+          "evidence": "22 sample titles, 66 characteristics fields"
+        },
+        "n_samples": {
+          "value": 22,
+          "status": "PRESENT",
+          "evidence": "22 !Sample_title entries"
+        },
+        "modality": {
+          "value": "METHYLATION_ARRAY",
+          "status": "PRESENT",
+          "evidence": "title/strategy indicates a methylation array"
+        },
+        "n_timepoints": {
+          "value": 3,
+          "status": "PRESENT",
+          "evidence": "day tokens parsed from sample titles: [9, 11, 15]"
+        },
+        "donors": {
+          "value": [
+            "O1",
+            "O2",
+            "Y1",
+            "Y2"
+          ],
+          "status": "PRESENT",
+          "evidence": "4 donor prefixes: ['O1', 'O2', 'Y1', 'Y2']"
+        },
+        "experiment_replicates": {
+          "value": [],
+          "status": "ABSENT_PROVEN",
+          "evidence": "no expN token in 22 titles"
+        },
+        "n_independent_units": {
+          "value": 4,
+          "status": "PRESENT",
+          "evidence": "4 donors x 1 experiment(s) = 4"
+        },
+        "independent_outcome": {
+          "value": true,
+          "status": "PRESENT",
+          "evidence": "surface-marker SORT present in sample titles: ['CD13', 'SSEA4']. These are ANTIBODY phenotypes, measured independently of the RNA vector -- unlike y_cls, which fate_labels() computes from expression"
+        },
+        "outcome_is_rna_surrogate": {
+          "value": false,
+          "status": "PRESENT",
+          "evidence": "['CD13', 'SSEA4'] sorting is orthogonal to RNA"
+        },
+        "outcome_is_contemporaneous": {
+          "value": true,
+          "status": "PRESENT",
+          "evidence": "the sort is performed AT COLLECTION, so it is an orthogonal phenotype at the sample's own timepoint -- not yet a FUTURE outcome. Building a forward task requires pairing an early sample with a LATER sorted sample of the same culture"
+        },
+        "lineage_link": {
+          "value": false,
+          "status": "ABSENT_PROVEN",
+          "evidence": "66 characteristics + 22 titles, none mentioning clone/lineage/barcode/CellTag; and bulk RNA has no per-cell identity to link"
+        }
+      }
+    },
+    {
+      "dataset": "GSE165179",
+      "path": "D:\\GSE165179",
+      "present": true,
+      "level": "TRAJECTORY_FORWARD",
+      "level_reason": "4 distinct timepoints support a population trajectory; no higher level established",
+      "ruled_out": {
+        "STRICT_LINEAGE": "ruled out: lineage_link=False (288 characteristics + 96 titles, none mentioning clone/lineage/barcode/CellTag; and bulk RNA has no per-cell identity to link)",
+        "CULTURE_FORWARD": "ruled out: independent_outcome=False, n_independent_units=6"
+      },
+      "findings": {
+        "location": {
+          "value": "D:\\GSE165179",
+          "status": "PRESENT",
+          "evidence": "directory found at D:\\GSE165179"
+        },
+        "n_files": {
+          "value": 2,
+          "status": "PRESENT",
+          "evidence": "2 files"
+        },
+        "matrix_files": {
+          "value": [
+            "GSE165179_Matrix_processed_transient.txt.gz"
+          ],
+          "status": "PRESENT",
+          "evidence": "1 matrix file(s)"
+        },
+        "series_matrix": {
+          "value": "GSE165179_series_matrix.txt.gz",
+          "status": "PRESENT",
+          "evidence": "96 sample titles, 288 characteristics fields"
+        },
+        "n_samples": {
+          "value": 96,
+          "status": "PRESENT",
+          "evidence": "96 !Sample_title entries"
+        },
+        "modality": {
+          "value": "METHYLATION_ARRAY",
+          "status": "PRESENT",
+          "evidence": "title/strategy indicates a methylation array"
+        },
+        "n_timepoints": {
+          "value": 4,
+          "status": "PRESENT",
+          "evidence": "day tokens parsed from sample titles: [10, 13, 15, 17]"
+        },
+        "donors": {
+          "value": [
+            "O1",
+            "O2",
+            "O3"
+          ],
+          "status": "PRESENT",
+          "evidence": "3 donor prefixes: ['O1', 'O2', 'O3']"
+        },
+        "experiment_replicates": {
+          "value": [
+            "exp1",
+            "exp2"
+          ],
+          "status": "PRESENT",
+          "evidence": "experiment tokens in titles: ['exp1', 'exp2']"
+        },
+        "n_independent_units": {
+          "value": 6,
+          "status": "PRESENT",
+          "evidence": "3 donors x 2 experiment(s) = 6"
+        },
+        "independent_outcome": {
+          "value": false,
+          "status": "ABSENT_PROVEN",
+          "evidence": "no surface-marker or orthogonal-phenotype token in 96 titles / 288 characteristics; only expression matrices present"
+        },
+        "outcome_is_rna_surrogate": {
+          "value": true,
+          "status": "PRESENT",
+          "evidence": "any fate/age label for this corpus is computed from its own expression"
+        },
+        "lineage_link": {
+          "value": false,
+          "status": "ABSENT_PROVEN",
+          "evidence": "288 characteristics + 96 titles, none mentioning clone/lineage/barcode/CellTag; and bulk RNA has no per-cell identity to link"
+        }
+      }
+    },
+    {
+      "dataset": "GSE113957",
+      "path": "D:\\GSE113957",
+      "present": true,
+      "level": "INVALID_PROSPECTIVE_PENDING_SOURCE_AUDIT",
+      "level_reason": "n_timepoints=None \u2014 no early\u2192late mapping; UNRESOLVED: independent_outcome/n_independent_units, n_timepoints",
+      "ruled_out": {
+        "STRICT_LINEAGE": "ruled out: lineage_link=False (65 characteristics + 13 titles, none mentioning clone/lineage/barcode/CellTag; and bulk RNA has no per-cell identity to link)",
+        "CULTURE_FORWARD": "NOT RULED OUT \u2014 outcome independence or unit count unknown locally"
+      },
+      "findings": {
+        "location": {
+          "value": "D:\\GSE113957",
+          "status": "PRESENT",
+          "evidence": "directory found at D:\\GSE113957"
+        },
+        "n_files": {
+          "value": 4,
+          "status": "PRESENT",
+          "evidence": "4 files"
+        },
+        "matrix_files": {
+          "value": [
+            "GSE113957_raw_counts_GRCh38.p13_NCBI.tsv.gz",
+            "Human.GRCh38.p13.annot.tsv.gz"
+          ],
+          "status": "PRESENT",
+          "evidence": "2 matrix file(s)"
+        },
+        "series_matrix": {
+          "value": "GSE113957-GPL16791_series_matrix.txt.gz",
+          "status": "PRESENT",
+          "evidence": "13 sample titles, 65 characteristics fields"
+        },
+        "n_samples": {
+          "value": 13,
+          "status": "PRESENT",
+          "evidence": "13 !Sample_title entries"
+        },
+        "modality": {
+          "value": "RNA",
+          "status": "PRESENT",
+          "evidence": "library_strategy/title indicates RNA-Seq"
+        },
+        "n_timepoints": {
+          "value": null,
+          "status": "UNKNOWN_REQUIRES_SOURCE_AUDIT",
+          "evidence": "no day token matched `dN` or `N days` in sample titles"
+        },
+        "donors": {
+          "value": [],
+          "status": "UNKNOWN_REQUIRES_SOURCE_AUDIT",
+          "evidence": "no donor prefix pattern"
+        },
+        "experiment_replicates": {
+          "value": [],
+          "status": "ABSENT_PROVEN",
+          "evidence": "no expN token in 13 titles"
+        },
+        "n_independent_units": {
+          "value": null,
+          "status": "UNKNOWN_REQUIRES_SOURCE_AUDIT",
+          "evidence": "no donor structure parsed"
+        },
+        "independent_outcome": {
+          "value": false,
+          "status": "ABSENT_PROVEN",
+          "evidence": "no surface-marker or orthogonal-phenotype token in 13 titles / 65 characteristics; only expression matrices present"
+        },
+        "outcome_is_rna_surrogate": {
+          "value": true,
+          "status": "PRESENT",
+          "evidence": "any fate/age label for this corpus is computed from its own expression"
+        },
+        "lineage_link": {
+          "value": false,
+          "status": "ABSENT_PROVEN",
+          "evidence": "65 characteristics + 13 titles, none mentioning clone/lineage/barcode/CellTag; and bulk RNA has no per-cell identity to link"
+        }
+      }
+    },
+    {
+      "dataset": "GSE297234",
+      "path": "D:\\GSE297234",
+      "present": true,
+      "level": "INVALID_PROSPECTIVE_PENDING_SOURCE_AUDIT",
+      "level_reason": "n_timepoints=1 \u2014 no early\u2192late mapping; UNRESOLVED: lineage_link",
+      "ruled_out": {
+        "STRICT_LINEAGE": "NOT RULED OUT \u2014 lineage structure is unknown locally",
+        "CULTURE_FORWARD": "ruled out: independent_outcome=False, n_independent_units=1"
+      },
+      "findings": {
+        "location": {
+          "value": "D:\\GSE297234",
+          "status": "PRESENT",
+          "evidence": "directory found at D:\\GSE297234"
+        },
+        "n_files": {
+          "value": 2,
+          "status": "PRESENT",
+          "evidence": "2 files"
+        },
+        "n_gsm": {
+          "value": 2,
+          "status": "PRESENT",
+          "evidence": "2 GSM prefixes in filenames: ['GSM8986586', 'GSM8986590']\u2026"
+        },
+        "timepoint_labels": {
+          "value": [
+            "GM00731_D0_filtered_feature_bc_matrix",
+            "GM23815_D0_filtered_feature_bc_matrix"
+          ],
+          "status": "PRESENT",
+          "evidence": "parsed from filenames: ['GM00731_D0_filtered_feature_bc_matrix', 'GM23815_D0_filtered_feature_bc_matrix']"
+        },
+        "donors": {
+          "value": [
+            "GM00731",
+            "GM23815"
+          ],
+          "status": "PRESENT",
+          "evidence": "donor prefixes in filenames: ['GM00731', 'GM23815']"
+        },
+        "n_timepoints": {
+          "value": 1,
+          "status": "PRESENT",
+          "evidence": "1 distinct timepoint/state tokens after stripping donor prefix: ['D0'] (from 2 labels across 2 donors)"
+        },
+        "replicates_per_timepoint": {
+          "value": 1,
+          "status": "PRESENT",
+          "evidence": "2 GSMs for 2 distinct labels \u2014 one sample per timepoint"
+        },
+        "barcode_encoding": {
+          "value": null,
+          "status": "UNKNOWN_REQUIRES_SOURCE_AUDIT",
+          "evidence": "no barcodes file found locally"
+        },
+        "clone_id_in_barcode": {
+          "value": null,
+          "status": "UNKNOWN_REQUIRES_SOURCE_AUDIT",
+          "evidence": "no barcodes file found locally"
+        },
+        "series_matrix": {
+          "value": null,
+          "status": "UNKNOWN_REQUIRES_SOURCE_AUDIT",
+          "evidence": "no *series_matrix* file on disk \u2014 sample-level metadata was never downloaded"
+        },
+        "lineage_link": {
+          "value": null,
+          "status": "UNKNOWN_REQUIRES_SOURCE_AUDIT",
+          "evidence": "cannot be established: the series matrix that would carry clone/lineage annotation is not present locally. The plain-10x barcode encoding proves only that the BARCODE FILE carries no tag, not that the STUDY lacked lineage tracing"
+        },
+        "independent_outcome": {
+          "value": false,
+          "status": "ABSENT_PROVEN",
+          "evidence": "directory holds only expression matrices/barcodes; no imaging, colony, sorting or viability file, and no surface-marker token in any filename. Every fate label in this project is computed from RNA (src/cellfate/data/labels.py::fate_labels)"
+        },
+        "outcome_is_rna_surrogate": {
+          "value": true,
+          "status": "PRESENT",
+          "evidence": "y_cls is derived by fate_labels() from marker-program scores on the cell's own expression vector"
+        },
+        "n_independent_units": {
+          "value": 1,
+          "status": "PRESENT",
+          "evidence": "one sample per timepoint from a single line implies ONE culture; timepoints from one culture are serially dependent, not independent units"
+        },
+        "cell_count_is_not_n": {
+          "value": true,
+          "status": "PRESENT",
+          "evidence": "plan \u00a76: effective n counts independent donors/cultures/clones/experiments, not cells"
+        }
+      }
+    }
+  ],
+  "selected_dataset": null,
+  "selected_task_level": null,
+  "selected_forward_task": null,
+  "verdict": "CULTURE_FORWARD_AVAILABLE",
+  "src_modified": false
+}
