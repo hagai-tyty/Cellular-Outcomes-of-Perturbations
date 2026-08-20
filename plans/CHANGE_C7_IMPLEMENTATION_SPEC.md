@@ -5,6 +5,12 @@
 §10 (predicate host + B2′), §11 (B1 verified, the five blockers).
 **Ships:** OFF. Enabling it is a separate pre-registered run, exactly as C-2 did.
 
+> ### 🟩 STATUS AT CLOSE — IMPLEMENTED
+>
+> ⚠️ The header below still reads *Nothing written*. That is stale -- the spec was built. See `data/integrity.py` and the runbook `plans/C7_RETRAIN_RUNBOOK.md`.
+>
+> *Commit: `see CHANGES.md 2026-08-09 onward`. The status line above is the pre-execution claim and is left unedited, per the append-never-rewrite rule.*
+
 > **Five decisions are marked 🟡 DECIDE. They change what gets built and I have not chosen them
 > unilaterally.** Everything else is determined by code that already exists.
 

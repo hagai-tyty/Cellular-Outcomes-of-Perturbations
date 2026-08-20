@@ -7,6 +7,12 @@ recommendation that had not been earned, and the objection to it is correct: **O
 pluripotency, and pluripotency induction may BE the mechanism of rejuvenation.** Removing it could
 be deleting the signal, not the noise.
 
+> ### 🟩 STATUS AT CLOSE — EXECUTED 2026-08-16, CLOSED
+>
+> Verdict **MEDIATION, not contamination** (3/3 tests). §10.5 ruled: the removal recommendation is **WITHDRAWN** -- removing the signature deletes signal (rho 0.770 -> 0.354). `src/` correctly never moved.
+>
+> *Commit: `3b71412`. The status line above is the pre-execution claim and is left unedited, per the append-never-rewrite rule.*
+
 ---
 
 ## 10.0 The two readings, stated so they can be told apart

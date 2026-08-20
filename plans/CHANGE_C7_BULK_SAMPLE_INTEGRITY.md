@@ -2,6 +2,12 @@
 
 **Status:** 🔵 **PRE-REGISTERED 2026-08-08. NOT IMPLEMENTED. `src/` untouched, no label moved.**
 
+> ### 🟩 STATUS AT CLOSE — IMPLEMENTED AND SHIPPED
+>
+> ⚠️ The header below still reads *NOT IMPLEMENTED*. That is stale. `src/cellfate/data/integrity.py` exists and `bulk_integrity_gate` is wired through `sources.py` and `build_dataset.py`. The gate ships **OFF** and is enabled per run via `CELLFATE_BULK_GATE=1`; every fold set from `_c7t` onward was built with it ON. It rejects the same 5 Gill samples and masks the same 19 ΔAge labels on every run, asserted by an exact-match guard.
+>
+> *Commit: `see CHANGES.md 2026-08-09 onward`. The status line above is the pre-execution claim and is left unedited, per the append-never-rewrite rule.*
+
 **Status — ✅ IMPLEMENTED 2026-08-08 (§13). Flag OFF.** *The line above is left as written.* All four components shipped; **B1 verified twice** (real matrix and the recorded 124-column cohort) and **B4 verified** — `max|Δ| = 0.00e+00` on 1944 cells against the pre-C-1 baseline. **Not adopted:** the flag is off, no label has moved, and enabling it for anything consuming a trained model remains a separate pre-registered run.
 
 **Why a file and not a section:** two machines pushed a `## 5.8` into `STAGE_1_5_6_SPARSE_CLOCK.md`

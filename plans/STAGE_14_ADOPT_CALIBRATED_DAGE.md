@@ -4,6 +4,12 @@
 Change would be, what it would and would not buy, and the guards it must pass — so the decision is
 made on measured grounds rather than on the appeal of a 63 % drop in ΔAge MAE.
 
+> ### 🟩 STATUS AT CLOSE — EXECUTED 2026-08-18, CLOSED
+>
+> Option **(c)** shipped, as §14.4 recommended: `k_var = 0.5991` applied in `inference/service.py::build_response` **only**, reported ALONGSIDE raw with the UNTESTED-transfer caveat. `res.py`, the scorecard and every evaluation path stay raw. New module `src/cellfate/inference/dage_calibration.py`.
+>
+> *Commit: `31fe72a`. The status line above is the pre-execution claim and is left unedited, per the append-never-rewrite rule.*
+
 **A pre-flight was run before writing this plan** (`experiments/diag_stage14_calibration_
 equivariance.py`, 14 tests). It changed the plan's central recommendation. §14.3 records what I
 expected and what the data said instead.

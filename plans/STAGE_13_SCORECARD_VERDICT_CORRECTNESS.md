@@ -3,6 +3,12 @@
 **Status:** PLAN, then EXECUTE. Changes `scorecard.py` only (aggregation + verdict + printing).
 **Does NOT change `measure_fold`, any stored snapshot, or any model.** See §13.7.
 
+> ### 🟩 STATUS AT CLOSE — EXECUTED 2026-08-17, CLOSED
+>
+> `scorecard.py` fixed. Retro-audit over the nine committed snapshots: **12 of 20 distinct verdicts changed, and 8 of those were comparisons in which a SHUFFLE CONTROL had scored ACCEPT (better)**. The invariant `col_B - col_A == mean diff` now holds 18/18.
+>
+> *Commit: `a9a87aa`. The status line above is the pre-execution claim and is left unedited, per the append-never-rewrite rule.*
+
 ---
 
 ## 13.1 Why this is Stage 13 and not something to defer

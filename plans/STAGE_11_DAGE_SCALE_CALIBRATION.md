@@ -3,6 +3,12 @@
 **Status:** PLAN. `src/` is not touched by this stage under any outcome; the most a positive result
 buys is the right to PROPOSE a Change, separately pre-registered (same rule as Stage 10 §10.5).
 
+> ### 🟩 STATUS AT CLOSE — EXECUTED 2026-08-16, CLOSED
+>
+> Verdict **SCALE IS THE PROBLEM**: LODO-calibrated raw MAE 22.69 -> 6.78 against a 7.30 yr floor, `k` stable across donors (spread 1.19x vs a 2x bar). As §11.0 required, this bought only the right to PROPOSE a Change -- taken up and shipped by **Stage 14**.
+>
+> *Commit: `bf1dca3`. The status line above is the pre-execution claim and is left unedited, per the append-never-rewrite rule.*
+
 **Opened because** Stage 10 established that `raw`'s problem is **not** pluripotency — it is
 **scale**. Raw ΔAge has the right ordering (Spearman 0.770 vs methylation) and a 66 % magnitude
 inflation (SD ratio 1.66). Nobody has tried simply *correcting the scale*.

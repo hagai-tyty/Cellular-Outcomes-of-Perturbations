@@ -3,6 +3,12 @@
 **Status:** PLAN, then EXECUTE. Changes `scorecard.py` only (metric direction, aggregation,
 printing). **No model change, no rebuild, no snapshot rewritten.**
 
+> ### 🟩 STATUS AT CLOSE — EXECUTED 2026-08-18, CLOSED
+>
+> `conformal_coverage` is now direction `target`, judged on distance to the per-fold `conformal_level`; 4 of 21 past coverage verdicts changed. The `b/w` fold-direction tally ships as CONTEXT and prints no p-value.
+>
+> *Commit: `bcd5d20`. The status line above is the pre-execution claim and is left unedited, per the append-never-rewrite rule.*
+
 Found while executing Stage 12 §12.9. I deliberately did **not** patch either defect mid-Change —
 changing the instrument during a measurement invalidates the measurement. This is that Change.
 

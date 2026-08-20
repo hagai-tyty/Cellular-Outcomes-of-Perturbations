@@ -6,6 +6,37 @@ to run, what to send back, and what decision follows**.
 
 ---
 
+> ### 🟩 CURRENT STATE — updated 2026-08-20. READ THIS FIRST.
+>
+> **The running order below is the ORIGINAL plan (Stages 1–6 plus the 1.5.x arc). It is left
+> unedited, but it stops at 2026-08-04 and does not mention Stages 10–18, which are where the
+> project actually went.** Nothing below is wrong about *its own* stages; it is simply incomplete.
+>
+> **For what is true today, read [`../ARCHITECTURE.md` §11](../ARCHITECTURE.md), not this file.**
+>
+> **Stages 10–18 — all executed and closed:**
+>
+> | | | |
+> |---|---|---|
+> | **10** | pluripotency → MEDIATION, removal withdrawn | `STAGE_10_…` |
+> | **11** | ΔAge is mis-scaled, not broken | `STAGE_11_…` |
+> | **12** | `cell_id` was not unique — fixed, rebuilt, null on metrics | `STAGE_12_…` |
+> | **13** | scorecard judged signed level shift — 12 of 20 verdicts changed | `STAGE_13_…` |
+> | **14** | calibrated ΔAge shipped at the reporting boundary | `STAGE_14_…` |
+> | **15** | RES is zero because σ ≫ \|µ\| — attributed | `STAGE_15_RES_ZERO_RECORD.md` |
+> | **16** | fate calibrator was fitted on the wrong target — fixed and verified | `STAGE_16_…` |
+> | **17** | scorecard rewarded over-coverage — fixed | `STAGE_17_…` |
+> | **18** | the fate head is partly a clock; 0.917 on 12 within-timepoint pairs | `STAGE_18_FATE_BEYOND_DAY_RECORD.md` |
+>
+> **What is still open:** Stage 2 (level correction), Stages 3–5 (tool, validation, publication),
+> and `STAGE_6_NEW_DATA_REV.md` / `DATA_REQUIREMENT_SECOND_TIMECOURSE.md` — the data acquisition
+> that everything else now waits on.
+>
+> **Current fold set: `_s16`.** Grade every change with
+> `python scorecard.py compare c7t_stage16 <tag>`.
+
+---
+
 ## What each file in this folder is
 
 **Three kinds of document. Only one kind describes work you perform.**

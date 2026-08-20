@@ -3,6 +3,12 @@
 **Status:** PLAN, then EXECUTE. Read-only diagnostic; `src/` is **not** touched by this stage.
 A positive result buys the right to propose a Change, separately pre-registered.
 
+> ### 🟩 STATUS AT CLOSE — EXECUTED, DIAGNOSIS CORRECTED, THEN VERIFIED 2026-08-18
+>
+> ⚠️ **§16.8's proposed fix was NOT the one shipped.** Pre-build diagnostics found that Platt was ALREADY applied at inference and that the real defect was the TARGET it was fitted against (soft `y_cls` vs the hard class every consumer reads). See `CHANGES.md` 2026-08-18 'STAGE 16 DIAGNOSIS CORRECTED'. The fix landed in `training/train_model.py`, and was **verified on recalibrated `_s16` folds**: sensitivity 0.275 -> 0.670 with specificity UNCHANGED at 0.929 -- the feared trade did not occur.
+>
+> *Commit: `e85111e / 9ff570c`. The status line above is the pre-execution claim and is left unedited, per the append-never-rewrite rule.*
+
 ---
 
 ## 16.0 The observation, and what it can and cannot buy
