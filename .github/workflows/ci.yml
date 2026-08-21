@@ -15,10 +15,14 @@ jobs:
         python-version: ["3.11", "3.12"]
 
     steps:
-      - uses: actions/checkout@v4
+      # Bumped 2026-08-22 from checkout@v4 / setup-python@v5, which run on Node 20. GitHub has
+      # deprecated that runtime and was already forcing these steps onto Node 24 with a warning
+      # on every run; the v5/v6 majors target Node 24 natively. Behaviour is otherwise identical,
+      # including `cache: pip`.
+      - uses: actions/checkout@v5
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
