@@ -1,0 +1,11 @@
+# Benchmark artifacts must reproduce byte-for-byte on any checkout.
+#
+# The repo runs with core.autocrlf=true, so without this rule a fresh clone lands CRLF in the
+# working tree while the builders write LF -- re-running Stage 22 on a clean checkout would then
+# diff every table for line endings alone. Verified by cloning and comparing.
+results/** text eol=lf
+
+# Frozen at Stage 21D with CRLF in the blob. Marked binary so it is neither converted nor
+# renormalized: rewriting a frozen 21D artifact is exactly what the no-rewrite rule forbids, and
+# its content is identical either way.
+results/stage21d_rewind_clone_table.tsv -text
