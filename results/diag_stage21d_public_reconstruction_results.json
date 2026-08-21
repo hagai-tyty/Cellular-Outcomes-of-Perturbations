@@ -1,15 +1,46 @@
 {
   "stage": "21D",
+  "revision": 2,
   "plan": "plans/(newer)practical plans/STAGE_21_PROSPECTIVE_DATA_QUALIFICATION_V3.md",
   "additive_to": [
     "results/diag_stage21_data_audit_results.json",
     "results/diag_stage21b_source_design_results.json"
   ],
+  "supersedes": {
+    "revision": 1,
+    "commit": "30ca7f0",
+    "overall": "STAGE_22_PENDING_OUTCOME_RULE",
+    "overall_vocabulary_note": "revision 1 spelled the pass gate STAGE_22_MAY_OPEN; it is STAGE_22_READY here. The pending and blocked gates are unchanged.",
+    "why_it_was_reasonable_then": "the author code was not available to that run: D:\\GSE227151_Rewind\\author_code_zenodo7707418\\ existed but was EMPTY, and GEO ships GSE279162 as a raw feature-barcode matrix whose Data-Processing block states only that barcode reads were linked to 10x cell barcodes, not how a clone was called. Both outcome rules were therefore genuinely unknown, and revision 1 recorded them as UNKNOWN rather than inventing them.",
+    "GSE227151": {
+      "verdict": "RECONSTRUCTABLE_PENDING_EXACT_OUTCOME_RULE",
+      "rule_used": "clone present in the gDNA arm at any read count",
+      "positive_clones": 82,
+      "positive_cells": 102,
+      "negative_clones": 3067,
+      "negative_cells": 3819,
+      "note": "invariant for any read floor in [1, 562] -- true, but invariance to a knob the authors do not use. The author rule is a top-100 cut, not a floor."
+    },
+    "GSE279162": {
+      "verdict": "RECONSTRUCTABLE_PENDING_EXACT_OUTCOME_RULE",
+      "rule_used": "exploratory dominant-barcode fraction and UMI floor sweep -- SUPERSEDED, must not be used as the production clone call",
+      "naive_clones_floor1": 4018,
+      "clones_in_ge2_treatments": 1500,
+      "clones_in_all_6": 250
+    },
+    "findings_that_still_stand": [
+      "Rewind SampleNum must be resolved by cellID containment, not by the GEO title text: SampleNum 1 -> GSM7092516, SampleNum 2 -> GSM7092515",
+      "clones span both Rewind 10x lanes, so a lane-wise outer split would leak; the clone remains the biological grouping unit",
+      "the 6479/6189 figures carried into revision 1 are not supported by the files; the measured counts stand"
+    ]
+  },
   "model_fitted": false,
   "src_modified": false,
   "raw_data_committed": false,
+  "author_code_committed": false,
   "GSE227151": {
-    "verdict": "RECONSTRUCTABLE_PENDING_EXACT_OUTCOME_RULE",
+    "verdict": "RECONSTRUCTION_PASS",
+    "previous_verdict": "RECONSTRUCTABLE_PENDING_EXACT_OUTCOME_RULE",
     "findings": {
       "required_files": {
         "value": {
@@ -19,25 +50,48 @@
         "status": "PRESENT",
         "evidence": "checked 11 paths under D:\\GSE227151_Rewind"
       },
-      "author_qc_table_schema": {
-        "value": [
-          "cellID",
-          "BC50StarcodeD8",
-          "SampleNum",
-          "nUMI",
-          "fracUMI",
-          "nLineages"
-        ],
-        "status": "PRESENT",
-        "evidence": "filtered10XCells.txt is an author-processed cell->clone table, 3921 rows. Used as the primary linkage; QC is NOT rebuilt from the raw combined intermediate."
-      },
-      "prefilter_table_rows": {
+      "author_code": {
         "value": {
-          "stepThree_BC_10X": 4975,
-          "filtered10XCells": 3921
+          "root": "D:\\GSE227151_Rewind\\author_code_zenodo7707418",
+          "scripts": [
+            "D:\\GSE227151_Rewind\\author_code_zenodo7707418\\plotScripts\\rewind10X\\R1\\20220921_R1_primedVersusNonPrimedMarkersAndDistribution.R",
+            "D:\\GSE227151_Rewind\\author_code_zenodo7707418\\plotScripts\\rewind10X\\R1\\2022.02.14_R1_cellNumberDistributionForPrimedVersusNonPrimed.R"
+          ],
+          "missing": []
         },
         "status": "PRESENT",
-        "evidence": "the author QC step drops 1054 of 4975 rows (21.2%)"
+        "evidence": "the two load-bearing R1 scripts. In revision 1 this directory existed but was EMPTY, which is exactly why the outcome rule was UNKNOWN then."
+      },
+      "gdna_arm_equivalence": {
+        "value": {
+          "cellID_values": [
+            "dummy"
+          ],
+          "rows_kept_by_filter_dummy": 49554,
+          "rows_total": 49554,
+          "samplenum_values": [
+            3
+          ],
+          "count_column_here": [
+            "counts"
+          ],
+          "count_column_in_author_script": [
+            "UMI"
+          ],
+          "schema_difference": true
+        },
+        "status": "PRESENT",
+        "evidence": "the author reads a combined 10XAndGDNA file and applies filter(cellID == \"dummy\"); our separate file IS that arm already, so the filter is inert (it keeps every row). One real SCHEMA difference: the per-row count column is named `counts` here and `UMI` there. The semantics are not assumed equal -- they are checked downstream by the 42-cell reproduction, which the rule reproduces exactly."
+      },
+      "author_qc_step_is_a_single_barcode_exclusion": {
+        "value": {
+          "stepThree_rows": 4975,
+          "filtered10XCells_rows": 3921,
+          "rows_carrying_excluded_barcode": 1054,
+          "filtered_equals_stepThree_minus_that_barcode": true
+        },
+        "status": "PRESENT",
+        "evidence": "revision 1 recorded that the author QC drops 21.2% of rows without explaining it. It is exactly one hyper-abundant barcode: filtered10XCells.txt IS stepThreeStarcodeShavedReads_BC_10X.txt minus all 1054 rows of ATTCTAGTTGTAGTACGAGTAGCACATGTTCTACGTGGAGGACGAGAACG."
       },
       "samplenum_to_gsm": {
         "value": {
@@ -59,7 +113,7 @@
           }
         },
         "status": "PRESENT",
-        "evidence": "resolved by cellID containment in each GSM's own barcodes.tsv. NOTE: this is TRANSPOSED relative to the GEO titles -- GEO calls GSM7092515 'sample 1', but the barcode tables' SampleNum 1 is GSM7092516. Reading either label instead of intersecting would have mislabelled every cell."
+        "evidence": "resolved by cellID containment in each GSM's own barcodes.tsv. NOTE: this is TRANSPOSED relative to the GEO titles -- GEO calls GSM7092515 'sample 1', but the barcode tables' SampleNum 1 is GSM7092516. Reading either label instead of intersecting would have mislabelled every cell. Carried forward unchanged from revision 1."
       },
       "expression_cells": {
         "value": {
@@ -85,16 +139,7 @@
           "2": 2035
         },
         "status": "PRESENT",
-        "evidence": "3913 of 13665 sequenced cells carry an author-QC clone assignment (28.6%)"
-      },
-      "ambiguous_cells": {
-        "value": {
-          "rows_with_multiple_lineages": 16,
-          "rows": 3921,
-          "unique_cell_sample_pairs": 3913
-        },
-        "status": "PRESENT",
-        "evidence": "16 rows carry nLineages > 1; every clone-assigned row otherwise maps to one clone"
+        "evidence": "3913 of 13665 sequenced cells carry an author-QC clone assignment"
       },
       "clone_structure": {
         "value": {
@@ -104,149 +149,65 @@
           "shared": 311
         },
         "status": "PRESENT",
-        "evidence": "311 clones appear in BOTH 10x lanes -> a lane-wise split would leak clones. The outer split unit must be the clone."
+        "evidence": "311 clones appear in BOTH 10x lanes -> a lane-wise split would leak clones. The outer split unit must be the clone. Carried forward unchanged from revision 1."
       },
-      "gdna_table_schema": {
-        "value": [
-          "cellID",
-          "counts",
-          "BC50StarcodeD8",
-          "SampleNum"
-        ],
-        "status": "PRESENT",
-        "evidence": "49554 rows, 1936 distinct clone barcodes, cellID is the constant ['dummy'] and SampleNum is [3]; rows are pre-collapse read groups, so the principled aggregation per clone is the SUM of counts"
-      },
-      "gdna_read_distribution": {
+      "author_rule_slice_max": {
         "value": {
-          "1": 1309,
-          "2": 153,
-          "3-9": 92,
-          "10-99": 15,
-          "100-499": 10,
-          ">=500": 357
+          "grouped_rows": 1936,
+          "n": 100,
+          "cutoff_nUMI": 2365,
+          "rows_at_cutoff": 2,
+          "selected_barcodes": 101,
+          "selected_nUMI_min": 2365,
+          "selected_nUMI_max": 18735,
+          "with_ties_primed_cells": 42,
+          "without_ties_primed_cells": 42
         },
         "status": "PRESENT",
-        "evidence": "strongly bimodal: a 1-2 read noise mode and a colony mode in the hundreds to thousands"
-      },
-      "outcome_threshold_sensitivity": {
-        "value": {
-          "sweep": {
-            "1": {
-              "gdna_clones": 1936,
-              "primed_clones": 82,
-              "primed_cells": 102
-            },
-            "2": {
-              "gdna_clones": 627,
-              "primed_clones": 82,
-              "primed_cells": 102
-            },
-            "3": {
-              "gdna_clones": 474,
-              "primed_clones": 82,
-              "primed_cells": 102
-            },
-            "5": {
-              "gdna_clones": 410,
-              "primed_clones": 82,
-              "primed_cells": 102
-            },
-            "10": {
-              "gdna_clones": 382,
-              "primed_clones": 82,
-              "primed_cells": 102
-            },
-            "20": {
-              "gdna_clones": 375,
-              "primed_clones": 82,
-              "primed_cells": 102
-            },
-            "50": {
-              "gdna_clones": 371,
-              "primed_clones": 82,
-              "primed_cells": 102
-            },
-            "100": {
-              "gdna_clones": 367,
-              "primed_clones": 82,
-              "primed_cells": 102
-            },
-            "200": {
-              "gdna_clones": 364,
-              "primed_clones": 82,
-              "primed_cells": 102
-            },
-            "500": {
-              "gdna_clones": 357,
-              "primed_clones": 82,
-              "primed_cells": 102
-            },
-            "562": {
-              "gdna_clones": 356,
-              "primed_clones": 82,
-              "primed_cells": 102
-            },
-            "563": {
-              "gdna_clones": 355,
-              "primed_clones": 81,
-              "primed_cells": 98
-            }
-          },
-          "invariant_over": [
-            1,
-            562
-          ],
-          "is_invariant": true
-        },
-        "status": "PRESENT",
-        "evidence": "every clone seen in BOTH arms carries >= 562 summed gDNA reads, i.e. none sits in the 1-2 read noise mode. The primed set is therefore IDENTICAL for any read floor in [1, 562] -- no threshold had to be chosen for it."
+        "evidence": "slice_max(order_by = nUMI, n = 100) with dplyr's default with_ties = TRUE. There IS a boundary tie (2 barcodes at nUMI = 2365), so 101 barcodes are selected, not 100. The cell count happens to be identical either way here, which is reported rather than relied on."
       },
       "prospective_label_counts": {
         "value": {
-          "positive_clones": 82,
-          "negative_clones": 3067,
-          "positive_cells": 102,
-          "negative_cells": 3819,
+          "primed_cells": 42,
+          "primed_clones": 35,
+          "nonprimed_cells": 3879,
+          "nonprimed_clones": 3114,
           "per_sample": {
             "1": {
-              "primed_cells": 50,
-              "primed_clones": 42
+              "primed_cells": 24,
+              "primed_clones": 21
             },
             "2": {
-              "primed_cells": 52,
-              "primed_clones": 46
+              "primed_cells": 18,
+              "primed_clones": 17
             }
           },
-          "positive_rate_clones": 0.026
+          "positive_rate_cells": 0.0107
         },
         "status": "PRESENT",
-        "evidence": "primed := the clone's barcode is recovered from the post-reprogramming gDNA arm (SampleNum 3). Rare-event geometry, as the biology implies."
+        "evidence": "primed := the clone's barcode is among the top-100 of the future gDNA arm by summed count, per the author scripts. Revision 1's presence-at-any-count reading gave 82 clones / 102 cells; the author rule gives fewer, and the difference is the whole reason revision 1 refused to call it a PASS."
       },
-      "published_42_check": {
+      "published_42_reproduction": {
         "value": {
-          "readings": {
-            "pooled_cells": 102,
-            "pooled_clones": 82,
-            "sample1_cells": 50,
-            "sample1_clones": 42,
-            "sample2_cells": 52,
-            "sample2_clones": 46
-          },
-          "readings_equal_to_42": [
-            "sample1_clones"
-          ]
+          "published_primed_cells": 42,
+          "reconstructed_primed_cells": 42,
+          "reproduced": true,
+          "tuned": false
         },
         "status": "PRESENT",
-        "evidence": "VALIDATION CHECK ONLY -- no threshold was moved to produce it. The published figure of 42 primed cells is not reproduced by any cell-level reading; it coincides with the CLONE count of one lane. A coincidence at this resolution does not establish the author rule, so it is recorded and not adopted."
+        "evidence": "ASSERTED AFTER the author rule was implemented, never targeted. n = 100 comes from the author script and no threshold was moved. Revision 1's rule did not reproduce 42 at cell level; this one does exactly."
       },
-      "unresolved_outcome_rule": {
-        "value": [
-          "is 'primed' defined per clone or per cell?",
-          "are the two 10x lanes pooled, or is one lane the anchor?",
-          "was any gDNA read floor applied? (immaterial over [1, 562], but unstated)"
-        ],
-        "status": "UNKNOWN_REQUIRES_SOURCE_FILE",
-        "evidence": "the author code directory D:\\GSE227151_Rewind\\author_code_zenodo7707418 is present but EMPTY, and the GEO Data-Processing block documents only the cellranger scRNA path -- it says nothing about barcode calling. The rule is pending that code drop, not pending more data."
+      "second_script_barcode_exclusion": {
+        "value": {
+          "barcode": "ATTCTAGTTGTAGTACGAGTAGCACATGTTCTACGTGGAGGACGAGAACG",
+          "rows_in_filtered10XCells": 0,
+          "rows_in_gdna": 0,
+          "in_top_selection": false,
+          "effect_on_primed_cells": 0,
+          "inert": true
+        },
+        "status": "ABSENT_PROVEN",
+        "evidence": "the second R1 script drops this barcode before counting. It is ABSENT from filtered10XCells.txt and from the gDNA arm, so the exclusion is INERT here -- because the upstream QC that produced filtered10XCells.txt already removed exactly this barcode. Both author scripts therefore give identical primed sets."
       },
       "replicate_structure": {
         "value": {
@@ -270,7 +231,7 @@
           ]
         },
         "status": "PRESENT",
-        "evidence": "both local GSMs are titled 'biol rep 1' -- two 10x lanes of ONE biological replicate. The author barcode tables only carry SampleNum 1/2/3, so the linkage exists for rep 1 only. Outer units are clones within one replicate, not independent replicates."
+        "evidence": "both local GSMs are titled 'biol rep 1' -- two 10x lanes of ONE biological replicate. Outer units are clones within one replicate, not independent replicates. This limits generalisation and is unchanged by the rule resolution."
       }
     },
     "manifest": [
@@ -339,12 +300,25 @@
         "exists": true,
         "bytes": 3610607,
         "sha256": "0d4618be162600ac2f54ef551ee875af65ee0af2c3b816ce45513d0e526f773e"
+      },
+      {
+        "path": "D:\\GSE227151_Rewind\\author_code_zenodo7707418\\plotScripts\\rewind10X\\R1\\20220921_R1_primedVersusNonPrimedMarkersAndDistribution.R",
+        "exists": true,
+        "bytes": 19415,
+        "sha256": "a4fa6d2aaa5271d2ce4bfcdbb51036ef884c27776ea5c0a46479cf460aac0786"
+      },
+      {
+        "path": "D:\\GSE227151_Rewind\\author_code_zenodo7707418\\plotScripts\\rewind10X\\R1\\2022.02.14_R1_cellNumberDistributionForPrimedVersusNonPrimed.R",
+        "exists": true,
+        "bytes": 5448,
+        "sha256": "51b327c4767abb4a2f837ef89ac39c46f5ac019cfa1b0f248c9ebfa6a53bab20"
       }
     ],
     "clone_table": "results\\stage21d_rewind_clone_table.tsv"
   },
   "GSE279162": {
-    "verdict": "RECONSTRUCTABLE_PENDING_EXACT_OUTCOME_RULE",
+    "verdict": "RECONSTRUCTION_PASS",
+    "previous_verdict": "RECONSTRUCTABLE_PENDING_EXACT_OUTCOME_RULE",
     "findings": {
       "required_files": {
         "value": {
@@ -354,423 +328,340 @@
         "status": "PRESENT",
         "evidence": "checked 29 paths under D:\\GSE279162 across 9 samples"
       },
-      "feature_structure": {
+      "author_code": {
         "value": {
-          "total": 189656,
-          "by_type": {
-            "Gene Expression": 36601,
-            "Custom": 153055
-          },
-          "n_genes": 36601,
-          "n_lineage_features": 153055,
-          "genes_first": true,
-          "lineage_ids_match_L_pattern": true
-        },
-        "status": "PRESENT",
-        "evidence": "the clone identifier is a FEATURE ROW, not a side file: 153055 'Custom' LinNNNN features sit after 36601 genes in the same matrix"
-      },
-      "per_sample_lineage_capture": {
-        "value": {
-          "Naive1": {
-            "gsm": "GSM8562999",
-            "cells": 2356,
-            "nnz": 10572207,
-            "lineage_entries": 4430,
-            "cells_with_lineage_umi": 2010,
-            "clones_observed": 1332,
-            "lineage_umi_total": 60045
-          },
-          "Naive2": {
-            "gsm": "GSM8563000",
-            "cells": 3186,
-            "nnz": 14068815,
-            "lineage_entries": 8487,
-            "cells_with_lineage_umi": 2805,
-            "clones_observed": 1942,
-            "lineage_umi_total": 88562
-          },
-          "Naive3": {
-            "gsm": "GSM8563001",
-            "cells": 4508,
-            "nnz": 18925231,
-            "lineage_entries": 12568,
-            "cells_with_lineage_umi": 4125,
-            "clones_observed": 2436,
-            "lineage_umi_total": 104816
-          },
-          "Dabrafenib": {
-            "gsm": "GSM8563002",
-            "cells": 9910,
-            "nnz": 27535291,
-            "lineage_entries": 129483,
-            "cells_with_lineage_umi": 9779,
-            "clones_observed": 4145,
-            "lineage_umi_total": 438883
-          },
-          "Trametinib": {
-            "gsm": "GSM8563003",
-            "cells": 16882,
-            "nnz": 31496805,
-            "lineage_entries": 120082,
-            "cells_with_lineage_umi": 16410,
-            "clones_observed": 2872,
-            "lineage_umi_total": 346170
-          },
-          "CoCl2": {
-            "gsm": "GSM8563004",
-            "cells": 7766,
-            "nnz": 28081431,
-            "lineage_entries": 63740,
-            "cells_with_lineage_umi": 7610,
-            "clones_observed": 2508,
-            "lineage_umi_total": 347251
-          },
-          "Acid": {
-            "gsm": "GSM8563005",
-            "cells": 12634,
-            "nnz": 27011148,
-            "lineage_entries": 134323,
-            "cells_with_lineage_umi": 12504,
-            "clones_observed": 5929,
-            "lineage_umi_total": 447097
-          },
-          "Cisplatin": {
-            "gsm": "GSM8563006",
-            "cells": 11049,
-            "nnz": 26884101,
-            "lineage_entries": 46122,
-            "cells_with_lineage_umi": 10814,
-            "clones_observed": 2119,
-            "lineage_umi_total": 132400
-          },
-          "Doxorubicin": {
-            "gsm": "GSM8563007",
-            "cells": 9126,
-            "nnz": 15039925,
-            "lineage_entries": 63954,
-            "cells_with_lineage_umi": 9087,
-            "clones_observed": 2523,
-            "lineage_umi_total": 92862
-          }
-        },
-        "status": "PRESENT",
-        "evidence": "cells carrying at least one lineage UMI, per sample, straight from the matrices"
-      },
-      "per_cell_barcode_dominance": {
-        "value": {
-          "cells_with_any_lineage_umi": 75144,
-          "median_dominant_fraction": 0.5,
-          "median_lineage_features_per_cell": 6,
-          "cells_at_dominance": {
-            "frac>=0.5": 41743,
-            "frac>=0.6": 29156,
-            "frac>=0.7": 21259,
-            "frac>=0.8": 14917,
-            "frac>=0.9": 9346,
-            "frac>=1.0": 5819
-          }
-        },
-        "status": "PRESENT",
-        "evidence": "the dominant barcode carries only a median ~50% of a cell's lineage UMIs and the median cell shows several lineage features, so a per-cell clone call REQUIRES an explicit dominance + UMI rule. GEO ships no such rule and no author-processed cell->clone table."
-      },
-      "outcome_threshold_sensitivity": {
-        "value": {
-          "1": {
-            "naive_clones": 4018,
-            "Dabrafenib": {
-              "clones": 4145,
-              "positives": 779,
-              "negatives": 3239
-            },
-            "Trametinib": {
-              "clones": 2872,
-              "positives": 736,
-              "negatives": 3282
-            },
-            "CoCl2": {
-              "clones": 2508,
-              "positives": 834,
-              "negatives": 3184
-            },
-            "Acid": {
-              "clones": 5929,
-              "positives": 1357,
-              "negatives": 2661
-            },
-            "Cisplatin": {
-              "clones": 2119,
-              "positives": 1126,
-              "negatives": 2892
-            },
-            "Doxorubicin": {
-              "clones": 2523,
-              "positives": 1349,
-              "negatives": 2669
-            }
-          },
-          "2": {
-            "naive_clones": 1969,
-            "Dabrafenib": {
-              "clones": 983,
-              "positives": 648,
-              "negatives": 1321
-            },
-            "Trametinib": {
-              "clones": 909,
-              "positives": 604,
-              "negatives": 1365
-            },
-            "CoCl2": {
-              "clones": 897,
-              "positives": 709,
-              "negatives": 1260
-            },
-            "Acid": {
-              "clones": 1553,
-              "positives": 1181,
-              "negatives": 788
-            },
-            "Cisplatin": {
-              "clones": 1143,
-              "positives": 959,
-              "negatives": 1010
-            },
-            "Doxorubicin": {
-              "clones": 1568,
-              "positives": 1184,
-              "negatives": 785
-            }
-          },
-          "3": {
-            "naive_clones": 1900,
-            "Dabrafenib": {
-              "clones": 893,
-              "positives": 597,
-              "negatives": 1303
-            },
-            "Trametinib": {
-              "clones": 797,
-              "positives": 542,
-              "negatives": 1358
-            },
-            "CoCl2": {
-              "clones": 829,
-              "positives": 668,
-              "negatives": 1232
-            },
-            "Acid": {
-              "clones": 1416,
-              "positives": 1105,
-              "negatives": 795
-            },
-            "Cisplatin": {
-              "clones": 981,
-              "positives": 845,
-              "negatives": 1055
-            },
-            "Doxorubicin": {
-              "clones": 1428,
-              "positives": 1088,
-              "negatives": 812
-            }
-          },
-          "5": {
-            "naive_clones": 1825,
-            "Dabrafenib": {
-              "clones": 819,
-              "positives": 551,
-              "negatives": 1274
-            },
-            "Trametinib": {
-              "clones": 689,
-              "positives": 470,
-              "negatives": 1355
-            },
-            "CoCl2": {
-              "clones": 745,
-              "positives": 607,
-              "negatives": 1218
-            },
-            "Acid": {
-              "clones": 1286,
-              "positives": 1012,
-              "negatives": 813
-            },
-            "Cisplatin": {
-              "clones": 793,
-              "positives": 700,
-              "negatives": 1125
-            },
-            "Doxorubicin": {
-              "clones": 1227,
-              "positives": 961,
-              "negatives": 864
-            }
-          },
-          "10": {
-            "naive_clones": 1697,
-            "Dabrafenib": {
-              "clones": 706,
-              "positives": 462,
-              "negatives": 1235
-            },
-            "Trametinib": {
-              "clones": 554,
-              "positives": 368,
-              "negatives": 1329
-            },
-            "CoCl2": {
-              "clones": 684,
-              "positives": 540,
-              "negatives": 1157
-            },
-            "Acid": {
-              "clones": 1154,
-              "positives": 912,
-              "negatives": 785
-            },
-            "Cisplatin": {
-              "clones": 598,
-              "positives": 542,
-              "negatives": 1155
-            },
-            "Doxorubicin": {
-              "clones": 961,
-              "positives": 788,
-              "negatives": 909
-            }
-          },
-          "20": {
-            "naive_clones": 1434,
-            "Dabrafenib": {
-              "clones": 588,
-              "positives": 361,
-              "negatives": 1073
-            },
-            "Trametinib": {
-              "clones": 436,
-              "positives": 271,
-              "negatives": 1163
-            },
-            "CoCl2": {
-              "clones": 604,
-              "positives": 448,
-              "negatives": 986
-            },
-            "Acid": {
-              "clones": 1006,
-              "positives": 756,
-              "negatives": 678
-            },
-            "Cisplatin": {
-              "clones": 378,
-              "positives": 345,
-              "negatives": 1089
-            },
-            "Doxorubicin": {
-              "clones": 695,
-              "positives": 583,
-              "negatives": 851
-            }
-          },
-          "50": {
-            "naive_clones": 781,
-            "Dabrafenib": {
-              "clones": 411,
-              "positives": 180,
-              "negatives": 601
-            },
-            "Trametinib": {
-              "clones": 297,
-              "positives": 132,
-              "negatives": 649
-            },
-            "CoCl2": {
-              "clones": 449,
-              "positives": 281,
-              "negatives": 500
-            },
-            "Acid": {
-              "clones": 756,
-              "positives": 477,
-              "negatives": 304
-            },
-            "Cisplatin": {
-              "clones": 180,
-              "positives": 158,
-              "negatives": 623
-            },
-            "Doxorubicin": {
-              "clones": 386,
-              "positives": 301,
-              "negatives": 480
-            }
-          }
-        },
-        "status": "PRESENT",
-        "evidence": "the naive pool and every positive count move materially with the UMI floor (naive clones 4018 -> 781). Unlike the Rewind gDNA arm there is NO empty region to separate signal from noise, so no floor is selected here."
-      },
-      "multi_treatment_coverage": {
-        "value": {
-          "naive_clones": 4018,
-          "by_n_treatments": {
-            "0": 2187,
-            "1": 331,
-            "2": 309,
-            "3": 320,
-            "4": 333,
-            "5": 288,
-            "6": 250
-          },
-          "clones_in_ge2_treatments": 1500,
-          "clones_in_all_6": 250
-        },
-        "status": "PRESENT",
-        "evidence": "1500 naive clones are re-observed under two or more treatments at floor 1 -- this is the structure a state x treatment interaction test needs, and it is the reason this dataset was qualified for Role B."
-      },
-      "pretreatment_observations_per_clone": {
-        "value": {
-          "clones": 4018,
-          "median_cells": 1,
-          "max_cells": 262,
-          "clones_with_ge_k_cells": {
-            "1": 4018,
-            "2": 1645,
-            "3": 1371,
-            "5": 992,
-            "10": 561
-          }
-        },
-        "status": "PRESENT",
-        "evidence": "X is a clone-level pretreatment profile; clones with a single naive cell give a one-cell estimate of that clone's starting state"
-      },
-      "design_from_source": {
-        "value": {
-          "pretreatment_samples": [
-            "Naive1",
-            "Naive2",
-            "Naive3"
+          "root": "D:\\GSE279162\\author_code_Schaff_manuscript",
+          "scripts": [
+            "D:\\GSE279162\\author_code_Schaff_manuscript\\How_to_run_code_README.txt",
+            "D:\\GSE279162\\author_code_Schaff_manuscript\\preprocess_GEX.Rmd",
+            "D:\\GSE279162\\author_code_Schaff_manuscript\\preprocess_cDNA_BCs.Rmd",
+            "D:\\GSE279162\\author_code_Schaff_manuscript\\preprocess_gDNA_BCs.Rmd",
+            "D:\\GSE279162\\author_code_Schaff_manuscript\\Find_Markers_Top_Res_lins_in_naive.Rmd"
           ],
-          "treatments": [
-            "Dabrafenib",
-            "Trametinib",
-            "CoCl2",
-            "Acid",
-            "Cisplatin",
-            "Doxorubicin"
+          "missing": [],
+          "readme_order": [
+            "preprocess_GEX.Rmd",
+            "preprocess_cDNA_BCs.Rmd",
+            "preprocess_gDNA_BCs.Rmd",
+            "Find_Markers_Top_Res_lins_in_naive.Rmd"
           ]
         },
         "status": "PRESENT",
-        "evidence": "GEO Overall-Design: barcoded WM989 cells were allowed to double, a subset was taken for the untreated naive scRNA arm, and the remainder was split six ways -- 4 weeks of dabrafenib / trametinib / CoCl2 / acidic media, or 2 weeks of cisplatin / doxorubicin plus a 2 week holiday -- then re-sequenced. X precedes U precedes Y by construction."
+        "evidence": "the five primary provenance files. preprocess_gDNA_BCs.Rmd is separate gDNA/RPM logic, kept as provenance only -- it is NOT the scRNA assigned_lineage procedure."
       },
-      "unresolved_outcome_rule": {
-        "value": [
-          "per-cell clone call: minimum UMI and minimum dominant fraction are unspecified",
-          "clone-presence floor for calling a clone 'surviving' in a treated sample",
-          "whether Naive1/2/3 are pooled into one pretreatment pool or kept as replicates"
-        ],
+      "feature_structure": {
+        "value": {
+          "total": 189656,
+          "n_genes": 36601,
+          "n_lineage_features": 153055,
+          "genes_first": true,
+          "mt_genes": 13,
+          "lineage_ids_match_L_pattern": true
+        },
+        "status": "PRESENT",
+        "evidence": "the clone identifier is a FEATURE ROW: 153055 'Custom' LinNNNN features after 36601 genes. preprocess_GEX.Rmd makes exactly this block the `lineage` assay."
+      },
+      "author_rna_qc": {
+        "value": {
+          "Acid": {
+            "gsm": "GSM8563005",
+            "cells_raw": 12634,
+            "cells_post_qc": 8004,
+            "pct_kept": 63.4,
+            "qc": {
+              "nFeature_RNA_gt": 1500,
+              "nCount_RNA_lt": 30000,
+              "percent_mt_lt": 15
+            }
+          },
+          "Cisplatin": {
+            "gsm": "GSM8563006",
+            "cells_raw": 11049,
+            "cells_post_qc": 7390,
+            "pct_kept": 66.9,
+            "qc": {
+              "nFeature_RNA_gt": 1500,
+              "nCount_RNA_lt": 20000,
+              "percent_mt_lt": 20
+            }
+          },
+          "CoCl2": {
+            "gsm": "GSM8563004",
+            "cells_raw": 7766,
+            "cells_post_qc": 5173,
+            "pct_kept": 66.6,
+            "qc": {
+              "nFeature_RNA_gt": 2500,
+              "nCount_RNA_lt": 50000,
+              "percent_mt_lt": 15
+            }
+          },
+          "Dabrafenib": {
+            "gsm": "GSM8563002",
+            "cells_raw": 9910,
+            "cells_post_qc": 6556,
+            "pct_kept": 66.2,
+            "qc": {
+              "nFeature_RNA_gt": 2000,
+              "nCount_RNA_lt": 30000,
+              "percent_mt_lt": 15
+            }
+          },
+          "Doxorubicin": {
+            "gsm": "GSM8563007",
+            "cells_raw": 9126,
+            "cells_post_qc": 3831,
+            "pct_kept": 42.0,
+            "qc": {
+              "nFeature_RNA_gt": 1500,
+              "nCount_RNA_lt": 20000,
+              "percent_mt_lt": 20
+            }
+          },
+          "Naive1": {
+            "gsm": "GSM8562999",
+            "cells_raw": 2356,
+            "cells_post_qc": 1595,
+            "pct_kept": 67.7,
+            "qc": {
+              "nFeature_RNA_gt": 3000,
+              "nCount_RNA_lt": 75000,
+              "percent_mt_lt": 20
+            }
+          },
+          "Naive2": {
+            "gsm": "GSM8563000",
+            "cells_raw": 3186,
+            "cells_post_qc": 2064,
+            "pct_kept": 64.8,
+            "qc": {
+              "nFeature_RNA_gt": 3000,
+              "nCount_RNA_lt": 60000,
+              "percent_mt_lt": 20
+            }
+          },
+          "Naive3": {
+            "gsm": "GSM8563001",
+            "cells_raw": 4508,
+            "cells_post_qc": 3567,
+            "pct_kept": 79.1,
+            "qc": {
+              "nFeature_RNA_gt": 2500,
+              "nCount_RNA_lt": 50000,
+              "percent_mt_lt": 15
+            }
+          },
+          "Trametinib": {
+            "gsm": "GSM8563003",
+            "cells_raw": 16882,
+            "cells_post_qc": 8711,
+            "pct_kept": 51.6,
+            "qc": {
+              "nFeature_RNA_gt": 1500,
+              "nCount_RNA_lt": 20000,
+              "percent_mt_lt": 15
+            }
+          }
+        },
+        "status": "PRESENT",
+        "evidence": "condition-specific filters transcribed from preprocess_GEX.Rmd. 46891 of 77417 raw cells survive. Revision 1 used every raw GEO cell, which is one reason its counts were inflated."
+      },
+      "barcode_clustering": {
+        "value": {
+          "lineages_after_rowsum_filter": 14883,
+          "cell_lower_limit": 100,
+          "cor_threshold": 0.55,
+          "candidate_lineages": 604,
+          "correlated_pairs": 153,
+          "clusters": 90,
+          "lineages_merged": 204,
+          "cluster_size_histogram": {
+            "2": 74,
+            "3": 12,
+            "4": 2,
+            "5": 1,
+            "7": 1
+          },
+          "author_stop_merging_happening_fired": 0
+        },
+        "status": "PRESENT",
+        "evidence": "correlated lineage features are the same physical clone read with sequencing error or multiple integrations. The author's loop raises stop(\"Merging happening\") if a pair would join two existing clusters; it fires 0 times here, so the reconstruction meets the same precondition the authors' run did."
+      },
+      "barcoding_posterior_and_assignment": {
+        "value": {
+          "lineages": 14769,
+          "cells": 46891,
+          "difference_val": 0.2,
+          "posterior_floor": 0.5,
+          "beta1_mean": 0.40166849887926903,
+          "gamma_min": 2535.3843881893526,
+          "gamma_max": 5548291.955015295,
+          "assigned_before_posterior_floor": 43260,
+          "dropped_by_posterior_floor": 4007,
+          "assigned_cells": 42771,
+          "na_cells": 4120
+        },
+        "status": "PRESENT",
+        "evidence": "multinomial posterior over every lineage, assignment only when the top two posteriors differ by >= 0.2, then assigned_lineage <- NA below a 0.5 posterior. This SUPERSEDES revision 1's dominant-fraction / UMI-floor sweep, which is not the production rule."
+      },
+      "per_condition_assignment": {
+        "value": {
+          "Acid": {
+            "cells_post_qc": 8004,
+            "assigned": 7246,
+            "na": 758,
+            "unique_clones": 950
+          },
+          "Cisplatin": {
+            "cells_post_qc": 7390,
+            "assigned": 6815,
+            "na": 575,
+            "unique_clones": 346
+          },
+          "CoCl2": {
+            "cells_post_qc": 5173,
+            "assigned": 5134,
+            "na": 39,
+            "unique_clones": 410
+          },
+          "Dabrafenib": {
+            "cells_post_qc": 6556,
+            "assigned": 6164,
+            "na": 392,
+            "unique_clones": 509
+          },
+          "Doxorubicin": {
+            "cells_post_qc": 3831,
+            "assigned": 2832,
+            "na": 999,
+            "unique_clones": 662
+          },
+          "Trametinib": {
+            "cells_post_qc": 8711,
+            "assigned": 8091,
+            "na": 620,
+            "unique_clones": 425
+          },
+          "naive": {
+            "cells_post_qc": 7226,
+            "assigned": 6489,
+            "na": 737,
+            "unique_clones": 1401
+          }
+        },
+        "status": "PRESENT",
+        "evidence": "naive1/2/3 are pooled into one `naive` condition, as preprocess_GEX.Rmd does explicitly. That answers one of revision 1's three open questions outright."
+      },
+      "clone_coverage": {
+        "value": {
+          "unique_assigned_clones": 2215,
+          "clones_with_naive_observation": 1401,
+          "clones_in_ge1_treatment": 929,
+          "clones_in_ge2_treatments": 603,
+          "clones_in_all_6": 37,
+          "by_n_treatments": {
+            "0": 472,
+            "1": 326,
+            "2": 215,
+            "3": 185,
+            "4": 107,
+            "5": 59,
+            "6": 37
+          }
+        },
+        "status": "PRESENT",
+        "evidence": "603 clones carry both a naive observation and a post-treatment observation under two or more treatments -- the structure an X x U interaction test needs. Revision 1's floor-1 sweep claimed 1500; the author rule gives fewer and is the number that counts."
+      },
+      "future_outcome": {
+        "value": {
+          "definition": "Y(clone, treatment) = post-treatment assigned-cell abundance; rank is taken within each treatment",
+          "per_treatment": {
+            "Dabrafenib": {
+              "clones_present": 321,
+              "clones_absent": 1080,
+              "assigned_cells": 4411,
+              "abundance_median": 2,
+              "abundance_max": 476
+            },
+            "Trametinib": {
+              "clones_present": 274,
+              "clones_absent": 1127,
+              "assigned_cells": 4471,
+              "abundance_median": 2,
+              "abundance_max": 776
+            },
+            "CoCl2": {
+              "clones_present": 319,
+              "clones_absent": 1082,
+              "assigned_cells": 4326,
+              "abundance_median": 2,
+              "abundance_max": 3290
+            },
+            "Acid": {
+              "clones_present": 665,
+              "clones_absent": 736,
+              "assigned_cells": 6823,
+              "abundance_median": 3,
+              "abundance_max": 464
+            },
+            "Cisplatin": {
+              "clones_present": 272,
+              "clones_absent": 1129,
+              "assigned_cells": 6717,
+              "abundance_median": 1,
+              "abundance_max": 2791
+            },
+            "Doxorubicin": {
+              "clones_present": 405,
+              "clones_absent": 996,
+              "assigned_cells": 2282,
+              "abundance_median": 2,
+              "abundance_max": 577
+            }
+          },
+          "abundance_distribution": {
+            "n_nonzero": 2256,
+            "median": 2,
+            "q75": 5,
+            "q95": 26,
+            "max": 3290
+          },
+          "naive_cells_per_clone": {
+            "median": 2,
+            "max": 88,
+            "ge2": 816,
+            "ge5": 356,
+            "ge10": 167
+          }
+        },
+        "status": "PRESENT",
+        "evidence": "built exactly as Find_Markers_Top_Res_lins_in_naive.Rmd builds it: table(assigned_lineage[OG_condition == condition]). The script's num_lin = 5 is figure-specific and is deliberately NOT turned into a binary target here."
+      },
+      "reproduction_anchor": {
+        "value": {
+          "published_count_available": false,
+          "scripts_searched": [
+            "How_to_run_code_README.txt",
+            "preprocess_GEX.Rmd",
+            "preprocess_cDNA_BCs.Rmd",
+            "preprocess_gDNA_BCs.Rmd",
+            "Find_Markers_Top_Res_lins_in_naive.Rmd"
+          ],
+          "nearest_candidate": "preprocess_GEX.Rmd writes preprocess_GEX/cellsPreandPostFilt.xlsx",
+          "candidate_present_in_archive": false,
+          "is_a_reproduction_failure": false
+        },
         "status": "UNKNOWN_REQUIRES_SOURCE_FILE",
-        "evidence": "GEO ships the raw feature-barcode matrix only. There is no author-processed clone table and the Data-Processing block states only that barcode reads were linked to 10x cell barcodes, not how a clone was called. Every reported count above is floor-conditional."
+        "evidence": "unlike Rewind's published 42, the five provided scripts contain no published count that can serve as an independent reproduction check -- preprocess_GEX.Rmd writes cellsPreandPostFilt.xlsx but that output is not in the archive. The pipeline executes cleanly and end to end, so this is a missing VALIDATION ANCHOR, not a reproduction failure. Recorded so nobody later mistakes 'ran without error' for 'checked against the authors' numbers'."
+      },
+      "known_deviations_from_the_author_object": {
+        "value": [
+          "Seurat's CreateAssayObject(min.cells = 1) is applied per sample before QC; here the equivalent zero-lineage filter is the merged rowSums > 0 that preprocess_cDNA_BCs.Rmd applies anyway, which subsumes it",
+          "NormalizeData / PCA / UMAP / FindClusters are not run: they feed visualisation and marker tests, never assigned_lineage",
+          "sample merge order is fixed alphabetically; it can only matter for which.max ties, and a tie yields a zero top-two difference, which the 0.2 rule sends to NA regardless"
+        ],
+        "status": "PRESENT",
+        "evidence": "stated so the reconstruction is auditable against the authors' object rather than implied to be byte-identical to it"
       }
     },
     "manifest": [
@@ -947,9 +838,40 @@
         "exists": true,
         "bytes": 57132084,
         "sha256": "7c6b106ba63cc21e632e15ae6b799d5a035102101a6753adefadd23e0f73bc2c"
+      },
+      {
+        "path": "D:\\GSE279162\\author_code_Schaff_manuscript\\How_to_run_code_README.txt",
+        "exists": true,
+        "bytes": 210,
+        "sha256": "a24a1a447f1323b43b08b265caa57c12b7b91fb8972dbc3b4811fe5c9868c978"
+      },
+      {
+        "path": "D:\\GSE279162\\author_code_Schaff_manuscript\\preprocess_GEX.Rmd",
+        "exists": true,
+        "bytes": 27424,
+        "sha256": "7e13991f4e54ace117ddd6861cd0554c6868de5e6a7f2089c5d00ddf8c565d13"
+      },
+      {
+        "path": "D:\\GSE279162\\author_code_Schaff_manuscript\\preprocess_cDNA_BCs.Rmd",
+        "exists": true,
+        "bytes": 10784,
+        "sha256": "97af9e1aed4385c807273d87f0a42010d6291995c8b5655a551705c8f46d83fc"
+      },
+      {
+        "path": "D:\\GSE279162\\author_code_Schaff_manuscript\\preprocess_gDNA_BCs.Rmd",
+        "exists": true,
+        "bytes": 4553,
+        "sha256": "bbf9f341a44539b8d42f84129e49739af15f97edd1fe94f7325bda6d62fbf489"
+      },
+      {
+        "path": "D:\\GSE279162\\author_code_Schaff_manuscript\\Find_Markers_Top_Res_lins_in_naive.Rmd",
+        "exists": true,
+        "bytes": 7033,
+        "sha256": "74fdd749c815a4ff0a99faff4d8968fc725ce715c9c271ccfd635972dba86827"
       }
     ],
     "clone_table": "results\\stage21d_gse279162_clone_table.tsv"
   },
-  "overall": "STAGE_22_PENDING_OUTCOME_RULE"
+  "overall": "STAGE_22_READY",
+  "previous_overall": "STAGE_22_PENDING_OUTCOME_RULE"
 }
