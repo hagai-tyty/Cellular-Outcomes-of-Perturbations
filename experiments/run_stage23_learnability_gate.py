@@ -689,14 +689,324 @@ def run_23b(rewind_root: Path) -> dict:
     return out
 
 
+# --------------------------------------------------------------------------------------------- #
+# 23C — WM989 additive state-signal gate.  Does pretreatment X add beyond treatment U and captured
+# naive clone abundance B?  No interaction terms here: those are 23D.
+# --------------------------------------------------------------------------------------------- #
+WM989_C1_OOF = _RESULTS / "stage23_wm989_detection_oof.csv"
+WM989_C2_OOF = _RESULTS / "stage23_wm989_abundance_oof.csv"
+WM989_RESULTS = _RESULTS / "stage23_wm989_results.json"
+ROLE_B_PASS = "ROLE_B_ADDITIVE_PASS"
+ROLE_B_WEAK = "ROLE_B_ADDITIVE_WEAK"
+ROLE_B_FAIL = "ROLE_B_ADDITIVE_FAIL"
+WM989_MODELS = ("W0", "W1", "W2", "W3", "W4")
+
+
+def _load_wm989_x():
+    p = _CACHE / "GSE279162_pseudobulk.npz"
+    if not p.exists():
+        raise RuntimeError("23A pseudobulk cache missing -- run `--stage 23a` first")
+    X = sparse.load_npz(p)
+    clones = json.loads((_CACHE / "GSE279162_clones.json").read_text(encoding="utf-8"))
+    man = json.loads((_RESULTS / "stage23_wm989_clone_expression_manifest.json")
+                     .read_text(encoding="utf-8"))
+    got = sha256_bytes(X.indptr.tobytes() + X.indices.tobytes() + np.round(X.data, 10).tobytes())
+    if got != man["matrix_content_sha256"]:
+        raise RuntimeError("cached X does not match the 23A manifest hash")
+    return X, clones
+
+
+def treatment_dummies(treatments: np.ndarray) -> np.ndarray:
+    """Five non-reference dummies in the frozen canonical order; `Acid` is the reference.
+
+    Never standardized (V2 §3.5). Column order is fixed by TREATMENT_ORDER, not by whatever order
+    the rows happen to arrive in.
+    """
+    non_ref = [t for t in TREATMENT_ORDER if t != REFERENCE_TREATMENT]
+    return np.column_stack([(treatments == t).astype(float) for t in non_ref])
+
+
+def clone_balanced_error(err: np.ndarray, clone_key: np.ndarray, square: bool = False):
+    """Per-clone mean first, then the mean over clones -- so a clone observed under many
+    treatments does not silently become several independent units (V2 §5.2)."""
+    e = err ** 2 if square else np.abs(err)
+    df = pd.DataFrame({"c": clone_key, "e": e})
+    per_clone = df.groupby("c", sort=True)["e"].mean()
+    return per_clone
+
+
+def _fit_ridge(Xtr, ytr, Xte, alpha, weights=None):
+    from sklearn.linear_model import Ridge
+
+    m = Ridge(alpha=alpha, fit_intercept=True)
+    m.fit(Xtr, ytr, sample_weight=weights)
+    return m.predict(Xte)
+
+
+def run_23c(wm989_root: Path) -> dict:
+    from scipy.stats import spearmanr
+    from sklearn.metrics import average_precision_score, brier_score_loss, log_loss, roc_auc_score
+    from sklearn.model_selection import GroupKFold
+
+    X, clones = _load_wm989_x()
+    clone_pos = {c: i for i, c in enumerate(clones)}
+    ck = pd.read_csv(_RESULTS / "stage22_wm989_clones.csv").set_index("clone_id").loc[clones]
+    ct = pd.read_csv(_RESULTS / "stage22_wm989_clone_treatment.csv")
+    ct = ct.sort_values(["clone_id", "treatment"]).reset_index(drop=True)
+
+    fold_of = ck["outer_fold"].to_dict()
+    nuis_clone = np.column_stack([np.log1p(ck[c].to_numpy(dtype=float))
+                                  for c in ("n_naive_cells", "n_naive1_cells",
+                                            "n_naive2_cells", "n_naive3_cells")])
+    row_fold = ct["clone_id"].map(fold_of).to_numpy()
+    dummies_all = treatment_dummies(ct["treatment"].to_numpy())
+    y_c1 = (ct["n_post_cells"].to_numpy() > 0).astype(int)
+    y_c2 = np.log1p(ct["n_post_cells"].to_numpy(dtype=float))
+    c2_mask = ct["n_post_cells"].to_numpy() > 0
+
+    convergence: list = []
+    out: dict = {}
+
+    for endpoint in ("C1", "C2"):
+        rows = np.arange(len(ct)) if endpoint == "C1" else np.flatnonzero(c2_mask)
+        y = y_c1 if endpoint == "C1" else y_c2
+        elig_clones = sorted(set(ct["clone_id"].to_numpy()[rows]))
+        oof = {m: np.full(len(rows), np.nan) for m in WM989_MODELS}
+        selected: dict = {}
+        meta: dict = {}
+
+        for f in range(N_OUTER):
+            te_rows_local = np.flatnonzero(row_fold[rows] == f)
+            tr_rows_local = np.flatnonzero(row_fold[rows] != f)
+            tr_clones = sorted({ct["clone_id"].iloc[rows[i]] for i in tr_rows_local})
+            te_clones = sorted({ct["clone_id"].iloc[rows[i]] for i in te_rows_local})
+
+            def prep(fit_clones, apply_sets):
+                """Fit filter/scale/PCA/nuisance-scale on `fit_clones` only, apply to each set."""
+                fit_idx = np.array([clone_pos[c] for c in fit_clones])
+                all_idx = np.array([clone_pos[c] for c in sum(apply_sets, [])])
+                ztr, zall, n_genes, kmax = expression_block(X, fit_idx, all_idx,
+                                                            max(K_CANDIDATES))
+                btr, ball = standardize_train_only(nuis_clone[fit_idx], nuis_clone[all_idx])
+                pcs = {c: ztr[i] for i, c in enumerate(fit_clones)}
+                nui = {c: btr[i] for i, c in enumerate(fit_clones)}
+                for i, c in enumerate(sum(apply_sets, [])):
+                    pcs[c] = zall[i]
+                    nui[c] = ball[i]
+                return pcs, nui, n_genes, kmax
+
+            # ---- inner CV: refit every learned quantity inside each inner-training split ----- #
+            scores: dict = {m: {} for m in WM989_MODELS}
+            gkf = GroupKFold(n_splits=N_INNER)
+            g = np.array(tr_clones)
+            for itr_i, iva_i in gkf.split(g, groups=g):
+                itr_c, iva_c = [g[i] for i in itr_i], [g[i] for i in iva_i]
+                pcs, nui, _, kmax = prep(itr_c, [iva_c])
+                sel_i = np.array([i for i in tr_rows_local
+                                  if ct["clone_id"].iloc[rows[i]] in set(itr_c)])
+                sel_v = np.array([i for i in tr_rows_local
+                                  if ct["clone_id"].iloc[rows[i]] in set(iva_c)])
+                ci = ct["clone_id"].to_numpy()[rows[sel_i]]
+                cv = ct["clone_id"].to_numpy()[rows[sel_v]]
+                Pi = np.array([pcs[c] for c in ci])
+                Pv = np.array([pcs[c] for c in cv])
+                Bi = np.array([nui[c] for c in ci])
+                Bv = np.array([nui[c] for c in cv])
+                Ui, Uv = dummies_all[rows[sel_i]], dummies_all[rows[sel_v]]
+                yi, yv = y[rows[sel_i]], y[rows[sel_v]]
+                w = None
+                if endpoint == "C2":
+                    cnt = pd.Series(ci).value_counts()
+                    w = 1.0 / pd.Series(ci).map(cnt).to_numpy()
+                    w = w / w.mean()
+
+                def score(pred, ep=endpoint, yy=yv, cc=cv):
+                    if ep == "C1":
+                        return log_loss(yy, np.clip(pred, 1e-15, 1 - 1e-15), labels=[0, 1])
+                    return float(clone_balanced_error(yy - pred, cc).mean())
+
+                specs = {"W0": (False, False, True), "W1": (False, True, True),
+                         "W2": (True, False, False), "W3": (True, False, True),
+                         "W4": (True, True, True)}
+                for m, (ux, ub, uu) in specs.items():
+                    ks = K_CANDIDATES if ux else (None,)
+                    grid = LOGISTIC_C if endpoint == "C1" else RIDGE_ALPHA
+                    for k in ks:
+                        if k is not None and k > kmax:
+                            continue
+                        Ai = np.hstack([q for q, use in
+                                        ((Pi[:, :k] if k else None, ux), (Bi, ub), (Ui, uu)) if use])
+                        Av = np.hstack([q for q, use in
+                                        ((Pv[:, :k] if k else None, ux), (Bv, ub), (Uv, uu)) if use])
+                        for hp in grid:
+                            if endpoint == "C1":
+                                pred = _fit_logistic(Ai, yi, Av, hp, convergence)
+                            else:
+                                pred = _fit_ridge(Ai, yi, Av, hp, w)
+                            scores[m].setdefault((k, hp), []).append(score(pred))
+
+            def pick(model, sc=scores, ep=endpoint):
+                # minimise for both endpoints; tie-break smaller K then stronger regularisation
+                return min(sc[model].items(),
+                           key=lambda kv: (round(float(np.mean(kv[1])), 12),
+                                           kv[0][0] or 0,
+                                           -kv[0][1] if ep == "C2" else kv[0][1]))
+
+            sel = {m: pick(m) for m in WM989_MODELS}
+            selected[str(f)] = {m: {"K": sel[m][0][0], "hp": sel[m][0][1],
+                                    "mean_inner_score": round(float(np.mean(sel[m][1])), 6)}
+                                for m in WM989_MODELS}
+
+            # ---- final refit on the whole outer-training set, predict the test rows once ----- #
+            pcs, nui, n_genes, kmax = prep(tr_clones, [te_clones])
+            ctr = ct["clone_id"].to_numpy()[rows[tr_rows_local]]
+            cte = ct["clone_id"].to_numpy()[rows[te_rows_local]]
+            Ptr = np.array([pcs[c] for c in ctr])
+            Pte = np.array([pcs[c] for c in cte])
+            Btr = np.array([nui[c] for c in ctr])
+            Bte = np.array([nui[c] for c in cte])
+            Utr, Ute = dummies_all[rows[tr_rows_local]], dummies_all[rows[te_rows_local]]
+            ytr = y[rows[tr_rows_local]]
+            w = None
+            if endpoint == "C2":
+                cnt = pd.Series(ctr).value_counts()
+                w = 1.0 / pd.Series(ctr).map(cnt).to_numpy()
+                w = w / w.mean()
+            specs = {"W0": (False, False, True), "W1": (False, True, True),
+                     "W2": (True, False, False), "W3": (True, False, True),
+                     "W4": (True, True, True)}
+            for m, (ux, ub, uu) in specs.items():
+                k, hp = sel[m][0]
+                Atr = np.hstack([q for q, use in
+                                 ((Ptr[:, :k] if k else None, ux), (Btr, ub), (Utr, uu)) if use])
+                Ate = np.hstack([q for q, use in
+                                 ((Pte[:, :k] if k else None, ux), (Bte, ub), (Ute, uu)) if use])
+                if endpoint == "C1":
+                    oof[m][te_rows_local] = _fit_logistic(Atr, ytr, Ate, hp, convergence)
+                else:
+                    oof[m][te_rows_local] = _fit_ridge(Atr, ytr, Ate, hp, w)
+            meta[str(f)] = {"train_clones": len(tr_clones), "test_clones": len(te_clones),
+                            "train_rows": int(len(tr_rows_local)),
+                            "test_rows": int(len(te_rows_local)),
+                            "retained_genes": n_genes, "max_feasible_K": kmax}
+
+        assert not np.isnan(np.concatenate([oof[m] for m in WM989_MODELS])).any()
+
+        yv = y[rows]
+        ckey = ct["clone_id"].to_numpy()[rows]
+        tkey = ct["treatment"].to_numpy()[rows]
+        if endpoint == "C1":
+            metrics = {m: {"log_loss": float(log_loss(yv, np.clip(oof[m], 1e-15, 1 - 1e-15))),
+                           "AP": float(average_precision_score(yv, oof[m])),
+                           "ROC_AUC": float(roc_auc_score(yv, oof[m])),
+                           "brier": float(brier_score_loss(yv, oof[m]))} for m in WM989_MODELS}
+            # per-clone mean log loss; every clone has all six treatment rows, so the row
+            # average and the clone-balanced average coincide here (V2 §3.6)
+            def _rowwise_ll(pred, yy=yv):
+                pc = np.clip(pred, 1e-15, 1 - 1e-15)
+                return -(yy * np.log(pc) + (1 - yy) * np.log(1 - pc))
+
+            per_clone = {m: clone_balanced_error(_rowwise_ll(oof[m]), ckey)
+                         for m in WM989_MODELS}
+        else:
+            metrics = {}
+            per_clone = {}
+            for m in WM989_MODELS:
+                mae_c = clone_balanced_error(yv - oof[m], ckey)
+                mse_c = clone_balanced_error(yv - oof[m], ckey, square=True)
+                sp = {t: float(spearmanr(yv[tkey == t], oof[m][tkey == t]).statistic)
+                      for t in TREATMENT_ORDER}
+                metrics[m] = {"clone_balanced_MAE": float(mae_c.mean()),
+                              "clone_balanced_RMSE": float(np.sqrt(mse_c.mean())),
+                              "per_treatment_spearman": {k: round(v, 4) for k, v in sp.items()},
+                              "mean_treatment_spearman": float(np.mean(list(sp.values())))}
+                per_clone[m] = mae_c
+
+        # ---- clone-cluster bootstrap: resample clones, carry all of their rows -------------- #
+        seed = SEED_BOOT_WM989_C1 if endpoint == "C1" else SEED_BOOT_WM989_C2
+        rng = np.random.default_rng(seed)
+        uc = per_clone["W1"].index.to_numpy()
+        v1, v4 = per_clone["W1"].to_numpy(), per_clone["W4"].to_numpy()
+        deltas = np.empty(N_BOOTSTRAP)
+        for b in range(N_BOOTSTRAP):
+            idx = rng.integers(0, len(uc), len(uc))
+            deltas[b] = v1[idx].mean() - v4[idx].mean()
+        key = "log_loss" if endpoint == "C1" else "clone_balanced_MAE"
+        point = metrics["W1"][key] - metrics["W4"][key]
+        lo95, hi95 = np.percentile(deltas, [2.5, 97.5])
+        lo975, hi975 = np.percentile(deltas, [1.25, 98.75])
+        inference = {"delta_state_W1_minus_W4": {
+            "metric": key, "point": float(point),
+            "ci95": [float(lo95), float(hi95)],
+            "ci975_two_sided": [float(lo975), float(hi975)],
+            "fraction_delta_le_0": float((deltas <= 0).mean()),
+            "bootstrap_mean": float(deltas.mean()),
+            "replicates": N_BOOTSTRAP, "seed": seed,
+            "bootstrap_unit": "clone", "clones_resampled": int(len(uc))}}
+
+        frame = pd.DataFrame({"clone_id": ckey, "treatment": tkey, "outer_fold": row_fold[rows],
+                              "y": yv, **{f"pred_{m}": oof[m] for m in WM989_MODELS}})
+        frame.to_csv(WM989_C1_OOF if endpoint == "C1" else WM989_C2_OOF,
+                     index=False, lineterminator="\n")
+        out[endpoint] = {"rows": int(len(rows)), "clones": len(elig_clones),
+                         "selected_hyperparameters_per_outer_fold": selected,
+                         "per_outer_fold": meta, "pooled_oof_metrics": metrics,
+                         "inference": inference}
+
+    # ---- derived verdict (V2 §5.7) ------------------------------------------------------------ #
+    ll = out["C1"]["inference"]["delta_state_W1_minus_W4"]
+    ma = out["C2"]["inference"]["delta_state_W1_minus_W4"]
+    pass_ll, pass_ma = ll["ci975_two_sided"][0] > 0, ma["ci975_two_sided"][0] > 0
+    harm_ll, harm_ma = ll["ci975_two_sided"][1] < 0, ma["ci975_two_sided"][1] < 0
+    if (pass_ll and not harm_ma) or (pass_ma and not harm_ll):
+        verdict = ROLE_B_PASS
+    elif ll["point"] <= 0 and ma["point"] <= 0:
+        verdict = ROLE_B_FAIL
+    elif harm_ll or harm_ma:
+        verdict = ROLE_B_FAIL
+    else:
+        verdict = ROLE_B_WEAK
+
+    res = {
+        "stage": "23C", "dataset": "GSE279162", "role": "B",
+        "plan": {"file": PLAN.name, "version": PLAN_VERSION,
+                 "canonical_lf_sha256": canonical_text_sha256(PLAN)},
+        "protocol_sha256": sha256_file(_RESULTS / "stage23_protocol.json"),
+        "models": {"W0": "U", "W1": "B + U", "W2": "X", "W3": "X + U", "W4": "X + B + U"},
+        "nuisance_block_B": list(WM989_NUISANCE),
+        "treatment_coding": {"order": list(TREATMENT_ORDER), "reference": REFERENCE_TREATMENT},
+        "primary_comparison": "W4 vs W1 on both endpoints",
+        "interaction_terms_present": False,
+        "endpoints": out,
+        "convergence_warnings": convergence,
+        "verdict": verdict,
+        "verdict_is_provisional_until": "23E structural controls + "
+                                        "ROLE_B_ADDITIVE_PERMUTATION_PASS",
+    }
+    WM989_RESULTS.write_text(json.dumps(res, indent=2), encoding="utf-8", newline="\n")
+    return res
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Stage 23 learnability gate")
-    ap.add_argument("--stage", default="23a", choices=["23a", "23b"])
+    ap.add_argument("--stage", default="23a", choices=["23a", "23b", "23c"])
     ap.add_argument("--rewind-root", type=Path, default=S21D.REWIND)
     ap.add_argument("--wm989-root", type=Path, default=S21D.WM989)
     args = ap.parse_args(argv)
     _RESULTS.mkdir(exist_ok=True)
     _CACHE.mkdir(parents=True, exist_ok=True)
+
+    if args.stage == "23c":
+        r = run_23c(args.wm989_root)
+        for ep in ("C1", "C2"):
+            e = r["endpoints"][ep]
+            key = list(e["pooled_oof_metrics"]["W0"])[0]
+            print(f"  {ep} {key}: " + "  ".join(
+                f"{m}={e['pooled_oof_metrics'][m][key]:.5f}" for m in ("W0","W1","W2","W3","W4")))
+            d = e["inference"]["delta_state_W1_minus_W4"]
+            print(f"      delta(W1-W4) = {d['point']:+.5f}  95% {d['ci95']}  97.5% {d['ci975_two_sided']}")
+        print("OVERALL:", r["verdict"])
+        return 0
 
     if args.stage == "23b":
         r = run_23b(args.rewind_root)

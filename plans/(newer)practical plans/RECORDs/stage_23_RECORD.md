@@ -174,6 +174,29 @@ the first substage that fits an estimator.
 **PROVISIONAL VERDICT: `ROLE_A_SIGNAL_PASS`** — provisional until 23E structural controls and
 `ROLE_A_PERMUTATION_PASS`.
 
+### FROZEN 23B HEADLINE — accepted 2026-08-22, not to be re-run or re-tuned
+
+The 23B protocol, models, folds, preprocessing, hyperparameters, metrics and thresholds are
+**frozen exactly as reported**. Six facts carry forward together; quoting the verdict without them
+would misrepresent the result.
+
+```text
+1. dAP_state = AP(R3) - AP(R1) = +0.01050   95% CI [+0.00397, +0.02258]
+2. fold-wise R3-R1 positive in 5/5 folds    DIAGNOSTIC ONLY, not a gate
+3. absolute signal is WEAK                  AP(R3) = 0.02085 , ROC-AUC = 0.6628
+4. R3 does NOT improve log loss or Brier over the prevalence model R0
+       log loss  R3 0.06209  vs  R0 0.06109      (R3 worse)
+       Brier     R3 0.011078 vs  R0 0.010998     (R3 worse)
+5. R1 is WORSE than R0 (AP 0.01035 vs 0.01112, ROC-AUC 0.4747, below chance),
+   so the Rewind nuisance baseline is poor and dAP_state is partly "R1 is weak"
+6. FINAL Role-A PASS still requires the 23E permutation gate
+       ROLE_A_PERMUTATION_PASS + STRUCTURAL_CONTROLS_PASS
+```
+
+Point 4 deserves emphasis: the state signal shows up as **ranking** improvement (AP, ROC-AUC), not
+as better-calibrated probabilities. A model that ranks slightly better while scoring marginally
+worse on log loss and Brier than a constant is a weak-signal signature, not a usable classifier.
+
 ### Pooled out-of-fold metrics (3,147 clones, 35 positive)
 
 ```text
@@ -261,3 +284,152 @@ observed `ΔAP_state` beats its permutation null.
 
 ## Next action
 23C — WM989 additive state-signal gate. Not started.
+
+---
+
+# 23C — WM989 additive state-signal gate
+
+## Goal
+Ask whether pretreatment `X` adds beyond treatment `U` and captured naive clone abundance `B`, on
+two descriptive future endpoints. **No interaction terms** — those are 23D.
+
+## Inputs
+- 23A protocol (`PROTOCOL_FROZEN`), referenced by SHA-256; clone `X` re-verified against its
+  committed content hash before use
+- frozen Stage-22 WM989 outer folds, `n_post_cells`, and the four nuisance columns
+- `B = log1p(n_naive_cells) + log1p(n_naive1_cells) + log1p(n_naive2_cells) + log1p(n_naive3_cells)`
+- treatment coding frozen: canonical order `Acid, Cisplatin, CoCl2, Dabrafenib, Doxorubicin,
+  Trametinib`, reference `Acid`, five non-reference dummies, never standardized
+
+## Files added
+- `results/stage23_wm989_detection_oof.csv` (8,406 rows) ·
+  `results/stage23_wm989_abundance_oof.csv` (2,256 rows) ·
+  `results/stage23_wm989_results.json`
+
+## Files modified
+- `experiments/run_stage23_learnability_gate.py` — `--stage 23c`; 23A/23B untouched
+- `tests/test_stage23_learnability_gate.py` — 15 further contracts (51 total)
+
+## Tests
+- 1887 passed · ruff clean (CI scope) · **0 convergence warnings**
+
+## Result
+
+**VERDICT: `ROLE_B_ADDITIVE_PASS`** — provisional until 23E structural controls and
+`ROLE_B_ADDITIVE_PERMUTATION_PASS`.
+
+The PASS rests entirely on **C1 detection**. C2 conditional abundance is not significant, and is
+not significantly worse — which is exactly the pre-registered condition for the other endpoint.
+
+### C1 — future clone detection (8,406 rows, 1,401 clones)
+
+```text
+model                  log loss        AP     ROC-AUC      Brier
+W0  U                   0.55992   0.36895     0.60973    0.18716
+W1  B + U               0.47832   0.61365     0.76410    0.15356
+W2  X                   0.54772   0.40072     0.68358    0.18290
+W3  X + U               0.52408   0.49944     0.71531    0.17226
+W4  X + B + U           0.46895   0.63190     0.77983    0.14998
+
+ΔLL_state = logloss(W1) - logloss(W4) = +0.00937
+    95%   CI [+0.00583, +0.01259]
+    97.5% CI [+0.00516, +0.01315]      P(Δ ≤ 0) = 0.0000
+```
+
+### C2 — conditional future abundance (2,256 nonzero rows, 929 clones)
+
+```text
+model      clone-balanced MAE   clone-balanced RMSE   mean treatment Spearman
+W0  U                 0.58423               0.82872                  -0.10189
+W1  B + U             0.51449               0.76305                  +0.36283
+W2  X                 0.59963               0.83582                  +0.12475
+W3  X + U             0.58048               0.82046                  +0.10850
+W4  X + B + U         0.51008               0.75131                  +0.39987
+
+ΔMAE_state = MAE(W1) - MAE(W4) = +0.00441
+    95%   CI [-0.00184, +0.01048]
+    97.5% CI [-0.00247, +0.01111]      P(Δ ≤ 0) = 0.0830
+```
+
+Per-treatment Spearman on pooled OOF (secondary):
+
+```text
+model      Acid  Cisplatin   CoCl2  Dabrafenib  Doxorubicin  Trametinib
+W0      -0.0465    -0.1172 -0.0829     -0.1013      -0.0917     -0.1717
+W1      +0.6162    +0.4658 +0.3491     +0.1902      +0.4150     +0.1407
+W4      +0.5892    +0.4761 +0.3469     +0.2901      +0.4235     +0.2734
+```
+
+### Selected hyperparameters per outer fold (`K / C` for C1, `K / alpha` for C2)
+
+```text
+C1   fold      W0        W1        W2        W3        W4
+     0      None/10   None/10     50/1      50/1      50/1
+     1      None/10    None/1     50/1      50/1      50/1
+     2      None/10   None/10    50/10     50/10      50/1
+     3      None/10    None/1    50/10      50/1      50/1
+     4      None/10   None/10     50/1      50/1      50/1
+
+C2   fold      W0        W1        W2        W3        W4
+     0     None/0.1    None/1   10/0.1    10/0.1     20/10
+     1       None/1   None/10   10/100    10/0.1     50/10
+     2     None/0.1    None/1   10/0.1    10/0.1      20/1
+     3     None/0.1   None/10   10/0.1    10/0.1     20/10
+     4     None/0.1   None/10   10/0.1    10/0.1     50/10
+```
+
+Every C1 X-model selected `K = 50`; C2 selected `K = 10` for the X-only models and 20–50 once `B`
+was present. Retained outer-training genes: 18,227–18,411 (C1), 19,026–19,256 (C2).
+
+## Bugs found
+1. **A duplicate test name.** The 23C hyperparameter contract was written with the same function
+   name as the 23B one, so Python would have silently replaced the 23B test and it would never
+   have run again. Ruff's `F811` caught it; renamed, and a check confirms all 51 test names are
+   now unique. A shadowed test is worse than a missing one — it still shows up as coverage
+2. No deviations from the frozen protocol, no failed assumptions, and no convergence warnings
+
+## Deviations / clarifications
+- V2 §3.6 restricts the C2 dataset to nonzero rows **after** the outer split is known. It does not
+  spell out which clone set the C2 gene filter / scaler / PCA is fitted on. Implemented as: fitted
+  on the **C2-eligible outer-training clones** — the actual training population — never on clones
+  outside the analysis set. Recorded here because it is a reading of the plan rather than a
+  quotation of it
+- Expression transforms are fitted on **unique clones**, not on repeated clone×treatment rows, so a
+  clone observed under six treatments does not get six times the weight in the PCA basis
+
+## Scientific interpretation
+**Proves:** on the detection endpoint, pretreatment state adds a small but reliably positive amount
+beyond treatment identity and captured naive abundance. The lower 97.5% bound clears zero
+(`+0.00516`) and no bootstrap replicate out of 2,000 put Δ at or below zero.
+
+**The result that matters more than the verdict: `B` is doing most of the work.**
+
+```text
+C1 log-loss gain from adding B to U      0.55992 -> 0.47832   = 0.0816
+C1 log-loss gain from adding X to B+U    0.47832 -> 0.46895   = 0.0094
+```
+
+Captured clone abundance buys roughly **nine times** what pretreatment expression adds on top of
+it. This is precisely the confound Stage 22 measured (observed-zero rate 87.1% → 32.6% across
+capture depth), and it is why V2 §1.2.1 made the total-depth term mandatory before any fitting. A
+Role-B PASS here means "X adds a little beyond a strong abundance baseline", not "X predicts
+treatment response".
+
+**Does NOT prove:**
+
+- **Anything on conditional abundance.** `ΔMAE_state` is `+0.0044` with a 97.5% interval spanning
+  zero and `P(Δ ≤ 0) = 0.083`. Under the pre-registered rule this endpoint contributes only the
+  "not significantly worse" half of the PASS. It must not be reported as a positive finding.
+- **That `X` is useful alone.** `W2` (X only) is *worse* than `W0` (treatment only) on C2 MAE
+  (`0.59963` vs `0.58423`), and its mean treatment Spearman is `+0.125` against `W1`'s `+0.363`.
+  Pretreatment expression without the abundance baseline is a poor predictor here.
+- **That the interaction question is answered.** No `X × U` term was fitted. The C2 per-treatment
+  Spearman table shows `W4` improving over `W1` mainly on Dabrafenib (`+0.190 → +0.290`) and
+  Trametinib (`+0.141 → +0.273`) while being flat or slightly lower elsewhere — a *hint* that the
+  state contribution may be treatment-dependent, which is exactly what 23D exists to test properly.
+  It is recorded as a secondary observation and carries no inferential weight here.
+
+The verdict is provisional until 23E.
+
+## Next action
+23D — WM989 explicit interaction gate. Not started.

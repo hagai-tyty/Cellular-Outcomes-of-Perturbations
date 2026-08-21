@@ -467,3 +467,176 @@ def test_no_target_or_provenance_column_reached_the_design_matrix():
 def test_the_results_reference_the_protocol_that_was_frozen_in_23a(rb):
     assert rb["protocol_sha256"] == S23.sha256_file(RES / "stage23_protocol.json")
     assert rb["plan"]["version"] == "V2"
+
+
+# ================================================================================================ #
+# 23C — WM989 additive state-signal gate
+# ================================================================================================ #
+WM989_RESULTS = RES / "stage23_wm989_results.json"
+C1_OOF = RES / "stage23_wm989_detection_oof.csv"
+C2_OOF = RES / "stage23_wm989_abundance_oof.csv"
+ran_23c = pytest.mark.skipif(not WM989_RESULTS.exists(), reason="23C has not been run")
+
+
+@pytest.fixture(scope="module")
+def wb():
+    return json.loads(WM989_RESULTS.read_text(encoding="utf-8"))
+
+
+@ran_23c
+def test_exactly_w0_to_w4_are_present_and_no_interaction_yet(wb):
+    """23C is the ADDITIVE gate. X x U belongs to 23D and must not leak forward."""
+    assert set(wb["models"]) == {"W0", "W1", "W2", "W3", "W4"}
+    assert wb["models"] == {"W0": "U", "W1": "B + U", "W2": "X", "W3": "X + U",
+                            "W4": "X + B + U"}
+    assert wb["interaction_terms_present"] is False
+    assert "W5" not in json.dumps(wb)
+    assert wb["primary_comparison"] == "W4 vs W1 on both endpoints"
+
+
+@ran_23c
+def test_the_nuisance_block_is_the_four_frozen_terms(wb):
+    assert wb["nuisance_block_B"] == list(S23.WM989_NUISANCE)
+    assert "log1p(n_naive_cells)" in wb["nuisance_block_B"], "total captured depth is mandatory"
+
+
+@ran_23c
+def test_the_treatment_coding_is_the_frozen_case_sensitive_one(wb):
+    assert wb["treatment_coding"]["order"] == list(S23.TREATMENT_ORDER)
+    assert wb["treatment_coding"]["reference"] == "Acid"
+    d = S23.treatment_dummies(np.array(["Acid", "CoCl2", "Trametinib"]))
+    assert d.shape == (3, 5), "five non-reference dummies"
+    assert d[0].sum() == 0, "the reference level is all-zero"
+    assert d[1].sum() == 1 and d[2].sum() == 1
+
+
+@ran_23c
+def test_c1_covers_every_clone_treatment_row_and_c2_only_the_nonzero_ones(wb):
+    c1, c2 = pd.read_csv(C1_OOF), pd.read_csv(C2_OOF)
+    assert len(c1) == 8406 == wb["endpoints"]["C1"]["rows"]
+    assert c1["clone_id"].nunique() == 1401
+    assert (c1.groupby("clone_id").size() == 6).all(), "all six treatments per clone"
+    assert len(c2) == 2256 == wb["endpoints"]["C2"]["rows"]
+    assert c2["clone_id"].nunique() == 929 == wb["endpoints"]["C2"]["clones"]
+    ct = pd.read_csv(RES / "stage22_wm989_clone_treatment.csv")
+    nz = ct[ct.n_post_cells > 0]
+    assert set(map(tuple, c2[["clone_id", "treatment"]].to_numpy())) == set(
+        map(tuple, nz[["clone_id", "treatment"]].to_numpy()))
+
+
+@ran_23c
+def test_c1_target_is_detection_and_is_never_renamed_resistance(wb):
+    c1 = pd.read_csv(C1_OOF)
+    ct = pd.read_csv(RES / "stage22_wm989_clone_treatment.csv").sort_values(
+        ["clone_id", "treatment"]).reset_index(drop=True)
+    assert (c1["y"].to_numpy() == (ct["n_post_cells"].to_numpy() > 0).astype(int)).all()
+    blob = json.dumps(wb).lower()
+    for word in ("resistant", "resistance", "survival", "death"):
+        assert word not in blob, f"C1 detection must not be renamed {word!r}"
+
+
+@ran_23c
+def test_c2_target_is_log1p_of_the_nonzero_count(wb):
+    c2 = pd.read_csv(C2_OOF)
+    ct = pd.read_csv(RES / "stage22_wm989_clone_treatment.csv")
+    nz = ct[ct.n_post_cells > 0].sort_values(["clone_id", "treatment"]).reset_index(drop=True)
+    assert np.allclose(c2.sort_values(["clone_id", "treatment"])["y"].to_numpy(),
+                       np.log1p(nz["n_post_cells"].to_numpy()))
+
+
+@ran_23c
+def test_the_c2_metric_is_clone_balanced_not_row_averaged(wb):
+    """A clone seen under five treatments must not count as five independent units."""
+    c2 = pd.read_csv(C2_OOF)
+    err = np.abs(c2["y"] - c2["pred_W4"])
+    row_mean = float(err.mean())
+    clone_balanced = float(pd.DataFrame({"c": c2["clone_id"], "e": err})
+                           .groupby("c")["e"].mean().mean())
+    reported = wb["endpoints"]["C2"]["pooled_oof_metrics"]["W4"]["clone_balanced_MAE"]
+    assert abs(reported - clone_balanced) < 1e-9
+    assert abs(reported - row_mean) > 1e-9, "the two must actually differ, else the test is vacuous"
+
+
+@ran_23c
+def test_wm989_hyperparameters_come_only_from_the_frozen_grids(wb):
+    for ep, grid in (("C1", S23.LOGISTIC_C), ("C2", S23.RIDGE_ALPHA)):
+        sel = wb["endpoints"][ep]["selected_hyperparameters_per_outer_fold"]
+        assert len(sel) == 5
+        for f, models in sel.items():
+            for m, v in models.items():
+                assert v["hp"] in grid, (ep, f, m, v)
+                if m in ("W0", "W1"):
+                    assert v["K"] is None, f"{m} uses no expression block"
+                else:
+                    assert v["K"] in S23.K_CANDIDATES, (ep, f, m)
+
+
+@ran_23c
+def test_the_outer_folds_are_the_frozen_stage22_ones(wb):
+    frozen = pd.read_csv(RES / "stage22_wm989_clones.csv").set_index("clone_id")["outer_fold"]
+    for path in (C1_OOF, C2_OOF):
+        df = pd.read_csv(path)
+        assert (df["clone_id"].map(frozen).to_numpy() == df["outer_fold"].to_numpy()).all()
+        assert df.groupby("clone_id")["outer_fold"].nunique().max() == 1
+
+
+@ran_23c
+def test_the_bootstrap_resamples_clones_and_carries_their_rows(wb):
+    for ep, seed, n in (("C1", 23223, 1401), ("C2", 23224, 929)):
+        d = wb["endpoints"][ep]["inference"]["delta_state_W1_minus_W4"]
+        assert d["seed"] == seed and d["replicates"] == 2000
+        assert d["bootstrap_unit"] == "clone" and d["clones_resampled"] == n
+        assert len(d["ci95"]) == 2 and len(d["ci975_two_sided"]) == 2
+        assert d["ci975_two_sided"][0] <= d["ci95"][0], "97.5% interval must be the wider one"
+        assert d["ci975_two_sided"][1] >= d["ci95"][1]
+
+
+@ran_23c
+def test_the_reported_delta_equals_w1_minus_w4(wb):
+    for ep in ("C1", "C2"):
+        e = wb["endpoints"][ep]
+        d = e["inference"]["delta_state_W1_minus_W4"]
+        key = d["metric"]
+        expect = e["pooled_oof_metrics"]["W1"][key] - e["pooled_oof_metrics"]["W4"][key]
+        assert abs(d["point"] - expect) < 1e-12
+
+
+@ran_23c
+def test_the_verdict_is_derived_from_the_pre_registered_rule(wb):
+    ll = wb["endpoints"]["C1"]["inference"]["delta_state_W1_minus_W4"]
+    ma = wb["endpoints"]["C2"]["inference"]["delta_state_W1_minus_W4"]
+    pass_ll, pass_ma = ll["ci975_two_sided"][0] > 0, ma["ci975_two_sided"][0] > 0
+    harm_ll, harm_ma = ll["ci975_two_sided"][1] < 0, ma["ci975_two_sided"][1] < 0
+    if (pass_ll and not harm_ma) or (pass_ma and not harm_ll):
+        expected = S23.ROLE_B_PASS
+    elif ll["point"] <= 0 and ma["point"] <= 0:
+        expected = S23.ROLE_B_FAIL
+    elif harm_ll or harm_ma:
+        expected = S23.ROLE_B_FAIL
+    else:
+        expected = S23.ROLE_B_WEAK
+    assert wb["verdict"] == expected
+    src = SRC.read_text(encoding="utf-8")
+    assert '"verdict": "ROLE_B' not in src, "the verdict must not be hard-coded"
+
+
+@ran_23c
+def test_the_abundance_baseline_is_load_bearing_and_visible(wb):
+    """The whole point of V2 §1.2.1: W1 must be a serious competitor, not a formality."""
+    c1 = wb["endpoints"]["C1"]["pooled_oof_metrics"]
+    assert c1["W1"]["log_loss"] < c1["W0"]["log_loss"], "B must improve on treatment-only"
+    b_gain = c1["W0"]["log_loss"] - c1["W1"]["log_loss"]
+    x_gain = c1["W1"]["log_loss"] - c1["W4"]["log_loss"]
+    assert b_gain > x_gain, "if X ever exceeds B here, re-read the confound before believing it"
+
+
+@ran_23c
+def test_no_convergence_warning_was_swallowed(wb):
+    assert wb["convergence_warnings"] == [], wb["convergence_warnings"]
+
+
+@ran_23c
+def test_the_results_reference_the_23a_protocol(wb):
+    assert wb["protocol_sha256"] == S23.sha256_file(RES / "stage23_protocol.json")
+    assert wb["plan"]["version"] == "V2"
+    assert "23E" in wb["verdict_is_provisional_until"]
