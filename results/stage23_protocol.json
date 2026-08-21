@@ -1,0 +1,357 @@
+{
+  "stage": "23A",
+  "plan": {
+    "file": "STAGE_23_LEARNABILITY_INTERACTION_GATE_V2.md",
+    "version": "V2",
+    "canonical_lf_sha256": "bc783e6b7da8102de5b73dd50dbe02861c92d2ca907c0a80d2e2a1c37561df69"
+  },
+  "stage22_benchmark_commit": "8d6011a",
+  "builder_source_canonical_lf_sha256": "bbc528f8aad270e3f1fd4d38a8526b8cd01f4138ca46ffe7a9351e6c9af5d86c",
+  "hash_rule": {
+    "binary_artifacts": "sha256 of exact bytes",
+    "text_sources": "sha256 after canonicalising CRLF and CR to LF"
+  },
+  "seeds": {
+    "protocol_pca_and_inner_cv": 23023,
+    "bootstrap_rewind": 23123,
+    "bootstrap_wm989_c1": 23223,
+    "bootstrap_wm989_c2": 23224,
+    "permutation_base": 23323
+  },
+  "outer_cv": {
+    "folds": 5,
+    "unit": "clone",
+    "source": "frozen Stage-22 outer_fold; never recomputed"
+  },
+  "inner_cv": {
+    "folds": 3,
+    "rewind": "StratifiedKFold(shuffle=True, random_state=23023) on clones; every inner fold must contain both classes",
+    "wm989": "GroupKFold(groups=clone_id) over deterministically sorted clone ids",
+    "wm989_c2": "restricted to outer-training clones with >=1 nonzero row, after the outer split is known"
+  },
+  "representation": {
+    "pseudobulk": "sum raw pretreatment counts per clone",
+    "normalization": "CP10K then log1p, exactly once",
+    "gene_filter": "detected in >= max(5, ceil(0.01 * n_training_clones)) and var > 0, fitted on the applicable TRAINING split only",
+    "pca": {
+      "impl": "sklearn.decomposition.PCA",
+      "svd_solver": "randomized",
+      "random_state": 23023,
+      "fit_once_at_max_K_then_reuse_prefixes": true
+    },
+    "k_candidates": [
+      10,
+      20,
+      50
+    ],
+    "standardization": "genes standardized train-only; PC scores standardized again train-only; continuous nuisance standardized train-only; treatment dummies never standardized"
+  },
+  "grids": {
+    "logistic": {
+      "penalty": "l2",
+      "solver": "liblinear",
+      "C": [
+        0.01,
+        0.1,
+        1,
+        10
+      ],
+      "fit_intercept": true,
+      "class_weight": null,
+      "max_iter": 5000,
+      "random_state": 23023
+    },
+    "ridge": {
+      "alpha": [
+        0.1,
+        1,
+        10,
+        100
+      ],
+      "fit_intercept": true
+    }
+  },
+  "tie_break": [
+    "smaller K",
+    "stronger regularization (smaller C / larger alpha)"
+  ],
+  "treatment_coding": {
+    "canonical_order": [
+      "Acid",
+      "Cisplatin",
+      "CoCl2",
+      "Dabrafenib",
+      "Doxorubicin",
+      "Trametinib"
+    ],
+    "reference": "Acid",
+    "n_dummies": 5,
+    "case_sensitive_match_to_stage22": true,
+    "standardized": false
+  },
+  "nuisance_blocks": {
+    "rewind": [
+      "log1p(n_pretreatment_cells)",
+      "n_lanes"
+    ],
+    "wm989": [
+      "log1p(n_naive_cells)",
+      "log1p(n_naive1_cells)",
+      "log1p(n_naive2_cells)",
+      "log1p(n_naive3_cells)"
+    ]
+  },
+  "inner_selection_metric": {
+    "rewind": "maximize mean average_precision_score",
+    "wm989_c1": "minimize mean clone-balanced log loss",
+    "wm989_c2": "minimize mean clone-balanced MAE"
+  },
+  "c2_sample_weight": "1 / n_nonzero_rows_for_that_clone_in_the_training_subset, renormalised to mean 1",
+  "inference": {
+    "bootstrap_replicates": 2000,
+    "permutations": 200,
+    "permutation_p": "(1 + #{null >= observed}) / (n_perm + 1)"
+  },
+  "feature_firewall": {
+    "primary_x": "pretreatment Gene Expression features only",
+    "wm989_custom_lineage_features_forbidden": true,
+    "stage23_tightened_vs_stage22": {
+      "post_tie_size": {
+        "stage22": "PROVENANCE_ONLY",
+        "stage23": "TARGET"
+      },
+      "treatment_total_assigned_cells": {
+        "stage22": "BASELINE_NUISANCE",
+        "stage23": "TARGET"
+      }
+    },
+    "rule": "Stage 23 may tighten eligibility; it may never loosen a Stage-22 forbidden/target/provenance field into PRIMARY_X"
+  },
+  "model_fitted": false,
+  "input_audit": {
+    "verdict": "STAGE22_INPUTS_AUDITED",
+    "failed_checks": [],
+    "n_checks": 38,
+    "checks": {
+      "six_benchmark_csv_hashes_match_manifests": {
+        "ok": true
+      },
+      "two_manifest_hashes_match_results": {
+        "ok": true
+      },
+      "results_file_omits_its_own_hash": {
+        "ok": true
+      },
+      "role_a_ready": {
+        "ok": true,
+        "detail": "BENCHMARK_READY_WITH_DECLARED_MISSINGNESS"
+      },
+      "all_gates_pass_true": {
+        "ok": true
+      },
+      "every_individual_gate_true": {
+        "ok": true,
+        "detail": "all true"
+      },
+      "model_fitted_false": {
+        "ok": true
+      },
+      "preflight_derived_independently_of_overall_string": {
+        "ok": true
+      },
+      "stage22_overall_string_for_reference_only": {
+        "ok": true,
+        "detail": "STAGE_23_READY"
+      },
+      "role_b_status_preserved_separately": {
+        "ok": true,
+        "detail": "BENCHMARK_READY_WITH_DECLARED_MISSINGNESS"
+      },
+      "known_stage22_gate_derivation_limitation": {
+        "ok": true,
+        "detail": "Stage 22 derives `overall` from the Role-A verdict without consuming all_gates_pass. Unaffected here because all ten gates are true, and Stage 23 fails closed on the derived condition above regardless."
+      },
+      "inherited_crlf_lf_provenance_limitation": {
+        "ok": true,
+        "detail": {
+          "stage22_plan": {
+            "recorded": "b26db9fef09359791013d54c7f6e8ea4843d5ccfc3e2823f8794bd67a0bc1ff9",
+            "checkout_bytes": "b26db9fef09359791013d54c7f6e8ea4843d5ccfc3e2823f8794bd67a0bc1ff9",
+            "canonical_lf": "fd671ad6ea0dff668883b11d2f645436257f0780efe1d9e034413662b34d766a"
+          },
+          "stage22_builder": {
+            "recorded": "785b9811cee22fe6b28173dbbe7bd109d519c81cba2592aa4410c6ed7a4cc7b9",
+            "checkout_bytes": "785b9811cee22fe6b28173dbbe7bd109d519c81cba2592aa4410c6ed7a4cc7b9",
+            "canonical_lf": "dfd047eff9fb82d0303c24743416d5a3ddc524076976074adceb435cb5d704a7"
+          },
+          "note": "content-identical; digests differ only by line endings. Stage-22 tables are NOT rewritten to hide this."
+        }
+      },
+      "canonical_text_hash_is_lf_crlf_invariant": {
+        "ok": true
+      },
+      "rewind_counts": {
+        "ok": true
+      },
+      "wm989_counts": {
+        "ok": true
+      },
+      "rewind_positive_clones_per_fold": {
+        "ok": true
+      },
+      "outer_folds_are_five_each": {
+        "ok": true
+      },
+      "rewind_cell_fold_matches_clone_fold": {
+        "ok": true
+      },
+      "wm989_clone_treatment_fold_matches_clone_fold": {
+        "ok": true
+      },
+      "wm989_c2_eligible_clones_929": {
+        "ok": true,
+        "detail": 929
+      },
+      "treatments_match_frozen_case_sensitive": {
+        "ok": true
+      },
+      "reference_treatment_present_case_sensitive": {
+        "ok": true
+      },
+      "wm989_nuisance_column_n_naive_cells": {
+        "ok": true
+      },
+      "wm989_nuisance_column_n_naive1_cells": {
+        "ok": true
+      },
+      "wm989_nuisance_column_n_naive2_cells": {
+        "ok": true
+      },
+      "wm989_nuisance_column_n_naive3_cells": {
+        "ok": true
+      },
+      "rewind_nuisance_column_n_pretreatment_cells": {
+        "ok": true
+      },
+      "rewind_nuisance_column_n_lanes": {
+        "ok": true
+      },
+      "GSE227151_raw_files_present_and_identical": {
+        "ok": true,
+        "detail": {
+          "missing": [],
+          "mismatched": [],
+          "checked": 11
+        }
+      },
+      "GSE279162_raw_files_present_and_identical": {
+        "ok": true,
+        "detail": {
+          "missing": [],
+          "mismatched": [],
+          "checked": 29
+        }
+      },
+      "every_expression_column_index_resolves": {
+        "ok": true,
+        "detail": 0
+      },
+      "expression_sources_exist": {
+        "ok": true
+      },
+      "every_sample_has_36601_gene_expression_features": {
+        "ok": true,
+        "detail": {
+          "GSM7092515_1_2_control_features.tsv.gz": 36601,
+          "GSM7092516_1_1_control_features.tsv.gz": 36601,
+          "GSM8562999_Naive1_filtered_features.tsv.gz": 36601,
+          "GSM8563000_Naive2_filtered_features.tsv.gz": 36601,
+          "GSM8563001_Naive3_filtered_features.tsv.gz": 36601,
+          "GSM8563002_Dabrafenib_filtered_features.tsv.gz": 36601,
+          "GSM8563003_Trametinib_filtered_features.tsv.gz": 36601,
+          "GSM8563004_CoCl2_filtered_features.tsv.gz": 36601,
+          "GSM8563005_Acid_filtered_features.tsv.gz": 36601,
+          "GSM8563006_Cisplatin_filtered_features.tsv.gz": 36601,
+          "GSM8563007_Doxorubicin_filtered_features.tsv.gz": 36601
+        }
+      },
+      "wm989_custom_block_is_153055_where_present": {
+        "ok": true
+      },
+      "gene_block_is_the_first_36601_rows": {
+        "ok": true
+      },
+      "all_samples_share_one_gene_feature_id_list": {
+        "ok": true,
+        "detail": {
+          "distinct_signatures": 1,
+          "samples": 11
+        }
+      },
+      "wm989_targets_rebuild_from_treated_cells_only": {
+        "ok": true,
+        "detail": {
+          "rows": 8406,
+          "max_abs_diff": 0,
+          "naive_cells_used": 0
+        }
+      },
+      "wm989_inherited_joint_assignment_dependency": {
+        "ok": true,
+        "detail": "199/39,665 = 0.50% of treated assignments differ if the author pipeline is rerun on treated cells only. Declared limitation per V2 \u00a71.2.1; the frozen Stage-22 target is NOT rebuilt. No pretreatment Gene Expression value enters any target."
+      }
+    }
+  },
+  "expression_manifests": {
+    "GSE227151": {
+      "dataset": "GSE227151",
+      "clones": 3147,
+      "genes": 36601,
+      "nnz": 15880583,
+      "density": 0.137872,
+      "pretreatment_cells_summed": 3905,
+      "cells_per_clone": {
+        "min": 1,
+        "median": 1,
+        "max": 11
+      },
+      "source_samples": [
+        "GSM7092515_1_2_control_matrix.mtx.gz",
+        "GSM7092516_1_1_control_matrix.mtx.gz"
+      ],
+      "normalization": "sum raw counts per clone -> CP10K -> log1p, applied exactly once",
+      "feature_key": "stable 10x feature id (column 1 of features.tsv), never symbol or row index",
+      "feature_id_sha256": "3a5b3f31ab21773f83f8c2c52b9f543bc56dcbd1b9ff68db3afc99616b492193",
+      "clone_id_sha256": "ecb1f602e61a2b88fbd0e213f2efd38f2253911784d186079bfa5f470927b80a",
+      "matrix_content_sha256": "0279e28e9932f275cbdd2219de54803458bcca9916da4e6533f268e7b373aa44",
+      "committed_to_git": false,
+      "cache_path_note": "materialised under _cc_cache/stage23/ which is gitignored; the content hash above is what makes a rebuild verifiable"
+    },
+    "GSE279162": {
+      "dataset": "GSE279162",
+      "clones": 1401,
+      "genes": 36601,
+      "nnz": 10697195,
+      "density": 0.208612,
+      "pretreatment_cells_summed": 6489,
+      "cells_per_clone": {
+        "min": 1,
+        "median": 2,
+        "max": 88
+      },
+      "source_samples": [
+        "GSM8562999_Naive1_filtered_matrix.mtx.gz",
+        "GSM8563000_Naive2_filtered_matrix.mtx.gz",
+        "GSM8563001_Naive3_filtered_matrix.mtx.gz"
+      ],
+      "normalization": "sum raw counts per clone -> CP10K -> log1p, applied exactly once",
+      "feature_key": "stable 10x feature id (column 1 of features.tsv), never symbol or row index",
+      "feature_id_sha256": "3a5b3f31ab21773f83f8c2c52b9f543bc56dcbd1b9ff68db3afc99616b492193",
+      "clone_id_sha256": "8b0d3344f0b29da3ea263a37ce3d5528371beed95da0667d0ee2b417dcb2b227",
+      "matrix_content_sha256": "75a9735dcaf1f23335f1e613d752bfde360dd60ba46dd2f7290898fc2d0e8685",
+      "committed_to_git": false,
+      "cache_path_note": "materialised under _cc_cache/stage23/ which is gitignored; the content hash above is what makes a rebuild verifiable"
+    }
+  },
+  "verdict": "PROTOCOL_FROZEN"
+}

@@ -1,0 +1,79 @@
+{
+  "note": "descriptive only; the estimator pipeline refits this filter inside every inner split per V2 SS2.5",
+  "per_dataset": {
+    "GSE227151": {
+      "0": {
+        "outer_training_clones": 2517,
+        "detection_floor": 26,
+        "retained_genes": 13610,
+        "max_feasible_K": 2517,
+        "all_K_feasible": true
+      },
+      "1": {
+        "outer_training_clones": 2517,
+        "detection_floor": 26,
+        "retained_genes": 13589,
+        "max_feasible_K": 2517,
+        "all_K_feasible": true
+      },
+      "2": {
+        "outer_training_clones": 2518,
+        "detection_floor": 26,
+        "retained_genes": 13627,
+        "max_feasible_K": 2518,
+        "all_K_feasible": true
+      },
+      "3": {
+        "outer_training_clones": 2518,
+        "detection_floor": 26,
+        "retained_genes": 13606,
+        "max_feasible_K": 2518,
+        "all_K_feasible": true
+      },
+      "4": {
+        "outer_training_clones": 2518,
+        "detection_floor": 26,
+        "retained_genes": 13607,
+        "max_feasible_K": 2518,
+        "all_K_feasible": true
+      }
+    },
+    "GSE279162": {
+      "0": {
+        "outer_training_clones": 1120,
+        "detection_floor": 12,
+        "retained_genes": 18385,
+        "max_feasible_K": 1120,
+        "all_K_feasible": true
+      },
+      "1": {
+        "outer_training_clones": 1121,
+        "detection_floor": 12,
+        "retained_genes": 18411,
+        "max_feasible_K": 1121,
+        "all_K_feasible": true
+      },
+      "2": {
+        "outer_training_clones": 1121,
+        "detection_floor": 12,
+        "retained_genes": 18270,
+        "max_feasible_K": 1121,
+        "all_K_feasible": true
+      },
+      "3": {
+        "outer_training_clones": 1121,
+        "detection_floor": 12,
+        "retained_genes": 18227,
+        "max_feasible_K": 1121,
+        "all_K_feasible": true
+      },
+      "4": {
+        "outer_training_clones": 1121,
+        "detection_floor": 12,
+        "retained_genes": 18361,
+        "max_feasible_K": 1121,
+        "all_K_feasible": true
+      }
+    }
+  }
+}

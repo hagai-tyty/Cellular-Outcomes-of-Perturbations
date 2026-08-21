@@ -1,0 +1,24 @@
+{
+  "dataset": "GSE227151",
+  "clones": 3147,
+  "genes": 36601,
+  "nnz": 15880583,
+  "density": 0.137872,
+  "pretreatment_cells_summed": 3905,
+  "cells_per_clone": {
+    "min": 1,
+    "median": 1,
+    "max": 11
+  },
+  "source_samples": [
+    "GSM7092515_1_2_control_matrix.mtx.gz",
+    "GSM7092516_1_1_control_matrix.mtx.gz"
+  ],
+  "normalization": "sum raw counts per clone -> CP10K -> log1p, applied exactly once",
+  "feature_key": "stable 10x feature id (column 1 of features.tsv), never symbol or row index",
+  "feature_id_sha256": "3a5b3f31ab21773f83f8c2c52b9f543bc56dcbd1b9ff68db3afc99616b492193",
+  "clone_id_sha256": "ecb1f602e61a2b88fbd0e213f2efd38f2253911784d186079bfa5f470927b80a",
+  "matrix_content_sha256": "0279e28e9932f275cbdd2219de54803458bcca9916da4e6533f268e7b373aa44",
+  "committed_to_git": false,
+  "cache_path_note": "materialised under _cc_cache/stage23/ which is gitignored; the content hash above is what makes a rebuild verifiable"
+}
