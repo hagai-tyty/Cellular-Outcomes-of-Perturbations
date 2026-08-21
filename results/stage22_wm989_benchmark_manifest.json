@@ -1,0 +1,673 @@
+{
+  "dataset": "GSE279162",
+  "role": "B",
+  "source_accession": "GSE279162",
+  "local_source_path_used": "D:\\GSE279162",
+  "source_files": [
+    {
+      "name": "GSE279162_family.xml",
+      "bytes": 36937,
+      "sha256": "569630ffc28ed088c34d3450f90c533c863984c5ba5347c3d86be3d28c22003d"
+    },
+    {
+      "name": "GSE279162_series_matrix.txt.gz",
+      "bytes": 3235,
+      "sha256": "828fb6691f235e702ae48442328ae975c911a59199076c58ae6816acb54db0bc"
+    },
+    {
+      "name": "GSM8562999_Naive1_filtered_barcodes.tsv.gz",
+      "bytes": 13020,
+      "sha256": "69605b1ae55167c9d3354c123ca82365b9bb10f7f8c142cdb81362984e925cc3"
+    },
+    {
+      "name": "GSM8562999_Naive1_filtered_features.tsv.gz",
+      "bytes": 1201382,
+      "sha256": "abac5d77e3ea8fe08aff73d757927d4a558413afe34048aa201c52dc8d5c48ba"
+    },
+    {
+      "name": "GSM8562999_Naive1_filtered_matrix.mtx.gz",
+      "bytes": 39323313,
+      "sha256": "10786dd7ffc64f29a6bb81e87af4d2a478903f81f0bc5edce5748adbb885233c"
+    },
+    {
+      "name": "GSM8563000_Naive2_filtered_barcodes.tsv.gz",
+      "bytes": 17333,
+      "sha256": "edfbc63ec9e042814ad7cdb8b657364b0a7d351c1ce1977591d76e38cbbdf028"
+    },
+    {
+      "name": "GSM8563000_Naive2_filtered_features.tsv.gz",
+      "bytes": 1201382,
+      "sha256": "bfff08cce0d38a75e908701f3b9a6ae2adc5a4bf171aab45f2fb8de32daf9338"
+    },
+    {
+      "name": "GSM8563000_Naive2_filtered_matrix.mtx.gz",
+      "bytes": 52465932,
+      "sha256": "8ea44b5ec7daabb4b5476722c94a077c1e43e753523989f16325892010af4b8b"
+    },
+    {
+      "name": "GSM8563001_Naive3_filtered_barcodes.tsv.gz",
+      "bytes": 24070,
+      "sha256": "7a68d8bb3f73e2aa3921178df97c75bb973643a2f7408bb2c24bbc73be1fd5b1"
+    },
+    {
+      "name": "GSM8563001_Naive3_filtered_features.tsv.gz",
+      "bytes": 1201382,
+      "sha256": "178c966e65dd8400bad1782601c3405d0ec568e5294a81c220fad725f7fa0e10"
+    },
+    {
+      "name": "GSM8563001_Naive3_filtered_matrix.mtx.gz",
+      "bytes": 70391230,
+      "sha256": "846c2886535ed9be4b70178aecbc89a753650cb1e0824f6a4ee7dc435eb65264"
+    },
+    {
+      "name": "GSM8563002_Dabrafenib_filtered_barcodes.tsv.gz",
+      "bytes": 50460,
+      "sha256": "5c638d635d6dfe842fa995829fcb831da0fa22389a2950207930a8f72ca29bf8"
+    },
+    {
+      "name": "GSM8563002_Dabrafenib_filtered_features.tsv.gz",
+      "bytes": 1201382,
+      "sha256": "db292853d46839ba7306fafd6830bf8d3ec6afd484a70f54cd69f4f3d8f2b4e4"
+    },
+    {
+      "name": "GSM8563002_Dabrafenib_filtered_matrix.mtx.gz",
+      "bytes": 103394149,
+      "sha256": "724fc89d524c0a343912e75440a9118ff656f27d70c0055c61a19d0905b6c653"
+    },
+    {
+      "name": "GSM8563003_Trametinib_filtered_barcodes.tsv.gz",
+      "bytes": 82684,
+      "sha256": "f19d56af7cf2ad237d2ab508f9fe94002b7d9edcc8684bb7d7368f8208c75b4f"
+    },
+    {
+      "name": "GSM8563003_Trametinib_filtered_features.tsv.gz",
+      "bytes": 1201382,
+      "sha256": "417216647407fafa52e021b73745502925c6f8e1f0654189adc58d69ecb71429"
+    },
+    {
+      "name": "GSM8563003_Trametinib_filtered_matrix.mtx.gz",
+      "bytes": 119634308,
+      "sha256": "a418fac2f52738783724ccde5b2e9f1c3fdf131af02a4e781fa75c2df6b28b75"
+    },
+    {
+      "name": "GSM8563004_CoCl2_filtered_barcodes.tsv.gz",
+      "bytes": 40091,
+      "sha256": "3cd87a7d59cdbe54b49d32e2c49abf1a12255f71f59e64478c1f1fdf4b4088c5"
+    },
+    {
+      "name": "GSM8563004_CoCl2_filtered_features.tsv.gz",
+      "bytes": 1201382,
+      "sha256": "7cc0ecc69f70d3e9b779c7619705227d205faa962e66ea0b33a5b8ede7e74009"
+    },
+    {
+      "name": "GSM8563004_CoCl2_filtered_matrix.mtx.gz",
+      "bytes": 105221280,
+      "sha256": "179aeba5ac426dc8c42363b43829a788c3dec31ae3561dcd19526b5955be81d8"
+    },
+    {
+      "name": "GSM8563005_Acid_filtered_barcodes.tsv.gz",
+      "bytes": 63202,
+      "sha256": "bff5753495d4ea2f39a53ac4b35b155e5ad6790622ce4ee19dffbe2617955797"
+    },
+    {
+      "name": "GSM8563005_Acid_filtered_features.tsv.gz",
+      "bytes": 1201382,
+      "sha256": "70798d213d6598ec539ed4169d8788169b8d3336f2c5e39e0d86cbc0d8c52bc3"
+    },
+    {
+      "name": "GSM8563005_Acid_filtered_matrix.mtx.gz",
+      "bytes": 102749120,
+      "sha256": "9a38a0059de4fe90834c6fb7af80462636255b8fd5c12e81c67fa3f8d0bf5f78"
+    },
+    {
+      "name": "GSM8563006_Cisplatin_filtered_barcodes.tsv.gz",
+      "bytes": 55750,
+      "sha256": "ca55f48ca0daf20e2d44053beb11c107af5e98f04b90d1139d7ed4881aee4482"
+    },
+    {
+      "name": "GSM8563006_Cisplatin_filtered_features.tsv.gz",
+      "bytes": 1201382,
+      "sha256": "fbd1ee6c7eea0c56333c8341ea7ec24492730481382a5288beee7618c43780b5"
+    },
+    {
+      "name": "GSM8563006_Cisplatin_filtered_matrix.mtx.gz",
+      "bytes": 101046114,
+      "sha256": "4ec3442d417ad0b098dbb4b1e8f5601420d894bb47b68a2b744037920553e530"
+    },
+    {
+      "name": "GSM8563007_Doxorubicin_filtered_barcodes.tsv.gz",
+      "bytes": 46506,
+      "sha256": "beff5a86082e0b9a7cd526a311b2fba42cf05be5edc8a41abeafaa247245f19e"
+    },
+    {
+      "name": "GSM8563007_Doxorubicin_filtered_features.tsv.gz",
+      "bytes": 1201382,
+      "sha256": "9108156e1e49872d90d4e6964cdcfe35a2099a786dc62623bc7391f47856971b"
+    },
+    {
+      "name": "GSM8563007_Doxorubicin_filtered_matrix.mtx.gz",
+      "bytes": 57132084,
+      "sha256": "7c6b106ba63cc21e632e15ae6b799d5a035102101a6753adefadd23e0f73bc2c"
+    }
+  ],
+  "author_code_files": [
+    {
+      "name": "How_to_run_code_README.txt",
+      "bytes": 210,
+      "sha256": "a24a1a447f1323b43b08b265caa57c12b7b91fb8972dbc3b4811fe5c9868c978"
+    },
+    {
+      "name": "preprocess_GEX.Rmd",
+      "bytes": 27424,
+      "sha256": "7e13991f4e54ace117ddd6861cd0554c6868de5e6a7f2089c5d00ddf8c565d13"
+    },
+    {
+      "name": "preprocess_cDNA_BCs.Rmd",
+      "bytes": 10784,
+      "sha256": "97af9e1aed4385c807273d87f0a42010d6291995c8b5655a551705c8f46d83fc"
+    },
+    {
+      "name": "preprocess_gDNA_BCs.Rmd",
+      "bytes": 4553,
+      "sha256": "bbf9f341a44539b8d42f84129e49739af15f97edd1fe94f7325bda6d62fbf489"
+    },
+    {
+      "name": "Find_Markers_Top_Res_lins_in_naive.Rmd",
+      "bytes": 7033,
+      "sha256": "74fdd749c815a4ff0a99faff4d8968fc725ce715c9c271ccfd635972dba86827"
+    }
+  ],
+  "author_rule_identifiers": {
+    "qc": {
+      "Naive1": [
+        3000,
+        75000,
+        20
+      ],
+      "Naive2": [
+        3000,
+        60000,
+        20
+      ],
+      "Naive3": [
+        2500,
+        50000,
+        15
+      ],
+      "Dabrafenib": [
+        2000,
+        30000,
+        15
+      ],
+      "Trametinib": [
+        1500,
+        20000,
+        15
+      ],
+      "CoCl2": [
+        2500,
+        50000,
+        15
+      ],
+      "Acid": [
+        1500,
+        30000,
+        15
+      ],
+      "Cisplatin": [
+        1500,
+        20000,
+        20
+      ],
+      "Doxorubicin": [
+        1500,
+        20000,
+        20
+      ]
+    },
+    "cell_lower_limit": 100,
+    "cor_threshold": 0.55,
+    "difference_val": 0.2,
+    "posterior_floor": 0.5,
+    "outcome_rule": "table(assigned_lineage[OG_condition == condition])",
+    "outcome_semantics": "post_treatment_assigned_cell_abundance",
+    "rank_convention": "descending competition rank (pandas rank(method='min', ascending=False)) over the eligible naive-observed clones"
+  },
+  "reconstruction_commit": "6c2f2d6",
+  "plan": {
+    "file": "STAGE_22_PROSPECTIVE_BENCHMARK_CONSTRUCTION_V2.md",
+    "version": "V2",
+    "sha256": "b26db9fef09359791013d54c7f6e8ea4843d5ccfc3e2823f8794bd67a0bc1ff9"
+  },
+  "builder_source_sha256": "e4398cc915605cd047d8a08e19a6d5322e8df48ecef23917fdba5a00376e298b",
+  "split": {
+    "n_splits": 5,
+    "seed": 22022,
+    "unit": "clone",
+    "assigned_once_in_stage_22": true
+  },
+  "feature_eligibility": {
+    "TARGET": [
+      "y_primed",
+      "n_post_cells",
+      "post_fraction",
+      "post_rank",
+      "post_rank_fraction",
+      "detected_post",
+      "outcome_observation_status"
+    ],
+    "PROVENANCE_ONLY": [
+      "cell_uid",
+      "cellID",
+      "cell_barcode",
+      "clone_id",
+      "assigned_lineage",
+      "gsm",
+      "SampleNum",
+      "sample",
+      "source_naive_sample",
+      "condition",
+      "expression_barcode",
+      "expression_column_index",
+      "expression_source",
+      "outcome_source",
+      "outcome_rule",
+      "outcome_semantics",
+      "outer_group",
+      "outer_fold",
+      "biological_replicate",
+      "generalization_scope",
+      "naive_source_samples",
+      "treatment_sample_available",
+      "post_tie_size",
+      "is_assigned",
+      "is_naive",
+      "lane_membership",
+      "exclusion_reason"
+    ],
+    "BASELINE_NUISANCE": [
+      "n_pretreatment_cells",
+      "n_lanes",
+      "n_primed_cells",
+      "n_nonprimed_cells",
+      "n_naive_cells",
+      "n_naive1_cells",
+      "n_naive2_cells",
+      "n_naive3_cells",
+      "naive1_total_assigned_cells",
+      "naive2_total_assigned_cells",
+      "naive3_total_assigned_cells",
+      "naive_pooled_fraction",
+      "treatment_total_assigned_cells",
+      "nUMI",
+      "fracUMI",
+      "nLineages",
+      "assigned_posterior"
+    ],
+    "PRIMARY_X": [
+      "pretreatment gene-expression values only, resolved through expression_source + expression_column_index"
+    ]
+  },
+  "model_fitted": false,
+  "src_modified": false,
+  "raw_data_committed": false,
+  "declared_exclusions": {
+    "reason": "assigned_lineage is NA (posterior floor or ambiguous top-two)",
+    "n_cells": 4120,
+    "note": "documented and excluded from clone-linked prospective rows; NOT reassigned by any alternative heuristic"
+  },
+  "claim_scope": {
+    "observed_zero": "a zero is an OBSERVED zero against an available treatment sample. It is not relabelled as death, failure, sensitivity or non-resistance; it may reflect biological non-survival, allocation/sampling, sequencing or capture limits.",
+    "compositional": "post_fraction shares a treatment-level denominator. Fractions over ALL assigned clones sum to one; the benchmark holds only the eligible naive-observed subset, so its rows sum to less than one. The clone x treatment rows are NOT independent biological units.",
+    "abundance_confound": "the observed-zero rate falls steeply with captured naive clone size, so Stage 23 must clear abundance-only nuisance baselines before any state-conditioned claim.",
+    "treatment_holdout": "reserved for Stage 26; Stage 23 uses these clone-held-out state-generalization folds only"
+  },
+  "checks": {
+    "cell_uid_unique": true,
+    "six_rows_per_eligible_clone": true,
+    "structural_rows_match": true,
+    "all_treatment_samples_available": true,
+    "zeros_retained_as_observed_zero": true,
+    "one_group_and_fold_per_clone": true,
+    "naive_cells_share_clone_fold": true,
+    "clone_fold_consistent_across_tables": true,
+    "five_folds": true,
+    "expression_mapping_complete": true,
+    "no_binary_resistance_threshold": true,
+    "posterior_floor_applied": true
+  },
+  "statistics": {
+    "feature_structure": {
+      "total_features": 189656,
+      "n_genes": 36601,
+      "n_lineage_features": 153055,
+      "lineage_assay_source": "Custom feature block",
+      "mt_genes": 13
+    },
+    "clone_call_source": "s21d.barcoding_posterior_and_assignment (author pipeline); no dominant-fraction or UMI-floor fallback exists",
+    "joint_assignment": {
+      "run_once_on_all_samples": true,
+      "cells_in_joint_object": 46891,
+      "lineages_in_joint_object": 14883
+    },
+    "per_sample_qc": {
+      "Acid": {
+        "gsm": "GSM8563005",
+        "cells_raw": 12634,
+        "cells_post_qc": 8004,
+        "qc": {
+          "nFeature_RNA_gt": 1500,
+          "nCount_RNA_lt": 30000,
+          "percent_mt_lt": 15
+        }
+      },
+      "Cisplatin": {
+        "gsm": "GSM8563006",
+        "cells_raw": 11049,
+        "cells_post_qc": 7390,
+        "qc": {
+          "nFeature_RNA_gt": 1500,
+          "nCount_RNA_lt": 20000,
+          "percent_mt_lt": 20
+        }
+      },
+      "CoCl2": {
+        "gsm": "GSM8563004",
+        "cells_raw": 7766,
+        "cells_post_qc": 5173,
+        "qc": {
+          "nFeature_RNA_gt": 2500,
+          "nCount_RNA_lt": 50000,
+          "percent_mt_lt": 15
+        }
+      },
+      "Dabrafenib": {
+        "gsm": "GSM8563002",
+        "cells_raw": 9910,
+        "cells_post_qc": 6556,
+        "qc": {
+          "nFeature_RNA_gt": 2000,
+          "nCount_RNA_lt": 30000,
+          "percent_mt_lt": 15
+        }
+      },
+      "Doxorubicin": {
+        "gsm": "GSM8563007",
+        "cells_raw": 9126,
+        "cells_post_qc": 3831,
+        "qc": {
+          "nFeature_RNA_gt": 1500,
+          "nCount_RNA_lt": 20000,
+          "percent_mt_lt": 20
+        }
+      },
+      "Naive1": {
+        "gsm": "GSM8562999",
+        "cells_raw": 2356,
+        "cells_post_qc": 1595,
+        "qc": {
+          "nFeature_RNA_gt": 3000,
+          "nCount_RNA_lt": 75000,
+          "percent_mt_lt": 20
+        }
+      },
+      "Naive2": {
+        "gsm": "GSM8563000",
+        "cells_raw": 3186,
+        "cells_post_qc": 2064,
+        "qc": {
+          "nFeature_RNA_gt": 3000,
+          "nCount_RNA_lt": 60000,
+          "percent_mt_lt": 20
+        }
+      },
+      "Naive3": {
+        "gsm": "GSM8563001",
+        "cells_raw": 4508,
+        "cells_post_qc": 3567,
+        "qc": {
+          "nFeature_RNA_gt": 2500,
+          "nCount_RNA_lt": 50000,
+          "percent_mt_lt": 15
+        }
+      },
+      "Trametinib": {
+        "gsm": "GSM8563003",
+        "cells_raw": 16882,
+        "cells_post_qc": 8711,
+        "qc": {
+          "nFeature_RNA_gt": 1500,
+          "nCount_RNA_lt": 20000,
+          "percent_mt_lt": 15
+        }
+      }
+    },
+    "raw_cells": 77417,
+    "post_qc_cells": 46891,
+    "assigned_cells": 42771,
+    "na_lineage_cells": 4120,
+    "by_condition": {
+      "Acid": {
+        "post_qc_cells": 8004,
+        "assigned": 7246,
+        "na": 758,
+        "unique_clones": 950
+      },
+      "Cisplatin": {
+        "post_qc_cells": 7390,
+        "assigned": 6815,
+        "na": 575,
+        "unique_clones": 346
+      },
+      "CoCl2": {
+        "post_qc_cells": 5173,
+        "assigned": 5134,
+        "na": 39,
+        "unique_clones": 410
+      },
+      "Dabrafenib": {
+        "post_qc_cells": 6556,
+        "assigned": 6164,
+        "na": 392,
+        "unique_clones": 509
+      },
+      "Doxorubicin": {
+        "post_qc_cells": 3831,
+        "assigned": 2832,
+        "na": 999,
+        "unique_clones": 662
+      },
+      "Trametinib": {
+        "post_qc_cells": 8711,
+        "assigned": 8091,
+        "na": 620,
+        "unique_clones": 425
+      },
+      "naive": {
+        "post_qc_cells": 7226,
+        "assigned": 6489,
+        "na": 737,
+        "unique_clones": 1401
+      }
+    },
+    "unique_cell_uid": 46891,
+    "reused_bare_barcodes_across_samples": 248,
+    "reused_bare_barcodes_across_samples_raw": 722,
+    "reused_bare_barcodes_note": "raw counts every barcode string in the 9 GEO barcode files; the other counts only the post-QC benchmark population",
+    "unique_assigned_clones": 2215,
+    "clones_with_naive_observation": 1401,
+    "naive_totals_by_sample": {
+      "Naive1": 1433,
+      "Naive2": 1863,
+      "Naive3": 3193
+    },
+    "naive_pooled_denominator": 6489,
+    "naive_cells_per_clone": {
+      "median": 2,
+      "max": 88,
+      "ge2": 816,
+      "ge5": 356,
+      "ge10": 167
+    },
+    "clone_treatment_rows": 8406,
+    "clone_coverage": {
+      "in_ge1_treatment": 929,
+      "in_ge2_treatments": 603,
+      "in_all_6": 37,
+      "by_n_treatments": {
+        "0": 472,
+        "1": 326,
+        "2": 215,
+        "3": 185,
+        "4": 107,
+        "5": 59,
+        "6": 37
+      }
+    },
+    "per_treatment": {
+      "Dabrafenib": {
+        "total_assigned_cells": 6164,
+        "clones_nonzero": 321,
+        "zero_rate": 0.7709,
+        "benchmark_fraction_sum": 0.7156,
+        "abundance_median_nonzero": 2,
+        "abundance_max": 476
+      },
+      "Trametinib": {
+        "total_assigned_cells": 8091,
+        "clones_nonzero": 274,
+        "zero_rate": 0.8044,
+        "benchmark_fraction_sum": 0.5526,
+        "abundance_median_nonzero": 2,
+        "abundance_max": 776
+      },
+      "CoCl2": {
+        "total_assigned_cells": 5134,
+        "clones_nonzero": 319,
+        "zero_rate": 0.7723,
+        "benchmark_fraction_sum": 0.8426,
+        "abundance_median_nonzero": 2,
+        "abundance_max": 3290
+      },
+      "Acid": {
+        "total_assigned_cells": 7246,
+        "clones_nonzero": 665,
+        "zero_rate": 0.5253,
+        "benchmark_fraction_sum": 0.9416,
+        "abundance_median_nonzero": 3,
+        "abundance_max": 464
+      },
+      "Cisplatin": {
+        "total_assigned_cells": 6815,
+        "clones_nonzero": 272,
+        "zero_rate": 0.8059,
+        "benchmark_fraction_sum": 0.9856,
+        "abundance_median_nonzero": 1,
+        "abundance_max": 2791
+      },
+      "Doxorubicin": {
+        "total_assigned_cells": 2832,
+        "clones_nonzero": 405,
+        "zero_rate": 0.7109,
+        "benchmark_fraction_sum": 0.8058,
+        "abundance_median_nonzero": 2,
+        "abundance_max": 577
+      }
+    },
+    "observed_zero_rows": 6150,
+    "observed_zero_rate": 0.7316,
+    "zero_rate_by_naive_depth": {
+      "1": {
+        "clones": 585,
+        "zero_rate": 0.8707
+      },
+      "2": {
+        "clones": 242,
+        "zero_rate": 0.8264
+      },
+      "3-4": {
+        "clones": 218,
+        "zero_rate": 0.6789
+      },
+      "5-9": {
+        "clones": 189,
+        "zero_rate": 0.5988
+      },
+      "10+": {
+        "clones": 167,
+        "zero_rate": 0.3263
+      }
+    },
+    "per_outer_fold": {
+      "0": 281,
+      "1": 280,
+      "2": 280,
+      "3": 280,
+      "4": 280
+    },
+    "naive_expression_mapped_cells": 6489,
+    "naive_expression_unmapped_cells": 0,
+    "barcode_clustering": {
+      "candidate_lineages": 604,
+      "correlated_pairs": 153,
+      "clusters": 90,
+      "merging_conflicts": 0
+    },
+    "posterior_assignment": {
+      "beta1_mean": 0.40166849887926903,
+      "gamma_min": 2535.3843881893526,
+      "gamma_max": 5548291.955015295,
+      "assigned_before_posterior_floor": 43260,
+      "dropped_by_posterior_floor": 4007
+    },
+    "treatment_aliases": {
+      "Dabrafenib": {
+        "plan": "dabrafenib",
+        "author_code": "dab"
+      },
+      "Trametinib": {
+        "plan": "trametinib",
+        "author_code": "tram"
+      },
+      "CoCl2": {
+        "plan": "CoCl2",
+        "author_code": "cocl2"
+      },
+      "Acid": {
+        "plan": "acid",
+        "author_code": "acid"
+      },
+      "Cisplatin": {
+        "plan": "cisplatin",
+        "author_code": "cis"
+      },
+      "Doxorubicin": {
+        "plan": "doxorubicin",
+        "author_code": "dox"
+      }
+    }
+  },
+  "verdict": "BENCHMARK_READY_WITH_DECLARED_MISSINGNESS",
+  "derived_artifacts": [
+    {
+      "name": "stage22_wm989_cell_assignments.csv",
+      "bytes": 4511482,
+      "sha256": "5d80d7262369e32426507d8970ea3ada9c985d4c702ff4e78db1de875753ebef"
+    },
+    {
+      "name": "stage22_wm989_naive_cells.csv",
+      "bytes": 857870,
+      "sha256": "7d8b4993ba53df05d23c98bfc6b81a23c35ba83e10fb30e7e55608f304da50f9"
+    },
+    {
+      "name": "stage22_wm989_clones.csv",
+      "bytes": 88859,
+      "sha256": "750e47623b9bd473ce9a642d551352883b84b25c274c584617be839e964eb08f"
+    },
+    {
+      "name": "stage22_wm989_clone_treatment.csv",
+      "bytes": 914941,
+      "sha256": "113da618839a4cc9c9cd61adfaeceffe934fb2c7808c7f67e38a1f44321a52a7"
+    }
+  ]
+}

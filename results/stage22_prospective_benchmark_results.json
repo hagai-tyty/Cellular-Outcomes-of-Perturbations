@@ -1,0 +1,136 @@
+{
+  "stage": "22",
+  "reconstruction_commit": "6c2f2d6",
+  "plan": {
+    "file": "STAGE_22_PROSPECTIVE_BENCHMARK_CONSTRUCTION_V2.md",
+    "version": "V2",
+    "sha256": "b26db9fef09359791013d54c7f6e8ea4843d5ccfc3e2823f8794bd67a0bc1ff9"
+  },
+  "builder_source_sha256": "e4398cc915605cd047d8a08e19a6d5322e8df48ecef23917fdba5a00376e298b",
+  "split": {
+    "n_splits": 5,
+    "seed": 22022,
+    "unit": "clone",
+    "assigned_once_in_stage_22": true
+  },
+  "feature_eligibility": {
+    "TARGET": [
+      "y_primed",
+      "n_post_cells",
+      "post_fraction",
+      "post_rank",
+      "post_rank_fraction",
+      "detected_post",
+      "outcome_observation_status"
+    ],
+    "PROVENANCE_ONLY": [
+      "cell_uid",
+      "cellID",
+      "cell_barcode",
+      "clone_id",
+      "assigned_lineage",
+      "gsm",
+      "SampleNum",
+      "sample",
+      "source_naive_sample",
+      "condition",
+      "expression_barcode",
+      "expression_column_index",
+      "expression_source",
+      "outcome_source",
+      "outcome_rule",
+      "outcome_semantics",
+      "outer_group",
+      "outer_fold",
+      "biological_replicate",
+      "generalization_scope",
+      "naive_source_samples",
+      "treatment_sample_available",
+      "post_tie_size",
+      "is_assigned",
+      "is_naive",
+      "lane_membership",
+      "exclusion_reason"
+    ],
+    "BASELINE_NUISANCE": [
+      "n_pretreatment_cells",
+      "n_lanes",
+      "n_primed_cells",
+      "n_nonprimed_cells",
+      "n_naive_cells",
+      "n_naive1_cells",
+      "n_naive2_cells",
+      "n_naive3_cells",
+      "naive1_total_assigned_cells",
+      "naive2_total_assigned_cells",
+      "naive3_total_assigned_cells",
+      "naive_pooled_fraction",
+      "treatment_total_assigned_cells",
+      "nUMI",
+      "fracUMI",
+      "nLineages",
+      "assigned_posterior"
+    ],
+    "PRIMARY_X": [
+      "pretreatment gene-expression values only, resolved through expression_source + expression_column_index"
+    ]
+  },
+  "model_fitted": false,
+  "src_modified": false,
+  "raw_data_committed": false,
+  "datasets": {
+    "GSE227151": {
+      "role": "A",
+      "verdict": "BENCHMARK_READY_WITH_DECLARED_MISSINGNESS",
+      "manifest": "stage22_rewind_benchmark_manifest.json"
+    },
+    "GSE279162": {
+      "role": "B",
+      "verdict": "BENCHMARK_READY_WITH_DECLARED_MISSINGNESS",
+      "manifest": "stage22_wm989_benchmark_manifest.json"
+    }
+  },
+  "role_b_is_non_blocking": true,
+  "role_b_status_preserved": "BENCHMARK_READY_WITH_DECLARED_MISSINGNESS",
+  "gates": {
+    "G22-1_prospective_linkage": true,
+    "G22-2_no_label_leakage": true,
+    "G22-3_unique_biological_grouping": true,
+    "G22-4_expression_resolvability": true,
+    "G22-5_outcome_completeness": true,
+    "G22-6_author_rule_fidelity": true,
+    "G22-7_frozen_evaluation_geometry": true,
+    "G22-8_feature_firewall": true,
+    "G22-9_claim_scope": true,
+    "G22-10_no_modelling": true
+  },
+  "gate_evidence": {
+    "G22-2": {
+      "rewind_target_recomputed_from_outcome_source_alone": true,
+      "rewind_written_labels_are_a_subset_of_that_set": true,
+      "rewind_no_expression_file_read_to_build_the_target": true,
+      "wm989_target_uses_no_pretreatment_expression": true,
+      "wm989_caveat": "post-treatment cell countability depends on the authors' post-treatment RNA QC, applied identically across conditions; no pretreatment expression value enters any target"
+    },
+    "G22-10": {
+      "no_modelling_imports": true,
+      "modelling_imports_found": [],
+      "no_fit_call": true,
+      "sklearn_use_is_splitters_only": true
+    }
+  },
+  "all_gates_pass": true,
+  "overall": "STAGE_23_READY",
+  "manifest_hashes": [
+    {
+      "name": "stage22_rewind_benchmark_manifest.json",
+      "bytes": 12200,
+      "sha256": "7744a9e1b19139925e24fa42a66ffb5b1b4106c8932e9d673f436e597bec2be5"
+    },
+    {
+      "name": "stage22_wm989_benchmark_manifest.json",
+      "bytes": 20094,
+      "sha256": "b13b4f0f1f2ee5e1cbf253f7011cacac9cd8f1fd5e57ceef083b0308a30aebb7"
+    }
+  ]
+}

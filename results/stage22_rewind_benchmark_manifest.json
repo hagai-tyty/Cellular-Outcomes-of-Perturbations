@@ -1,0 +1,392 @@
+{
+  "dataset": "GSE227151",
+  "role": "A",
+  "source_accession": "GSE227151",
+  "local_source_path_used": "D:\\GSE227151_Rewind",
+  "source_files": [
+    {
+      "name": "filtered10XCells.txt",
+      "bytes": 357569,
+      "sha256": "b9235c59e0ef720c6a23b0b99fe839767bf984a0daed7c9d66cadddc87261e9f"
+    },
+    {
+      "name": "GSE227151-GPL18573_series_matrix.txt.gz",
+      "bytes": 2787,
+      "sha256": "3a520196c4509cfb4cf82280879326a8867d30341c13595eaab3c0f73ea55fb1"
+    },
+    {
+      "name": "GSE227151_family.xml",
+      "bytes": 56285,
+      "sha256": "8754df8e89eabfd221fe26063a5aba82bc58bf0377df0fc62cae1a98c7111b99"
+    },
+    {
+      "name": "GSM7092515_1_2_control_barcodes.tsv.gz",
+      "bytes": 34267,
+      "sha256": "758ee4ca2fa82f891f71c958e6752b9bbcc829ef856e0c838ec4e05fc8f94f86"
+    },
+    {
+      "name": "GSM7092515_1_2_control_features.tsv.gz",
+      "bytes": 333437,
+      "sha256": "f3e351a904be4a81d0edb3b26638243598bead0b7bc581e54a4af0ef745edce2"
+    },
+    {
+      "name": "GSM7092515_1_2_control_matrix.mtx.gz",
+      "bytes": 92848980,
+      "sha256": "63c22cbe8ad5af4b314cba94209e99070ce69251d72cf64959f073fba470b04b"
+    },
+    {
+      "name": "GSM7092516_1_1_control_barcodes.tsv.gz",
+      "bytes": 36927,
+      "sha256": "cb66621bcafe5209c6f565790dbc19294b1b2270ef6553ee8190f976e4c1a329"
+    },
+    {
+      "name": "GSM7092516_1_1_control_features.tsv.gz",
+      "bytes": 333437,
+      "sha256": "f1c2446e38f4715e9caa64a55982a814fc9db8e4c2e1003ad6607af3c5b1684d"
+    },
+    {
+      "name": "GSM7092516_1_1_control_matrix.mtx.gz",
+      "bytes": 110493437,
+      "sha256": "20f65d82b3886a7c27f79762996d1a4932f08eeeb4b982a605946b2de65fbb22"
+    },
+    {
+      "name": "stepThreeStarcodeShavedReads_BC_10X.txt",
+      "bytes": 451087,
+      "sha256": "4964b3f54998dc0376b23624a5dbb74848dbe95818c851e2debdaed4f227c409"
+    },
+    {
+      "name": "stepThreeStarcodeShavedReads_BC_gDNA.txt",
+      "bytes": 3610607,
+      "sha256": "0d4618be162600ac2f54ef551ee875af65ee0af2c3b816ce45513d0e526f773e"
+    }
+  ],
+  "author_code_files": [
+    {
+      "name": "20220921_R1_primedVersusNonPrimedMarkersAndDistribution.R",
+      "bytes": 19415,
+      "sha256": "a4fa6d2aaa5271d2ce4bfcdbb51036ef884c27776ea5c0a46479cf460aac0786"
+    },
+    {
+      "name": "2022.02.14_R1_cellNumberDistributionForPrimedVersusNonPrimed.R",
+      "bytes": 5448,
+      "sha256": "51b327c4767abb4a2f837ef89ac39c46f5ac019cfa1b0f248c9ebfa6a53bab20"
+    }
+  ],
+  "author_rule_identifiers": {
+    "outcome_rule": "gDNA arm -> group_by(BC50StarcodeD8, SampleNum) -> sum -> slice_max(n=100, with_ties=TRUE) -> inner_join(filtered10XCells)",
+    "outcome_semantics": "author_top100_iPSC_gDNA_priming",
+    "top_n": 100,
+    "with_ties": true,
+    "second_script_excluded_barcode": "ATTCTAGTTGTAGTACGAGTAGCACATGTTCTACGTGGAGGACGAGAACG"
+  },
+  "reconstruction_commit": "6c2f2d6",
+  "plan": {
+    "file": "STAGE_22_PROSPECTIVE_BENCHMARK_CONSTRUCTION_V2.md",
+    "version": "V2",
+    "sha256": "b26db9fef09359791013d54c7f6e8ea4843d5ccfc3e2823f8794bd67a0bc1ff9"
+  },
+  "builder_source_sha256": "e4398cc915605cd047d8a08e19a6d5322e8df48ecef23917fdba5a00376e298b",
+  "split": {
+    "n_splits": 5,
+    "seed": 22022,
+    "unit": "clone",
+    "assigned_once_in_stage_22": true
+  },
+  "feature_eligibility": {
+    "TARGET": [
+      "y_primed",
+      "n_post_cells",
+      "post_fraction",
+      "post_rank",
+      "post_rank_fraction",
+      "detected_post",
+      "outcome_observation_status"
+    ],
+    "PROVENANCE_ONLY": [
+      "cell_uid",
+      "cellID",
+      "cell_barcode",
+      "clone_id",
+      "assigned_lineage",
+      "gsm",
+      "SampleNum",
+      "sample",
+      "source_naive_sample",
+      "condition",
+      "expression_barcode",
+      "expression_column_index",
+      "expression_source",
+      "outcome_source",
+      "outcome_rule",
+      "outcome_semantics",
+      "outer_group",
+      "outer_fold",
+      "biological_replicate",
+      "generalization_scope",
+      "naive_source_samples",
+      "treatment_sample_available",
+      "post_tie_size",
+      "is_assigned",
+      "is_naive",
+      "lane_membership",
+      "exclusion_reason"
+    ],
+    "BASELINE_NUISANCE": [
+      "n_pretreatment_cells",
+      "n_lanes",
+      "n_primed_cells",
+      "n_nonprimed_cells",
+      "n_naive_cells",
+      "n_naive1_cells",
+      "n_naive2_cells",
+      "n_naive3_cells",
+      "naive1_total_assigned_cells",
+      "naive2_total_assigned_cells",
+      "naive3_total_assigned_cells",
+      "naive_pooled_fraction",
+      "treatment_total_assigned_cells",
+      "nUMI",
+      "fracUMI",
+      "nLineages",
+      "assigned_posterior"
+    ],
+    "PRIMARY_X": [
+      "pretreatment gene-expression values only, resolved through expression_source + expression_column_index"
+    ]
+  },
+  "model_fitted": false,
+  "src_modified": false,
+  "raw_data_committed": false,
+  "declared_exclusions": {
+    "reason": "ambiguous_multi_lineage_clone_assignment",
+    "n_cell_uid": 8,
+    "cells": [
+      {
+        "cell_uid": "1:ACTTCGCTCGGTCATA",
+        "SampleNum": 1,
+        "clone_ids": [
+          "ATTCATCTAGTTCGTGCTGATGAAGTACTTGGAGAACTTGAACCAGTTCT",
+          "ATTGCTGTAGGAGGTGAAGCAGTTCCAGAAGCTCAAGCAGCTCATGCTCA"
+        ],
+        "n_source_rows": 2,
+        "nLineages": [
+          2
+        ],
+        "any_clone_primed": false,
+        "exclusion_reason": "ambiguous_multi_lineage_clone_assignment"
+      },
+      {
+        "cell_uid": "1:ATTATCCCACGGTGTC",
+        "SampleNum": 1,
+        "clone_ids": [
+          "ATAGGTCCTGCTGGAGAACAACGTGTAGAACAAGGAGGTCTTCATCTACC",
+          "ATAGTACTACTTGGTGTTGCACTAGGACATGTTCATGATCCTGTACCAGC"
+        ],
+        "n_source_rows": 2,
+        "nLineages": [
+          2
+        ],
+        "any_clone_primed": false,
+        "exclusion_reason": "ambiguous_multi_lineage_clone_assignment"
+      },
+      {
+        "cell_uid": "1:GTAGGAGGTAAGATTG",
+        "SampleNum": 1,
+        "clone_ids": [
+          "ATAGGTGTACTTGAAGGTGATGGAGTAGCAGTTCCACTAGATCTTGTTGG",
+          "ATAGTAGGTGCTGTAGGTGCTGCTGATGTTGATCAACATGGACTTGCACT"
+        ],
+        "n_source_rows": 2,
+        "nLineages": [
+          2
+        ],
+        "any_clone_primed": false,
+        "exclusion_reason": "ambiguous_multi_lineage_clone_assignment"
+      },
+      {
+        "cell_uid": "2:AAGATAGGTCTCAGAT",
+        "SampleNum": 2,
+        "clone_ids": [
+          "ATAGGTGTACTTGAAGGTGATGGAGTAGCAGTTCCACTAGATCTTGTTGG",
+          "ATAGTAGGTGCTGTAGGTGCTGCTGATGTTGATCAACATGGACTTGCACT"
+        ],
+        "n_source_rows": 2,
+        "nLineages": [
+          2
+        ],
+        "any_clone_primed": false,
+        "exclusion_reason": "ambiguous_multi_lineage_clone_assignment"
+      },
+      {
+        "cell_uid": "2:ACTTTGTCACGGCGTT",
+        "SampleNum": 2,
+        "clone_ids": [
+          "ATAGCACGTGGAGATGGAGAACCAGTAGTACGTGTTGGTCAACATCGTGT",
+          "ATTCATCTTGATGGTGCTGTAGGAGTTCGTGTAGTTCTTCTTGATCTTCG"
+        ],
+        "n_source_rows": 2,
+        "nLineages": [
+          2
+        ],
+        "any_clone_primed": false,
+        "exclusion_reason": "ambiguous_multi_lineage_clone_assignment"
+      },
+      {
+        "cell_uid": "2:GATAGAACAGATCACT",
+        "SampleNum": 2,
+        "clone_ids": [
+          "ATAGCACGTGGAGATGGAGAACCAGTAGTACGTGTTGGTCAACATCGTGT",
+          "ATTCATCTTGATGGTGCTGTAGGAGTTCGTGTAGTTCTTCTTGATCTTCG"
+        ],
+        "n_source_rows": 2,
+        "nLineages": [
+          2
+        ],
+        "any_clone_primed": false,
+        "exclusion_reason": "ambiguous_multi_lineage_clone_assignment"
+      },
+      {
+        "cell_uid": "2:GTAACACCACAAATGA",
+        "SampleNum": 2,
+        "clone_ids": [
+          "ATAGGTCCTGCTGGAGAACAACGTGTAGAACAAGGAGGTCTTCATCTACC",
+          "ATAGTACTACTTGGTGTTGCACTAGGACATGTTCATGATCCTGTACCAGC"
+        ],
+        "n_source_rows": 2,
+        "nLineages": [
+          2
+        ],
+        "any_clone_primed": false,
+        "exclusion_reason": "ambiguous_multi_lineage_clone_assignment"
+      },
+      {
+        "cell_uid": "2:TACGGGCTCCCTCGAT",
+        "SampleNum": 2,
+        "clone_ids": [
+          "ATTCATCTAGTTCGTGCTGATGAAGTACTTGGAGAACTTGAACCAGTTCT",
+          "ATTGCTGTAGGAGGTGAAGCAGTTCCAGAAGCTCAAGCAGCTCATGCTCA"
+        ],
+        "n_source_rows": 2,
+        "nLineages": [
+          2
+        ],
+        "any_clone_primed": false,
+        "exclusion_reason": "ambiguous_multi_lineage_clone_assignment"
+      }
+    ]
+  },
+  "claim_scope": {
+    "biological_replicate": "R1",
+    "generalization_scope": "within_R1_clone_heldout",
+    "limitation": "Rewind R1 is ONE biological replicate. Clone-held-out evaluation is within-experiment prospective generalization, not independent biological-replicate validation.",
+    "outcome_semantics_caveat": "`nonprimed` is the author-defined complement of the top-100 future-gDNA rule. It is NOT proven biological death or absolute reprogramming failure and may reflect downstream sampling/detection.",
+    "treatment_variation": "none -- U is fixed; treatment-comparison fields are not applicable to this dataset"
+  },
+  "checks": {
+    "retained_cell_uid_unique": true,
+    "no_retained_cell_maps_to_multiple_clones": true,
+    "no_clone_has_contradictory_outcome": true,
+    "one_group_and_fold_per_clone": true,
+    "cell_outer_group_equals_clone": true,
+    "five_folds": true,
+    "every_fold_has_both_classes": true,
+    "expression_mapping_complete": true,
+    "primed_cells_42": true,
+    "primed_clones_35": true,
+    "no_ambiguous_cell_retained": true
+  },
+  "statistics": {
+    "source_author_qc_assignment_records": 3921,
+    "source_unique_cell_uid": 3913,
+    "source_unique_bare_cellID": 3913,
+    "source_unique_clones": 3149,
+    "bare_cellID_cross_lane_collisions": 0,
+    "ambiguous_cell_uid_excluded": 8,
+    "source_rows_removed_by_exclusion": 16,
+    "retained_benchmark_cell_uid": 3905,
+    "retained_benchmark_clones": 3147,
+    "clones_lost_entirely_to_exclusion": 2,
+    "positive_cells": 42,
+    "negative_cells": 3863,
+    "positive_clones": 35,
+    "negative_clones": 3112,
+    "cell_grain_prevalence": 0.010755,
+    "clone_grain_prevalence": 0.011122,
+    "cells_per_clone": {
+      "1": 2584,
+      "2": 416,
+      "3": 113,
+      "4": 28,
+      "5": 3,
+      "6": 2,
+      "11": 1
+    },
+    "clones_spanning_both_lanes_after_exclusion": 306,
+    "per_outer_fold": {
+      "0": {
+        "clones": 630,
+        "positive_clones": 7,
+        "positive_cells": 9
+      },
+      "1": {
+        "clones": 630,
+        "positive_clones": 7,
+        "positive_cells": 8
+      },
+      "2": {
+        "clones": 629,
+        "positive_clones": 7,
+        "positive_cells": 8
+      },
+      "3": {
+        "clones": 629,
+        "positive_clones": 7,
+        "positive_cells": 8
+      },
+      "4": {
+        "clones": 629,
+        "positive_clones": 7,
+        "positive_cells": 9
+      }
+    },
+    "expression_mapped_cells": 3905,
+    "expression_unmapped_cells": 0,
+    "expression_features": {
+      "GSM7092515": 36601,
+      "GSM7092516": 36601
+    },
+    "author_rule": {
+      "n": 100,
+      "cutoff_nUMI": 2365,
+      "barcodes_at_cutoff": 2,
+      "selected_barcodes": 101
+    },
+    "samplenum_to_gsm": {
+      "1": "GSM7092516",
+      "2": "GSM7092515"
+    },
+    "samplenum_containment": {
+      "1": {
+        "GSM7092515": 0.0043,
+        "GSM7092516": 1.0
+      },
+      "2": {
+        "GSM7092515": 1.0,
+        "GSM7092516": 0.0015
+      }
+    }
+  },
+  "verdict": "BENCHMARK_READY_WITH_DECLARED_MISSINGNESS",
+  "derived_artifacts": [
+    {
+      "name": "stage22_rewind_cells.csv",
+      "bytes": 1767887,
+      "sha256": "fc2791540a2a6db9471dd8a78987304d94ae8b389787c709b6bbb0eb572c879b"
+    },
+    {
+      "name": "stage22_rewind_clones.csv",
+      "bytes": 466507,
+      "sha256": "6b1fcd00c414d4b6c1eb459d69d8cedd2b423a29fce9e4fc7d2512cf62eb3df8"
+    }
+  ]
+}
