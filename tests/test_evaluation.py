@@ -395,13 +395,26 @@ def test_cell_line_regime_is_multiclass_with_finite_metrics(eval_bundle, eval_re
     paths = ArtifactPaths.of(eval_bundle)
     test = gather_split(paths, "cell_line", Split.TEST.value)
     assert test.n > 0
-    assert len(np.unique(test.y_cls)) == 3  # decoupled scaffolds -> all classes present
+
+    # This used to assert all three classes appear in the `cell_line` TEST split. That split is a
+    # SINGLE held-out cell line (n=176 here) in which the minority class has ~9 cells -- a 5%
+    # margin -- so the assertion was resting on luck, not on the decoupling it cited: the
+    # coprime-scaffold argument buys multi-class *scaffold* splits, where TEST spans every line.
+    # It duly went red on one CI runner and not another. What the regime actually guarantees is a
+    # genuinely multi-class held-out split, plus a pooled dataset carrying all three classes with
+    # a margin of hundreds of cells.
+    present = sorted(int(c) for c in np.unique(test.y_cls))
+    assert len(present) >= 2, f"cell_line TEST collapsed to one class: {present}"
+    pooled = np.concatenate([gather_split(paths, "cell_line", s).y_cls
+                             for s in (Split.TRAIN.value, Split.VAL.value, Split.TEST.value)])
+    assert len(np.unique(pooled)) == 3, "the fixture must still exercise all three classes"
 
     out, _gates = eval_reports
     R = json.loads((out / "cell_line.json").read_text())
-    # model AUROC/PR-AUC are finite on a genuinely multi-class test split
-    assert all(np.isfinite(R["model"][f"auroc_{c}"]) for c in range(3))
-    assert all(np.isfinite(R["model"][f"prauc_{c}"]) for c in range(3))
+    # Finite for every class the split actually contains. A class with no support has no defined
+    # AUROC, which is exactly why the rest of this file reads these with `mean_finite` below.
+    assert all(np.isfinite(R["model"][f"auroc_{c}"]) for c in present)
+    assert all(np.isfinite(R["model"][f"prauc_{c}"]) for c in present)
 
 
 def test_model_beats_trivial_baseline_on_cell_line(eval_reports):
