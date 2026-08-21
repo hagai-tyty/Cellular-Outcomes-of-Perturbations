@@ -30,6 +30,14 @@ folds, an expression-column mapping, and a feature-eligibility firewall — and 
 ## Files modified
 - none — **additive only**. 21A / 21B / 21C / 21D results and records untouched (pinned by test)
 
+> *Correction, 2026-08-21 (bookkeeping only; no verdict changes): the line above is no longer
+> literally true and is left as written. **`.gitattributes` was added** at the repository root
+> during Stage 22, pinning `results/**` to `text eol=lf` so a fresh-clone rebuild is
+> byte-deterministic — see Bugs found #5. It is scoped: `results/stage21d_rewind_clone_table.tsv`
+> is marked `-text` precisely so its frozen CRLF blob is **not** renormalized, and no 21A–21D
+> artifact was rewritten. The three JSON manifests were also regenerated once after the
+> `newline` fix (Bugs found #6); that diff is the builder hash and the byte counts, nothing else.*
+
 ## What changed
 - Both benchmarks are built by **importing** the Stage-21D author-rule implementation, not by
   re-implementing it. A test asserts the builder defines none of `slice_max_with_ties`,
@@ -172,15 +180,24 @@ mandatory rather than a formality.
    renormalized — rewriting a frozen 21D artifact is what the no-rewrite rule forbids
 6. **The three JSON writers emitted CRLF** because `Path.write_text` translates newlines on
    Windows, while the CSV writers forced LF. Same content, different bytes. Now written with an
-   explicit `newline="
-"`. Only after this did a fresh-clone rebuild produce a genuine zero diff
+   explicit `newline="\n"`. Only after this did a fresh-clone rebuild produce a genuine
+   zero diff
 
 ## Scientific interpretation
 **Proves:** both prospective tasks are now frozen artifacts rather than descriptions. Every
-benchmark row traces pretreatment cell → clone → independently measured later outcome; every clone
-carries exactly one `outer_group` and one `outer_fold` across every table it appears in; every
-eligible pretreatment cell resolves to a specific expression column; and the whole artifact set
-reproduces byte-for-byte. Stage 23 can no longer redefine the task after seeing performance.
+benchmark row traces pretreatment cell → clone → **temporally future, lineage-grounded outcome**;
+every clone carries exactly one `outer_group` and one `outer_fold` across every table it appears
+in; every eligible pretreatment cell resolves to a specific expression column; and the whole
+artifact set reproduces byte-for-byte. Stage 23 can no longer redefine the task after seeing
+performance.
+
+> *Correction, 2026-08-21 (wording; no verdict or number changes): this sentence originally read
+> "independently measured later outcome". That is accurate for **Rewind**, whose future gDNA arm
+> is a genuinely distinct outcome channel from the pretreatment RNA. It overstates **WM989**,
+> whose outcome is later post-treatment lineage/clone abundance reconstructed from the
+> post-treatment single-cell data — temporally future and lineage-grounded, but the same assay
+> modality, not an independent one. "Temporally future, lineage-grounded" covers both honestly.
+> This matters for manuscript wording, so the weaker claim is the one that carries forward.*
 
 The pre-registered ambiguity exclusion was the right call and the plan's insistence on
 *recomputing* post-exclusion counts was vindicated: 2 clones consisted only of excluded cells, so
