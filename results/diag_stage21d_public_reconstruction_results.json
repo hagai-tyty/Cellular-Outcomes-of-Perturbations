@@ -1,0 +1,955 @@
+{
+  "stage": "21D",
+  "plan": "plans/(newer)practical plans/STAGE_21_PROSPECTIVE_DATA_QUALIFICATION_V3.md",
+  "additive_to": [
+    "results/diag_stage21_data_audit_results.json",
+    "results/diag_stage21b_source_design_results.json"
+  ],
+  "model_fitted": false,
+  "src_modified": false,
+  "raw_data_committed": false,
+  "GSE227151": {
+    "verdict": "RECONSTRUCTABLE_PENDING_EXACT_OUTCOME_RULE",
+    "findings": {
+      "required_files": {
+        "value": {
+          "expected": 11,
+          "missing": []
+        },
+        "status": "PRESENT",
+        "evidence": "checked 11 paths under D:\\GSE227151_Rewind"
+      },
+      "author_qc_table_schema": {
+        "value": [
+          "cellID",
+          "BC50StarcodeD8",
+          "SampleNum",
+          "nUMI",
+          "fracUMI",
+          "nLineages"
+        ],
+        "status": "PRESENT",
+        "evidence": "filtered10XCells.txt is an author-processed cell->clone table, 3921 rows. Used as the primary linkage; QC is NOT rebuilt from the raw combined intermediate."
+      },
+      "prefilter_table_rows": {
+        "value": {
+          "stepThree_BC_10X": 4975,
+          "filtered10XCells": 3921
+        },
+        "status": "PRESENT",
+        "evidence": "the author QC step drops 1054 of 4975 rows (21.2%)"
+      },
+      "samplenum_to_gsm": {
+        "value": {
+          "mapping": {
+            "1": "GSM7092516",
+            "2": "GSM7092515"
+          },
+          "containment": {
+            "1": {
+              "GSM7092515": 0.0043,
+              "GSM7092516": 1.0,
+              "n_cells": 1878
+            },
+            "2": {
+              "GSM7092515": 1.0,
+              "GSM7092516": 0.0015,
+              "n_cells": 2035
+            }
+          }
+        },
+        "status": "PRESENT",
+        "evidence": "resolved by cellID containment in each GSM's own barcodes.tsv. NOTE: this is TRANSPOSED relative to the GEO titles -- GEO calls GSM7092515 'sample 1', but the barcode tables' SampleNum 1 is GSM7092516. Reading either label instead of intersecting would have mislabelled every cell."
+      },
+      "expression_cells": {
+        "value": {
+          "GSM7092515": {
+            "genes": 36601,
+            "cells": 6569,
+            "nnz": 24707105,
+            "barcodes": 6569
+          },
+          "GSM7092516": {
+            "genes": 36601,
+            "cells": 7096,
+            "nnz": 29376468,
+            "barcodes": 7096
+          }
+        },
+        "status": "PRESENT",
+        "evidence": "total sequenced cells = 13665"
+      },
+      "cells_with_author_qc_clone": {
+        "value": {
+          "1": 1878,
+          "2": 2035
+        },
+        "status": "PRESENT",
+        "evidence": "3913 of 13665 sequenced cells carry an author-QC clone assignment (28.6%)"
+      },
+      "ambiguous_cells": {
+        "value": {
+          "rows_with_multiple_lineages": 16,
+          "rows": 3921,
+          "unique_cell_sample_pairs": 3913
+        },
+        "status": "PRESENT",
+        "evidence": "16 rows carry nLineages > 1; every clone-assigned row otherwise maps to one clone"
+      },
+      "clone_structure": {
+        "value": {
+          "clones_total": 3149,
+          "clones_sample1": 1635,
+          "clones_sample2": 1825,
+          "shared": 311
+        },
+        "status": "PRESENT",
+        "evidence": "311 clones appear in BOTH 10x lanes -> a lane-wise split would leak clones. The outer split unit must be the clone."
+      },
+      "gdna_table_schema": {
+        "value": [
+          "cellID",
+          "counts",
+          "BC50StarcodeD8",
+          "SampleNum"
+        ],
+        "status": "PRESENT",
+        "evidence": "49554 rows, 1936 distinct clone barcodes, cellID is the constant ['dummy'] and SampleNum is [3]; rows are pre-collapse read groups, so the principled aggregation per clone is the SUM of counts"
+      },
+      "gdna_read_distribution": {
+        "value": {
+          "1": 1309,
+          "2": 153,
+          "3-9": 92,
+          "10-99": 15,
+          "100-499": 10,
+          ">=500": 357
+        },
+        "status": "PRESENT",
+        "evidence": "strongly bimodal: a 1-2 read noise mode and a colony mode in the hundreds to thousands"
+      },
+      "outcome_threshold_sensitivity": {
+        "value": {
+          "sweep": {
+            "1": {
+              "gdna_clones": 1936,
+              "primed_clones": 82,
+              "primed_cells": 102
+            },
+            "2": {
+              "gdna_clones": 627,
+              "primed_clones": 82,
+              "primed_cells": 102
+            },
+            "3": {
+              "gdna_clones": 474,
+              "primed_clones": 82,
+              "primed_cells": 102
+            },
+            "5": {
+              "gdna_clones": 410,
+              "primed_clones": 82,
+              "primed_cells": 102
+            },
+            "10": {
+              "gdna_clones": 382,
+              "primed_clones": 82,
+              "primed_cells": 102
+            },
+            "20": {
+              "gdna_clones": 375,
+              "primed_clones": 82,
+              "primed_cells": 102
+            },
+            "50": {
+              "gdna_clones": 371,
+              "primed_clones": 82,
+              "primed_cells": 102
+            },
+            "100": {
+              "gdna_clones": 367,
+              "primed_clones": 82,
+              "primed_cells": 102
+            },
+            "200": {
+              "gdna_clones": 364,
+              "primed_clones": 82,
+              "primed_cells": 102
+            },
+            "500": {
+              "gdna_clones": 357,
+              "primed_clones": 82,
+              "primed_cells": 102
+            },
+            "562": {
+              "gdna_clones": 356,
+              "primed_clones": 82,
+              "primed_cells": 102
+            },
+            "563": {
+              "gdna_clones": 355,
+              "primed_clones": 81,
+              "primed_cells": 98
+            }
+          },
+          "invariant_over": [
+            1,
+            562
+          ],
+          "is_invariant": true
+        },
+        "status": "PRESENT",
+        "evidence": "every clone seen in BOTH arms carries >= 562 summed gDNA reads, i.e. none sits in the 1-2 read noise mode. The primed set is therefore IDENTICAL for any read floor in [1, 562] -- no threshold had to be chosen for it."
+      },
+      "prospective_label_counts": {
+        "value": {
+          "positive_clones": 82,
+          "negative_clones": 3067,
+          "positive_cells": 102,
+          "negative_cells": 3819,
+          "per_sample": {
+            "1": {
+              "primed_cells": 50,
+              "primed_clones": 42
+            },
+            "2": {
+              "primed_cells": 52,
+              "primed_clones": 46
+            }
+          },
+          "positive_rate_clones": 0.026
+        },
+        "status": "PRESENT",
+        "evidence": "primed := the clone's barcode is recovered from the post-reprogramming gDNA arm (SampleNum 3). Rare-event geometry, as the biology implies."
+      },
+      "published_42_check": {
+        "value": {
+          "readings": {
+            "pooled_cells": 102,
+            "pooled_clones": 82,
+            "sample1_cells": 50,
+            "sample1_clones": 42,
+            "sample2_cells": 52,
+            "sample2_clones": 46
+          },
+          "readings_equal_to_42": [
+            "sample1_clones"
+          ]
+        },
+        "status": "PRESENT",
+        "evidence": "VALIDATION CHECK ONLY -- no threshold was moved to produce it. The published figure of 42 primed cells is not reproduced by any cell-level reading; it coincides with the CLONE count of one lane. A coincidence at this resolution does not establish the author rule, so it is recorded and not adopted."
+      },
+      "unresolved_outcome_rule": {
+        "value": [
+          "is 'primed' defined per clone or per cell?",
+          "are the two 10x lanes pooled, or is one lane the anchor?",
+          "was any gDNA read floor applied? (immaterial over [1, 562], but unstated)"
+        ],
+        "status": "UNKNOWN_REQUIRES_SOURCE_FILE",
+        "evidence": "the author code directory D:\\GSE227151_Rewind\\author_code_zenodo7707418 is present but EMPTY, and the GEO Data-Processing block documents only the cellranger scRNA path -- it says nothing about barcode calling. The rule is pending that code drop, not pending more data."
+      },
+      "replicate_structure": {
+        "value": {
+          "gsms_local": [
+            "GSM7092515",
+            "GSM7092516"
+          ],
+          "biological_replicates_local": 1,
+          "gsms_in_series_not_local": [
+            "GSM7092517",
+            "GSM7092518",
+            "GSM7092519",
+            "GSM7092520",
+            "GSM7092521",
+            "GSM7092522",
+            "GSM7092523",
+            "GSM7092524",
+            "GSM7092525",
+            "GSM7092526",
+            "GSM7092527"
+          ]
+        },
+        "status": "PRESENT",
+        "evidence": "both local GSMs are titled 'biol rep 1' -- two 10x lanes of ONE biological replicate. The author barcode tables only carry SampleNum 1/2/3, so the linkage exists for rep 1 only. Outer units are clones within one replicate, not independent replicates."
+      }
+    },
+    "manifest": [
+      {
+        "path": "D:\\GSE227151_Rewind\\filtered10XCells.txt",
+        "exists": true,
+        "bytes": 357569,
+        "sha256": "b9235c59e0ef720c6a23b0b99fe839767bf984a0daed7c9d66cadddc87261e9f"
+      },
+      {
+        "path": "D:\\GSE227151_Rewind\\GSE227151-GPL18573_series_matrix.txt.gz",
+        "exists": true,
+        "bytes": 2787,
+        "sha256": "3a520196c4509cfb4cf82280879326a8867d30341c13595eaab3c0f73ea55fb1"
+      },
+      {
+        "path": "D:\\GSE227151_Rewind\\GSE227151_family.xml",
+        "exists": true,
+        "bytes": 56285,
+        "sha256": "8754df8e89eabfd221fe26063a5aba82bc58bf0377df0fc62cae1a98c7111b99"
+      },
+      {
+        "path": "D:\\GSE227151_Rewind\\GSM7092515\\GSM7092515_1_2_control_barcodes.tsv.gz",
+        "exists": true,
+        "bytes": 34267,
+        "sha256": "758ee4ca2fa82f891f71c958e6752b9bbcc829ef856e0c838ec4e05fc8f94f86"
+      },
+      {
+        "path": "D:\\GSE227151_Rewind\\GSM7092515\\GSM7092515_1_2_control_features.tsv.gz",
+        "exists": true,
+        "bytes": 333437,
+        "sha256": "f3e351a904be4a81d0edb3b26638243598bead0b7bc581e54a4af0ef745edce2"
+      },
+      {
+        "path": "D:\\GSE227151_Rewind\\GSM7092515\\GSM7092515_1_2_control_matrix.mtx.gz",
+        "exists": true,
+        "bytes": 92848980,
+        "sha256": "63c22cbe8ad5af4b314cba94209e99070ce69251d72cf64959f073fba470b04b"
+      },
+      {
+        "path": "D:\\GSE227151_Rewind\\GSM7092516\\GSM7092516_1_1_control_barcodes.tsv.gz",
+        "exists": true,
+        "bytes": 36927,
+        "sha256": "cb66621bcafe5209c6f565790dbc19294b1b2270ef6553ee8190f976e4c1a329"
+      },
+      {
+        "path": "D:\\GSE227151_Rewind\\GSM7092516\\GSM7092516_1_1_control_features.tsv.gz",
+        "exists": true,
+        "bytes": 333437,
+        "sha256": "f1c2446e38f4715e9caa64a55982a814fc9db8e4c2e1003ad6607af3c5b1684d"
+      },
+      {
+        "path": "D:\\GSE227151_Rewind\\GSM7092516\\GSM7092516_1_1_control_matrix.mtx.gz",
+        "exists": true,
+        "bytes": 110493437,
+        "sha256": "20f65d82b3886a7c27f79762996d1a4932f08eeeb4b982a605946b2de65fbb22"
+      },
+      {
+        "path": "D:\\GSE227151_Rewind\\stepThreeStarcodeShavedReads_BC_10X.txt",
+        "exists": true,
+        "bytes": 451087,
+        "sha256": "4964b3f54998dc0376b23624a5dbb74848dbe95818c851e2debdaed4f227c409"
+      },
+      {
+        "path": "D:\\GSE227151_Rewind\\stepThreeStarcodeShavedReads_BC_gDNA.txt",
+        "exists": true,
+        "bytes": 3610607,
+        "sha256": "0d4618be162600ac2f54ef551ee875af65ee0af2c3b816ce45513d0e526f773e"
+      }
+    ],
+    "clone_table": "results\\stage21d_rewind_clone_table.tsv"
+  },
+  "GSE279162": {
+    "verdict": "RECONSTRUCTABLE_PENDING_EXACT_OUTCOME_RULE",
+    "findings": {
+      "required_files": {
+        "value": {
+          "expected": 29,
+          "missing": []
+        },
+        "status": "PRESENT",
+        "evidence": "checked 29 paths under D:\\GSE279162 across 9 samples"
+      },
+      "feature_structure": {
+        "value": {
+          "total": 189656,
+          "by_type": {
+            "Gene Expression": 36601,
+            "Custom": 153055
+          },
+          "n_genes": 36601,
+          "n_lineage_features": 153055,
+          "genes_first": true,
+          "lineage_ids_match_L_pattern": true
+        },
+        "status": "PRESENT",
+        "evidence": "the clone identifier is a FEATURE ROW, not a side file: 153055 'Custom' LinNNNN features sit after 36601 genes in the same matrix"
+      },
+      "per_sample_lineage_capture": {
+        "value": {
+          "Naive1": {
+            "gsm": "GSM8562999",
+            "cells": 2356,
+            "nnz": 10572207,
+            "lineage_entries": 4430,
+            "cells_with_lineage_umi": 2010,
+            "clones_observed": 1332,
+            "lineage_umi_total": 60045
+          },
+          "Naive2": {
+            "gsm": "GSM8563000",
+            "cells": 3186,
+            "nnz": 14068815,
+            "lineage_entries": 8487,
+            "cells_with_lineage_umi": 2805,
+            "clones_observed": 1942,
+            "lineage_umi_total": 88562
+          },
+          "Naive3": {
+            "gsm": "GSM8563001",
+            "cells": 4508,
+            "nnz": 18925231,
+            "lineage_entries": 12568,
+            "cells_with_lineage_umi": 4125,
+            "clones_observed": 2436,
+            "lineage_umi_total": 104816
+          },
+          "Dabrafenib": {
+            "gsm": "GSM8563002",
+            "cells": 9910,
+            "nnz": 27535291,
+            "lineage_entries": 129483,
+            "cells_with_lineage_umi": 9779,
+            "clones_observed": 4145,
+            "lineage_umi_total": 438883
+          },
+          "Trametinib": {
+            "gsm": "GSM8563003",
+            "cells": 16882,
+            "nnz": 31496805,
+            "lineage_entries": 120082,
+            "cells_with_lineage_umi": 16410,
+            "clones_observed": 2872,
+            "lineage_umi_total": 346170
+          },
+          "CoCl2": {
+            "gsm": "GSM8563004",
+            "cells": 7766,
+            "nnz": 28081431,
+            "lineage_entries": 63740,
+            "cells_with_lineage_umi": 7610,
+            "clones_observed": 2508,
+            "lineage_umi_total": 347251
+          },
+          "Acid": {
+            "gsm": "GSM8563005",
+            "cells": 12634,
+            "nnz": 27011148,
+            "lineage_entries": 134323,
+            "cells_with_lineage_umi": 12504,
+            "clones_observed": 5929,
+            "lineage_umi_total": 447097
+          },
+          "Cisplatin": {
+            "gsm": "GSM8563006",
+            "cells": 11049,
+            "nnz": 26884101,
+            "lineage_entries": 46122,
+            "cells_with_lineage_umi": 10814,
+            "clones_observed": 2119,
+            "lineage_umi_total": 132400
+          },
+          "Doxorubicin": {
+            "gsm": "GSM8563007",
+            "cells": 9126,
+            "nnz": 15039925,
+            "lineage_entries": 63954,
+            "cells_with_lineage_umi": 9087,
+            "clones_observed": 2523,
+            "lineage_umi_total": 92862
+          }
+        },
+        "status": "PRESENT",
+        "evidence": "cells carrying at least one lineage UMI, per sample, straight from the matrices"
+      },
+      "per_cell_barcode_dominance": {
+        "value": {
+          "cells_with_any_lineage_umi": 75144,
+          "median_dominant_fraction": 0.5,
+          "median_lineage_features_per_cell": 6,
+          "cells_at_dominance": {
+            "frac>=0.5": 41743,
+            "frac>=0.6": 29156,
+            "frac>=0.7": 21259,
+            "frac>=0.8": 14917,
+            "frac>=0.9": 9346,
+            "frac>=1.0": 5819
+          }
+        },
+        "status": "PRESENT",
+        "evidence": "the dominant barcode carries only a median ~50% of a cell's lineage UMIs and the median cell shows several lineage features, so a per-cell clone call REQUIRES an explicit dominance + UMI rule. GEO ships no such rule and no author-processed cell->clone table."
+      },
+      "outcome_threshold_sensitivity": {
+        "value": {
+          "1": {
+            "naive_clones": 4018,
+            "Dabrafenib": {
+              "clones": 4145,
+              "positives": 779,
+              "negatives": 3239
+            },
+            "Trametinib": {
+              "clones": 2872,
+              "positives": 736,
+              "negatives": 3282
+            },
+            "CoCl2": {
+              "clones": 2508,
+              "positives": 834,
+              "negatives": 3184
+            },
+            "Acid": {
+              "clones": 5929,
+              "positives": 1357,
+              "negatives": 2661
+            },
+            "Cisplatin": {
+              "clones": 2119,
+              "positives": 1126,
+              "negatives": 2892
+            },
+            "Doxorubicin": {
+              "clones": 2523,
+              "positives": 1349,
+              "negatives": 2669
+            }
+          },
+          "2": {
+            "naive_clones": 1969,
+            "Dabrafenib": {
+              "clones": 983,
+              "positives": 648,
+              "negatives": 1321
+            },
+            "Trametinib": {
+              "clones": 909,
+              "positives": 604,
+              "negatives": 1365
+            },
+            "CoCl2": {
+              "clones": 897,
+              "positives": 709,
+              "negatives": 1260
+            },
+            "Acid": {
+              "clones": 1553,
+              "positives": 1181,
+              "negatives": 788
+            },
+            "Cisplatin": {
+              "clones": 1143,
+              "positives": 959,
+              "negatives": 1010
+            },
+            "Doxorubicin": {
+              "clones": 1568,
+              "positives": 1184,
+              "negatives": 785
+            }
+          },
+          "3": {
+            "naive_clones": 1900,
+            "Dabrafenib": {
+              "clones": 893,
+              "positives": 597,
+              "negatives": 1303
+            },
+            "Trametinib": {
+              "clones": 797,
+              "positives": 542,
+              "negatives": 1358
+            },
+            "CoCl2": {
+              "clones": 829,
+              "positives": 668,
+              "negatives": 1232
+            },
+            "Acid": {
+              "clones": 1416,
+              "positives": 1105,
+              "negatives": 795
+            },
+            "Cisplatin": {
+              "clones": 981,
+              "positives": 845,
+              "negatives": 1055
+            },
+            "Doxorubicin": {
+              "clones": 1428,
+              "positives": 1088,
+              "negatives": 812
+            }
+          },
+          "5": {
+            "naive_clones": 1825,
+            "Dabrafenib": {
+              "clones": 819,
+              "positives": 551,
+              "negatives": 1274
+            },
+            "Trametinib": {
+              "clones": 689,
+              "positives": 470,
+              "negatives": 1355
+            },
+            "CoCl2": {
+              "clones": 745,
+              "positives": 607,
+              "negatives": 1218
+            },
+            "Acid": {
+              "clones": 1286,
+              "positives": 1012,
+              "negatives": 813
+            },
+            "Cisplatin": {
+              "clones": 793,
+              "positives": 700,
+              "negatives": 1125
+            },
+            "Doxorubicin": {
+              "clones": 1227,
+              "positives": 961,
+              "negatives": 864
+            }
+          },
+          "10": {
+            "naive_clones": 1697,
+            "Dabrafenib": {
+              "clones": 706,
+              "positives": 462,
+              "negatives": 1235
+            },
+            "Trametinib": {
+              "clones": 554,
+              "positives": 368,
+              "negatives": 1329
+            },
+            "CoCl2": {
+              "clones": 684,
+              "positives": 540,
+              "negatives": 1157
+            },
+            "Acid": {
+              "clones": 1154,
+              "positives": 912,
+              "negatives": 785
+            },
+            "Cisplatin": {
+              "clones": 598,
+              "positives": 542,
+              "negatives": 1155
+            },
+            "Doxorubicin": {
+              "clones": 961,
+              "positives": 788,
+              "negatives": 909
+            }
+          },
+          "20": {
+            "naive_clones": 1434,
+            "Dabrafenib": {
+              "clones": 588,
+              "positives": 361,
+              "negatives": 1073
+            },
+            "Trametinib": {
+              "clones": 436,
+              "positives": 271,
+              "negatives": 1163
+            },
+            "CoCl2": {
+              "clones": 604,
+              "positives": 448,
+              "negatives": 986
+            },
+            "Acid": {
+              "clones": 1006,
+              "positives": 756,
+              "negatives": 678
+            },
+            "Cisplatin": {
+              "clones": 378,
+              "positives": 345,
+              "negatives": 1089
+            },
+            "Doxorubicin": {
+              "clones": 695,
+              "positives": 583,
+              "negatives": 851
+            }
+          },
+          "50": {
+            "naive_clones": 781,
+            "Dabrafenib": {
+              "clones": 411,
+              "positives": 180,
+              "negatives": 601
+            },
+            "Trametinib": {
+              "clones": 297,
+              "positives": 132,
+              "negatives": 649
+            },
+            "CoCl2": {
+              "clones": 449,
+              "positives": 281,
+              "negatives": 500
+            },
+            "Acid": {
+              "clones": 756,
+              "positives": 477,
+              "negatives": 304
+            },
+            "Cisplatin": {
+              "clones": 180,
+              "positives": 158,
+              "negatives": 623
+            },
+            "Doxorubicin": {
+              "clones": 386,
+              "positives": 301,
+              "negatives": 480
+            }
+          }
+        },
+        "status": "PRESENT",
+        "evidence": "the naive pool and every positive count move materially with the UMI floor (naive clones 4018 -> 781). Unlike the Rewind gDNA arm there is NO empty region to separate signal from noise, so no floor is selected here."
+      },
+      "multi_treatment_coverage": {
+        "value": {
+          "naive_clones": 4018,
+          "by_n_treatments": {
+            "0": 2187,
+            "1": 331,
+            "2": 309,
+            "3": 320,
+            "4": 333,
+            "5": 288,
+            "6": 250
+          },
+          "clones_in_ge2_treatments": 1500,
+          "clones_in_all_6": 250
+        },
+        "status": "PRESENT",
+        "evidence": "1500 naive clones are re-observed under two or more treatments at floor 1 -- this is the structure a state x treatment interaction test needs, and it is the reason this dataset was qualified for Role B."
+      },
+      "pretreatment_observations_per_clone": {
+        "value": {
+          "clones": 4018,
+          "median_cells": 1,
+          "max_cells": 262,
+          "clones_with_ge_k_cells": {
+            "1": 4018,
+            "2": 1645,
+            "3": 1371,
+            "5": 992,
+            "10": 561
+          }
+        },
+        "status": "PRESENT",
+        "evidence": "X is a clone-level pretreatment profile; clones with a single naive cell give a one-cell estimate of that clone's starting state"
+      },
+      "design_from_source": {
+        "value": {
+          "pretreatment_samples": [
+            "Naive1",
+            "Naive2",
+            "Naive3"
+          ],
+          "treatments": [
+            "Dabrafenib",
+            "Trametinib",
+            "CoCl2",
+            "Acid",
+            "Cisplatin",
+            "Doxorubicin"
+          ]
+        },
+        "status": "PRESENT",
+        "evidence": "GEO Overall-Design: barcoded WM989 cells were allowed to double, a subset was taken for the untreated naive scRNA arm, and the remainder was split six ways -- 4 weeks of dabrafenib / trametinib / CoCl2 / acidic media, or 2 weeks of cisplatin / doxorubicin plus a 2 week holiday -- then re-sequenced. X precedes U precedes Y by construction."
+      },
+      "unresolved_outcome_rule": {
+        "value": [
+          "per-cell clone call: minimum UMI and minimum dominant fraction are unspecified",
+          "clone-presence floor for calling a clone 'surviving' in a treated sample",
+          "whether Naive1/2/3 are pooled into one pretreatment pool or kept as replicates"
+        ],
+        "status": "UNKNOWN_REQUIRES_SOURCE_FILE",
+        "evidence": "GEO ships the raw feature-barcode matrix only. There is no author-processed clone table and the Data-Processing block states only that barcode reads were linked to 10x cell barcodes, not how a clone was called. Every reported count above is floor-conditional."
+      }
+    },
+    "manifest": [
+      {
+        "path": "D:\\GSE279162\\GSE279162_family.xml",
+        "exists": true,
+        "bytes": 36937,
+        "sha256": "569630ffc28ed088c34d3450f90c533c863984c5ba5347c3d86be3d28c22003d"
+      },
+      {
+        "path": "D:\\GSE279162\\GSE279162_series_matrix.txt.gz",
+        "exists": true,
+        "bytes": 3235,
+        "sha256": "828fb6691f235e702ae48442328ae975c911a59199076c58ae6816acb54db0bc"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8562999_Naive1_filtered_barcodes.tsv.gz",
+        "exists": true,
+        "bytes": 13020,
+        "sha256": "69605b1ae55167c9d3354c123ca82365b9bb10f7f8c142cdb81362984e925cc3"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8562999_Naive1_filtered_features.tsv.gz",
+        "exists": true,
+        "bytes": 1201382,
+        "sha256": "abac5d77e3ea8fe08aff73d757927d4a558413afe34048aa201c52dc8d5c48ba"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8562999_Naive1_filtered_matrix.mtx.gz",
+        "exists": true,
+        "bytes": 39323313,
+        "sha256": "10786dd7ffc64f29a6bb81e87af4d2a478903f81f0bc5edce5748adbb885233c"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563000_Naive2_filtered_barcodes.tsv.gz",
+        "exists": true,
+        "bytes": 17333,
+        "sha256": "edfbc63ec9e042814ad7cdb8b657364b0a7d351c1ce1977591d76e38cbbdf028"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563000_Naive2_filtered_features.tsv.gz",
+        "exists": true,
+        "bytes": 1201382,
+        "sha256": "bfff08cce0d38a75e908701f3b9a6ae2adc5a4bf171aab45f2fb8de32daf9338"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563000_Naive2_filtered_matrix.mtx.gz",
+        "exists": true,
+        "bytes": 52465932,
+        "sha256": "8ea44b5ec7daabb4b5476722c94a077c1e43e753523989f16325892010af4b8b"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563001_Naive3_filtered_barcodes.tsv.gz",
+        "exists": true,
+        "bytes": 24070,
+        "sha256": "7a68d8bb3f73e2aa3921178df97c75bb973643a2f7408bb2c24bbc73be1fd5b1"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563001_Naive3_filtered_features.tsv.gz",
+        "exists": true,
+        "bytes": 1201382,
+        "sha256": "178c966e65dd8400bad1782601c3405d0ec568e5294a81c220fad725f7fa0e10"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563001_Naive3_filtered_matrix.mtx.gz",
+        "exists": true,
+        "bytes": 70391230,
+        "sha256": "846c2886535ed9be4b70178aecbc89a753650cb1e0824f6a4ee7dc435eb65264"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563002_Dabrafenib_filtered_barcodes.tsv.gz",
+        "exists": true,
+        "bytes": 50460,
+        "sha256": "5c638d635d6dfe842fa995829fcb831da0fa22389a2950207930a8f72ca29bf8"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563002_Dabrafenib_filtered_features.tsv.gz",
+        "exists": true,
+        "bytes": 1201382,
+        "sha256": "db292853d46839ba7306fafd6830bf8d3ec6afd484a70f54cd69f4f3d8f2b4e4"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563002_Dabrafenib_filtered_matrix.mtx.gz",
+        "exists": true,
+        "bytes": 103394149,
+        "sha256": "724fc89d524c0a343912e75440a9118ff656f27d70c0055c61a19d0905b6c653"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563003_Trametinib_filtered_barcodes.tsv.gz",
+        "exists": true,
+        "bytes": 82684,
+        "sha256": "f19d56af7cf2ad237d2ab508f9fe94002b7d9edcc8684bb7d7368f8208c75b4f"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563003_Trametinib_filtered_features.tsv.gz",
+        "exists": true,
+        "bytes": 1201382,
+        "sha256": "417216647407fafa52e021b73745502925c6f8e1f0654189adc58d69ecb71429"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563003_Trametinib_filtered_matrix.mtx.gz",
+        "exists": true,
+        "bytes": 119634308,
+        "sha256": "a418fac2f52738783724ccde5b2e9f1c3fdf131af02a4e781fa75c2df6b28b75"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563004_CoCl2_filtered_barcodes.tsv.gz",
+        "exists": true,
+        "bytes": 40091,
+        "sha256": "3cd87a7d59cdbe54b49d32e2c49abf1a12255f71f59e64478c1f1fdf4b4088c5"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563004_CoCl2_filtered_features.tsv.gz",
+        "exists": true,
+        "bytes": 1201382,
+        "sha256": "7cc0ecc69f70d3e9b779c7619705227d205faa962e66ea0b33a5b8ede7e74009"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563004_CoCl2_filtered_matrix.mtx.gz",
+        "exists": true,
+        "bytes": 105221280,
+        "sha256": "179aeba5ac426dc8c42363b43829a788c3dec31ae3561dcd19526b5955be81d8"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563005_Acid_filtered_barcodes.tsv.gz",
+        "exists": true,
+        "bytes": 63202,
+        "sha256": "bff5753495d4ea2f39a53ac4b35b155e5ad6790622ce4ee19dffbe2617955797"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563005_Acid_filtered_features.tsv.gz",
+        "exists": true,
+        "bytes": 1201382,
+        "sha256": "70798d213d6598ec539ed4169d8788169b8d3336f2c5e39e0d86cbc0d8c52bc3"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563005_Acid_filtered_matrix.mtx.gz",
+        "exists": true,
+        "bytes": 102749120,
+        "sha256": "9a38a0059de4fe90834c6fb7af80462636255b8fd5c12e81c67fa3f8d0bf5f78"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563006_Cisplatin_filtered_barcodes.tsv.gz",
+        "exists": true,
+        "bytes": 55750,
+        "sha256": "ca55f48ca0daf20e2d44053beb11c107af5e98f04b90d1139d7ed4881aee4482"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563006_Cisplatin_filtered_features.tsv.gz",
+        "exists": true,
+        "bytes": 1201382,
+        "sha256": "fbd1ee6c7eea0c56333c8341ea7ec24492730481382a5288beee7618c43780b5"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563006_Cisplatin_filtered_matrix.mtx.gz",
+        "exists": true,
+        "bytes": 101046114,
+        "sha256": "4ec3442d417ad0b098dbb4b1e8f5601420d894bb47b68a2b744037920553e530"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563007_Doxorubicin_filtered_barcodes.tsv.gz",
+        "exists": true,
+        "bytes": 46506,
+        "sha256": "beff5a86082e0b9a7cd526a311b2fba42cf05be5edc8a41abeafaa247245f19e"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563007_Doxorubicin_filtered_features.tsv.gz",
+        "exists": true,
+        "bytes": 1201382,
+        "sha256": "9108156e1e49872d90d4e6964cdcfe35a2099a786dc62623bc7391f47856971b"
+      },
+      {
+        "path": "D:\\GSE279162\\GSM8563007_Doxorubicin_filtered_matrix.mtx.gz",
+        "exists": true,
+        "bytes": 57132084,
+        "sha256": "7c6b106ba63cc21e632e15ae6b799d5a035102101a6753adefadd23e0f73bc2c"
+      }
+    ],
+    "clone_table": "results\\stage21d_gse279162_clone_table.tsv"
+  },
+  "overall": "STAGE_22_PENDING_OUTCOME_RULE"
+}
