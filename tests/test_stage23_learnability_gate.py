@@ -640,3 +640,146 @@ def test_the_results_reference_the_23a_protocol(wb):
     assert wb["protocol_sha256"] == S23.sha256_file(RES / "stage23_protocol.json")
     assert wb["plan"]["version"] == "V2"
     assert "23E" in wb["verdict_is_provisional_until"]
+
+
+# ================================================================================================ #
+# 23D — WM989 explicit interaction gate
+# ================================================================================================ #
+INTERACTION_RESULTS = RES / "stage23_wm989_interaction_results.json"
+ran_23d = pytest.mark.skipif(not INTERACTION_RESULTS.exists(), reason="23D has not been run")
+
+
+@pytest.fixture(scope="module")
+def wi():
+    return json.loads(INTERACTION_RESULTS.read_text(encoding="utf-8"))
+
+
+def test_the_interaction_block_is_pc_by_dummy_only_and_zero_for_the_reference():
+    """V2 §6.1: only standardized PC score x non-reference dummy. The reference treatment's rows
+    must have an all-zero interaction block, so its state contribution stays in the common X
+    coefficients rather than being double counted."""
+    pcs = np.arange(12.0).reshape(3, 4)
+    d = S23.treatment_dummies(np.array(["Acid", "CoCl2", "Trametinib"]))
+    blk = S23.interaction_block(pcs, d)
+    assert blk.shape == (3, 4 * 5), "exactly 5K columns"
+    assert (blk[0] == 0).all(), "the reference row carries no interaction"
+    assert blk[1].sum() != 0 and blk[2].sum() != 0
+    for row in (1, 2):
+        assert int((blk[row] != 0).sum()) == 4, "one treatment block active per row"
+
+
+@ran_23d
+def test_w1_and_w4_are_reused_verbatim_from_23c(wi):
+    """The reference must not drift: 23D refits only W5."""
+    assert wi["w1_w4_reused_from_23c"] is True
+    for name, path in (("C1", RES / "stage23_wm989_interaction_oof.csv"),
+                       ("C2", RES / "stage23_wm989_interaction_abundance_oof.csv")):
+        new = pd.read_csv(path)
+        old = pd.read_csv(RES / ("stage23_wm989_detection_oof.csv" if name == "C1"
+                                 else "stage23_wm989_abundance_oof.csv"))
+        assert np.allclose(new["pred_W1"], old["pred_W1"]), name
+        assert np.allclose(new["pred_W4"], old["pred_W4"]), name
+        assert (new["clone_id"] == old["clone_id"]).all()
+        assert "pred_W5" in new.columns and new["pred_W5"].notna().all()
+
+
+@ran_23d
+def test_the_design_width_is_exactly_k_plus_b_plus_u_plus_interaction(wi):
+    for ep in ("C1", "C2"):
+        e = wi["endpoints"][ep]
+        for f, sel in e["selected_hyperparameters_per_outer_fold"].items():
+            k = sel["K"]
+            assert sel["interaction_columns"] == 5 * k
+            assert e["per_outer_fold"][f]["design_columns"] == k + 4 + 5 + 5 * k, (ep, f)
+
+
+@ran_23d
+def test_no_gene_level_interaction_was_constructed(wi):
+    assert "no gene-level interaction" in wi["interaction_terms"]
+    for ep in ("C1", "C2"):
+        for f, m in wi["endpoints"][ep]["per_outer_fold"].items():
+            assert m["design_columns"] < 400, (ep, f, "a gene-level interaction would be enormous")
+
+
+@ran_23d
+def test_both_required_comparisons_are_present_with_both_intervals(wi):
+    for ep in ("C1", "C2"):
+        inf = wi["endpoints"][ep]["inference"]
+        assert set(inf) == {"interaction_W4_minus_W5", "full_state_W1_minus_W5"}
+        for key, d in inf.items():
+            assert d["replicates"] == 2000 and d["bootstrap_unit"] == "clone"
+            assert d["ci975_two_sided"][0] <= d["ci95"][0]
+            assert d["ci975_two_sided"][1] >= d["ci95"][1]
+            a, b = d["comparison"].split(" - ")
+            expect = wi["endpoints"][ep]["pooled"][a] - wi["endpoints"][ep]["pooled"][b]
+            assert abs(d["point"] - expect) < 1e-12, key
+
+
+@ran_23d
+def test_the_full_state_comparison_is_required_not_optional(wi):
+    """V2 §6.3: W5 must beat the load-bearing nuisance baseline W1, not merely rearrange error
+    relative to W4."""
+    for ep in ("C1", "C2"):
+        assert "full_state_W1_minus_W5" in wi["endpoints"][ep]["inference"]
+    assert "pass_full" in wi["endpoint_families"]["C1"]
+
+
+@ran_23d
+def test_treatment_level_directions_cover_all_six(wi):
+    for ep in ("C1", "C2"):
+        e = wi["endpoints"][ep]
+        assert set(e["by_treatment"]) == set(S23.TREATMENT_ORDER)
+        n = sum(v["improved"] for v in e["by_treatment"].values())
+        assert n == e["treatments_improved_by_W5_over_W4"]
+        for t, v in e["by_treatment"].items():
+            assert abs(v["improvement_W4_minus_W5"] - (v["W4"] - v["W5"])) < 1e-12, t
+            assert v["improved"] == (v["W4"] - v["W5"] > 0)
+
+
+@ran_23d
+def test_the_verdict_is_derived_from_the_four_pre_registered_criteria(wi):
+    fams = wi["endpoint_families"]
+    got = S23.INTERACTION_NONE
+    passing = None
+    for ep, other in (("C1", "C2"), ("C2", "C1")):
+        a, b = fams[ep], fams[other]
+        if (a["pass_int"] and a["pass_full"] and a["n_treat"] >= 3
+                and not b["harm_int"] and not b["harm_full"]):
+            got, passing = S23.INTERACTION_PASS, ep
+            break
+    if got != S23.INTERACTION_PASS:
+        if (any(f["point_int"] > 0 or f["point_full"] > 0 for f in fams.values())
+                and any(f["n_treat"] >= 1 for f in fams.values())):
+            got = S23.INTERACTION_LOCAL
+    assert wi["verdict"] == got
+    assert wi["passing_endpoint"] == passing
+    src = SRC.read_text(encoding="utf-8")
+    assert '"verdict": "INTERACTION' not in src, "the verdict must not be hard-coded"
+
+
+@ran_23d
+def test_a_pass_required_beating_w1_on_the_same_endpoint(wi):
+    """The specific failure mode V2 §6.5 exists to block: W5 'passing' by rearranging error
+    against W4 while still not beating the nuisance baseline."""
+    if wi["verdict"] != S23.INTERACTION_PASS:
+        pytest.skip("no PASS to check")
+    ep = wi["passing_endpoint"]
+    f = wi["endpoint_families"][ep]
+    assert f["pass_int"] and f["pass_full"], "both bounds are required on the passing endpoint"
+    assert f["n_treat"] >= 3, "one favourable treatment is not a broad interaction claim"
+
+
+@ran_23d
+def test_the_outer_folds_are_still_the_frozen_stage22_ones(wi):
+    frozen = pd.read_csv(RES / "stage22_wm989_clones.csv").set_index("clone_id")["outer_fold"]
+    for path in ("stage23_wm989_interaction_oof.csv",
+                 "stage23_wm989_interaction_abundance_oof.csv"):
+        df = pd.read_csv(RES / path)
+        assert (df["clone_id"].map(frozen).to_numpy() == df["outer_fold"].to_numpy()).all()
+
+
+@ran_23d
+def test_no_convergence_warning_and_the_protocol_is_referenced(wi):
+    assert wi["convergence_warnings"] == [], wi["convergence_warnings"]
+    assert wi["protocol_sha256"] == S23.sha256_file(RES / "stage23_protocol.json")
+    assert "23E" in wi["verdict_is_provisional_until"]

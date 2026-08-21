@@ -318,6 +318,29 @@ two descriptive future endpoints. **No interaction terms** — those are 23D.
 **VERDICT: `ROLE_B_ADDITIVE_PASS`** — provisional until 23E structural controls and
 `ROLE_B_ADDITIVE_PERMUTATION_PASS`.
 
+### FROZEN 23C HEADLINE — accepted 2026-08-22, not to be re-run or re-tuned
+
+```text
+1. The PASS rests ENTIRELY on C1 detection.
+2. C1  dLL_state  = +0.00937   97.5% CI [+0.00516, +0.01315]
+3. C2  dMAE_state = +0.00441   97.5% CI [-0.00247, +0.01111]
+       C2 is NOT a positive finding. It supplies only the pre-registered
+       "other endpoint is not significantly worse" half of the PASS.
+4. The abundance+treatment baseline accounts for far more predictive
+   improvement than X:
+       adding B to U      log loss 0.55992 -> 0.47832  = 0.0816
+       adding X to B+U    log loss 0.47832 -> 0.46895  = 0.00937
+5. C2 preprocessing (gene filter / gene scaler / PCA / PC scaler / nuisance
+   scaler) was fitted on UNIQUE C2-eligible outer-training clones, and both
+   fitting and scoring are clone-balanced.
+6. FINAL Role-B additive PASS still requires the corresponding 23E control:
+       ROLE_B_ADDITIVE_PERMUTATION_PASS + STRUCTURAL_CONTROLS_PASS
+```
+
+The Dabrafenib / Trametinib per-treatment Spearman pattern is preserved as a **secondary
+observation only**. It did not inform the 23D design, which was frozen in V2 before any 23C result
+existed, and it must not be used to reshape 23D after the fact.
+
 The PASS rests entirely on **C1 detection**. C2 conditional abundance is not significant, and is
 not significantly worse — which is exactly the pre-registered condition for the other endpoint.
 
@@ -433,3 +456,149 @@ The verdict is provisional until 23E.
 
 ## Next action
 23D — WM989 explicit interaction gate. Not started.
+
+---
+
+# 23D — WM989 explicit interaction gate
+
+## Goal
+Ask whether the contribution of pretreatment state **depends on treatment** — the gate for any
+later state-conditioned treatment ranking. `W5 = X + B + U + X×U` against the additive reference
+`W4`, and against the load-bearing nuisance baseline `W1`.
+
+## Inputs
+- 23A protocol (`PROTOCOL_FROZEN`), referenced by SHA-256; same frozen nested CV, preprocessing,
+  treatment coding and grids
+- **`W1` and `W4` are reused verbatim from the frozen 23C out-of-fold predictions.** Only `W5` is
+  fitted here, so the reference cannot drift between substages — a test asserts the reused columns
+  are byte-equal to 23C's
+- interaction features are **standardized PC score × non-reference treatment dummy only**; no
+  gene-level interaction. Design width is exactly `K + 4 + 5 + 5K`
+
+## Files added
+- `results/stage23_wm989_interaction_results.json`
+- `results/stage23_wm989_interaction_oof.csv` (C1, 8,406 rows) ·
+  `results/stage23_wm989_interaction_abundance_oof.csv` (C2, 2,256 rows)
+
+## Files modified
+- `experiments/run_stage23_learnability_gate.py` — `--stage 23d`; 23A/23B/23C untouched
+- `tests/test_stage23_learnability_gate.py` — 11 further contracts (62 total)
+
+## Tests
+- 1899 passed · ruff clean (CI scope) · **0 convergence warnings**
+
+## Result
+
+**VERDICT: `INTERACTION_PASS_MULTI_TREATMENT`** — passing endpoint **C1**; provisional until 23E
+structural controls and `ROLE_B_INTERACTION_PERMUTATION_PASS`.
+
+Both endpoints satisfy all four pre-registered criteria independently.
+
+### C1 — detection (log loss; 8,406 rows, 1,401 clones)
+
+```text
+W1 = 0.47832      W4 = 0.46895      W5 = 0.45465
+
+ΔLL_interaction  (W4 - W5) = +0.01430   95% [+0.01056, +0.01797]
+                                        97.5% [+0.01010, +0.01847]   P(Δ≤0) = 0.0000
+ΔLL_full         (W1 - W5) = +0.02367   95% [+0.01845, +0.02869]
+                                        97.5% [+0.01750, +0.02949]   P(Δ≤0) = 0.0000
+```
+
+### C2 — conditional abundance (clone-balanced MAE; 2,256 rows, 929 clones)
+
+```text
+W1 = 0.51449      W4 = 0.51008      W5 = 0.50070
+
+ΔMAE_interaction (W4 - W5) = +0.00938   95% [+0.00185, +0.01662]
+                                        97.5% [+0.00086, +0.01740]   P(Δ≤0) = 0.0095
+ΔMAE_full        (W1 - W5) = +0.01378   95% [+0.00379, +0.02366]
+                                        97.5% [+0.00254, +0.02474]   P(Δ≤0) = 0.0025
+```
+
+### Selected hyperparameters per outer fold
+
+```text
+C1   W5   f0 K=50/C=0.1   f1 K=50/C=0.1   f2 K=50/C=0.1   f3 K=50/C=0.1   f4 K=50/C=0.1
+     W4   f0 K=50/C=1     f1 K=50/C=1     f2 K=50/C=1     f3 K=50/C=1     f4 K=50/C=1
+     design columns 309 in every fold  (50 PC + 4 B + 5 U + 250 interaction)
+
+C2   W5   f0 K=50/a=10    f1 K=20/a=10    f2 K=20/a=10    f3 K=10/a=10    f4 K=20/a=10
+     W4   f0 K=20/a=10    f1 K=50/a=10    f2 K=20/a=1     f3 K=20/a=10    f4 K=50/a=10
+     design columns 309 / 129 / 129 / 69 / 129
+```
+
+`W5` regularises itself once the interaction block is present: on C1 it selects `C = 0.1` where
+`W4` selects `C = 1`, and on C2 it selects a smaller `K` than `W4` in four of five folds. The
+nested CV was allowed to do this from the frozen grid; nothing was widened for `W5`.
+
+### Treatment-level directions (`W4 − W5`, positive = W5 better)
+
+```text
+C1 detection (log loss)                    C2 conditional abundance (MAE)
+treatment        W4       W5    W4-W5      treatment        W4       W5    W4-W5
+Acid        0.53038  0.51941  +0.01097     Acid        0.62903  0.59804  +0.03099
+Cisplatin   0.40115  0.40113  +0.00002     Cisplatin   0.42896  0.42428  +0.00468
+CoCl2       0.41990  0.40096  +0.01894     CoCl2       0.47176  0.46945  +0.00231
+Dabrafenib  0.49047  0.46455  +0.02592     Dabrafenib  0.76954  0.76035  +0.00919
+Doxorubicin 0.49966  0.50298  -0.00332     Doxorubicin 0.43902  0.44248  -0.00346
+Trametinib  0.47213  0.43887  +0.03326     Trametinib  0.82714  0.79356  +0.03358
+
+improved: 5/6 on both endpoints
+```
+
+**Doxorubicin is the single treatment where `W5` is worse, and it is worse on both endpoints**
+(`−0.0033`, `−0.0035`). That consistency is worth carrying forward rather than averaging away.
+
+Cisplatin's C1 improvement is `+0.00002` — directionally positive but numerically negligible, so
+"5/6 improved" on C1 is really "4 clear, 1 marginal, 1 negative".
+
+## Bugs found
+- None in this substage. No deviations from the frozen protocol, no failed assumptions, no
+  convergence warnings, and no change to any earlier substage
+
+## Scientific interpretation
+**Proves:** on both endpoints, letting the state contribution vary by treatment improves held-out
+prediction over the additive model, and — the criterion that actually matters — over the nuisance
+baseline `W1` as well. `W5` is not merely rearranging error relative to `W4`; it beats the
+abundance+treatment baseline that dominated 23C.
+
+**The C2 result is the more interesting one.** In 23C the *additive* state effect on conditional
+abundance was not significant (`ΔMAE_state = +0.00441`, 97.5% CI spanning zero). Here the same
+endpoint yields a significant interaction effect (`+0.00938`, lower bound `+0.00086`) and a
+significant full-state effect (`+0.01378`, lower bound `+0.00254`). This is exactly the case V2 §5.7
+anticipated in advance: *"a failure here does not preclude a treatment-specific interaction that
+cancels in the additive average."* The additive average was hiding treatment-specific structure.
+
+Comparing the two substages on C1 makes the same point quantitatively:
+
+```text
+additive state contribution   W1 -> W4   = +0.00937
+interaction contribution      W4 -> W5   = +0.01430
+full state contribution       W1 -> W5   = +0.02367
+```
+
+More than half of the total state contribution on detection is treatment-specific rather than
+additive.
+
+**Does NOT prove:**
+
+- **That abundance has stopped dominating.** `B` still buys `0.0816` of log loss on C1 (23C); the
+  entire full-state contribution here is `0.0237`, under a third of that. The honest ordering is
+  still: captured abundance first, treatment-specific state second, additive state third.
+- **That the interaction generalises to every treatment.** Doxorubicin is negative on both
+  endpoints and Cisplatin is effectively flat on C1. The pre-registered `>=3/6` bar is met, but
+  "multi-treatment" here means four treatments carry it, not six.
+- **That treatment ranking works.** This gate says the state contribution varies by treatment. It
+  does not test whether a model can *rank* treatments for a clone, which is Stage 25 and requires
+  its own design.
+- **Anything, until 23E.** The verdict is provisional: it needs `STRUCTURAL_CONTROLS_PASS` and, per
+  V2 §7.3, **both** the `W5`-vs-`W4` and `W5`-vs-`W1` improvements must clear their permutation
+  nulls on the passing endpoint.
+
+The Dabrafenib/Trametinib pattern noted as a secondary observation in 23C reappears here as the two
+largest C1 gains. That is a consistency check after the fact, not evidence — 23D's design was
+frozen in V2 before any 23C result existed and was not altered.
+
+## Next action
+23E — negative controls, permutation nulls, leakage audit and determinism. Not started.

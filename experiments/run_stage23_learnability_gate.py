@@ -987,14 +987,255 @@ def run_23c(wm989_root: Path) -> dict:
     return res
 
 
+# --------------------------------------------------------------------------------------------- #
+# 23D — WM989 explicit interaction gate.  Does the contribution of pretreatment state DEPEND on
+# treatment?  W1 and W4 are reused verbatim from the frozen 23C out-of-fold predictions, so the
+# reference cannot drift; only W5 is fitted here.
+# --------------------------------------------------------------------------------------------- #
+WM989_INTERACTION_RESULTS = _RESULTS / "stage23_wm989_interaction_results.json"
+WM989_W5_OOF = _RESULTS / "stage23_wm989_interaction_oof.csv"
+INTERACTION_PASS = "INTERACTION_PASS_MULTI_TREATMENT"
+INTERACTION_LOCAL = "INTERACTION_LOCAL_ONLY"
+INTERACTION_NONE = "INTERACTION_NOT_SUPPORTED"
+
+
+def interaction_block(pcs: np.ndarray, dummies: np.ndarray) -> np.ndarray:
+    """V2 §6.1/§3.8: only standardized PC score x non-reference treatment dummy.
+
+    Never a gene-level interaction matrix. With K PCs and five non-reference dummies this is
+    exactly 5K columns, and the reference treatment's state contribution stays in the common X
+    coefficients.
+    """
+    return np.hstack([pcs * dummies[:, [t]] for t in range(dummies.shape[1])])
+
+
+def run_23d(wm989_root: Path) -> dict:
+    from sklearn.metrics import log_loss
+    from sklearn.model_selection import GroupKFold
+
+    X, clones = _load_wm989_x()
+    clone_pos = {c: i for i, c in enumerate(clones)}
+    ck = pd.read_csv(_RESULTS / "stage22_wm989_clones.csv").set_index("clone_id").loc[clones]
+    nuis_clone = np.column_stack([np.log1p(ck[c].to_numpy(dtype=float))
+                                  for c in ("n_naive_cells", "n_naive1_cells",
+                                            "n_naive2_cells", "n_naive3_cells")])
+    convergence: list = []
+    out: dict = {}
+
+    for endpoint, oof_path in (("C1", WM989_C1_OOF), ("C2", WM989_C2_OOF)):
+        base = pd.read_csv(oof_path)
+        if not {"pred_W1", "pred_W4"} <= set(base.columns):
+            raise RuntimeError(f"{oof_path.name} lacks the frozen 23C W1/W4 predictions")
+        ckey = base["clone_id"].to_numpy()
+        tkey = base["treatment"].to_numpy()
+        yv = base["y"].to_numpy()
+        rf = base["outer_fold"].to_numpy()
+        dummies = treatment_dummies(tkey)
+        w5 = np.full(len(base), np.nan)
+        selected, meta = {}, {}
+
+        for f in range(N_OUTER):
+            te = np.flatnonzero(rf == f)
+            tr = np.flatnonzero(rf != f)
+            tr_clones = sorted(set(ckey[tr]))
+            te_clones = sorted(set(ckey[te]))
+
+            def prep(fit_clones, apply_clones):
+                fit_idx = np.array([clone_pos[c] for c in fit_clones])
+                app_idx = np.array([clone_pos[c] for c in apply_clones])
+                ztr, zap, n_genes, kmax = expression_block(X, fit_idx, app_idx,
+                                                           max(K_CANDIDATES))
+                btr, bap = standardize_train_only(nuis_clone[fit_idx], nuis_clone[app_idx])
+                pcs = {c: ztr[i] for i, c in enumerate(fit_clones)}
+                nui = {c: btr[i] for i, c in enumerate(fit_clones)}
+                for i, c in enumerate(apply_clones):
+                    pcs[c] = zap[i]
+                    nui[c] = bap[i]
+                return pcs, nui, n_genes, kmax
+
+            def design(idx, pcs, nui, k, cc=ckey, dd=dummies):
+                P = np.array([pcs[c] for c in cc[idx]])[:, :k]
+                B = np.array([nui[c] for c in cc[idx]])
+                U = dd[idx]
+                return np.hstack([P, B, U, interaction_block(P, U)])
+
+            # ---- inner CV for W5 only; W1/W4 are frozen from 23C ---------------------------- #
+            scores: dict = {}
+            g = np.array(tr_clones)
+            for itr_i, iva_i in GroupKFold(n_splits=N_INNER).split(g, groups=g):
+                itr_c, iva_c = [g[i] for i in itr_i], [g[i] for i in iva_i]
+                pcs, nui, _, kmax = prep(itr_c, iva_c)
+                si = np.array([i for i in tr if ckey[i] in set(itr_c)])
+                sv = np.array([i for i in tr if ckey[i] in set(iva_c)])
+                wts = None
+                if endpoint == "C2":
+                    cnt = pd.Series(ckey[si]).value_counts()
+                    wts = 1.0 / pd.Series(ckey[si]).map(cnt).to_numpy()
+                    wts = wts / wts.mean()
+                grid = LOGISTIC_C if endpoint == "C1" else RIDGE_ALPHA
+                for k in K_CANDIDATES:
+                    if k > kmax:
+                        continue
+                    Ai, Av = design(si, pcs, nui, k), design(sv, pcs, nui, k)
+                    for hp in grid:
+                        if endpoint == "C1":
+                            pred = _fit_logistic(Ai, yv[si], Av, hp, convergence)
+                            sc = log_loss(yv[sv], np.clip(pred, 1e-15, 1 - 1e-15), labels=[0, 1])
+                        else:
+                            pred = _fit_ridge(Ai, yv[si], Av, hp, wts)
+                            sc = float(clone_balanced_error(yv[sv] - pred, ckey[sv]).mean())
+                        scores.setdefault((k, hp), []).append(sc)
+
+            best = min(scores.items(),
+                       key=lambda kv: (round(float(np.mean(kv[1])), 12), kv[0][0],
+                                       -kv[0][1] if endpoint == "C2" else kv[0][1]))
+            k, hp = best[0]
+            selected[str(f)] = {"K": k, "hp": hp,
+                                "mean_inner_score": round(float(np.mean(best[1])), 6),
+                                "interaction_columns": 5 * k}
+
+            pcs, nui, n_genes, kmax = prep(tr_clones, te_clones)
+            wts = None
+            if endpoint == "C2":
+                cnt = pd.Series(ckey[tr]).value_counts()
+                wts = 1.0 / pd.Series(ckey[tr]).map(cnt).to_numpy()
+                wts = wts / wts.mean()
+            Atr, Ate = design(tr, pcs, nui, k), design(te, pcs, nui, k)
+            if endpoint == "C1":
+                w5[te] = _fit_logistic(Atr, yv[tr], Ate, hp, convergence)
+            else:
+                w5[te] = _fit_ridge(Atr, yv[tr], Ate, hp, wts)
+            meta[str(f)] = {"train_rows": int(len(tr)), "test_rows": int(len(te)),
+                            "design_columns": int(Atr.shape[1]), "retained_genes": n_genes}
+
+        assert not np.isnan(w5).any()
+
+        # ---- per-clone losses for the three models, then the two required comparisons ------- #
+        def per_clone(pred, ep=endpoint, yy=yv, cc=ckey):
+            if ep == "C1":
+                pc = np.clip(pred, 1e-15, 1 - 1e-15)
+                return clone_balanced_error(-(yy * np.log(pc) + (1 - yy) * np.log(1 - pc)), cc)
+            return clone_balanced_error(yy - pred, cc)
+
+        pcs_ = {m: per_clone(base[f"pred_{m}"].to_numpy()) for m in ("W1", "W4")}
+        pcs_["W5"] = per_clone(w5)
+        pooled = {m: float(v.mean()) for m, v in pcs_.items()}
+
+        seed = SEED_BOOT_WM989_C1 if endpoint == "C1" else SEED_BOOT_WM989_C2
+        uc = pcs_["W1"].index.to_numpy()
+        rng = np.random.default_rng(seed)
+        boot_idx = [rng.integers(0, len(uc), len(uc)) for _ in range(N_BOOTSTRAP)]
+
+        def compare(a, b, per=pcs_, bidx=boot_idx, pl=pooled, sd=seed, ucv=uc):
+            va, vb = per[a].to_numpy(), per[b].to_numpy()
+            d = np.array([va[i].mean() - vb[i].mean() for i in bidx])
+            lo95, hi95 = np.percentile(d, [2.5, 97.5])
+            lo975, hi975 = np.percentile(d, [1.25, 98.75])
+            return {"comparison": f"{a} - {b}", "point": float(pl[a] - pl[b]),
+                    "ci95": [float(lo95), float(hi95)],
+                    "ci975_two_sided": [float(lo975), float(hi975)],
+                    "fraction_delta_le_0": float((d <= 0).mean()),
+                    "replicates": N_BOOTSTRAP, "seed": sd, "bootstrap_unit": "clone",
+                    "clones_resampled": int(len(ucv))}
+
+        inference = {"interaction_W4_minus_W5": compare("W4", "W5"),
+                     "full_state_W1_minus_W5": compare("W1", "W5")}
+
+        # ---- treatment-level directional diagnostics ---------------------------------------- #
+        by_treatment = {}
+        for t in TREATMENT_ORDER:
+            m = tkey == t
+            if endpoint == "C1":
+                def ll(p, mm=m, yy=yv):
+                    return float(log_loss(yy[mm], np.clip(p[mm], 1e-15, 1 - 1e-15),
+                                          labels=[0, 1]))
+                w4v, w5v = ll(base["pred_W4"].to_numpy()), ll(w5)
+            else:
+                w4v = float(np.abs(yv[m] - base["pred_W4"].to_numpy()[m]).mean())
+                w5v = float(np.abs(yv[m] - w5[m]).mean())
+            by_treatment[t] = {"W4": w4v, "W5": w5v, "improvement_W4_minus_W5": w4v - w5v,
+                               "improved": bool(w4v - w5v > 0), "rows": int(m.sum())}
+        n_improved = sum(v["improved"] for v in by_treatment.values())
+
+        frame = base.copy()
+        frame["pred_W5"] = w5
+        frame.to_csv(WM989_W5_OOF if endpoint == "C1" else
+                     _RESULTS / "stage23_wm989_interaction_abundance_oof.csv",
+                     index=False, lineterminator="\n")
+        out[endpoint] = {"rows": int(len(base)), "clones": int(len(uc)),
+                         "selected_hyperparameters_per_outer_fold": selected,
+                         "per_outer_fold": meta,
+                         "pooled_metric": "log_loss" if endpoint == "C1" else "clone_balanced_MAE",
+                         "pooled": pooled, "inference": inference,
+                         "by_treatment": by_treatment,
+                         "treatments_improved_by_W5_over_W4": n_improved}
+
+    # ---- verdict, derived from V2 §6.5 -------------------------------------------------------- #
+    def fam(ep):
+        i = out[ep]["inference"]["interaction_W4_minus_W5"]
+        s = out[ep]["inference"]["full_state_W1_minus_W5"]
+        return {"pass_int": i["ci975_two_sided"][0] > 0, "pass_full": s["ci975_two_sided"][0] > 0,
+                "harm_int": i["ci975_two_sided"][1] < 0, "harm_full": s["ci975_two_sided"][1] < 0,
+                "point_int": i["point"], "point_full": s["point"],
+                "n_treat": out[ep]["treatments_improved_by_W5_over_W4"]}
+
+    fams = {ep: fam(ep) for ep in ("C1", "C2")}
+    verdict = INTERACTION_NONE
+    passing_endpoint = None
+    for ep, other in (("C1", "C2"), ("C2", "C1")):
+        a, b = fams[ep], fams[other]
+        if (a["pass_int"] and a["pass_full"] and a["n_treat"] >= 3
+                and not b["harm_int"] and not b["harm_full"]):
+            verdict, passing_endpoint = INTERACTION_PASS, ep
+            break
+    if verdict != INTERACTION_PASS:
+        any_point = any(f["point_int"] > 0 or f["point_full"] > 0 for f in fams.values())
+        any_treat = any(f["n_treat"] >= 1 for f in fams.values())
+        if any_point and any_treat:
+            verdict = INTERACTION_LOCAL
+
+    res = {"stage": "23D", "dataset": "GSE279162", "role": "B",
+           "plan": {"file": PLAN.name, "version": PLAN_VERSION,
+                    "canonical_lf_sha256": canonical_text_sha256(PLAN)},
+           "protocol_sha256": sha256_file(_RESULTS / "stage23_protocol.json"),
+           "models": {"W1": "B + U (frozen from 23C)", "W4": "X + B + U (frozen from 23C)",
+                      "W5": "X + B + U + X*U"},
+           "interaction_terms": "standardized PCA(X) score x non-reference treatment dummy only; "
+                                "no gene-level interaction",
+           "w1_w4_reused_from_23c": True,
+           "endpoints": out, "endpoint_families": fams,
+           "passing_endpoint": passing_endpoint,
+           "convergence_warnings": convergence,
+           "verdict": verdict,
+           "verdict_is_provisional_until": "23E structural controls + "
+                                           "ROLE_B_INTERACTION_PERMUTATION_PASS"}
+    WM989_INTERACTION_RESULTS.write_text(json.dumps(res, indent=2), encoding="utf-8",
+                                         newline="\n")
+    return res
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Stage 23 learnability gate")
-    ap.add_argument("--stage", default="23a", choices=["23a", "23b", "23c"])
+    ap.add_argument("--stage", default="23a", choices=["23a", "23b", "23c", "23d"])
     ap.add_argument("--rewind-root", type=Path, default=S21D.REWIND)
     ap.add_argument("--wm989-root", type=Path, default=S21D.WM989)
     args = ap.parse_args(argv)
     _RESULTS.mkdir(exist_ok=True)
     _CACHE.mkdir(parents=True, exist_ok=True)
+
+    if args.stage == "23d":
+        r = run_23d(args.wm989_root)
+        for ep in ("C1", "C2"):
+            e = r["endpoints"][ep]
+            print(f"  {ep} {e['pooled_metric']}: " + "  ".join(
+                f"{m}={e['pooled'][m]:.5f}" for m in ("W1", "W4", "W5")))
+            for key in ("interaction_W4_minus_W5", "full_state_W1_minus_W5"):
+                d = e["inference"][key]
+                print(f"      {d['comparison']:<9} {d['point']:+.5f}  "
+                      f"97.5% [{d['ci975_two_sided'][0]:+.5f}, {d['ci975_two_sided'][1]:+.5f}]")
+            print(f"      treatments improved by W5 over W4: {e['treatments_improved_by_W5_over_W4']}/6")
+        print("OVERALL:", r["verdict"])
+        return 0
 
     if args.stage == "23c":
         r = run_23c(args.wm989_root)
