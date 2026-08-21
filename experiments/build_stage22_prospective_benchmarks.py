@@ -697,7 +697,7 @@ def main(argv=None) -> int:
         "checks": a["checks"], "statistics": a["stats"], "verdict": a_verdict,
         "derived_artifacts": hash_artifacts(a["artifacts"]),
     }
-    REWIND_MANIFEST.write_text(json.dumps(rewind_manifest, indent=2, default=str), encoding="utf-8")
+    REWIND_MANIFEST.write_text(json.dumps(rewind_manifest, indent=2, default=str), encoding="utf-8", newline="\n")
     print("GSE227151:", a_verdict)
 
     # ---- Role B ------------------------------------------------------------------------------ #
@@ -743,7 +743,7 @@ def main(argv=None) -> int:
         "checks": b["checks"], "statistics": b["stats"], "verdict": b_verdict,
         "derived_artifacts": hash_artifacts(b["artifacts"]),
     }
-    WM989_MANIFEST.write_text(json.dumps(wm989_manifest, indent=2, default=str), encoding="utf-8")
+    WM989_MANIFEST.write_text(json.dumps(wm989_manifest, indent=2, default=str), encoding="utf-8", newline="\n")
     print("GSE279162:", b_verdict)
 
     # ---- gates + overall --------------------------------------------------------------------- #
@@ -788,7 +788,7 @@ def main(argv=None) -> int:
         "overall": overall,
         "manifest_hashes": hash_artifacts([REWIND_MANIFEST, WM989_MANIFEST]),
     }
-    OUT.write_text(json.dumps(rec, indent=2, default=str), encoding="utf-8")
+    OUT.write_text(json.dumps(rec, indent=2, default=str), encoding="utf-8", newline="\n")
     print("gates:", "all pass" if rec["all_gates_pass"] else
           [k for k, v in gates.items() if not v])
     print("OVERALL:", overall)
