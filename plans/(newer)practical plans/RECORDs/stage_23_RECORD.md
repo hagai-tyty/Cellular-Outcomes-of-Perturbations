@@ -128,3 +128,136 @@ which is why V2 §1.2.1 added `log1p(n_naive_cells)` to the nuisance block befor
 
 ## Next action
 23B — Rewind Role-A learnability. Not started.
+
+---
+
+# 23B — Rewind Role-A learnability
+
+## Goal
+Ask whether pretreatment transcriptomic state predicts the later author-defined Rewind priming
+outcome **beyond prevalence and captured clone size**, under the protocol frozen in 23A. This is
+the first substage that fits an estimator.
+
+## Inputs
+- `results/stage23_protocol.json` (23A, `PROTOCOL_FROZEN`) — referenced by SHA-256 in the results
+- clone `X_before` from the 23A cache, re-verified against its committed content hash before use
+- frozen Stage-22 outer folds, `y_primed`, and the two nuisance columns
+- no new seed, no new split, no new grid
+
+## Files added
+- `results/stage23_rewind_oof_predictions.csv` (3,147 rows — one frozen OOF row per clone)
+- `results/stage23_rewind_results.json`
+
+## Files modified
+- `experiments/run_stage23_learnability_gate.py` — `--stage 23b` added; 23A untouched
+- `tests/test_stage23_learnability_gate.py` — 13 further contracts (36 total)
+
+## What changed
+- Four models fitted exactly as pre-registered: `R0` prevalence, `R1` nuisance-only, `R2` X-only,
+  `R3` X + nuisance
+- Every learned quantity is refitted inside each inner-training split; the outer test fold is
+  transformed and predicted exactly once
+- Hyperparameters selected by mean inner Average Precision, with the frozen tie-break
+
+## What did NOT change
+- `src/` unchanged · outer folds identical to Stage 22 · no Stage-21/22 artifact rewritten
+- 23A's protocol, manifests and cached `X` untouched
+- no threshold tuning, no class reweighting, no SMOTE, no model outside the frozen grids
+
+## Tests
+- 1873 passed · ruff clean (CI scope)
+- **0 convergence warnings** across every candidate fit — V2 §3.7 treats one as a protocol failure
+  to investigate, not as permission to drop a candidate
+
+## Result
+
+**PROVISIONAL VERDICT: `ROLE_A_SIGNAL_PASS`** — provisional until 23E structural controls and
+`ROLE_A_PERMUTATION_PASS`.
+
+### Pooled out-of-fold metrics (3,147 clones, 35 positive)
+
+```text
+model                      AP     ROC-AUC    log loss     Brier
+R0  prevalence        0.01112      0.4998     0.06109  0.010998
+R1  nuisance only     0.01035      0.4747     0.10181  0.015630
+R2  X only            0.01923      0.6043     0.07493  0.012592
+R3  X + nuisance      0.02085      0.6628     0.06209  0.011078
+```
+
+### Selected hyperparameters per outer fold
+
+```text
+fold    R1 C     R2 K/C     R3 K/C    inner AP  R1       R2       R3
+0       0.01     10/0.01    50/10              0.01167  0.03094  0.03015
+1       0.01     10/0.1     10/0.1             0.01065  0.03270  0.03216
+2       0.01     10/0.1     10/0.1             0.01067  0.03729  0.03024
+3       1        20/10      10/0.1             0.01093  0.04895  0.04863
+4       1        10/1       10/1               0.01080  0.05441  0.05358
+```
+
+`K = 10` is selected in 8 of 10 X-model fits — the tie-break prefers the smaller K, and the larger
+bases did not earn their place.
+
+### Primary inference
+
+```text
+ΔAP_state  = AP(R3) - AP(R1) = +0.01050
+             95% CI [+0.00397, +0.02258]     P(Δ <= 0) = 0.0015
+ΔAP_abs    = AP(R2) - AP(R0) = +0.00812
+             95% CI [+0.00191, +0.04393]     P(Δ <= 0) = 0.0010
+```
+
+Stratified clone bootstrap, 2,000 replicates, seed 23123, positive and negative clones resampled
+separately so class counts are preserved.
+
+### Fold diagnostics (reported, not a gate)
+
+```text
+fold      R0       R1       R2       R3    ΔAP R3-R1   ΔAP R2-R0   pos   genes
+0    0.01111  0.00998  0.03890  0.02487     +0.01489    +0.02779     7  13,610
+1    0.01111  0.01061  0.03100  0.02820     +0.01759    +0.01989     7  13,589
+2    0.01113  0.01050  0.02523  0.02810     +0.01760    +0.01410     7  13,627
+3    0.01113  0.01083  0.02388  0.05479     +0.04396    +0.01275     7  13,606
+4    0.01113  0.01166  0.02443  0.02471     +0.01304    +0.01330     7  13,607
+```
+
+Both deltas are positive in 5/5 folds. Per V2 §4.5 this is a high-variance diagnostic on seven
+positive clones per fold and creates no separate PASS requirement — it is consistent with the
+pooled result rather than independent evidence for it.
+
+## Bugs found
+1. Three defects in my own new tests, all caught before commit: the "23A fits nothing" contract was
+   written against the whole module and broke once 23B legitimately fitted estimators (now scoped
+   to the 23A functions by AST); a tolerance compared a 6-dp rounded field at `1e-9`; and two
+   assertions ended in `or True`, which made them unconditionally true. The `or True` pair is the
+   worst of the three — a test that cannot fail is worse than no test, because it reads as coverage
+
+## Scientific interpretation
+**Proves:** under the frozen geometry, pretreatment expression carries held-out prospective
+information about the later priming outcome that the captured-clone-size baseline does not. The
+lower bound of the pre-registered interval clears zero on both the incremental comparison
+(`R3` vs `R1`) and the absolute one (`R2` vs `R0`), and the direction is consistent across all five
+folds.
+
+**Three things this does not say, which matter more than the verdict:**
+
+- **The absolute signal is very weak.** `AP = 0.021` against a prevalence of `0.011` — a model
+  roughly twice as good as guessing, on 35 positives. ROC-AUC `0.663`. This clears a learnability
+  gate; it is nowhere near a usable predictor, and the Stage-24 scope should be set by the effect
+  size, not by the word PASS.
+- **`R1` is worse than `R0`.** Nuisance-only AP `0.01035` is *below* prevalence and its ROC-AUC is
+  `0.4747` — below chance. Captured clone size is not merely uninformative for Rewind priming, it
+  is faintly anti-predictive out-of-fold. So `ΔAP_state` is partly "R1 is a poor baseline" rather
+  than purely "X is good". The descriptive arithmetic `AP(R3) - AP(R0) = +0.0097` is of similar
+  magnitude, so the conclusion does not appear to be an artifact of a weak `R1` — but that
+  comparison was **not pre-registered**, carries no interval, and must not be promoted into
+  evidence. It is recorded so the asymmetry is visible.
+  This is the opposite of the WM989 picture, where captured depth is a strong competitor.
+- **One biological replicate.** Rewind R1 remains a single experiment, so this is within-R1
+  clone-held-out generalisation and nothing wider.
+
+The verdict is provisional. It is not final until 23E shows the structural controls pass and the
+observed `ΔAP_state` beats its permutation null.
+
+## Next action
+23C — WM989 additive state-signal gate. Not started.

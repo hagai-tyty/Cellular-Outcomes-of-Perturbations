@@ -5,8 +5,14 @@ Pre-registered in `plans/(newer)practical plans/STAGE_23_LEARNABILITY_INTERACTIO
 Stage-22 benchmark (`8d6011a`).
 
 **23A fits NO outcome model.** It runs the §3.0 input audit, builds the clone-level `X_before`
-representation, and freezes the evaluation protocol. Nothing here touches an outcome except to
+representation, and freezes the evaluation protocol. Nothing there touches an outcome except to
 verify that Stage-22's targets are reconstructible from post-treatment data alone.
+
+**23B is the first substage that fits an estimator.** It may only use what 23A froze: the outer
+folds come from Stage 22 untouched, and every hyperparameter comes from the grids in
+`stage23_protocol.json`. Each learned quantity -- gene filter, gene scaler, PCA, PC scaler,
+nuisance scaler -- is refitted inside every inner-training split, then rebuilt once on the whole
+outer-training set before the outer test fold is touched exactly once.
 
 WHY THE ORDER MATTERS
 ---------------------
@@ -452,14 +458,255 @@ def build_protocol(tightened: dict) -> dict:
     }
 
 
+# --------------------------------------------------------------------------------------------- #
+# 23B — Rewind Role-A learnability.  Does pretreatment X predict priming beyond prevalence and
+# captured clone size?  This is the first substage that fits an estimator.
+# --------------------------------------------------------------------------------------------- #
+REWIND_OOF = _RESULTS / "stage23_rewind_oof_predictions.csv"
+REWIND_RESULTS = _RESULTS / "stage23_rewind_results.json"
+ROLE_A_PASS = "ROLE_A_SIGNAL_PASS"
+ROLE_A_WEAK = "ROLE_A_SIGNAL_WEAK"
+ROLE_A_FAIL = "ROLE_A_SIGNAL_FAIL"
+
+
+def _load_rewind_x() -> tuple[sparse.csr_matrix, list[str]]:
+    p = _CACHE / "GSE227151_pseudobulk.npz"
+    if not p.exists():
+        raise RuntimeError("23A pseudobulk cache missing -- run `--stage 23a` first")
+    X = sparse.load_npz(p)
+    clones = json.loads((_CACHE / "GSE227151_clones.json").read_text(encoding="utf-8"))
+    man = json.loads((_RESULTS / "stage23_rewind_clone_expression_manifest.json")
+                     .read_text(encoding="utf-8"))
+    got = sha256_bytes(X.indptr.tobytes() + X.indices.tobytes() + np.round(X.data, 10).tobytes())
+    if got != man["matrix_content_sha256"]:
+        raise RuntimeError("cached X does not match the 23A manifest hash")
+    return X, clones
+
+
+def expression_block(X, train_rows: np.ndarray, test_rows: np.ndarray, max_k: int):
+    """V2 §2.5/§3.4-3.5: filter, standardize, PCA and re-standardize -- all fitted on TRAIN only.
+
+    Returns standardized PC scores for train and test. PCA is fitted once at `max_k`; K=10/20/50
+    are prefixes of this same basis, never separate randomized fits.
+    """
+    from sklearn.decomposition import PCA
+
+    keep = training_fold_gene_filter(X, train_rows)
+    tr = np.asarray(X[train_rows][:, keep].todense())
+    te = np.asarray(X[test_rows][:, keep].todense())
+    mu, sd = tr.mean(axis=0), tr.std(axis=0)
+    sd[sd == 0] = 1.0
+    tr = (tr - mu) / sd
+    te = (te - mu) / sd
+    k = min(max_k, tr.shape[0], tr.shape[1])
+    pca = PCA(n_components=k, svd_solver="randomized", random_state=SEED_PROTOCOL).fit(tr)
+    ztr, zte = pca.transform(tr), pca.transform(te)
+    zmu, zsd = ztr.mean(axis=0), ztr.std(axis=0)
+    zsd[zsd == 0] = 1.0
+    return (ztr - zmu) / zsd, (zte - zmu) / zsd, int(len(keep)), k
+
+
+def standardize_train_only(tr: np.ndarray, te: np.ndarray):
+    mu, sd = tr.mean(axis=0), tr.std(axis=0)
+    sd[sd == 0] = 1.0
+    return (tr - mu) / sd, (te - mu) / sd
+
+
+def _fit_logistic(Xtr, ytr, Xte, C, convergence: list):
+    import warnings
+
+    from sklearn.exceptions import ConvergenceWarning
+    from sklearn.linear_model import LogisticRegression
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        m = LogisticRegression(penalty="l2", solver="liblinear", C=C, fit_intercept=True,
+                               class_weight=None, max_iter=5000, random_state=SEED_PROTOCOL)
+        m.fit(Xtr, ytr)
+        for w in caught:
+            if issubclass(w.category, ConvergenceWarning):
+                convergence.append({"C": C, "n_train": int(len(ytr)), "message": str(w.message)})
+    return m.predict_proba(Xte)[:, 1]
+
+
+def _design(pcs, nuis, k, use_x, use_nuis):
+    parts = []
+    if use_x:
+        parts.append(pcs[:, :k])
+    if use_nuis:
+        parts.append(nuis)
+    return np.hstack(parts)
+
+
+def run_23b(rewind_root: Path) -> dict:
+    from sklearn.metrics import average_precision_score, brier_score_loss, log_loss, roc_auc_score
+    from sklearn.model_selection import StratifiedKFold
+
+    X, clones = _load_rewind_x()
+    tbl = pd.read_csv(_RESULTS / "stage22_rewind_clones.csv").set_index("clone_id").loc[clones]
+    y = tbl["y_primed"].to_numpy()
+    fold = tbl["outer_fold"].to_numpy()
+    nuis_raw = np.column_stack([np.log1p(tbl["n_pretreatment_cells"].to_numpy()),
+                                tbl["n_lanes"].to_numpy().astype(float)])
+
+    convergence: list = []
+    oof = {m: np.full(len(clones), np.nan) for m in ("R0", "R1", "R2", "R3")}
+    selected: dict[str, dict] = {}
+    per_fold_meta = {}
+
+    for f in range(N_OUTER):
+        tr = np.flatnonzero(fold != f)
+        te = np.flatnonzero(fold == f)
+        ytr, yte = y[tr], y[te]
+
+        # ---- inner CV: every learned quantity refitted inside each inner-training split ------ #
+        skf = StratifiedKFold(n_splits=N_INNER, shuffle=True, random_state=SEED_PROTOCOL)
+        scores = {"R1": {}, "R2": {}, "R3": {}}
+        for itr_i, iva_i in skf.split(np.zeros(len(tr)), ytr):
+            itr, iva = tr[itr_i], tr[iva_i]
+            ztr, zva, _, kmax = expression_block(X, itr, iva, max(K_CANDIDATES))
+            btr, bva = standardize_train_only(nuis_raw[itr], nuis_raw[iva])
+            yi, yv = y[itr], y[iva]
+            for C in LOGISTIC_C:
+                p = _fit_logistic(btr, yi, bva, C, convergence)
+                scores["R1"].setdefault((None, C), []).append(average_precision_score(yv, p))
+            for k in K_CANDIDATES:
+                if k > kmax:
+                    continue
+                for C in LOGISTIC_C:
+                    p2 = _fit_logistic(_design(ztr, btr, k, True, False), yi,
+                                       _design(zva, bva, k, True, False), C, convergence)
+                    scores["R2"].setdefault((k, C), []).append(average_precision_score(yv, p2))
+                    p3 = _fit_logistic(_design(ztr, btr, k, True, True), yi,
+                                       _design(zva, bva, k, True, True), C, convergence)
+                    scores["R3"].setdefault((k, C), []).append(average_precision_score(yv, p3))
+
+        # ---- deterministic selection: maximise mean AP; tie-break smaller K, then smaller C -- #
+        def pick(model, sc=scores):   # bound now:  is rebuilt each outer fold
+            best = max(sc[model].items(),
+                       key=lambda kv: (round(float(np.mean(kv[1])), 12),
+                                       -(kv[0][0] or 0), -kv[0][1]))
+            return best[0], float(np.mean(best[1]))
+
+        sel = {m: pick(m) for m in ("R1", "R2", "R3")}
+        selected[str(f)] = {m: {"K": sel[m][0][0], "C": sel[m][0][1],
+                                "mean_inner_AP": round(sel[m][1], 6)} for m in sel}
+
+        # ---- final: rebuild the pipeline on the WHOLE outer-training set, predict test once --- #
+        ztr, zte, n_genes_kept, kmax = expression_block(X, tr, te, max(K_CANDIDATES))
+        btr, bte = standardize_train_only(nuis_raw[tr], nuis_raw[te])
+        oof["R0"][te] = float(ytr.mean())
+        oof["R1"][te] = _fit_logistic(btr, ytr, bte, sel["R1"][0][1], convergence)
+        oof["R2"][te] = _fit_logistic(_design(ztr, btr, sel["R2"][0][0], True, False), ytr,
+                                      _design(zte, bte, sel["R2"][0][0], True, False),
+                                      sel["R2"][0][1], convergence)
+        oof["R3"][te] = _fit_logistic(_design(ztr, btr, sel["R3"][0][0], True, True), ytr,
+                                      _design(zte, bte, sel["R3"][0][0], True, True),
+                                      sel["R3"][0][1], convergence)
+        per_fold_meta[str(f)] = {"train_clones": int(len(tr)), "test_clones": int(len(te)),
+                                 "test_positives": int(yte.sum()),
+                                 "retained_genes": n_genes_kept, "max_feasible_K": kmax,
+                                 "train_prevalence": round(float(ytr.mean()), 6)}
+
+    assert not np.isnan(np.concatenate([oof[m] for m in oof])).any(), "an OOF prediction is missing"
+
+    # ---- metrics ----------------------------------------------------------------------------- #
+    def metrics(p):
+        return {"AP": float(average_precision_score(y, p)),
+                "ROC_AUC": float(roc_auc_score(y, p)),
+                "log_loss": float(log_loss(y, np.clip(p, 1e-15, 1 - 1e-15))),
+                "brier": float(brier_score_loss(y, p))}
+
+    pooled = {m: metrics(oof[m]) for m in ("R0", "R1", "R2", "R3")}
+    per_fold_ap = {}
+    for f in range(N_OUTER):
+        te = np.flatnonzero(fold == f)
+        per_fold_ap[str(f)] = {m: float(average_precision_score(y[te], oof[m][te]))
+                               for m in ("R0", "R1", "R2", "R3")}
+        per_fold_ap[str(f)]["delta_AP_state"] = (per_fold_ap[str(f)]["R3"]
+                                                 - per_fold_ap[str(f)]["R1"])
+        per_fold_ap[str(f)]["delta_AP_absolute"] = (per_fold_ap[str(f)]["R2"]
+                                                    - per_fold_ap[str(f)]["R0"])
+
+    # ---- stratified clone bootstrap on the pooled OOF (V2 §4.4) ------------------------------ #
+    rng = np.random.default_rng(SEED_BOOT_REWIND)
+    pos, neg = np.flatnonzero(y == 1), np.flatnonzero(y == 0)
+    d_state, d_abs = np.empty(N_BOOTSTRAP), np.empty(N_BOOTSTRAP)
+    for b in range(N_BOOTSTRAP):
+        idx = np.concatenate([rng.choice(pos, len(pos), replace=True),
+                              rng.choice(neg, len(neg), replace=True)])
+        yb = y[idx]
+        d_state[b] = (average_precision_score(yb, oof["R3"][idx])
+                      - average_precision_score(yb, oof["R1"][idx]))
+        d_abs[b] = (average_precision_score(yb, oof["R2"][idx])
+                    - average_precision_score(yb, oof["R0"][idx]))
+
+    def boot(delta, point):
+        lo, hi = np.percentile(delta, [2.5, 97.5])
+        return {"point": float(point), "ci95_low": float(lo), "ci95_high": float(hi),
+                "fraction_delta_le_0": float((delta <= 0).mean()),
+                "bootstrap_mean": float(delta.mean()), "replicates": N_BOOTSTRAP,
+                "seed": SEED_BOOT_REWIND}
+
+    d_state_pt = pooled["R3"]["AP"] - pooled["R1"]["AP"]
+    d_abs_pt = pooled["R2"]["AP"] - pooled["R0"]["AP"]
+    inference = {"delta_AP_state_R3_minus_R1": boot(d_state, d_state_pt),
+                 "delta_AP_absolute_R2_minus_R0": boot(d_abs, d_abs_pt)}
+
+    # ---- provisional verdict, derived (V2 §4.6) ---------------------------------------------- #
+    s = inference["delta_AP_state_R3_minus_R1"]
+    if s["point"] <= 0:
+        verdict = ROLE_A_FAIL
+    elif s["ci95_low"] > 0:
+        verdict = ROLE_A_PASS
+    else:
+        verdict = ROLE_A_WEAK
+
+    pd.DataFrame({"clone_id": clones, "outer_fold": fold, "y_primed": y,
+                  **{f"pred_{m}": oof[m] for m in ("R0", "R1", "R2", "R3")}}
+                 ).to_csv(REWIND_OOF, index=False, lineterminator="\n")
+
+    out = {
+        "stage": "23B", "dataset": "GSE227151", "role": "A",
+        "plan": {"file": PLAN.name, "version": PLAN_VERSION,
+                 "canonical_lf_sha256": canonical_text_sha256(PLAN)},
+        "protocol_sha256": sha256_file(_RESULTS / "stage23_protocol.json"),
+        "clones": len(clones), "positives": int(y.sum()), "negatives": int((y == 0).sum()),
+        "models": {"R0": "outer-training prevalence", "R1": "nuisance only",
+                   "R2": "PCA(X) only", "R3": "PCA(X) + nuisance"},
+        "primary_metric": "average_precision_score at clone grain",
+        "selected_hyperparameters_per_outer_fold": selected,
+        "per_outer_fold": per_fold_meta,
+        "pooled_oof_metrics": pooled,
+        "per_fold_average_precision": per_fold_ap,
+        "fold_direction_is_diagnostic_only": True,
+        "inference": inference,
+        "convergence_warnings": convergence,
+        "provisional_verdict": verdict,
+        "verdict_is_provisional_until": "23E structural controls + ROLE_A_PERMUTATION_PASS",
+    }
+    REWIND_RESULTS.write_text(json.dumps(out, indent=2), encoding="utf-8", newline="\n")
+    return out
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Stage 23 learnability gate")
-    ap.add_argument("--stage", default="23a", choices=["23a"])
+    ap.add_argument("--stage", default="23a", choices=["23a", "23b"])
     ap.add_argument("--rewind-root", type=Path, default=S21D.REWIND)
     ap.add_argument("--wm989-root", type=Path, default=S21D.WM989)
     args = ap.parse_args(argv)
     _RESULTS.mkdir(exist_ok=True)
     _CACHE.mkdir(parents=True, exist_ok=True)
+
+    if args.stage == "23b":
+        r = run_23b(args.rewind_root)
+        for m in ("R0", "R1", "R2", "R3"):
+            print(f"  {m}  AP={r['pooled_oof_metrics'][m]['AP']:.4f}")
+        st = r["inference"]["delta_AP_state_R3_minus_R1"]
+        print(f"  dAP(R3-R1) = {st['point']:+.4f}  "
+              f"95% CI [{st['ci95_low']:+.4f}, {st['ci95_high']:+.4f}]")
+        print("OVERALL:", r["provisional_verdict"])
+        return 0
 
     # ---- step 1: the audit gates everything ------------------------------------------------- #
     audit = audit_stage22_inputs(args.rewind_root, args.wm989_root)

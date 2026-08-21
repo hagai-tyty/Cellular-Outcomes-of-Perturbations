@@ -1,0 +1,242 @@
+{
+  "stage": "23B",
+  "dataset": "GSE227151",
+  "role": "A",
+  "plan": {
+    "file": "STAGE_23_LEARNABILITY_INTERACTION_GATE_V2.md",
+    "version": "V2",
+    "canonical_lf_sha256": "bc783e6b7da8102de5b73dd50dbe02861c92d2ca907c0a80d2e2a1c37561df69"
+  },
+  "protocol_sha256": "b089612c1a9fe076a45f3219ea506e52e4b41b824060b796a273d6135eacc95f",
+  "clones": 3147,
+  "positives": 35,
+  "negatives": 3112,
+  "models": {
+    "R0": "outer-training prevalence",
+    "R1": "nuisance only",
+    "R2": "PCA(X) only",
+    "R3": "PCA(X) + nuisance"
+  },
+  "primary_metric": "average_precision_score at clone grain",
+  "selected_hyperparameters_per_outer_fold": {
+    "0": {
+      "R1": {
+        "K": null,
+        "C": 0.01,
+        "mean_inner_AP": 0.011665
+      },
+      "R2": {
+        "K": 10,
+        "C": 0.01,
+        "mean_inner_AP": 0.030936
+      },
+      "R3": {
+        "K": 50,
+        "C": 10,
+        "mean_inner_AP": 0.030152
+      }
+    },
+    "1": {
+      "R1": {
+        "K": null,
+        "C": 0.01,
+        "mean_inner_AP": 0.010649
+      },
+      "R2": {
+        "K": 10,
+        "C": 0.1,
+        "mean_inner_AP": 0.032697
+      },
+      "R3": {
+        "K": 10,
+        "C": 0.1,
+        "mean_inner_AP": 0.03216
+      }
+    },
+    "2": {
+      "R1": {
+        "K": null,
+        "C": 0.01,
+        "mean_inner_AP": 0.010668
+      },
+      "R2": {
+        "K": 10,
+        "C": 0.1,
+        "mean_inner_AP": 0.037291
+      },
+      "R3": {
+        "K": 10,
+        "C": 0.1,
+        "mean_inner_AP": 0.030243
+      }
+    },
+    "3": {
+      "R1": {
+        "K": null,
+        "C": 1,
+        "mean_inner_AP": 0.010932
+      },
+      "R2": {
+        "K": 20,
+        "C": 10,
+        "mean_inner_AP": 0.048953
+      },
+      "R3": {
+        "K": 10,
+        "C": 0.1,
+        "mean_inner_AP": 0.04863
+      }
+    },
+    "4": {
+      "R1": {
+        "K": null,
+        "C": 1,
+        "mean_inner_AP": 0.010795
+      },
+      "R2": {
+        "K": 10,
+        "C": 1,
+        "mean_inner_AP": 0.054413
+      },
+      "R3": {
+        "K": 10,
+        "C": 1,
+        "mean_inner_AP": 0.05358
+      }
+    }
+  },
+  "per_outer_fold": {
+    "0": {
+      "train_clones": 2517,
+      "test_clones": 630,
+      "test_positives": 7,
+      "retained_genes": 13610,
+      "max_feasible_K": 50,
+      "train_prevalence": 0.011124
+    },
+    "1": {
+      "train_clones": 2517,
+      "test_clones": 630,
+      "test_positives": 7,
+      "retained_genes": 13589,
+      "max_feasible_K": 50,
+      "train_prevalence": 0.011124
+    },
+    "2": {
+      "train_clones": 2518,
+      "test_clones": 629,
+      "test_positives": 7,
+      "retained_genes": 13627,
+      "max_feasible_K": 50,
+      "train_prevalence": 0.01112
+    },
+    "3": {
+      "train_clones": 2518,
+      "test_clones": 629,
+      "test_positives": 7,
+      "retained_genes": 13606,
+      "max_feasible_K": 50,
+      "train_prevalence": 0.01112
+    },
+    "4": {
+      "train_clones": 2518,
+      "test_clones": 629,
+      "test_positives": 7,
+      "retained_genes": 13607,
+      "max_feasible_K": 50,
+      "train_prevalence": 0.01112
+    }
+  },
+  "pooled_oof_metrics": {
+    "R0": {
+      "AP": 0.011117466370087915,
+      "ROC_AUC": 0.49980719794344475,
+      "log_loss": 0.06109457892996903,
+      "brier": 0.010998010969285345
+    },
+    "R1": {
+      "AP": 0.010346763671910921,
+      "ROC_AUC": 0.47466948218876237,
+      "log_loss": 0.10180902664596463,
+      "brier": 0.01562965848325886
+    },
+    "R2": {
+      "AP": 0.019232694919358393,
+      "ROC_AUC": 0.6042600073448402,
+      "log_loss": 0.07493123881191552,
+      "brier": 0.012591566675632025
+    },
+    "R3": {
+      "AP": 0.02084839302307603,
+      "ROC_AUC": 0.6628442893867058,
+      "log_loss": 0.06209306650363154,
+      "brier": 0.011077634423287862
+    }
+  },
+  "per_fold_average_precision": {
+    "0": {
+      "R0": 0.011111111111111112,
+      "R1": 0.009978051427250547,
+      "R2": 0.03890195663390278,
+      "R3": 0.024871424255735308,
+      "delta_AP_state": 0.01489337282848476,
+      "delta_AP_absolute": 0.027790845522791666
+    },
+    "1": {
+      "R0": 0.011111111111111112,
+      "R1": 0.010609857978279031,
+      "R2": 0.03099752829505761,
+      "R3": 0.02819912524689172,
+      "delta_AP_state": 0.01758926726861269,
+      "delta_AP_absolute": 0.0198864171839465
+    },
+    "2": {
+      "R0": 0.011128775834658187,
+      "R1": 0.010497676717745921,
+      "R2": 0.025231759828250613,
+      "R3": 0.028099775631547634,
+      "delta_AP_state": 0.01760209891380171,
+      "delta_AP_absolute": 0.014102983993592427
+    },
+    "3": {
+      "R0": 0.011128775834658187,
+      "R1": 0.010832098747050021,
+      "R2": 0.02388078834676386,
+      "R3": 0.05478784684110397,
+      "delta_AP_state": 0.04395574809405395,
+      "delta_AP_absolute": 0.012752012512105674
+    },
+    "4": {
+      "R0": 0.011128775834658187,
+      "R1": 0.011664299692479731,
+      "R2": 0.02443236566300238,
+      "R3": 0.024708360491964017,
+      "delta_AP_state": 0.013044060799484286,
+      "delta_AP_absolute": 0.013303589828344193
+    }
+  },
+  "fold_direction_is_diagnostic_only": true,
+  "inference": {
+    "delta_AP_state_R3_minus_R1": {
+      "point": 0.01050162935116511,
+      "ci95_low": 0.0039659740396362966,
+      "ci95_high": 0.022581343058477525,
+      "fraction_delta_le_0": 0.0015,
+      "bootstrap_mean": 0.011880052944891863,
+      "replicates": 2000,
+      "seed": 23123
+    },
+    "delta_AP_absolute_R2_minus_R0": {
+      "point": 0.008115228549270478,
+      "ci95_low": 0.001910020303731025,
+      "ci95_high": 0.04393314947415903,
+      "fraction_delta_le_0": 0.001,
+      "bootstrap_mean": 0.012564870165496927,
+      "replicates": 2000,
+      "seed": 23123
+    }
+  },
+  "convergence_warnings": [],
+  "provisional_verdict": "ROLE_A_SIGNAL_PASS",
+  "verdict_is_provisional_until": "23E structural controls + ROLE_A_PERMUTATION_PASS"
+}

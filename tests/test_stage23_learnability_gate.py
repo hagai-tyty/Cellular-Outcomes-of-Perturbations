@@ -282,10 +282,16 @@ def test_23a_fits_no_model_and_reuses_no_production_estimator():
         elif isinstance(node, ast.ImportFrom) and node.module:
             imported.add(node.module)
     assert not {m for m in imported if m.split(".")[0] in {"torch", "cellfate"}}
-    calls = [n for n in ast.walk(ast.parse(src))
-             if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
-             and n.func.attr in {"fit", "fit_transform", "fit_predict"}]
-    assert not calls, "23A fits nothing"
+    # 23B onward fits estimators by design; the 23A code path must not.
+    tree = ast.parse(src)
+    a_functions = {"audit_stage22_inputs", "clone_pseudobulk", "training_fold_gene_filter",
+                   "expression_manifest", "build_protocol"}
+    for fn in (n for n in ast.walk(tree)
+               if isinstance(n, ast.FunctionDef) and n.name in a_functions):
+        calls = [c for c in ast.walk(fn)
+                 if isinstance(c, ast.Call) and isinstance(c.func, ast.Attribute)
+                 and c.func.attr in {"fit", "fit_transform", "fit_predict"}]
+        assert not calls, f"{fn.name} is part of 23A and must fit nothing"
     for banned in ("CellFateNet", "_LinearBase"):
         assert banned not in src
 
@@ -309,3 +315,155 @@ def test_no_stage22_artifact_was_rewritten_by_23a(proto):
     assert res["overall"] == "STAGE_23_READY" and res["all_gates_pass"] is True
     for a in res["manifest_hashes"]:
         assert S23.sha256_file(RES / a["name"]) == a["sha256"], f"{a['name']} was modified"
+
+
+# ================================================================================================ #
+# 23B — Rewind Role-A learnability
+# ================================================================================================ #
+REWIND_RESULTS = RES / "stage23_rewind_results.json"
+REWIND_OOF = RES / "stage23_rewind_oof_predictions.csv"
+ran_23b = pytest.mark.skipif(not REWIND_RESULTS.exists(), reason="23B has not been run")
+
+
+@pytest.fixture(scope="module")
+def rb():
+    return json.loads(REWIND_RESULTS.read_text(encoding="utf-8"))
+
+
+@ran_23b
+def test_exactly_the_four_pre_registered_models_are_present(rb):
+    assert set(rb["models"]) == {"R0", "R1", "R2", "R3"}
+    assert set(rb["pooled_oof_metrics"]) == {"R0", "R1", "R2", "R3"}
+    assert rb["models"]["R0"] == "outer-training prevalence"
+    assert rb["models"]["R1"] == "nuisance only"
+
+
+@ran_23b
+def test_average_precision_is_primary_and_no_accuracy_gate_exists(rb):
+    assert rb["primary_metric"] == "average_precision_score at clone grain"
+    blob = json.dumps(rb).lower()
+    assert "accuracy" not in blob, "accuracy is reporting-only and must not appear in a gate"
+    for m in ("R0", "R1", "R2", "R3"):
+        assert set(rb["pooled_oof_metrics"][m]) == {"AP", "ROC_AUC", "log_loss", "brier"}
+
+
+@ran_23b
+def test_one_oof_prediction_per_clone_and_35_positives_exactly_once(rb):
+    oof = pd.read_csv(REWIND_OOF)
+    clones_tbl = pd.read_csv(RES / "stage22_rewind_clones.csv")
+    assert len(oof) == 3147 == rb["clones"]
+    assert oof["clone_id"].is_unique
+    assert set(oof["clone_id"]) == set(clones_tbl["clone_id"])
+    assert int(oof["y_primed"].sum()) == 35 == rb["positives"]
+    for m in ("R0", "R1", "R2", "R3"):
+        assert oof[f"pred_{m}"].notna().all(), m
+        assert ((oof[f"pred_{m}"] >= 0) & (oof[f"pred_{m}"] <= 1)).all(), m
+
+
+@ran_23b
+def test_the_outer_folds_are_exactly_the_frozen_stage22_assignment(rb):
+    oof = pd.read_csv(REWIND_OOF)
+    frozen_fold = pd.read_csv(RES / "stage22_rewind_clones.csv").set_index("clone_id")["outer_fold"]
+    assert (oof.set_index("clone_id")["outer_fold"] == frozen_fold.loc[oof["clone_id"]].values).all()
+    assert sorted(oof["outer_fold"].unique()) == [0, 1, 2, 3, 4]
+    assert oof.groupby("outer_fold")["y_primed"].sum().tolist() == [7, 7, 7, 7, 7]
+
+
+@ran_23b
+def test_r0_is_a_constant_per_fold_equal_to_the_training_prevalence(rb):
+    """R0 must be the outer-TRAINING prevalence, never the test prevalence."""
+    oof = pd.read_csv(REWIND_OOF)
+    for f, g in oof.groupby("outer_fold"):
+        assert g["pred_R0"].nunique() == 1, f
+        expected = rb["per_outer_fold"][str(f)]["train_prevalence"]
+        assert abs(g["pred_R0"].iloc[0] - expected) < 1e-6, "recorded to 6dp"
+        # and it is the TRAINING prevalence, not this fold's test prevalence
+        assert abs(g["pred_R0"].iloc[0] - g["y_primed"].mean()) > 0
+
+
+@ran_23b
+def test_hyperparameters_come_only_from_the_frozen_grids(rb):
+    for f, sel in rb["selected_hyperparameters_per_outer_fold"].items():
+        assert sel["R1"]["K"] is None, "the nuisance-only model has no K"
+        for m in ("R1", "R2", "R3"):
+            assert sel[m]["C"] in S23.LOGISTIC_C, (f, m)
+        for m in ("R2", "R3"):
+            assert sel[m]["K"] in S23.K_CANDIDATES, (f, m)
+
+
+@ran_23b
+def test_fold_direction_is_reported_but_is_not_a_pass_requirement(rb):
+    """V2 §4.5/§4.6: with seven positive clones per fold this is a high-variance diagnostic.
+    V1 made it an AND-condition; the audit showed that was too noisy to gate on."""
+    assert rb["fold_direction_is_diagnostic_only"] is True
+    assert len(rb["per_fold_average_precision"]) == 5
+    for f, a in rb["per_fold_average_precision"].items():
+        assert "delta_AP_state" in a and "delta_AP_absolute" in a
+        assert abs(a["delta_AP_state"] - (a["R3"] - a["R1"])) < 1e-12, f
+
+
+@ran_23b
+def test_the_bootstrap_is_the_pre_registered_stratified_clone_bootstrap(rb):
+    for key in ("delta_AP_state_R3_minus_R1", "delta_AP_absolute_R2_minus_R0"):
+        b = rb["inference"][key]
+        assert b["replicates"] == 2000 and b["seed"] == 23123
+        assert b["ci95_low"] <= b["ci95_high"]
+        assert 0.0 <= b["fraction_delta_le_0"] <= 1.0
+    s = rb["inference"]["delta_AP_state_R3_minus_R1"]
+    assert abs(s["point"] - (rb["pooled_oof_metrics"]["R3"]["AP"]
+                             - rb["pooled_oof_metrics"]["R1"]["AP"])) < 1e-12
+
+
+@ran_23b
+def test_the_provisional_verdict_is_derived_not_asserted(rb):
+    s = rb["inference"]["delta_AP_state_R3_minus_R1"]
+    expected = (S23.ROLE_A_FAIL if s["point"] <= 0
+                else S23.ROLE_A_PASS if s["ci95_low"] > 0 else S23.ROLE_A_WEAK)
+    assert rb["provisional_verdict"] == expected
+    src = SRC.read_text(encoding="utf-8")
+    assert '"provisional_verdict": "ROLE_A' not in src, "the verdict must not be hard-coded"
+
+
+@ran_23b
+def test_the_verdict_stays_provisional_until_23e(rb):
+    assert "23E" in rb["verdict_is_provisional_until"]
+    assert "PERMUTATION" in rb["verdict_is_provisional_until"]
+
+
+@ran_23b
+def test_convergence_warnings_are_surfaced_not_swallowed(rb):
+    """V2 §3.7: a convergence warning is a protocol failure to investigate, never a silent drop."""
+    assert isinstance(rb["convergence_warnings"], list)
+    assert rb["convergence_warnings"] == [], rb["convergence_warnings"]
+    src = SRC.read_text(encoding="utf-8")
+    assert "ConvergenceWarning" in src and "convergence.append" in src
+
+
+@ran_23b
+def test_no_target_or_provenance_column_reached_the_design_matrix():
+    """The design matrix is built from exactly two blocks: PC scores and the nuisance terms.
+
+    Checked on the syntax tree: `_design` is the only place a design matrix is assembled, and it
+    concatenates nothing except `pcs` and `nuis`. A target or provenance column could only enter
+    by being stuffed into one of those two, and the nuisance block is pinned below.
+    """
+    import ast
+
+    assert S23.REWIND_NUISANCE == ("log1p(n_pretreatment_cells)", "n_lanes")
+    tree = ast.parse(SRC.read_text(encoding="utf-8"))
+    fn = next(n for n in ast.walk(tree)
+              if isinstance(n, ast.FunctionDef) and n.name == "_design")
+    names = {n.id for n in ast.walk(fn) if isinstance(n, ast.Name)}
+    assert names <= {"parts", "pcs", "nuis", "k", "use_x", "use_nuis", "np"}, names
+    build = next(n for n in ast.walk(tree)
+                 if isinstance(n, ast.FunctionDef) and n.name == "run_23b")
+    cols = [ast.unparse(n) for n in ast.walk(build)
+            if isinstance(n, ast.Call) and ast.unparse(n).startswith("np.column_stack")]
+    assert len(cols) == 1 and "n_pretreatment_cells" in cols[0] and "n_lanes" in cols[0]
+    assert "y_primed" not in cols[0] and "outer_fold" not in cols[0]
+
+
+@ran_23b
+def test_the_results_reference_the_protocol_that_was_frozen_in_23a(rb):
+    assert rb["protocol_sha256"] == S23.sha256_file(RES / "stage23_protocol.json")
+    assert rb["plan"]["version"] == "V2"
