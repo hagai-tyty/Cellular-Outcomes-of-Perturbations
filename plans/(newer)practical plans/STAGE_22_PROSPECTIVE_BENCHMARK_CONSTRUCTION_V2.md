@@ -1224,6 +1224,14 @@ handling/interpretation of observed_zero outcomes
 
 For Rewind, the metric set must include a class-imbalance-sensitive metric such as **average precision / PR-AUC** at clone grain. Accuracy alone is not an acceptable primary metric for 35 positive versus 3,114 negative clones.
 
+> *Annotation, 2026-08-21 (pre-start, plan text above left as frozen): the illustrative figure
+> `3,114` is the PRE-exclusion negative-clone count carried from Stage 21D. After the §3.5
+> ambiguity exclusion the benchmark actually holds **35 positive versus 3,112 negative clones**
+> (3,147 retained clones), because 2 clones consisted only of the 8 excluded multi-lineage cells.
+> The argument for PR-AUC is unchanged. This is an annotation, not a reopening — §3.5's
+> instruction to recompute post-exclusion counts from the data remains the binding rule, and the
+> executed numbers belong in `stage_22_RECORD.md`.*
+
 These choices may not be selected after comparing held-out performance.
 
 Any learned expression preprocessing (feature selection, scaling parameters, dimensionality reduction, supervised filtering) must be fit on the training portion of each outer fold only. Do not compute a global expression representation using held-out cells and then cross-validate downstream.
