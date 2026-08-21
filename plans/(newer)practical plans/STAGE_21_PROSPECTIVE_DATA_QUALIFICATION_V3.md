@@ -3,7 +3,7 @@
 **Status:** PRE-REGISTERED PLAN — 🔒 frozen before the public-dataset search begins.
 **Supersedes:** `arcive/STAGE_21_PROSPECTIVE_DATA_QUALIFICATION_V2.md`, into which the post-21B
 execution amendment is now folded. V2 is archived unchanged; nothing in it was edited in place.
-**Executed so far:** 21A `f6a0056` · 21B `3b8b644` — both frozen. **This file does not reopen them.**
+**Executed so far:** 21A `f6a0056` · 21B `3b8b644` · 21C `cab27d8` — all frozen. **This file does not reopen them.**
 **Current model:** `_s16` remains frozen.
 **No model training in this stage. No `src/` changes.**
 
@@ -115,8 +115,10 @@ lineage-resolved terminal outcome
         ↓
 21B — LOCAL SOURCE / DESIGN RESOLUTION          ✅ DONE   (3b8b644)
         ↓
-21C — PUBLIC PROSPECTIVE DATASET QUALIFICATION
-        ↓
+21C — PUBLIC PROSPECTIVE DATASET QUALIFICATION   ✅ DONE   (cab27d8)
+        ↓            -> FULL_DATA_PATH
+                        Role A = GSE227151 (Rewind)
+                        Role B = GSE279162
 21D — ACQUIRE + RECONSTRUCT + VERIFY
         ↓
 PASS

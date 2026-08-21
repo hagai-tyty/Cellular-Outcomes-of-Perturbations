@@ -25,9 +25,25 @@ The old CellFate-Rx audit remains valuable supporting evidence and may become a 
 
 ## STAGE 21 — Prospective Data Qualification
 
-Audit the local datasets once, then qualify and reconstruct public lineage-resolved prospective data. The stage deliberately seeks **two complementary capabilities**: a reprogramming dataset with pre-outcome RNA and an independently measured later outcome, plus a multi-perturbation lineage dataset where treatment identity genuinely varies. Stage 21 ends only when those data are reconstructable, statistically usable, leakage-checked, and frozen for benchmark construction.
+Audit the local datasets once, then qualify and reconstruct public lineage-resolved prospective data. The stage seeks **two complementary capabilities**: a reprogramming dataset with pre-outcome RNA and an independently measured later outcome (**Role A — required**), plus a multi-perturbation lineage dataset where treatment identity genuinely varies (**Role B — high value, non-blocking**). Stage 21 ends when the Role-A data are reconstructable, statistically usable, leakage-checked, and frozen for benchmark construction; a qualified Role B is folded in on the same terms when the search finds one.
 
-**PASS → STAGE 22**
+**PASS → STAGE 22**, on either path:
+
+```text
+FULL_DATA_PATH   Role A + Role B qualified
+CORE_DATA_PATH   Role A qualified, Role B not found inside the frozen search budget
+                 -> proceed; the treatment-ranking contribution is SCOPED DOWN
+DATA_BLOCKED     Role A not found -> do not build the prospective architecture yet
+```
+
+*Corrected 2026-08-21: this paragraph originally read "The stage deliberately seeks two
+complementary capabilities … Stage 21 ends only when those data are reconstructable, statistically
+usable, leakage-checked, and frozen for benchmark construction", i.e. both roles required. That was
+V2's PASS rule. It is superseded by `STAGE_21_PROSPECTIVE_DATA_QUALIFICATION_V3.md` §9.8, which
+makes Role B non-blocking so a missing multi-perturbation dataset scopes the treatment-ranking
+contribution down instead of holding the paper. Executed 21C returned `FULL_DATA_PATH`, so both
+roles are in fact qualified — the rule is corrected here regardless, because it governs what a PASS
+means, not what happened to be found.*
 
 ---
 
