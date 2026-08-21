@@ -80,6 +80,7 @@ from __future__ import annotations
 import gzip
 import hashlib
 import json
+import os
 import re
 import sys
 from dataclasses import asdict, dataclass
@@ -109,8 +110,14 @@ STAGE22_READY = "STAGE_22_READY"
 STAGE22_PENDING = "STAGE_22_PENDING_OUTCOME_RULE"
 STAGE22_BLOCKED = "STAGE_22_BLOCKED"
 
-REWIND = Path(r"D:\GSE227151_Rewind")
-WM989 = Path(r"D:\GSE279162")
+# CI runs on ubuntu-latest, where D:\ does not exist. Making that condition reproducible LOCALLY
+# is what stops this class of red X from recurring: set CELLFATE_NO_LOCAL_DATA=1 and the suite sees
+# exactly what CI sees. Enforced by tests/test_ci_portability.py.
+_NO_LOCAL_DATA = os.environ.get("CELLFATE_NO_LOCAL_DATA") == "1"
+_ABSENT_ROOT = Path("__local_data_absent__")
+
+REWIND = _ABSENT_ROOT if _NO_LOCAL_DATA else Path(r"D:\GSE227151_Rewind")
+WM989 = _ABSENT_ROOT if _NO_LOCAL_DATA else Path(r"D:\GSE279162")
 
 # The one file whose absence stops the Role-A branch outright, by name, with no substitution.
 GDNA_FILE = "stepThreeStarcodeShavedReads_BC_gDNA.txt"
@@ -466,7 +473,7 @@ def audit_rewind(base: Path = REWIND) -> dict:
     return {"verdict": verdict, "previous_verdict": SUPERSEDES["GSE227151"]["verdict"],
             "findings": out,
             "manifest": manifest(sorted(req.values()) + REWIND_SCRIPTS),
-            "clone_table": str(REWIND_TABLE.relative_to(ROOT))}
+            "clone_table": REWIND_TABLE.relative_to(ROOT).as_posix()}
 
 
 # --------------------------------------------------------------------------------------------- #
@@ -840,7 +847,7 @@ def audit_gse279162(base: Path = WM989) -> dict:
     return {"verdict": verdict, "previous_verdict": SUPERSEDES["GSE279162"]["verdict"],
             "findings": out,
             "manifest": manifest(sorted(req.values()) + WM989_SCRIPTS),
-            "clone_table": str(WM989_TABLE.relative_to(ROOT))}
+            "clone_table": WM989_TABLE.relative_to(ROOT).as_posix()}
 
 
 # --------------------------------------------------------------------------------------------- #

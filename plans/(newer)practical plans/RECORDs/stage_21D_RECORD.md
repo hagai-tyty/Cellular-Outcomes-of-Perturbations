@@ -358,3 +358,15 @@ Learnability is still untested. No model was fitted.
 ## Next action
 
 Stage 22 — Prospective Benchmark Build may open. **Not started in this change.**
+
+---
+
+> *Correction, 2026-08-21 (portability; no verdict, count or evidence changes): the two
+> `clone_table` fields in `results/diag_stage21d_public_reconstruction_results.json` were written
+> by `str(Path.relative_to(ROOT))` on Windows, so they read `results\\stage21d_....tsv`. On
+> Linux that is one filename containing a backslash, not a path — it broke the CI run that Stage
+> 22's tests triggered. Both values are now POSIX (`results/stage21d_....tsv`) and the writer uses
+> `.as_posix()`. Nothing else in that file moved: the diff is two characters, and every verdict,
+> count and evidence string is byte-identical. The clone tables themselves were NOT regenerated.
+> Guarded going forward by `tests/test_ci_portability.py`.*
+

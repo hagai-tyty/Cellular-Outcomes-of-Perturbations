@@ -314,7 +314,7 @@
         "sha256": "51b327c4767abb4a2f837ef89ac39c46f5ac019cfa1b0f248c9ebfa6a53bab20"
       }
     ],
-    "clone_table": "results\\stage21d_rewind_clone_table.tsv"
+    "clone_table": "results/stage21d_rewind_clone_table.tsv"
   },
   "GSE279162": {
     "verdict": "RECONSTRUCTION_PASS",
@@ -870,7 +870,7 @@
         "sha256": "74fdd749c815a4ff0a99faff4d8968fc725ce715c9c271ccfd635972dba86827"
       }
     ],
-    "clone_table": "results\\stage21d_gse279162_clone_table.tsv"
+    "clone_table": "results/stage21d_gse279162_clone_table.tsv"
   },
   "overall": "STAGE_22_READY",
   "previous_overall": "STAGE_22_PENDING_OUTCOME_RULE"

@@ -31,6 +31,7 @@ from __future__ import annotations
 import collections
 import gzip
 import json
+import os
 import re
 import sys
 import tarfile
@@ -55,8 +56,15 @@ B_CONTEMP = "ORTHOGONAL_BUT_CONTEMPORANEOUS_ONLY"
 B_LEAK = "INVALID_FUTURE_LABEL_LEAKAGE"
 B_UNKNOWN = "UNKNOWN_REQUIRES_SOURCE_FILE"
 
-GSE242423 = Path(r"D:\GSE242423")
-GSE165176_DIRS = [Path(r"D:\Gill"), Path(r"D:\GSE165176")]
+# CI runs on ubuntu-latest, where D:\ does not exist. Making that condition reproducible LOCALLY
+# is what stops this class of red X from recurring: set CELLFATE_NO_LOCAL_DATA=1 and the suite sees
+# exactly what CI sees. Enforced by tests/test_ci_portability.py.
+_NO_LOCAL_DATA = os.environ.get("CELLFATE_NO_LOCAL_DATA") == "1"
+_ABSENT_ROOT = Path("__local_data_absent__")
+
+GSE242423 = _ABSENT_ROOT if _NO_LOCAL_DATA else Path(r"D:\GSE242423")
+GSE165176_DIRS = ([_ABSENT_ROOT] if _NO_LOCAL_DATA
+                  else [Path(r"D:\Gill"), Path(r"D:\GSE165176")])
 
 LINEAGE_TERMS = ("clone", "lineage", "celltag", "cell tag", "larry", "hashtag", "hto",
                  "multiplex", "demultiplex", "cmo", "sister", "barcoded", "lentibarcode")
