@@ -37,8 +37,9 @@ folds, an expression-column mapping, and a feature-eligibility firewall — and 
   `barcoding_posterior_and_assignment` itself (plan §1.3)
 - Clone-level outer folds are **frozen here**, once, over sorted clone keys — not left to Stage 23
 - Dataset roots are CLI arguments; no `D:\` literal exists in the builder (plan §1.4)
-- Manifests carry no timestamp and no repository `HEAD`; the whole artifact set was verified
-  **byte-identical across two consecutive runs**
+- Manifests carry no timestamp and no repository `HEAD`. Determinism was verified the hard way:
+  the repo was **cloned fresh and the builder re-run inside the clone**, producing a **zero diff**
+  across all nine artifacts
 
 ## What did NOT change
 - `src/` unchanged (verified: `git diff --name-only src/` empty)
@@ -52,6 +53,7 @@ folds, an expression-column mapping, and a feature-eligibility firewall — and 
 - ruff clean (CI scope: `src/ tests/ scripts/ plan_tests/`)
 - expression mapping (3,905 Rewind + 6,489 WM989 cells), fold consistency across all five tables,
   and the Rewind label were each re-derived independently outside the builder and matched
+- a fresh `git clone` followed by a full rebuild inside the clone produced **zero diff**
 
 ## Result
 
@@ -162,6 +164,16 @@ mandatory rather than a formality.
    picking whichever matched the plan's prose
 4. Missed the repo convention that every results-writer defines `_RESULTS` — caught by
    `tests/test_results_paths.py` before commit, as in Stage 21D
+5. **The determinism claim held only on this machine.** `core.autocrlf=true` means a fresh clone
+   lands CRLF in the working tree while the builders write LF, so re-running Stage 22 on a clean
+   checkout would have diffed every table for line endings alone. Found by actually cloning and
+   comparing, not by reasoning about it. Fixed with a `.gitattributes` rule pinning `results/**` to
+   LF, scoped so the CRLF-blob `stage21d_rewind_clone_table.tsv` is marked `-text` rather than
+   renormalized — rewriting a frozen 21D artifact is what the no-rewrite rule forbids
+6. **The three JSON writers emitted CRLF** because `Path.write_text` translates newlines on
+   Windows, while the CSV writers forced LF. Same content, different bytes. Now written with an
+   explicit `newline="
+"`. Only after this did a fresh-clone rebuild produce a genuine zero diff
 
 ## Scientific interpretation
 **Proves:** both prospective tasks are now frozen artifacts rather than descriptions. Every
