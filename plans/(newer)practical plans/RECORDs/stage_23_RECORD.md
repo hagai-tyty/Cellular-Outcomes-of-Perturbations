@@ -492,6 +492,31 @@ later state-conditioned treatment ranking. `W5 = X + B + U + X×U` against the a
 **VERDICT: `INTERACTION_PASS_MULTI_TREATMENT`** — passing endpoint **C1**; provisional until 23E
 structural controls and `ROLE_B_INTERACTION_PERMUTATION_PASS`.
 
+### FROZEN 23D HEADLINE — accepted 2026-08-22, not to be re-run or re-tuned
+
+```text
+1. C1 passes BOTH required bootstrap comparisons:
+       dLL_interaction = +0.01430   97.5% CI [+0.01010, +0.01847]
+       dLL_full        = +0.02367   97.5% CI [+0.01750, +0.02949]
+
+2. C2 ALSO independently clears the bootstrap criteria:
+       dMAE_interaction = +0.00938  97.5% CI [+0.00086, +0.01740]
+       dMAE_full        = +0.01378  97.5% CI [+0.00254, +0.02474]
+
+3. Treatment-wise W5-vs-W4 direction is positive in 5/6 on BOTH endpoints, but
+       Cisplatin C1 is effectively marginal   (+0.00002)
+       Doxorubicin is NEGATIVE on both        (-0.00332 C1, -0.00346 C2)
+
+4. Abundance remains the dominant predictor. The full C1 state contribution
+   W1 -> W5 = 0.02367 is still far smaller than U -> B+U = 0.0816.
+
+5. W1 and W4 were reused BYTE-IDENTICALLY from 23C and must remain frozen.
+   23D fitted only W5.
+
+6. No interpretation of the Dabrafenib / Trametinib pattern may alter the
+   already-frozen protocol. It is a post-hoc consistency observation only.
+```
+
 Both endpoints satisfy all four pre-registered criteria independently.
 
 ### C1 — detection (log loss; 8,406 rows, 1,401 clones)

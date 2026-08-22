@@ -7,7 +7,7 @@
     "version": "V2",
     "canonical_lf_sha256": "bc783e6b7da8102de5b73dd50dbe02861c92d2ca907c0a80d2e2a1c37561df69"
   },
-  "protocol_sha256": "b089612c1a9fe076a45f3219ea506e52e4b41b824060b796a273d6135eacc95f",
+  "protocol_sha256": "5b6c0762614ecff4ad7201313981fadd6839a4163c315bfe23478e3ff7dbb4e8",
   "models": {
     "W1": "B + U (frozen from 23C)",
     "W4": "X + B + U (frozen from 23C)",
