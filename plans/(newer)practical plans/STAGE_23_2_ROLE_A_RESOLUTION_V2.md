@@ -2145,13 +2145,18 @@ estimate between-replicate variance
 establish that a corrected same-data result would replicate
     that is 23.2G's question and needs untouched evidence
 
-be read as effective sample size
-    duplicated covariate rows are not independent observations; effective N is
-    below nominal N and the reported curve is therefore optimistic
+be read as an independent-sample power curve
+    scales 2 and 4 remain empirical resamples of biological replicate R1
 ```
 
-The duplicate-row caveat must be printed next to the curve in the 23.2E artifact and record, not
-only stated here.
+**Bias direction is not claimed.** Scales 2 and 4 remain empirical resamples of biological
+replicate R1. Repeated covariate profiles reduce effective covariate diversity and therefore make
+the projected power curve an approximation whose bias direction is not guaranteed. The simulation
+estimates within-R1 event-count detectability under the empirical R1 covariate distribution; it
+does not estimate power gained from additional independent biological replicates.
+
+This caveat must be printed next to the curve in the 23.2E artifact and record, not only stated
+here. Do not describe the curve as conservative or as optimistic.
 
 ---
 
