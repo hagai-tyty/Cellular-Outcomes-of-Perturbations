@@ -1285,7 +1285,7 @@ def test_the_closure_verdicts_are_the_ones_the_artifacts_carry(sy):
         assert verdict in block, f"the closure does not state the {name} verdict {verdict}"
     assert sy["roadmap_gate"]["gate"] in block
     assert "STAGE_24_OPEN" not in block, "Stage 24 is blocked; the closure must not say otherwise"
-    assert "23R" in block, "the closure must name the stage that follows"
+    assert "23R" in block or "23.2" in block, "the closure must name the stage that follows"
 
 
 @closed

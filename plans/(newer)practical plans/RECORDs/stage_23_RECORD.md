@@ -1110,5 +1110,18 @@ remains the dominant predictor throughout, Doxorubicin is a consistent treatment
 and no external biological replicate, unseen treatment, or cross-dataset transfer has been tested
 anywhere in this stage.
 
+### ADDITIVE NOTE — 2026-08-22, after roadmap V5
+
+Roadmap **V5 renamed Stage 23R to Stage 23.2** and expanded it (five explanations instead of four,
+a mandatory `STAGE_23_2_ROLE_A_RESOLUTION_V1.md` freeze, a Stage-24 handoff dossier, and a
+re-gating rule for material benchmark changes). Every "23R" above — including
+`next_stage: "STAGE 23R …"` inside the frozen `stage23_final_synthesis.json` — refers to that same
+stage under its earlier name.
+
+The frozen artifact is **not** re-pinned to the new name. Closure rule 1 permits a rerun only to
+re-pin a provenance hash, and a stage rename is neither a provenance hash nor a number. Renaming it
+would move `stage23_final_synthesis.json`, and with it the 13-artifact determinism evidence, for a
+cosmetic change. This note is the correction.
+
 ## Next action
-**Stage 23R.** Not started.
+**Stage 23.2** (called Stage 23R in the frozen 23F artifact). Not started.
