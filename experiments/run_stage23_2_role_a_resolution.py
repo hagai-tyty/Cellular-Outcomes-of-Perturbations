@@ -1523,10 +1523,298 @@ def run_23_2d() -> dict:
     return out
 
 
+
+
+# --------------------------------------------------------------------------------------------- #
+# 23.2E — power / identifiability.
+#
+# Planning, not confirmation. The question is which effect sizes the historical Role-A pipeline can
+# actually detect at different rare-positive counts, given this feature geometry and the
+# appropriate null.
+#
+# Two constraints from V2 shape the implementation:
+#
+#   * the synthetic state direction is LABEL-FREE. `z` is built from the expression matrix
+#     residualised on Bdepth, never from `y_primed`. Using all clones is permitted only because `z`
+#     is a simulation generator; it never scores the real outcome and never enters the fitted
+#     evaluation pipeline.
+#   * scaling cohorts cannot create biological replicate diversity. Scales 2 and 4 resample clones
+#     from R1 with replacement, so every synthetic cohort is still biological replicate R1. The
+#     curve answers the within-R1 event-count question (9.5.1) and says nothing about the
+#     biological-replication question (9.5.2), whose status is a design fact rather than an estimate.
+# --------------------------------------------------------------------------------------------- #
+E_SHARD_DIR = _CACHE / "power_shards"
+E_RESULTS = _OUT / "stage23_2_power_identifiability.json"
+COHORT_SCALES = (1, 2, 4)
+TARGET_AUCS = (0.66, 0.70)
+N_NULL_ALLOC = 200
+N_ALT_SIM = 100
+SEED_COVARIATE = 23440
+SEED_NULL = 23441
+SEED_ALT = 23442
+SEED_BETA = 23443
+
+
+def synthetic_direction() -> np.ndarray:
+    """V2 §9.3. One label-free simulation-generating score `z`, deterministically oriented."""
+    from sklearn.decomposition import PCA
+
+    X, clones = S23._load_rewind_x()
+    tbl = pd.read_csv(BDEPTH_TABLE).set_index("clone_id").loc[clones]
+    B = np.column_stack([tbl["log1p_n_pretreatment_cells"].to_numpy(dtype=float),
+                         tbl["n_lanes"].to_numpy(dtype=float),
+                         tbl["log1p_total_raw_GE_UMI"].to_numpy(dtype=float),
+                         tbl["log1p_n_detected_GE_features"].to_numpy(dtype=float)])
+    B = np.column_stack([np.ones(len(B)), (B - B.mean(0)) / np.where(B.std(0) == 0, 1, B.std(0))])
+
+    # residualise each gene on Bdepth, in blocks so the dense copy stays bounded
+    Xd = np.asarray(X.todense(), dtype=np.float64)
+    coef, *_ = np.linalg.lstsq(B, Xd, rcond=None)
+    R = Xd - B @ coef
+    del Xd
+
+    pca = PCA(n_components=1, svd_solver="randomized",
+              random_state=S23.SEED_PROTOCOL).fit(R)
+    load = pca.components_[0]
+    j = int(np.lexsort((np.arange(len(load)), -np.abs(load)))[0])   # ties -> smallest feature index
+    sign = 1.0 if load[j] >= 0 else -1.0
+    z = (R @ load) * sign
+    return (z - z.mean()) / z.std()
+
+
+def _assign_positives(z: np.ndarray, fold: np.ndarray, n_pos_per_fold: int, beta: float,
+                      rng: np.random.Generator) -> np.ndarray:
+    """Weighted sampling without replacement inside each fold, exact fold-level class counts."""
+    y = np.zeros(len(z), dtype=np.int64)
+    for f in np.unique(fold):
+        idx = np.flatnonzero(fold == f)
+        w = np.exp(beta * z[idx])
+        w = w / w.sum()
+        pick = rng.choice(idx, size=n_pos_per_fold, replace=False, p=w)
+        y[pick] = 1
+    return y
+
+
+def _oracle_auc(z: np.ndarray, y: np.ndarray) -> float:
+    from sklearn.metrics import roc_auc_score
+    return float(roc_auc_score(y, z))
+
+
+def calibrate_beta(z: np.ndarray, fold: np.ndarray, n_pos_per_fold: int,
+                   target_auc: float, n_cal: int = 200) -> dict:
+    """Deterministic bisection on beta so the ORACLE z has the requested median AUC."""
+    rng_seed = SEED_BETA
+    def median_auc(beta: float) -> float:
+        rng = np.random.default_rng(rng_seed)
+        return float(np.median([_oracle_auc(z, _assign_positives(z, fold, n_pos_per_fold,
+                                                                 beta, rng))
+                                for _ in range(n_cal)]))
+
+    lo, hi = 0.0, 8.0
+    while median_auc(hi) < target_auc and hi < 64:
+        hi *= 2
+    for _ in range(40):
+        mid = (lo + hi) / 2
+        if median_auc(mid) < target_auc:
+            lo = mid
+        else:
+            hi = mid
+    beta = (lo + hi) / 2
+    return {"beta": float(beta), "achieved_median_oracle_AUC": median_auc(beta),
+            "target_AUC": target_auc, "calibration_draws": n_cal, "seed": SEED_BETA}
+
+
+def _build_cohort(scale: int):
+    """Scale 1 is the real cohort. Scales 2/4 resample WITH replacement inside each outer fold."""
+    X, clones = S23._load_rewind_x()
+    k = pd.read_csv(_RESULTS / "stage22_rewind_clones.csv").set_index("clone_id").loc[clones]
+    fold = k["outer_fold"].to_numpy()
+    tbl = pd.read_csv(BDEPTH_TABLE).set_index("clone_id").loc[clones]
+    nuis = np.column_stack([tbl["log1p_n_pretreatment_cells"].to_numpy(dtype=float),
+                            tbl["n_lanes"].to_numpy(dtype=float)])
+    if scale == 1:
+        return X, nuis, fold, np.arange(len(clones))
+    rng = np.random.default_rng(SEED_COVARIATE + scale)
+    rows = []
+    for f in range(S23.N_OUTER):
+        idx = np.flatnonzero(fold == f)
+        rows.append(rng.choice(idx, size=len(idx) * scale, replace=True))
+    rows = np.concatenate(rows)
+    return X[rows], nuis[rows], fold[rows], rows
+
+
+def _delta_ap_once(X, nuis, y, fold) -> float:
+    """The historical R1/R3 nested pipeline on one synthetic cohort. ΔAP = AP(R3) - AP(R1)."""
+    from sklearn.metrics import average_precision_score
+    from sklearn.model_selection import StratifiedKFold
+
+    oof1 = np.full(len(y), np.nan)
+    oof3 = np.full(len(y), np.nan)
+    for f in range(S23.N_OUTER):
+        tr, te = np.flatnonzero(fold != f), np.flatnonzero(fold == f)
+        skf = StratifiedKFold(n_splits=S23.N_INNER, shuffle=True, random_state=S23.SEED_PROTOCOL)
+        s1: dict = {}
+        s3: dict = {}
+        for itr_i, iva_i in skf.split(np.zeros(len(tr)), y[tr]):
+            itr, iva = tr[itr_i], tr[iva_i]
+            ztr, zva, _, kmax = S23.expression_block(X, itr, iva, max(S23.K_CANDIDATES))
+            btr, bva = S23.standardize_train_only(nuis[itr], nuis[iva])
+            for C in S23.LOGISTIC_C:
+                p = S23._fit_logistic(btr, y[itr], bva, C, [])
+                s1.setdefault((None, C), []).append(average_precision_score(y[iva], p))
+            for kk in S23.K_CANDIDATES:
+                if kk > kmax:
+                    continue
+                for C in S23.LOGISTIC_C:
+                    p = S23._fit_logistic(np.hstack([ztr[:, :kk], btr]), y[itr],
+                                          np.hstack([zva[:, :kk], bva]), C, [])
+                    s3.setdefault((kk, C), []).append(average_precision_score(y[iva], p))
+
+        def pick(sc):
+            return max(sc.items(), key=lambda kv: (round(float(np.mean(kv[1])), 12),
+                                                   -(kv[0][0] or 0), -kv[0][1]))[0]
+
+        ztr, zte, _, _ = S23.expression_block(X, tr, te, max(S23.K_CANDIDATES))
+        btr, bte = S23.standardize_train_only(nuis[tr], nuis[te])
+        oof1[te] = S23._fit_logistic(btr, y[tr], bte, pick(s1)[1], [])
+        kk, C = pick(s3)
+        oof3[te] = S23._fit_logistic(np.hstack([ztr[:, :kk], btr]), y[tr],
+                                     np.hstack([zte[:, :kk], bte]), C, [])
+    return float(average_precision_score(y, oof3) - average_precision_score(y, oof1))
+
+
+def run_23_2e_shard(scale: int, kind: str, target_auc: float | None, n_sims: int) -> dict:
+    """One independent shard: (scale, kind[, target AUC]). Shards use disjoint seed streams."""
+    t0 = time.perf_counter()
+    X, nuis, fold, rows = _build_cohort(scale)
+    z_full = synthetic_direction()
+    z = z_full[rows]
+    n_pos_per_fold = ANCHOR_POS_PER_FOLD * scale
+
+    beta_info = None
+    if kind == "alt":
+        beta_info = calibrate_beta(z, fold, n_pos_per_fold, target_auc)
+
+    base = SEED_NULL if kind == "null" else SEED_ALT
+    offset = scale * 1000 + (0 if kind == "null" else int(target_auc * 100))
+    vals, aucs = [], []
+    for i in range(n_sims):
+        rng = np.random.default_rng(base + offset + i)
+        if kind == "null":
+            y = _assign_positives(z, fold, n_pos_per_fold, 0.0, rng)
+        else:
+            y = _assign_positives(z, fold, n_pos_per_fold, beta_info["beta"], rng)
+        aucs.append(_oracle_auc(z, y))
+        vals.append(_delta_ap_once(X, nuis, y, fold))
+        if (i + 1) % 10 == 0:
+            el = time.perf_counter() - t0
+            print(f"  [s{scale}-{kind}{target_auc or ''}] {i + 1}/{n_sims}  {el / 60:.1f} min  "
+                  f"eta {el / (i + 1) * (n_sims - i - 1) / 60:.1f} min", flush=True)
+
+    E_SHARD_DIR.mkdir(parents=True, exist_ok=True)
+    name = f"scale{scale}_{kind}" + (f"_auc{int(target_auc * 100)}" if target_auc else "")
+    payload = {"scale": scale, "kind": kind, "target_auc": target_auc, "n_sims": n_sims,
+               "cohort_N": int(X.shape[0]), "positives_per_fold": n_pos_per_fold,
+               "beta": beta_info, "delta_ap": [float(v) for v in vals],
+               "oracle_auc": [float(v) for v in aucs],
+               "runtime_minutes": round((time.perf_counter() - t0) / 60, 2)}
+    (E_SHARD_DIR / f"{name}.json").write_text(json.dumps(payload), encoding="utf-8", newline="\n")
+    return payload
+
+
+def merge_23_2e() -> dict:
+    """Combine the shards into the two V2 §9.5 statuses."""
+    shards = {}
+    for p in sorted(E_SHARD_DIR.glob("*.json")):
+        d = json.loads(p.read_text(encoding="utf-8"))
+        shards[p.stem] = d
+
+    per_scale = {}
+    for scale in COHORT_SCALES:
+        nl = shards.get(f"scale{scale}_null")
+        if nl is None:
+            continue
+        q95 = float(np.percentile(np.array(nl["delta_ap"]), 95))
+        entry = {"cohort_N": nl["cohort_N"], "positives_per_fold": nl["positives_per_fold"],
+                 "n_null": nl["n_sims"], "q95_null": q95,
+                 "null_mean": float(np.mean(nl["delta_ap"])), "power": {}}
+        for auc in TARGET_AUCS:
+            alt = shards.get(f"scale{scale}_alt_auc{int(auc * 100)}")
+            if alt is None:
+                continue
+            arr = np.array(alt["delta_ap"])
+            entry["power"][str(auc)] = {
+                "n_alt": alt["n_sims"], "estimated_power": float((arr > q95).mean()),
+                "alt_mean_delta_ap": float(arr.mean()),
+                "achieved_median_oracle_AUC": float(np.median(alt["oracle_auc"])),
+                "beta": alt["beta"]["beta"] if alt["beta"] else None}
+        per_scale[str(scale)] = entry
+
+    prim = {s: per_scale[s]["power"].get("0.66", {}).get("estimated_power")
+            for s in per_scale if per_scale[s]["power"].get("0.66")}
+    p1 = prim.get("1")
+    reached = any(v is not None and v >= 0.80 for k, v in prim.items() if k in ("2", "4"))
+    if p1 is None:
+        event_status = "UNRESOLVED"
+    elif p1 >= 0.80:
+        event_status = "NOT_SUPPORTED"
+    elif p1 < 0.50 and reached:
+        event_status = "SUPPORTED"
+    else:
+        event_status = "UNRESOLVED"
+
+    out = {
+        "stage": "23.2E",
+        "plan": {"file": PLAN.name, "version": PLAN_VERSION},
+        "stage23_2_protocol_sha256": json.loads(
+            PROTOCOL.read_text(encoding="utf-8"))["canonical_sha256"],
+        "design": {"cohort_scales": list(COHORT_SCALES), "target_AUCs": list(TARGET_AUCS),
+                   "null_allocations": N_NULL_ALLOC, "alternative_simulations": N_ALT_SIM,
+                   "seeds": {"covariate_resample": SEED_COVARIATE, "null": SEED_NULL,
+                             "alternative": SEED_ALT, "beta_calibration": SEED_BETA}},
+        "historical_test_geometry": _historical_geometry(),
+        "per_scale": per_scale,
+        "WITHIN_R1_EVENT_COUNT_LIMITATION": event_status,
+        "BIOLOGICAL_REPLICATION_LIMITATION": "SUPPORTED",
+        "biological_replication_note": (
+            "V2 §9.5.2 -- a design fact, not an estimate. The claim rests on n_biological_"
+            "replicates = 1, and no simulation can change that. It can become NOT_SUPPORTED only "
+            "when a Role-A claim is supported by >= 2 independent biological replicates."),
+        "bias_direction_caveat": (
+            "Scales 2 and 4 remain empirical resamples of biological replicate R1. Repeated "
+            "covariate profiles reduce effective covariate diversity and therefore make the "
+            "projected power curve an approximation whose bias direction is not guaranteed. The "
+            "simulation estimates within-R1 event-count detectability under the empirical R1 "
+            "covariate distribution; it does not estimate power gained from additional independent "
+            "biological replicates."),
+        "what_this_cannot_do": [
+            "create biological replicate diversity",
+            "estimate between-replicate variance",
+            "establish that a corrected same-data result would replicate",
+            "be read as an independent-sample power curve"],
+        "source_provenance": source_provenance(),
+    }
+    write_json(E_RESULTS, out)
+    return out
+
+
+def _historical_geometry() -> dict:
+    pe = json.loads((_RESULTS / "stage23_permutation_results.json").read_text(encoding="utf-8"))
+    t = pe["permutation_tests"]["role_a_delta_AP_state"]
+    return {"observed_delta_AP": t["observed"], "null_mean": t["null_mean"],
+            "null_sd": t["null_sd"], "null_p95": t["null_p95"], "p_perm": t["p_perm"],
+            "null_centered_separation": t["observed"] - t["null_mean"],
+            "distance_to_null_p95": t["observed"] - t["null_p95"]}
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Stage 23.2 Role-A resolution")
-    ap.add_argument("--stage", default="23.2a", choices=["23.2a", "23.2b", "23.2c", "23.2d"])
+    ap.add_argument("--stage", default="23.2a", choices=["23.2a", "23.2b", "23.2c", "23.2d", "23.2e", "23.2e-merge"])
     ap.add_argument("--permutations", type=int, default=200)
+    ap.add_argument("--scale", type=int, choices=[1, 2, 4])
+    ap.add_argument("--kind", choices=["null", "alt"])
+    ap.add_argument("--target-auc", type=float)
+    ap.add_argument("--sims", type=int)
     ap.add_argument("--no-replay", action="store_true",
                     help="recover mappings without replaying D00 (audit convenience only)")
     args = ap.parse_args(argv)
@@ -1543,6 +1831,26 @@ def main(argv=None) -> int:
         print(f"  ladder {r['search_width_ladder']}  monotone={r['ladder_monotone_increase']}")
         print("OVERALL:", r["MODEL_SELECTION_NULL_INFLATION"])
         return 0
+    if args.stage == "23.2e":
+        n = args.sims if args.sims else (N_NULL_ALLOC if args.kind == "null" else N_ALT_SIM)
+        r = run_23_2e_shard(args.scale, args.kind, args.target_auc, n)
+        arr = np.array(r["delta_ap"])
+        print(f"  scale {r['scale']} N={r['cohort_N']} {r['kind']} auc={r['target_auc']} "
+              f"n={r['n_sims']}  mean dAP {arr.mean():+.5f}  q95 {np.percentile(arr,95):+.5f}")
+        if r["beta"]:
+            print(f"  beta {r['beta']['beta']:.4f} -> median oracle AUC {r['beta']['achieved_median_oracle_AUC']:.4f}")
+        print(f"  runtime {r['runtime_minutes']} min")
+        return 0
+    if args.stage == "23.2e-merge":
+        r = merge_23_2e()
+        for s_, v in r["per_scale"].items():
+            print(f"  scale {s_}  N={v['cohort_N']}  q95_null {v['q95_null']:+.5f}")
+            for auc, pw in v["power"].items():
+                print(f"      AUC {auc}: power {pw['estimated_power']:.3f}  (median oracle AUC {pw['achieved_median_oracle_AUC']:.4f})")
+        print("  WITHIN_R1_EVENT_COUNT_LIMITATION:", r["WITHIN_R1_EVENT_COUNT_LIMITATION"])
+        print("  BIOLOGICAL_REPLICATION_LIMITATION:", r["BIOLOGICAL_REPLICATION_LIMITATION"])
+        return 0
+
     if args.stage == "23.2d":
         r = run_23_2d()
         m = r["multinomial_stability"]

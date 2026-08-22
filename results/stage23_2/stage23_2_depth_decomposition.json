@@ -1,0 +1,173 @@
+{
+  "stage": "23.2C",
+  "plan": {
+    "file": "STAGE_23_2_ROLE_A_RESOLUTION_V2.md",
+    "version": "V2"
+  },
+  "stage23_2_protocol_sha256": "78edd5d7f9900349925339169a5d5e3e5011fe23e3c7c22608ac98bfe3427bf4",
+  "n_permutations": 200,
+  "nuisance_Bdepth": [
+    "log1p(n_pretreatment_cells)",
+    "n_lanes",
+    "log1p(total_raw_GE_UMI)",
+    "log1p(n_detected_GE_features_in_raw_pseudobulk)"
+  ],
+  "reference": {
+    "r1depth_reference_AP": 0.011827201557068973,
+    "selected_C_per_fold": {
+      "0": 10,
+      "1": 0.01,
+      "2": 10,
+      "3": 10,
+      "4": 10
+    }
+  },
+  "null_means": {
+    "mu00": 0.003495157023790003,
+    "mu10": 0.002987955791652897,
+    "mu01": 0.002326377012261806,
+    "mu11": 0.0016116478742497656
+  },
+  "depth_shift_full": {
+    "mean": 0.001168780011528197,
+    "median": 0.0013097306351843568,
+    "sd": 0.004429593117151556,
+    "fraction_gt_0": 0.86,
+    "ci95_low": 0.0005720883394475872,
+    "ci95_high": 0.0018043300393462468,
+    "resamples": 10000,
+    "seed": 23422
+  },
+  "contrasts": {
+    "selection_main_contrast": {
+      "mean": 0.0005072012321371057,
+      "median": -5.210477029601087e-05,
+      "sd": 0.004819703559538055,
+      "fraction_gt_0": 0.47,
+      "ci95_low": -9.94512685740939e-05,
+      "ci95_high": 0.0012409193730043623,
+      "resamples": 10000,
+      "seed": 23422
+    },
+    "depth_main_contrast": {
+      "mean": 0.001168780011528197,
+      "median": 0.0013097306351843568,
+      "sd": 0.004429593117151556,
+      "fraction_gt_0": 0.86,
+      "ci95_low": 0.0005720883394475872,
+      "ci95_high": 0.0018043300393462468,
+      "resamples": 10000,
+      "seed": 23422
+    },
+    "factor_interaction": {
+      "mean": -0.0002075279058749347,
+      "median": 3.25745784028515e-05,
+      "sd": 0.003944788148852507,
+      "fraction_gt_0": 0.51,
+      "ci95_low": -0.0007494785877165956,
+      "ci95_high": 0.0003621009875888124,
+      "resamples": 10000,
+      "seed": 23422
+    }
+  },
+  "per_arm_Bdepth": {
+    "K10": {
+      "mean": 0.0013814731073765129,
+      "median": 0.0003133036431236351,
+      "sd": 0.00386981057260756,
+      "fraction_gt_0": 0.61,
+      "ci95_low": 0.0008847084861840433,
+      "ci95_high": 0.0019704473727136644,
+      "resamples": 10000,
+      "seed": 23422
+    },
+    "K20": {
+      "mean": 0.0015082964089075728,
+      "median": 0.0005307021501639491,
+      "sd": 0.0041176575232067004,
+      "fraction_gt_0": 0.59,
+      "ci95_low": 0.0009829345600795803,
+      "ci95_high": 0.0021421007252474477,
+      "resamples": 10000,
+      "seed": 23422
+    },
+    "K50": {
+      "mean": 0.0019451741064652112,
+      "median": 0.0006207070734211319,
+      "sd": 0.0057298148804673845,
+      "fraction_gt_0": 0.66,
+      "ci95_low": 0.0012357119004757747,
+      "ci95_high": 0.0028116530424236374,
+      "resamples": 10000,
+      "seed": 23422
+    }
+  },
+  "arm_dispersion_Bdepth": 0.0005637009990886984,
+  "technical_retention": {
+    "donor_nonzero_vs_recipient_log1p_total_UMI": {
+      "median": 0.33720248090821847,
+      "mean": 0.3373916163203988,
+      "ci95_low": 0.3357121431633824,
+      "ci95_high": 0.339108197998446,
+      "excludes_zero_positive": true
+    },
+    "donor_nonzero_vs_recipient_log1p_detected": {
+      "median": 0.34401238036995807,
+      "mean": 0.34376940072260515,
+      "ci95_low": 0.3420754831992564,
+      "ci95_high": 0.3454949445071712,
+      "excludes_zero_positive": true
+    },
+    "donor_total_UMI_vs_recipient_total_UMI": {
+      "median": 0.33062853887800137,
+      "mean": 0.3313128175668652,
+      "ci95_low": 0.32958359324905406,
+      "ci95_high": 0.33310815639728936,
+      "excludes_zero_positive": true
+    },
+    "note": "no outcome label is used in this diagnostic"
+  },
+  "observed_2x2": {
+    "O00": 0.01050162935116511,
+    "O10": 0.009618847221988186,
+    "O01": 0.0069373642052549915,
+    "O11": 0.008716611851819373,
+    "O00_matches_historical_within_tolerance": true
+  },
+  "corrected_same_data_diagnostic": {
+    "O11": 0.008716611851819373,
+    "q95_11": 0.008350830276890807,
+    "p_diag_11": 0.05472636815920398,
+    "CORRECTED_SAME_DATA_SIGNAL_DIAGNOSTIC": "NEGATIVE",
+    "note": "exploratory same-Rewind diagnostic; a POSITIVE result cannot emit ROLE_A_CONFIRMATORY_SUPPORTED"
+  },
+  "lane_composition_sensitivity": {
+    "permitted": false,
+    "within_r1_status": "WITHIN_R1_STRUCTURE_UNRESOLVED",
+    "executed": false,
+    "reason": "V2 \u00a77.5 permits this only under WITHIN_R1_TECHNICAL_LANES; 23.2A returned WITHIN_R1_STRUCTURE_UNRESOLVED, so per-sample cell counts could absorb biological-unit structure and are forbidden"
+  },
+  "RESIDUAL_DEPTH_STRUCTURE": "SUPPORTED",
+  "critical_interpretation": "Bdepth is diagnostic. V2 \u00a77.7 forbids promoting it into a Stage-24 production baseline without the frozen Stage-24 plan",
+  "runtime_minutes": 98.94,
+  "source_provenance": {
+    "git_commit": "444fed17532083c1dd7436eedc6285f5c0d53548",
+    "git_dirty_paths": [
+      "M experiments/run_stage23_2_role_a_resolution.py"
+    ],
+    "source_files": {
+      "stage23_2_builder": "f18c33484df43275e1b7ed075c4ccf381578822b32bee745e9bd7ed8f149d122",
+      "stage23_builder": "ce43d831b0c7585a226a61c340c95660fa14e67ab2ea0fa3714d822c64e8b7f7",
+      "plan_v2": "dec787ac1b9d745fc93e2ca4625ec30c627e07e67a02c014bbad726d777b4769",
+      "plan_v1_archived": "6bce724a625e32e527c9420a764cc457f18f185fd72e74cc92f2641796af3caf"
+    },
+    "versions": {
+      "python": "3.11.0",
+      "numpy": "2.4.6",
+      "pandas": "3.0.3",
+      "scipy": "1.17.1",
+      "sklearn": "1.9.0"
+    },
+    "platform": "Windows-10-10.0.19045-SP0"
+  }
+}

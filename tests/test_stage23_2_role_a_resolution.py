@@ -596,3 +596,124 @@ def test_the_top_n_rule_keeps_ties_at_the_cutoff():
     assert mask.tolist() == [True, True, True, True, False, False]
     assert S232._select_top_n(counts, 6).sum() == 6
     assert S232._select_top_n(counts, 99).sum() == 6
+
+
+# ============================================================================================== #
+# 23.2C — residual depth / nuisance decomposition.
+#
+# This is the substage that found the dominant mechanism, so the contracts guard the three ways a
+# strong-looking result here could be wrong:
+#
+#   * the 2x2 must be balanced. `D11` has to use the SAME three fixed-K arms as `D10`, or the
+#     "factor interaction" term is comparing different constructions and means nothing.
+#   * `SUPPORTED` requires outcome-level evidence AND a mechanistic correlation. A depth shift on
+#     its own could be an artifact of adding two columns to a nuisance model; the outcome-free
+#     retention correlations are what make it mechanistic.
+#   * the corrected same-data diagnostic must stay exploratory. It came within a hair of clearing
+#     its gate, which is exactly when a stage is tempted to promote it.
+# ============================================================================================== #
+C_RESULTS = OUT / "stage23_2_depth_decomposition.json"
+ran_c = pytest.mark.skipif(not C_RESULTS.exists(), reason="23.2C has not been run")
+
+
+@pytest.fixture(scope="module")
+def c():
+    return json.loads(C_RESULTS.read_text(encoding="utf-8"))
+
+
+@ran_c
+def test_the_2x2_is_balanced_across_both_nuisance_blocks(c):
+    """D10 and D11 must be built the same way, or the interaction term is meaningless."""
+    proto = json.loads(PROTOCOL.read_text(encoding="utf-8"))["protocol"]
+    assert proto["decomposition_design"]["no_k_selection_reference"]["fixed_K_arms"] == [10, 20, 50]
+    assert set(c["per_arm_Bdepth"]) == {"K10", "K20", "K50"}
+    arms = [c["per_arm_Bdepth"][f"K{k}"]["mean"] for k in (10, 20, 50)]
+    assert round(c["null_means"]["mu11"], 10) == round(float(np.mean(arms)), 10), (
+        "mu11 must be the equal-weight mean of the same three arms used for mu10")
+    assert c["arm_dispersion_Bdepth"] == pytest.approx(max(arms) - min(arms))
+
+
+@ran_c
+def test_the_nuisance_block_is_the_frozen_bdepth(c):
+    assert c["nuisance_Bdepth"] == [
+        "log1p(n_pretreatment_cells)", "n_lanes", "log1p(total_raw_GE_UMI)",
+        "log1p(n_detected_GE_features_in_raw_pseudobulk)"]
+    joined = " ".join(c["nuisance_Bdepth"]).lower()
+    for banned in ("gdna", "y_primed", "primed", "outcome"):
+        assert banned not in joined, f"Bdepth contains an outcome-derived term: {banned}"
+
+
+@ran_c
+def test_the_contrast_algebra_is_consistent_with_the_reported_means(c):
+    m = c["null_means"]
+    assert c["contrasts"]["selection_main_contrast"]["mean"] == pytest.approx(
+        m["mu00"] - m["mu10"], abs=1e-9)
+    assert c["contrasts"]["depth_main_contrast"]["mean"] == pytest.approx(
+        m["mu00"] - m["mu01"], abs=1e-9)
+    assert c["contrasts"]["factor_interaction"]["mean"] == pytest.approx(
+        m["mu00"] - m["mu10"] - m["mu01"] + m["mu11"], abs=1e-9)
+    assert c["depth_shift_full"]["mean"] == pytest.approx(m["mu00"] - m["mu01"], abs=1e-9)
+
+
+@ran_c
+def test_supported_requires_both_outcome_level_and_mechanistic_evidence(c):
+    """V2 §7.6 -- a depth shift alone is not enough; a retention correlation must also hold."""
+    mech = [v for v in c["technical_retention"].values() if isinstance(v, dict)]
+    any_pos = any(v["excludes_zero_positive"] for v in mech)
+    all_incl_zero = all(not v["excludes_zero_positive"] for v in mech)
+    d = c["depth_shift_full"]
+    expected = ("SUPPORTED" if (d["ci95_low"] > 0 and any_pos)
+                else "NOT_SUPPORTED" if (d["ci95_high"] <= 0 and all_incl_zero)
+                else "UNRESOLVED")
+    assert c["RESIDUAL_DEPTH_STRUCTURE"] == expected
+    if c["RESIDUAL_DEPTH_STRUCTURE"] == "SUPPORTED":
+        assert d["ci95_low"] > 0 and any_pos
+
+
+@ran_c
+def test_the_retention_diagnostic_uses_no_outcome(c):
+    assert "no outcome label is used" in c["technical_retention"]["note"]
+    for v in c["technical_retention"].values():
+        if isinstance(v, dict):
+            assert -1.0 <= v["median"] <= 1.0
+            assert v["ci95_low"] <= v["mean"] <= v["ci95_high"]
+
+
+@ran_c
+def test_the_corrected_same_data_diagnostic_stays_exploratory(c):
+    """It nearly cleared its gate. It must still be unable to emit a confirmatory verdict."""
+    d = c["corrected_same_data_diagnostic"]
+    expected = ("POSITIVE" if (d["O11"] > 0 and d["O11"] > d["q95_11"] and d["p_diag_11"] <= 0.05)
+                else "NEGATIVE")
+    assert d["CORRECTED_SAME_DATA_SIGNAL_DIAGNOSTIC"] == expected
+    assert "exploratory" in d["note"]
+    assert "ROLE_A_CONFIRMATORY_SUPPORTED" in d["note"]
+    blob = json.dumps(c)
+    assert "ROLE_A_SIGNAL_PASS" not in blob, "23.2C may not emit a Role-A pass"
+
+
+@ran_c
+def test_the_observed_2x2_preserves_the_historical_cell(c):
+    o = c["observed_2x2"]
+    assert o["O00_matches_historical_within_tolerance"] is True
+    assert o["O00"] == pytest.approx(0.01050162935116511, abs=1e-9)
+    assert set(o) >= {"O00", "O10", "O01", "O11"}
+
+
+@ran_c
+def test_lane_composition_sensitivity_respects_the_23_2a_status(c):
+    """V2 §7.5 is permitted only under WITHIN_R1_TECHNICAL_LANES."""
+    a = json.loads(A_RESULTS.read_text(encoding="utf-8"))
+    ls = c["lane_composition_sensitivity"]
+    assert ls["within_r1_status"] == a["within_r1_status"]
+    assert ls["permitted"] == (a["within_r1_status"] == "WITHIN_R1_TECHNICAL_LANES")
+    if not ls["permitted"]:
+        assert ls["executed"] is False
+        blob = json.dumps(c)
+        assert "n_cells_GSM" not in blob, "per-sample counts entered a forbidden diagnostic"
+
+
+@ran_c
+def test_bdepth_is_not_promoted_to_a_production_baseline(c):
+    assert "forbids promoting it into a" in c["critical_interpretation"]
+    assert "§7.7" in c["critical_interpretation"] or "7.7" in c["critical_interpretation"]
