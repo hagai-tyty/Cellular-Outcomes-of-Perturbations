@@ -1,0 +1,193 @@
+{
+  "stage": "23F",
+  "plan": {
+    "file": "STAGE_23_LEARNABILITY_INTERACTION_GATE_V2.md",
+    "version": "V2",
+    "canonical_lf_sha256": "bc783e6b7da8102de5b73dd50dbe02861c92d2ca907c0a80d2e2a1c37561df69"
+  },
+  "protocol_sha256": "04a7dab3fed5ebdd30a8ade118a638af0ae7eedf40e5a03843dfbdf8397fd9e2",
+  "synthesis_is_mechanical": true,
+  "models_fitted_in_23f": 0,
+  "source_artifacts": {
+    "23B": "dc64cc9e7ceedbfb6a6762d4f8429cdb9645b1ef1f12037a60e961b0b0412adb",
+    "23C": "2b84cdb8cd186246704f7ff5bdc72eb034d42060bbd028ba9cbb13a26097d52f",
+    "23D": "f1b9fbebb5fcf9e7b66dbb960bdc177d4a748a146559fbe477f19465ece75dc4",
+    "23E": "af3954de8dd8ba2d756065961e8a5975dcd2d4cd447c604827bf1636d2ac64c4"
+  },
+  "STRUCTURAL_CONTROLS_PASS": true,
+  "claims": {
+    "role_a": {
+      "dataset": "GSE227151",
+      "role": "A",
+      "required_by_plan": true,
+      "statistic": "delta_AP_state (R3 - R1)",
+      "observed": 0.01050162935116511,
+      "bootstrap_criterion": {
+        "lower_bound": 0.0039659740396362966,
+        "excludes_zero": true,
+        "source": "23B"
+      },
+      "permutation_gate": {
+        "p_perm": 0.0845771144278607,
+        "null_p95": 0.014545491038048794,
+        "passes": false,
+        "source": "23E"
+      },
+      "structural_controls_pass": true,
+      "final": "ROLE_A_SIGNAL_FAIL"
+    },
+    "role_b_additive": {
+      "dataset": "GSE279162",
+      "role": "B",
+      "endpoint": "C1",
+      "required_by_plan": false,
+      "statistic": "delta_log_loss_state (W1 - W4)",
+      "observed": 0.009372233093424887,
+      "bootstrap_criterion": {
+        "lower_bound": 0.005164130541834332,
+        "excludes_zero": true,
+        "source": "23C"
+      },
+      "permutation_gate": {
+        "p_perm": 0.004975124378109453,
+        "null_p95": 0.00010529784481495204,
+        "passes": true,
+        "source": "23E"
+      },
+      "structural_controls_pass": true,
+      "final": "ROLE_B_ADDITIVE_PASS"
+    },
+    "role_b_interaction": {
+      "dataset": "GSE279162",
+      "role": "B",
+      "endpoint": "C1",
+      "required_by_plan": false,
+      "statistic": "both W5-vs-W4 and W5-vs-W1 on the same endpoint",
+      "components": {
+        "W5_vs_W4": {
+          "observed": 0.014299986814330035,
+          "bootstrap_lower_bound": 0.010103105206688081,
+          "bootstrap_excludes_zero": true,
+          "p_perm": 0.004975124378109453,
+          "null_p95": 0.0008383045453672399,
+          "permutation_passes": true
+        },
+        "W5_vs_W1": {
+          "observed": 0.023672219907754866,
+          "bootstrap_lower_bound": 0.017499162318074447,
+          "bootstrap_excludes_zero": true,
+          "p_perm": 0.004975124378109453,
+          "null_p95": 0.0003983520753238711,
+          "permutation_passes": true
+        }
+      },
+      "treatments_improved_by_W5_over_W4": 5,
+      "permutation_gate": {
+        "passes": true,
+        "source": "23E"
+      },
+      "structural_controls_pass": true,
+      "final": "INTERACTION_PASS_MULTI_TREATMENT"
+    },
+    "c2_interaction_secondary": {
+      "endpoint": "C2",
+      "status": "secondary, independently tested, never load-bearing",
+      "components": {
+        "W5_vs_W4": {
+          "observed": 0.009375579861020777,
+          "bootstrap_lower_bound": 0.0008605678536598758,
+          "bootstrap_excludes_zero": true,
+          "p_perm": 0.004975124378109453,
+          "null_p95": 0.00017642776196034914,
+          "permutation_passes": true
+        },
+        "W5_vs_W1": {
+          "observed": 0.013782112409585823,
+          "bootstrap_lower_bound": 0.0025442571251153233,
+          "bootstrap_excludes_zero": true,
+          "p_perm": 0.004975124378109453,
+          "null_p95": -0.00048300912162515196,
+          "permutation_passes": true
+        }
+      },
+      "permutation_gate": {
+        "passes": true,
+        "source": "23E"
+      },
+      "additive_c2_state_was_not_a_pass_candidate": "23C failed its bootstrap criterion on additive C2, so 23E did not permutation-test it",
+      "structural_controls_pass": true,
+      "final": "C2_INTERACTION_SECONDARY_CONFIRMED"
+    }
+  },
+  "final_verdicts": {
+    "role_a": "ROLE_A_SIGNAL_FAIL",
+    "role_b_additive": "ROLE_B_ADDITIVE_PASS",
+    "role_b_interaction": "INTERACTION_PASS_MULTI_TREATMENT",
+    "c2_interaction_secondary": "C2_INTERACTION_SECONDARY_CONFIRMED"
+  },
+  "roadmap_gate": {
+    "gate": "STAGE_24_BLOCKED_ROLE_A",
+    "role_a_is_mandatory": true,
+    "role_b_may_substitute_for_role_a": false,
+    "rule": "Stage-23 V2 makes Role A the mandatory prospective anchor. A failed Role-A gate blocks Stage 24 regardless of how strong Role B is; Role B's positives are retained as evidence, not promoted into a substitute anchor.",
+    "next_stage": "STAGE 23R -- Role-A Resolution / Failure Decomposition (roadmap V4)"
+  },
+  "preserved_findings": {
+    "1_rewind_absolute_signal_was_weak_before_any_permutation": {
+      "R0_AP": 0.011117466370087915,
+      "R1_AP": 0.010346763671910921,
+      "R2_AP": 0.019232694919358393,
+      "R3_AP": 0.02084839302307603,
+      "positives": 35,
+      "clones": 3147,
+      "prevalence": 0.011121703209405783,
+      "note": "R3 reaches AP 0.0208 at 1.11% prevalence with 35 positive clones. Even the provisional 23B PASS was a small absolute effect on a very rare outcome.",
+      "source": "23B"
+    },
+    "2_role_a_permutation_p": {
+      "p_perm": 0.0845771144278607,
+      "observed": 0.01050162935116511,
+      "null_mean": 0.003495157023790003,
+      "null_p95": 0.014545491038048794,
+      "n_null_ge_observed": 16,
+      "source": "23E"
+    },
+    "3_abundance_remains_the_dominant_wm989_predictor": {
+      "abundance_gain_W0_minus_W1_log_loss": 0.08159226760230598,
+      "full_state_gain_W1_minus_W5_log_loss": 0.023672219907754866,
+      "ratio": 3.446751843310516,
+      "note": "captured abundance buys several times what the entire state contribution buys. The ordering is abundance first, then treatment-specific state.",
+      "source": "23C + 23D"
+    },
+    "4_state_adds_beyond_abundance_on_c1": {
+      "delta_log_loss_state_W1_minus_W4": 0.009372233093424887,
+      "bootstrap_lower_bound": 0.005164130541834332,
+      "p_perm": 0.004975124378109453,
+      "source": "23C + 23E"
+    },
+    "5_explicit_interaction_adds_further_signal": {
+      "delta_log_loss_interaction_W4_minus_W5": 0.014299986814330035,
+      "delta_log_loss_full_W1_minus_W5": 0.023672219907754866,
+      "share_of_state_contribution_that_is_treatment_specific": 0.6040830505146436,
+      "p_perm_interaction": 0.004975124378109453,
+      "p_perm_full": 0.004975124378109453,
+      "source": "23D + 23E"
+    },
+    "6_doxorubicin_is_the_consistent_treatment_level_exception": {
+      "C1_improvement_W4_minus_W5": -0.0033224048416362617,
+      "C2_improvement_W4_minus_W5": -0.0034591137249802006,
+      "negative_on_both_endpoints": true,
+      "treatments_improved_C1": 5,
+      "treatments_improved_C2": 5,
+      "note": "W5 is worse than W4 for Doxorubicin on BOTH endpoints. 'multi-treatment' means four treatments carry the interaction, not six.",
+      "source": "23D"
+    },
+    "7_no_external_generalization_has_been_shown": {
+      "external_biological_replicate_tested": false,
+      "unseen_treatment_tested": false,
+      "cross_dataset_transfer_tested": false,
+      "note": "every Stage-23 result is within-dataset, within the frozen Stage-22 clone folds, over the six treatments present in training. Nothing here shows the state contribution survives a new biological replicate or a treatment the model never saw.",
+      "source": "23A-23E, by construction"
+    }
+  }
+}

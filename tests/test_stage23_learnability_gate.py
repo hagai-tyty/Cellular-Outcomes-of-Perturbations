@@ -979,7 +979,8 @@ def test_determinism_compared_the_full_artifact_set_against_a_clean_tree():
     if not DET_RESULTS.exists():
         pytest.skip("the determinism check has not been run")
     d = json.loads(DET_RESULTS.read_text(encoding="utf-8"))
-    assert d["artifacts_compared"] == len(S23.DETERMINISM_ARTIFACTS) == 12
+    assert d["artifacts_compared"] == len(S23.DETERMINISM_ARTIFACTS)
+    assert len(S23.DETERMINISM_ARTIFACTS) >= 13, "the compared set must not shrink"
     assert d["working_tree_clean_for_builder_and_artifacts"] is True, (
         "a dirty builder makes the provenance hashes unreproducible by construction")
     assert d["mismatched"] == {}
@@ -1036,3 +1037,218 @@ def test_23e_references_the_frozen_protocol_and_plan(pe):
     assert pe["protocol_sha256"] == S23.sha256_file(RES / "stage23_protocol.json")
     assert pe["plan"]["canonical_lf_sha256"] == S23.canonical_text_sha256(S23.PLAN)
     assert pe["stage"] == "23E"
+
+
+# ============================================================================================== #
+# 23F — mechanical synthesis.
+#
+# 23F is where a stage that produced one failure and three passes gets summarised, and summarising
+# is where the failure would go missing. The contracts here are therefore about *arithmetic and
+# provenance*, not about performance:
+#
+#   * 23F must fit nothing -- a synthesis step that trains anything is no longer a synthesis;
+#   * every verdict must be recomputable from the frozen artifacts by a test that never reads
+#     23F's own conclusions;
+#   * the roadmap gate must depend on Role A alone, so no amount of Role-B strength can open
+#     Stage 24;
+#   * all seven findings the stage must carry forward have to be present AND agree with their
+#     source artifact, so a later edit cannot quietly soften one.
+# ============================================================================================== #
+SYNTHESIS = RES / "stage23_final_synthesis.json"
+ran_23f = pytest.mark.skipif(not SYNTHESIS.exists(), reason="23F has not been run")
+
+
+@pytest.fixture(scope="module")
+def sy():
+    return json.loads(SYNTHESIS.read_text(encoding="utf-8"))
+
+
+def test_23f_fits_nothing():
+    """A synthesis step that trains anything is not a synthesis. Checked on the AST of the 23F
+    code path rather than on its own self-reported `models_fitted_in_23f` field."""
+    import ast
+
+    tree = ast.parse(SRC.read_text(encoding="utf-8"))
+    f_functions = {"run_23f", "_lower_bound"}
+    for fn in (n for n in ast.walk(tree)
+               if isinstance(n, ast.FunctionDef) and n.name in f_functions):
+        for call in (c for c in ast.walk(fn) if isinstance(c, ast.Call)):
+            if isinstance(call.func, ast.Attribute):
+                assert call.func.attr not in {"fit", "fit_transform", "fit_predict", "predict",
+                                              "predict_proba"}, f"{fn.name} fits or predicts"
+            if isinstance(call.func, ast.Name):
+                assert not call.func.id.startswith("_fit_"), f"{fn.name} calls {call.func.id}"
+                assert call.func.id not in {"_load_rewind_x", "_load_wm989_x", "expression_block",
+                                            "clone_pseudobulk"}, f"{fn.name} touched expression"
+
+
+@ran_23f
+def test_23f_reports_that_it_fitted_nothing(sy):
+    assert sy["models_fitted_in_23f"] == 0
+    assert sy["synthesis_is_mechanical"] is True
+    assert sy["stage"] == "23F"
+
+
+@ran_23f
+def test_every_verdict_is_recomputable_from_the_frozen_artifacts_alone(sy):
+    """Re-derive all four verdicts from 23B/23C/23D/23E without reading 23F's conclusions."""
+    rb = json.loads((RES / "stage23_rewind_results.json").read_text(encoding="utf-8"))
+    wc = json.loads((RES / "stage23_wm989_results.json").read_text(encoding="utf-8"))
+    wi = json.loads((RES / "stage23_wm989_interaction_results.json").read_text(encoding="utf-8"))
+    pe = json.loads((RES / "stage23_permutation_results.json").read_text(encoding="utf-8"))
+    ctl = pe["STRUCTURAL_CONTROLS_PASS"]
+    st = pe["claim_permutation_status"]
+
+    a_ok = (rb["inference"]["delta_AP_state_R3_minus_R1"]["ci95_low"] > 0
+            and st["ROLE_A_PERMUTATION_PASS"] and ctl)
+    assert sy["final_verdicts"]["role_a"] == (S23.ROLE_A_PASS if a_ok else S23.ROLE_A_FAIL)
+
+    b = wc["endpoints"]["C1"]["inference"]["delta_state_W1_minus_W4"]
+    b_ok = b["ci975_two_sided"][0] > 0 and st["ROLE_B_ADDITIVE_PERMUTATION_PASS"] and ctl
+    assert sy["final_verdicts"]["role_b_additive"] == (S23.ROLE_B_PASS if b_ok
+                                                       else S23.ROLE_B_FAIL)
+
+    e = wi["endpoints"]["C1"]["inference"]
+    i_ok = (e["interaction_W4_minus_W5"]["ci975_two_sided"][0] > 0
+            and e["full_state_W1_minus_W5"]["ci975_two_sided"][0] > 0
+            and st["ROLE_B_INTERACTION_PERMUTATION_PASS"] and ctl)
+    broad = wi["endpoints"]["C1"]["treatments_improved_by_W5_over_W4"] >= 3
+    assert sy["final_verdicts"]["role_b_interaction"] == (
+        S23.INTERACTION_PASS if (i_ok and broad)
+        else S23.INTERACTION_LOCAL if i_ok else S23.INTERACTION_NONE)
+
+    e2 = wi["endpoints"]["C2"]["inference"]
+    c2_ok = (e2["interaction_W4_minus_W5"]["ci975_two_sided"][0] > 0
+             and e2["full_state_W1_minus_W5"]["ci975_two_sided"][0] > 0
+             and st["C2_INTERACTION_SECONDARY_PERMUTATION_PASS"] and ctl)
+    assert sy["final_verdicts"]["c2_interaction_secondary"] == (
+        S23.C2_SECONDARY_CONFIRMED if c2_ok else S23.C2_SECONDARY_NOT_CONFIRMED)
+
+
+@ran_23f
+def test_role_a_failed_and_that_is_what_the_ledger_says(sy):
+    """The demotion has to be visible in the ledger, not only in prose. Role A's bootstrap
+    criterion PASSED and its permutation gate FAILED -- both facts must survive."""
+    a = sy["claims"]["role_a"]
+    assert a["required_by_plan"] is True
+    assert a["bootstrap_criterion"]["excludes_zero"] is True, "23B's PASS candidacy is not erased"
+    assert a["permutation_gate"]["passes"] is False
+    assert a["permutation_gate"]["p_perm"] > 0.05
+    assert a["final"] == S23.ROLE_A_FAIL
+
+
+@ran_23f
+def test_23f_does_not_agree_with_23b_and_says_so(sy):
+    """23B recorded a provisional PASS. 23F must contradict it, or the permutation gate did
+    nothing."""
+    rb = json.loads((RES / "stage23_rewind_results.json").read_text(encoding="utf-8"))
+    assert rb["provisional_verdict"] == S23.ROLE_A_PASS
+    assert sy["final_verdicts"]["role_a"] == S23.ROLE_A_FAIL
+    assert sy["final_verdicts"]["role_a"] != rb["provisional_verdict"]
+
+
+@ran_23f
+def test_23f_agrees_with_23c_and_23d_where_nothing_overturned_them(sy):
+    """The converse contract: a synthesis that silently changed a passing substage's verdict would
+    be just as wrong as one that hid a failure."""
+    wc = json.loads((RES / "stage23_wm989_results.json").read_text(encoding="utf-8"))
+    wi = json.loads((RES / "stage23_wm989_interaction_results.json").read_text(encoding="utf-8"))
+    assert sy["final_verdicts"]["role_b_additive"] == wc["verdict"]
+    assert sy["final_verdicts"]["role_b_interaction"] == wi["verdict"]
+
+
+@ran_23f
+def test_the_gate_depends_on_role_a_alone(sy):
+    """The load-bearing rule: Role B is strong on three separate statistics and still cannot open
+    Stage 24."""
+    g = sy["roadmap_gate"]
+    assert g["role_a_is_mandatory"] is True
+    assert g["role_b_may_substitute_for_role_a"] is False
+    assert g["gate"] == (S23.STAGE_24_OPEN
+                         if sy["final_verdicts"]["role_a"] == S23.ROLE_A_PASS
+                         else S23.STAGE_24_BLOCKED_ROLE_A)
+    assert g["gate"] == S23.STAGE_24_BLOCKED_ROLE_A
+    # Role B really is positive -- the gate is blocked despite that, not because of it.
+    assert sy["final_verdicts"]["role_b_additive"] == S23.ROLE_B_PASS
+    assert sy["final_verdicts"]["role_b_interaction"] == S23.INTERACTION_PASS
+    assert sy["final_verdicts"]["c2_interaction_secondary"] == S23.C2_SECONDARY_CONFIRMED
+
+
+@ran_23f
+def test_the_gate_routes_to_the_failure_resolution_stage(sy):
+    """Roadmap V4 sends STAGE_24_BLOCKED_ROLE_A to Stage 23R, not to Stage 24 and not to a rerun
+    of Role A inside Stage 23."""
+    nxt = sy["roadmap_gate"]["next_stage"]
+    assert "23R" in nxt
+    assert "STAGE 24" not in nxt.upper().replace("STAGE 23R", "")
+
+
+@ran_23f
+def test_all_seven_preserved_findings_are_present(sy):
+    p = sy["preserved_findings"]
+    assert len(p) == 7, sorted(p)
+    for i, fragment in enumerate(
+            ["rewind_absolute_signal", "role_a_permutation_p", "abundance_remains",
+             "state_adds_beyond_abundance", "explicit_interaction_adds",
+             "doxorubicin", "no_external_generalization"], start=1):
+        key = next((k for k in p if k.startswith(f"{i}_")), None)
+        assert key is not None, f"finding {i} is missing"
+        assert fragment in key, f"finding {i} is not about {fragment}"
+        assert p[key], f"finding {i} is empty"
+
+
+@ran_23f
+def test_the_preserved_findings_agree_with_their_source_artifacts(sy):
+    """Each carried-forward number is re-read from the artifact it claims to come from."""
+    rb = json.loads((RES / "stage23_rewind_results.json").read_text(encoding="utf-8"))
+    wc = json.loads((RES / "stage23_wm989_results.json").read_text(encoding="utf-8"))
+    wi = json.loads((RES / "stage23_wm989_interaction_results.json").read_text(encoding="utf-8"))
+    pe = json.loads((RES / "stage23_permutation_results.json").read_text(encoding="utf-8"))
+    p = sy["preserved_findings"]
+
+    f1 = p["1_rewind_absolute_signal_was_weak_before_any_permutation"]
+    assert f1["positives"] == rb["positives"] == 35
+    assert f1["R3_AP"] == rb["pooled_oof_metrics"]["R3"]["AP"]
+    assert f1["prevalence"] == pytest.approx(rb["positives"] / rb["clones"])
+
+    f2 = p["2_role_a_permutation_p"]
+    assert f2["p_perm"] == pe["permutation_tests"]["role_a_delta_AP_state"]["p_perm"]
+    assert f2["p_perm"] == pytest.approx(0.0846, abs=1e-4)
+
+    f3 = p["3_abundance_remains_the_dominant_wm989_predictor"]
+    w0 = wc["endpoints"]["C1"]["pooled_oof_metrics"]["W0"]["log_loss"]
+    w1 = wc["endpoints"]["C1"]["pooled_oof_metrics"]["W1"]["log_loss"]
+    assert f3["abundance_gain_W0_minus_W1_log_loss"] == pytest.approx(w0 - w1)
+    assert f3["ratio"] > 1, "abundance must still be recorded as the dominant predictor"
+
+    f4 = p["4_state_adds_beyond_abundance_on_c1"]
+    assert f4["delta_log_loss_state_W1_minus_W4"] == (
+        wc["endpoints"]["C1"]["inference"]["delta_state_W1_minus_W4"]["point"])
+
+    f5 = p["5_explicit_interaction_adds_further_signal"]
+    assert f5["delta_log_loss_interaction_W4_minus_W5"] == (
+        wi["endpoints"]["C1"]["inference"]["interaction_W4_minus_W5"]["point"])
+
+    f6 = p["6_doxorubicin_is_the_consistent_treatment_level_exception"]
+    for ep, key in (("C1", "C1_improvement_W4_minus_W5"), ("C2", "C2_improvement_W4_minus_W5")):
+        assert f6[key] == wi["endpoints"][ep]["by_treatment"]["Doxorubicin"][
+            "improvement_W4_minus_W5"]
+        assert f6[key] < 0, f"Doxorubicin must stay recorded as negative on {ep}"
+    assert f6["negative_on_both_endpoints"] is True
+
+    f7 = p["7_no_external_generalization_has_been_shown"]
+    assert f7["external_biological_replicate_tested"] is False
+    assert f7["unseen_treatment_tested"] is False
+    assert f7["cross_dataset_transfer_tested"] is False
+
+
+@ran_23f
+def test_23f_pins_the_artifacts_it_synthesised(sy):
+    """A synthesis is only reproducible if it names the exact inputs it read."""
+    for stage, name in (("23B", "stage23_rewind_results.json"),
+                        ("23C", "stage23_wm989_results.json"),
+                        ("23D", "stage23_wm989_interaction_results.json"),
+                        ("23E", "stage23_permutation_results.json")):
+        assert sy["source_artifacts"][stage] == S23.sha256_file(RES / name), stage
+    assert sy["protocol_sha256"] == S23.sha256_file(RES / "stage23_protocol.json")
+    assert sy["plan"]["canonical_lf_sha256"] == S23.canonical_text_sha256(S23.PLAN)

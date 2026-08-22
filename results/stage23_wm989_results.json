@@ -7,7 +7,7 @@
     "version": "V2",
     "canonical_lf_sha256": "bc783e6b7da8102de5b73dd50dbe02861c92d2ca907c0a80d2e2a1c37561df69"
   },
-  "protocol_sha256": "a195d5c2a4ff8dd3dbb97def4334bf9cc464dc500ec18c59410fabfc0d26368d",
+  "protocol_sha256": "04a7dab3fed5ebdd30a8ade118a638af0ae7eedf40e5a03843dfbdf8397fd9e2",
   "models": {
     "W0": "U",
     "W1": "B + U",

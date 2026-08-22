@@ -6,7 +6,7 @@
     "canonical_lf_sha256": "bc783e6b7da8102de5b73dd50dbe02861c92d2ca907c0a80d2e2a1c37561df69"
   },
   "stage22_benchmark_commit": "8d6011a",
-  "builder_source_canonical_lf_sha256": "4be6aa1fb3e4d1674a6a84b2494c0e884ae8984af13583f24f46f1321682c2d2",
+  "builder_source_canonical_lf_sha256": "ce43d831b0c7585a226a61c340c95660fa14e67ab2ea0fa3714d822c64e8b7f7",
   "hash_rule": {
     "binary_artifacts": "sha256 of exact bytes",
     "text_sources": "sha256 after canonicalising CRLF and CR to LF"

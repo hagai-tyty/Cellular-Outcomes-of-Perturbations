@@ -1545,6 +1545,7 @@ DETERMINISM_ARTIFACTS = [
     "stage23_wm989_abundance_oof.csv",
     "stage23_wm989_interaction_oof.csv",
     "stage23_wm989_interaction_abundance_oof.csv",
+    "stage23_final_synthesis.json",
 ]
 
 
@@ -1574,7 +1575,7 @@ def run_determinism(rewind_root: Path, wm989_root: Path) -> dict:
         subprocess.run(["git", "clone", "--quiet", "--no-hardlinks", str(repo), str(clone)],
                        check=True, capture_output=True)
         env = dict(os.environ, PYTHONUTF8="1")
-        for st in ("23a", "23b", "23c", "23d"):
+        for st in ("23a", "23b", "23c", "23d", "23f"):
             subprocess.run([sys.executable,
                             str(clone / "experiments" / "run_stage23_learnability_gate.py"),
                             "--stage", st,
@@ -1929,9 +1930,239 @@ def _finish_23e(perm, obs, n_perm, Xr, rew_clones, Xw, wm_clones, t0, family_run
     return res
 
 
+# --------------------------------------------------------------------------------------------- #
+# 23F — mechanical evidence synthesis.
+#
+# NOTHING IS FITTED HERE. 23F opens no matrix, builds no design, and calls no estimator. It reads
+# the four frozen artifacts written by 23B-23E and evaluates boolean expressions over them.
+#
+# That restraint is the point. By the time a stage reaches synthesis, the temptation is to let a
+# disappointing gate be re-read as "weak but suggestive", or to let a strong result on one role
+# cover a failed one on another. Both are interpretation, and interpretation is exactly what a
+# pre-registered gate exists to remove. Every verdict below is a conjunction of values that were
+# frozen before this function was written, and a contract test asserts this module fits nothing.
+# --------------------------------------------------------------------------------------------- #
+STAGE23F_RESULTS = _RESULTS / "stage23_final_synthesis.json"
+STAGE_24_OPEN = "STAGE_24_OPEN"
+STAGE_24_BLOCKED_ROLE_A = "STAGE_24_BLOCKED_ROLE_A"
+C2_SECONDARY_CONFIRMED = "C2_INTERACTION_SECONDARY_CONFIRMED"
+C2_SECONDARY_NOT_CONFIRMED = "C2_INTERACTION_SECONDARY_NOT_CONFIRMED"
+# V2's breadth rule, the same one 23D applied when it wrote its own verdict. It is restated rather
+# than re-decided: a contract test asserts 23F's interaction verdict equals the one 23D recorded.
+MIN_TREATMENTS_IMPROVED = 3
+
+
+def _lower_bound(block: dict) -> float:
+    """The frozen lower confidence bound a bootstrap criterion is read from.
+
+    23C/23D record a two-sided 97.5% interval; 23B records a 95% interval. Each substage's own
+    frozen choice is used -- 23F never re-derives an interval, and never picks the friendlier one.
+    """
+    if "ci975_two_sided" in block:
+        return float(block["ci975_two_sided"][0])
+    if "ci95" in block:
+        return float(block["ci95"][0])
+    return float(block["ci95_low"])
+
+
+def run_23f() -> dict:
+    """V2 §8. Derive the final Stage-23 claim ledger and the roadmap gate. Fits nothing."""
+    rb = json.loads((_RESULTS / "stage23_rewind_results.json").read_text(encoding="utf-8"))
+    wc = json.loads((_RESULTS / "stage23_wm989_results.json").read_text(encoding="utf-8"))
+    wi = json.loads((_RESULTS / "stage23_wm989_interaction_results.json")
+                    .read_text(encoding="utf-8"))
+    pe = json.loads(STAGE23E_RESULTS.read_text(encoding="utf-8"))
+
+    controls = bool(pe["STRUCTURAL_CONTROLS_PASS"])
+    perm = pe["claim_permutation_status"]
+    ptests = pe["permutation_tests"]
+
+    # ---- Role A: mandatory prospective anchor ----------------------------------------------- #
+    a_boot = rb["inference"]["delta_AP_state_R3_minus_R1"]
+    role_a = {
+        "dataset": rb["dataset"], "role": "A", "required_by_plan": True,
+        "statistic": "delta_AP_state (R3 - R1)",
+        "observed": a_boot["point"],
+        "bootstrap_criterion": {
+            "lower_bound": _lower_bound(a_boot), "excludes_zero": _lower_bound(a_boot) > 0,
+            "source": "23B"},
+        "permutation_gate": {
+            "p_perm": ptests["role_a_delta_AP_state"]["p_perm"],
+            "null_p95": ptests["role_a_delta_AP_state"]["null_p95"],
+            "passes": bool(perm["ROLE_A_PERMUTATION_PASS"]), "source": "23E"},
+        "structural_controls_pass": controls}
+    role_a["final"] = (ROLE_A_PASS
+                       if (role_a["bootstrap_criterion"]["excludes_zero"]
+                           and role_a["permutation_gate"]["passes"] and controls)
+                       else ROLE_A_FAIL)
+
+    # ---- Role B additive, on the endpoint 23C carried ---------------------------------------- #
+    b_boot = wc["endpoints"]["C1"]["inference"]["delta_state_W1_minus_W4"]
+    role_b_add = {
+        "dataset": wc["dataset"], "role": "B", "endpoint": "C1", "required_by_plan": False,
+        "statistic": "delta_log_loss_state (W1 - W4)",
+        "observed": b_boot["point"],
+        "bootstrap_criterion": {
+            "lower_bound": _lower_bound(b_boot), "excludes_zero": _lower_bound(b_boot) > 0,
+            "source": "23C"},
+        "permutation_gate": {
+            "p_perm": ptests["c1_delta_LL_state"]["p_perm"],
+            "null_p95": ptests["c1_delta_LL_state"]["null_p95"],
+            "passes": bool(perm["ROLE_B_ADDITIVE_PERMUTATION_PASS"]), "source": "23E"},
+        "structural_controls_pass": controls}
+    role_b_add["final"] = (ROLE_B_PASS
+                           if (role_b_add["bootstrap_criterion"]["excludes_zero"]
+                               and role_b_add["permutation_gate"]["passes"] and controls)
+                           else ROLE_B_FAIL)
+
+    # ---- Role B interaction: BOTH bounds and BOTH nulls, on the same endpoint ---------------- #
+    def _interaction(endpoint: str, int_key: str, full_key: str) -> dict:
+        e = wi["endpoints"][endpoint]["inference"]
+        parts = {}
+        for label, block, pkey in (("W5_vs_W4", e["interaction_W4_minus_W5"], int_key),
+                                   ("W5_vs_W1", e["full_state_W1_minus_W5"], full_key)):
+            parts[label] = {
+                "observed": block["point"],
+                "bootstrap_lower_bound": _lower_bound(block),
+                "bootstrap_excludes_zero": _lower_bound(block) > 0,
+                "p_perm": ptests[pkey]["p_perm"], "null_p95": ptests[pkey]["null_p95"],
+                "permutation_passes": bool(ptests[pkey]["passes"])}
+        return parts
+
+    c1_parts = _interaction("C1", "c1_delta_LL_interaction", "c1_delta_LL_full")
+    role_b_int = {
+        "dataset": wi["dataset"], "role": "B", "endpoint": "C1", "required_by_plan": False,
+        "statistic": "both W5-vs-W4 and W5-vs-W1 on the same endpoint",
+        "components": c1_parts,
+        "treatments_improved_by_W5_over_W4":
+            wi["endpoints"]["C1"]["treatments_improved_by_W5_over_W4"],
+        "permutation_gate": {"passes": bool(perm["ROLE_B_INTERACTION_PERMUTATION_PASS"]),
+                             "source": "23E"},
+        "structural_controls_pass": controls}
+    _int_ok = (all(p["bootstrap_excludes_zero"] for p in c1_parts.values())
+               and role_b_int["permutation_gate"]["passes"] and controls)
+    _broad = role_b_int["treatments_improved_by_W5_over_W4"] >= MIN_TREATMENTS_IMPROVED
+    role_b_int["final"] = (INTERACTION_PASS if (_int_ok and _broad)
+                           else INTERACTION_LOCAL if _int_ok else INTERACTION_NONE)
+
+    c2_parts = _interaction("C2", "c2_delta_MAE_interaction", "c2_delta_MAE_full")
+    c2_int = {
+        "endpoint": "C2", "status": "secondary, independently tested, never load-bearing",
+        "components": c2_parts,
+        "permutation_gate": {"passes": bool(perm["C2_INTERACTION_SECONDARY_PERMUTATION_PASS"]),
+                             "source": "23E"},
+        "additive_c2_state_was_not_a_pass_candidate":
+            "23C failed its bootstrap criterion on additive C2, so 23E did not permutation-test it",
+        "structural_controls_pass": controls}
+    c2_int["final"] = (C2_SECONDARY_CONFIRMED
+                       if (all(p["bootstrap_excludes_zero"] for p in c2_parts.values())
+                           and c2_int["permutation_gate"]["passes"] and controls)
+                       else C2_SECONDARY_NOT_CONFIRMED)
+
+    # ---- the roadmap gate. Role A is mandatory, so Role B cannot substitute for it ----------- #
+    gate = STAGE_24_OPEN if role_a["final"] == ROLE_A_PASS else STAGE_24_BLOCKED_ROLE_A
+
+    # ---- findings that must survive the summary, each traced to its artifact ----------------- #
+    w1c1 = wc["endpoints"]["C1"]["pooled_oof_metrics"]["W1"]["log_loss"]
+    w0c1 = wc["endpoints"]["C1"]["pooled_oof_metrics"]["W0"]["log_loss"]
+    dox_c1 = wi["endpoints"]["C1"]["by_treatment"]["Doxorubicin"]["improvement_W4_minus_W5"]
+    dox_c2 = wi["endpoints"]["C2"]["by_treatment"]["Doxorubicin"]["improvement_W4_minus_W5"]
+    preserved = {
+        "1_rewind_absolute_signal_was_weak_before_any_permutation": {
+            "R0_AP": rb["pooled_oof_metrics"]["R0"]["AP"],
+            "R1_AP": rb["pooled_oof_metrics"]["R1"]["AP"],
+            "R2_AP": rb["pooled_oof_metrics"]["R2"]["AP"],
+            "R3_AP": rb["pooled_oof_metrics"]["R3"]["AP"],
+            "positives": rb["positives"], "clones": rb["clones"],
+            "prevalence": rb["positives"] / rb["clones"],
+            "note": "R3 reaches AP 0.0208 at 1.11% prevalence with 35 positive clones. Even the "
+                    "provisional 23B PASS was a small absolute effect on a very rare outcome.",
+            "source": "23B"},
+        "2_role_a_permutation_p": {
+            "p_perm": ptests["role_a_delta_AP_state"]["p_perm"],
+            "observed": ptests["role_a_delta_AP_state"]["observed"],
+            "null_mean": ptests["role_a_delta_AP_state"]["null_mean"],
+            "null_p95": ptests["role_a_delta_AP_state"]["null_p95"],
+            "n_null_ge_observed": ptests["role_a_delta_AP_state"]["n_null_ge_observed"],
+            "source": "23E"},
+        "3_abundance_remains_the_dominant_wm989_predictor": {
+            "abundance_gain_W0_minus_W1_log_loss": w0c1 - w1c1,
+            "full_state_gain_W1_minus_W5_log_loss":
+                wi["endpoints"]["C1"]["inference"]["full_state_W1_minus_W5"]["point"],
+            "ratio": (w0c1 - w1c1) / wi["endpoints"]["C1"]["inference"]
+                     ["full_state_W1_minus_W5"]["point"],
+            "note": "captured abundance buys several times what the entire state contribution "
+                    "buys. The ordering is abundance first, then treatment-specific state.",
+            "source": "23C + 23D"},
+        "4_state_adds_beyond_abundance_on_c1": {
+            "delta_log_loss_state_W1_minus_W4": b_boot["point"],
+            "bootstrap_lower_bound": _lower_bound(b_boot),
+            "p_perm": ptests["c1_delta_LL_state"]["p_perm"], "source": "23C + 23E"},
+        "5_explicit_interaction_adds_further_signal": {
+            "delta_log_loss_interaction_W4_minus_W5": c1_parts["W5_vs_W4"]["observed"],
+            "delta_log_loss_full_W1_minus_W5": c1_parts["W5_vs_W1"]["observed"],
+            "share_of_state_contribution_that_is_treatment_specific":
+                c1_parts["W5_vs_W4"]["observed"] / c1_parts["W5_vs_W1"]["observed"],
+            "p_perm_interaction": c1_parts["W5_vs_W4"]["p_perm"],
+            "p_perm_full": c1_parts["W5_vs_W1"]["p_perm"], "source": "23D + 23E"},
+        "6_doxorubicin_is_the_consistent_treatment_level_exception": {
+            "C1_improvement_W4_minus_W5": dox_c1, "C2_improvement_W4_minus_W5": dox_c2,
+            "negative_on_both_endpoints": bool(dox_c1 < 0 and dox_c2 < 0),
+            "treatments_improved_C1": wi["endpoints"]["C1"]
+                                        ["treatments_improved_by_W5_over_W4"],
+            "treatments_improved_C2": wi["endpoints"]["C2"]
+                                        ["treatments_improved_by_W5_over_W4"],
+            "note": "W5 is worse than W4 for Doxorubicin on BOTH endpoints. 'multi-treatment' "
+                    "means four treatments carry the interaction, not six.",
+            "source": "23D"},
+        "7_no_external_generalization_has_been_shown": {
+            "external_biological_replicate_tested": False,
+            "unseen_treatment_tested": False,
+            "cross_dataset_transfer_tested": False,
+            "note": "every Stage-23 result is within-dataset, within the frozen Stage-22 clone "
+                    "folds, over the six treatments present in training. Nothing here shows the "
+                    "state contribution survives a new biological replicate or a treatment the "
+                    "model never saw.",
+            "source": "23A-23E, by construction"},
+    }
+
+    res = {
+        "stage": "23F",
+        "plan": {"file": PLAN.name, "version": PLAN_VERSION,
+                 "canonical_lf_sha256": canonical_text_sha256(PLAN)},
+        "protocol_sha256": sha256_file(_RESULTS / "stage23_protocol.json"),
+        "synthesis_is_mechanical": True,
+        "models_fitted_in_23f": 0,
+        "source_artifacts": {
+            "23B": sha256_file(_RESULTS / "stage23_rewind_results.json"),
+            "23C": sha256_file(_RESULTS / "stage23_wm989_results.json"),
+            "23D": sha256_file(_RESULTS / "stage23_wm989_interaction_results.json"),
+            "23E": sha256_file(STAGE23E_RESULTS)},
+        "STRUCTURAL_CONTROLS_PASS": controls,
+        "claims": {"role_a": role_a, "role_b_additive": role_b_add,
+                   "role_b_interaction": role_b_int, "c2_interaction_secondary": c2_int},
+        "final_verdicts": {
+            "role_a": role_a["final"], "role_b_additive": role_b_add["final"],
+            "role_b_interaction": role_b_int["final"],
+            "c2_interaction_secondary": c2_int["final"]},
+        "roadmap_gate": {
+            "gate": gate,
+            "role_a_is_mandatory": True,
+            "role_b_may_substitute_for_role_a": False,
+            "rule": "Stage-23 V2 makes Role A the mandatory prospective anchor. A failed Role-A "
+                    "gate blocks Stage 24 regardless of how strong Role B is; Role B's positives "
+                    "are retained as evidence, not promoted into a substitute anchor.",
+            "next_stage": "STAGE 23R -- Role-A Resolution / Failure Decomposition "
+                          "(roadmap V4)"},
+        "preserved_findings": preserved,
+    }
+    STAGE23F_RESULTS.write_text(json.dumps(res, indent=2), encoding="utf-8", newline="\n")
+    return res
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Stage 23 learnability gate")
-    ap.add_argument("--stage", default="23a", choices=["23a", "23b", "23c", "23d", "23e"])
+    ap.add_argument("--stage", default="23a", choices=["23a", "23b", "23c", "23d", "23e", "23f"])
     ap.add_argument("--rewind-root", type=Path, default=S21D.REWIND)
     ap.add_argument("--wm989-root", type=Path, default=S21D.WM989)
     ap.add_argument("--permutations", type=int, default=N_PERMUTATION)
@@ -1941,6 +2172,15 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
     _RESULTS.mkdir(exist_ok=True)
     _CACHE.mkdir(parents=True, exist_ok=True)
+
+    if args.stage == "23f":
+        r = run_23f()
+        for name, v in r["final_verdicts"].items():
+            print(f"  {name:<26} {v}")
+        print("  STRUCTURAL_CONTROLS_PASS:", r["STRUCTURAL_CONTROLS_PASS"])
+        print("OVERALL:", r["roadmap_gate"]["gate"])
+        print("  next:", r["roadmap_gate"]["next_stage"])
+        return 0
 
     if args.stage == "23e":
         if args.determinism:
