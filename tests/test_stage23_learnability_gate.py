@@ -1252,3 +1252,62 @@ def test_23f_pins_the_artifacts_it_synthesised(sy):
         assert sy["source_artifacts"][stage] == S23.sha256_file(RES / name), stage
     assert sy["protocol_sha256"] == S23.sha256_file(RES / "stage23_protocol.json")
     assert sy["plan"]["canonical_lf_sha256"] == S23.canonical_text_sha256(S23.PLAN)
+
+
+# ============================================================================================== #
+# Formal closure.
+#
+# The closure declaration is prose, so it is the one part of Stage 23 that could drift away from
+# the artifacts without anything breaking. These contracts tie it back down: the verdicts and
+# digests written into the record must be the ones the frozen files actually carry, and the
+# stage's sections must all be present and in order.
+# ============================================================================================== #
+RECORD = ROOT / "plans" / "(newer)practical plans" / "RECORDs" / "stage_23_RECORD.md"
+closed = pytest.mark.skipif(not RECORD.exists(), reason="the Stage-23 record is absent")
+
+
+@closed
+def test_the_record_carries_every_substage_and_the_closure_in_order():
+    import re
+
+    text = RECORD.read_text(encoding="utf-8")
+    heads = re.findall(r"^# (23[A-F]|STAGE 23 — FORMAL CLOSURE)", text, re.M)
+    assert heads == ["23A", "23B", "23C", "23D", "23E", "23F", "STAGE 23 — FORMAL CLOSURE"], heads
+
+
+@closed
+@ran_23f
+def test_the_closure_verdicts_are_the_ones_the_artifacts_carry(sy):
+    """A closure section that disagrees with `stage23_final_synthesis.json` would be the single
+    most misleading thing in the repository."""
+    block = RECORD.read_text(encoding="utf-8").split("# STAGE 23 — FORMAL CLOSURE")[1]
+    for name, verdict in sy["final_verdicts"].items():
+        assert verdict in block, f"the closure does not state the {name} verdict {verdict}"
+    assert sy["roadmap_gate"]["gate"] in block
+    assert "STAGE_24_OPEN" not in block, "Stage 24 is blocked; the closure must not say otherwise"
+    assert "23R" in block, "the closure must name the stage that follows"
+
+
+@closed
+@ran_23f
+def test_the_digests_quoted_in_the_closure_match_the_files(sy):
+    block = RECORD.read_text(encoding="utf-8").split("# STAGE 23 — FORMAL CLOSURE")[1]
+    assert sy["protocol_sha256"] in block
+    for stage, name in (("23B", "stage23_rewind_results.json"),
+                        ("23C", "stage23_wm989_results.json"),
+                        ("23D", "stage23_wm989_interaction_results.json"),
+                        ("23E", "stage23_permutation_results.json")):
+        digest = S23.sha256_file(RES / name)
+        assert digest == sy["source_artifacts"][stage]
+        assert digest in block, f"{stage}'s digest in the closure is not the file's digest"
+    assert S23.sha256_file(SYNTHESIS) in block, "23F's own digest is stale in the closure"
+
+
+@closed
+def test_the_closure_states_that_role_a_stays_failed():
+    """The rule Stage 23R is bound by. If this sentence is ever softened, a later stage could
+    quietly relabel a failed pre-registered test as a pass."""
+    block = RECORD.read_text(encoding="utf-8").split("# STAGE 23 — FORMAL CLOSURE")[1]
+    assert "permanent" in block.lower()
+    assert "may **not** relabel" in block or "may not relabel" in block
+    assert "confirmatory evidence" in block

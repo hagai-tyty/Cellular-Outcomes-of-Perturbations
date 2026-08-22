@@ -1040,3 +1040,75 @@ Rewind, the state effect is not distinguishable from what the null produces.
 ## Next action
 **Stage 23R — Role-A Resolution / Failure Decomposition** (roadmap V4). Not started. Stage 23 is
 closed; its verdicts are final and additive corrections only.
+
+---
+
+# STAGE 23 — FORMAL CLOSURE
+
+**Declared closed 2026-08-22.** Substages 23A–23F executed in order, each frozen on acceptance.
+Nothing in Stage 23 remains open.
+
+## Closing verdict
+
+```text
+role_a                     ROLE_A_SIGNAL_FAIL
+role_b_additive            ROLE_B_ADDITIVE_PASS
+role_b_interaction         INTERACTION_PASS_MULTI_TREATMENT
+c2_interaction_secondary   C2_INTERACTION_SECONDARY_CONFIRMED
+STRUCTURAL_CONTROLS_PASS   true
+
+ROADMAP GATE               STAGE_24_BLOCKED_ROLE_A
+NEXT STAGE                 STAGE 23R — Role-A Resolution / Failure Decomposition
+```
+
+Stage 24 is **not** open. Role B is positive on three statistics across two endpoints and does not
+change that, because Role A is the mandatory prospective anchor.
+
+## State at closure
+
+```text
+last computational commit   e9fdab7
+plan                        STAGE_23_LEARNABILITY_INTERACTION_GATE_V2.md
+plan canonical LF sha256    bc783e6b7da8102d…
+protocol sha256             04a7dab3fed5ebdd30a8ade118a638af0ae7eedf40e5a03843dfbdf8397fd9e2
+
+23B  stage23_rewind_results.json              dc64cc9e7ceedbfb6a6762d4f8429cdb9645b1ef1f12037a60e961b0b0412adb
+23C  stage23_wm989_results.json               2b84cdb8cd186246704f7ff5bdc72eb034d42060bbd028ba9cbb13a26097d52f
+23D  stage23_wm989_interaction_results.json   f1b9fbebb5fcf9e7b66dbb960bdc177d4a748a146559fbe477f19465ece75dc4
+23E  stage23_permutation_results.json         7cff9a33978da04b9e542cf89a8e82853ba352e4990bcdd8da9b86d4a0a10dda
+23F  stage23_final_synthesis.json             e649719e92e54ac2fecf78085ecb5c7eabdfccffde91b1238cb52eda8b206c47
+
+fresh-clone determinism     13/13 byte-identical, clean tree, HEAD 0898ce84
+tests                       1932 passed · ruff clean (CI scope) · 92 Stage-23 contracts
+```
+
+## What closure means operationally
+
+1. **No substage may be re-run to change a number.** The verdicts above are final. A rerun is
+   permitted only to re-pin a provenance hash, and only when every statistic is verified unchanged
+   and the change is recorded — as was done twice in 23F.
+2. **Corrections are additive.** An earlier section is never rewritten because a later result is
+   inconvenient. The two corrections already made — the additive note under 23B, and the 23E merge
+   runtime superseded in 23F — are the pattern.
+3. **`ROLE_A_SIGNAL_FAIL` is permanent.** Stage 23R may explain the failure and may determine what
+   evidence would be needed to establish a Role-A signal. It may **not** relabel this test as a
+   PASS. A corrected analysis on the already-inspected Rewind data is exploratory evidence only;
+   reopening Stage 24 requires new confirmatory evidence not used to design the correction.
+4. **Role B's positives stand as evidence, not as a substitute anchor.** Promoting them into a
+   Role-A replacement requires an explicit roadmap and claim-architecture revision, not a
+   reinterpretation.
+5. **Role A is not to be redesigned inside Stage 23.** That work belongs to Stage 23R.
+
+## What Stage 23 established, in one paragraph
+
+On the multi-perturbation dataset, pretreatment transcriptional state carries information about
+post-treatment outcome beyond captured abundance — additively on detection, and more strongly
+through treatment-specific interaction, all surviving a permutation null that preserves the
+abundance structure. On the reprogramming dataset that the roadmap designated the mandatory
+prospective anchor, the state effect is not distinguishable from what that null produces. Abundance
+remains the dominant predictor throughout, Doxorubicin is a consistent treatment-level exception,
+and no external biological replicate, unseen treatment, or cross-dataset transfer has been tested
+anywhere in this stage.
+
+## Next action
+**Stage 23R.** Not started.
