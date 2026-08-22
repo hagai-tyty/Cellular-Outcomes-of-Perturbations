@@ -285,6 +285,19 @@ observed `ΔAP_state` beats its permutation null.
 ## Next action
 23C — WM989 additive state-signal gate. Not started.
 
+### ADDITIVE NOTE — written after 23E, nothing above this line altered
+
+23E ran the permutation null this section said the verdict depended on, and **Role A did not clear
+it**: `ΔAP_state = +0.01050` against a null 95th percentile of `+0.01455`, with 16 of 200 label-free
+draws matching or beating the observed value (`p_perm = 0.0846`). `ROLE_A_SIGNAL_PASS` is therefore
+**not promoted** and reverts to unproven.
+
+Everything reported above was an accurate account of what the bootstrap showed. The bootstrap
+resamples clones while holding the fitted models fixed, so it cannot price in either of the two
+mechanisms that could put a positive mean under the null — `R3`'s larger `(K, C)` candidate set, or
+the within-stratum depth information the permutation deliberately preserves. 23E does not separate
+those two. See `# 23E` for the null distributions.
+
 ---
 
 # 23C — WM989 additive state-signal gate
@@ -627,3 +640,225 @@ frozen in V2 before any 23C result existed and was not altered.
 
 ## Next action
 23E — negative controls, permutation nulls, leakage audit and determinism. Not started.
+
+---
+
+# 23E — negative controls, permutation nulls, leakage audit, determinism
+
+## Goal
+Decide whether the three provisional verdicts survive a null that destroys the `X → outcome` link
+while **preserving** the captured-abundance structure that dominates both datasets. Nothing here
+was tuned; every number below comes from the design frozen in V2 §7 before any 23B–23D result
+existed.
+
+## Design actually executed
+- **Permutation unit:** the whole clone-level CP10K/log1p expression profile, moved as an intact
+  vector. Outcomes, treatment coding, nuisance blocks and folds are never touched.
+- **Where the shuffle happens:** *within* the outer-training clones and *within* the outer-test
+  clones separately, inside the frozen strata — Rewind `n_pretreatment_cells {1,2,3+} × n_lanes`,
+  WM989 `depth bin {1,2,3-4,5-9,10+} × 3-bit naive-presence pattern`, any cell under four clones
+  merged by the frozen rule. So a null run has the same depth and lane composition as the observed
+  run; the only thing that changed is which profile belongs to which clone.
+- **200 permutations**, base seed `23323`, full nested-CV rerun each draw — inner gene filter,
+  gene scaler, PCA and hyperparameter selection all recomputed inside every inner split.
+- **What was cached, and why it is exact rather than convenient:** `R0/R1/W0/W1` use no expression
+  at all, so an expression permutation cannot move them and their observed OOF is reused verbatim.
+  The *final outer-training* transform is fitted on the outer-training profile **set**, which the
+  permutation preserves exactly — same set, same basis. Inner-split transforms are never cached.
+  A contract test checks the cached basis numerically against `expression_block` rather than
+  accepting the argument.
+
+The three families were computed in three processes. They already draw from disjoint seed streams
+(`+0`, `+100000`, `+200000`), so this is bit-identical to one loop and changes wall time only.
+
+## Files added
+- `results/stage23_permutation_results.json`
+- `results/stage23_determinism.json`
+- `_cc_cache/stage23/stage23e_null_{rewind,wm989c1,wm989c2}.json` (gitignored null draws)
+
+## Files modified
+- `experiments/run_stage23_learnability_gate.py` — `--stage 23e`, `--family`, `--determinism`;
+  23A–23D logic untouched
+- `tests/test_stage23_learnability_gate.py` — 19 further contracts (81 total)
+
+## Result
+
+```text
+statistic                    observed  null mean  null sd   null min   null p95   null max  #>=obs  p_perm  verdict
+role_a_delta_AP_state        +0.01050   +0.00350  0.00631   -0.00105   +0.01455   +0.05144      16  0.0846  FAIL
+c1_delta_LL_state            +0.00937   -0.00078  0.00060   -0.00279   +0.00011   +0.00091       0  0.0050  PASS
+c1_delta_LL_interaction      +0.01430   -0.00039  0.00083   -0.00274   +0.00084   +0.00175       0  0.0050  PASS
+c1_delta_LL_full             +0.02367   -0.00117  0.00099   -0.00401   +0.00040   +0.00145       0  0.0050  PASS
+c2_delta_MAE_interaction     +0.00938   -0.00418  0.00255   -0.01124   +0.00018   +0.00297       0  0.0050  PASS
+c2_delta_MAE_full            +0.01378   -0.00473  0.00263   -0.01167   -0.00048   +0.00340       0  0.0050  PASS
+```
+
+`p_perm = (1 + #{null ≥ observed}) / (n_perm + 1)`; `0.0050 = 1/201` is the floor 200 draws can
+resolve, not a claim of `p = 0`. A PASS requires **both** `observed > null p95` **and**
+`p_perm ≤ 0.05`.
+
+`c2_delta_MAE_state` was **not** permutation-tested and is recorded as
+`PERMUTATION_NOT_REQUIRED_NO_PASS_CANDIDATE`: additive C2 already failed its 23C bootstrap
+criterion, so it is not a PASS candidate.
+
+### FROZEN 23E HEADLINE — not to be re-run or re-tuned
+
+```text
+1. ROLE A FAILS ITS PERMUTATION GATE.
+       dAP_state = +0.01050, null p95 = +0.01455, p_perm = 0.0846, 16/200 nulls >= observed.
+   The 23B bootstrap CI [+0.0006, +0.0210] was real but could not see this: it resamples
+   clones while holding the FITTED models fixed, so it never prices in model selection.
+
+2. THE NULL MEAN IS POSITIVE (+0.00350, max +0.05144). TWO MECHANISMS ARE CONSISTENT
+   WITH THAT, AND 23E DID NOT SEPARATE THEM:
+     (a) selection asymmetry -- R3 selects from 12 (K, C) candidates, R1 from 4;
+     (b) residual abundance -- the permutation deliberately preserves depth structure,
+         so a permuted profile still carries within-stratum depth information that B's
+         two coarse columns do not capture.
+   Either way the consequence for the verdict is the same: dAP = +0.01050 is inside
+   what this null produces with no X-outcome link. Which mechanism dominates is
+   untested and would need its own design.
+
+3. ROLE B SURVIVES ON EVERY STATISTIC TESTED, and not marginally --
+   all four WM989 nulls are centred BELOW zero and none of the 200 draws reached the
+   observed value on any of them.
+
+4. STRUCTURAL_CONTROLS_PASS = True (all five controls).
+
+5. PROVENANCE SENTINEL DOES NOT FIRE on either dataset. Library-presence flags alone reach
+   neither R3 nor W4.
+
+6. 12/12 artifacts reproduce BYTE-FOR-BYTE in a fresh clone of a clean tree.
+```
+
+### Structural controls (V2 §7.6 / §7.8) — all executed, none asserted
+
+```text
+outer_test_isolation          PASS   probed numerically: one outer-test clone's expression was
+                                     multiplied and offset, and the training gene filter and PC
+                                     scores came back bit-identical -- no test row reaches a
+                                     fitted transform
+feature_firewall              PASS   X is exactly 36,601 columns on both datasets; all 153,055
+                                     WM989 `Custom` lineage features excluded
+frozen_fold_identity          PASS   every Stage-23 OOF row carries its Stage-22 outer_fold; one
+                                     row per clone in the Rewind table
+canonical_text_hash_lf_crlf   PASS   LF, CRLF and CR canonicalise to a single digest
+fresh_clone_determinism       PASS   12/12 artifacts byte-identical, clean tree, HEAD 515ef54b
+```
+
+### Provenance sentinel (V2 §7.4) — presence flags only, diagnostic
+
+```text
+Rewind      sentinel AP 0.01134   R1 0.01035   R3 0.02085   reaches R3: NO
+WM989 C1    sentinel LL 0.49837   W0 0.55992   W1 0.47832   W4 0.46895   reaches W4: NO
+```
+
+The sentinel sees only *which library was this clone captured in* — binarised presence, never
+counts, never `clone_id`, never expression. On Rewind it buys `+0.00099` AP over `R1` against a
+claimed `+0.01050`. On WM989 it improves on `W0` by `0.0615` but still loses to `W1` (0.47832) and
+to `W4` (0.46895): the abundance signal that dominates WM989 is genuinely in the *counts*, which
+live in the scientific nuisance block, not in bare library membership.
+
+### Runtime
+
+```text
+rewind    310.14 min      wm989c1  335.03 min      wm989c2  298.44 min      (three processes)
+wall clock ~5.6 h for the nulls; merge + controls + sentinel 0.92 min
+```
+
+## Tests
+- **1920 passed** · ruff clean (CI scope) · 81 Stage-23 contracts, 19 new in 23E
+- The new contracts were **mutation-tested**: flipping `ROLE_A_PERMUTATION_PASS` to `true`,
+  `fresh_clone_determinism.ok` to `false`, `reaches_R3_without_expression` to `true`, and injecting
+  a fake determinism mismatch caused five separate tests to fail. They are not vacuous.
+
+## Bugs found — three, all in my own 23E code, all fixed before the result was read
+
+1. **The sentinel alert compared incommensurable quantities.** It measured the sentinel's gain over
+   `W0` against `X`'s gain over `W1` and raised a false alert. V2 §7.4 asks a different question:
+   does a no-expression model *reach* the model whose gain is claimed? Corrected to compare the
+   sentinel directly against `R3` and `W4`.
+2. **Fresh-clone determinism was missing from `structural_controls`** despite V2 §7.6/§7.8 requiring
+   it inside `STRUCTURAL_CONTROLS_PASS`. Added, together with a `--determinism` runner that clones
+   HEAD, reruns 23A–23D there and compares byte-for-byte.
+3. **A determinism "failure" that was really a provenance success.** The first clone comparison
+   reported 4/12 mismatched: `stage23_protocol.json` and the three result JSONs. All six CSVs and
+   both expression manifests matched. Diffing field-by-field showed the *only* differing entries
+   were `builder_source_canonical_lf_sha256` and the `protocol_sha256` that derives from it — the
+   builder had grown 23E code after those artifacts were written, so the hash was correctly
+   reporting that the recorded builder was no longer the committed one. Resolved by rerunning
+   23A–23D against the final committed builder; **every OOF prediction CSV is byte-identical before
+   and after**, and every non-hash JSON field is identical, so no frozen 23B/23C/23D number moved.
+   The check now refuses to certify a dirty tree, because an artifact that hashes its own builder
+   cannot be reproducible until that builder is committed.
+
+## Deviations from the frozen protocol
+None. 200 permutations, full nested-CV reruns, frozen strata, frozen grids, frozen seeds. No
+early stopping, no reuse of observed-data hyperparameters, no weakened strata. The only latitude
+taken was process-level parallelism across three disjoint seed streams, which cannot change a
+statistic.
+
+## Scientific interpretation
+
+**Proves:** on WM989, pretreatment transcriptional state carries information about post-treatment
+outcome that survives a null which keeps captured abundance intact — additively on detection
+(`+0.00937`), and more strongly through treatment-specific interaction (`+0.01430` over the
+additive model, `+0.02367` over the nuisance baseline). All four WM989 nulls are centred *below*
+zero, and no draw out of 200 came close. The conditional-abundance interaction (C2) reproduces this
+independently on a different endpoint with a different loss.
+
+**Disproves, and this is the substantive result of 23E:** the Rewind Role-A gain is not established.
+`ΔAP = +0.01050` looked convincing in 23B — the bootstrap CI excluded zero — but 16 of 200
+label-free nulls matched or beat it, and the null mean is *positive*.
+
+**Two mechanisms could produce that positive null mean, and 23E does not distinguish them.**
+(i) *Selection asymmetry*: `R3` chooses among 12 `(K, C)` combinations while `R1` chooses among 4,
+and the extra freedom can manufacture a positive ΔAP on data with no X–outcome relationship.
+(ii) *Residual abundance*: the permutation preserves depth structure on purpose, so a permuted
+profile still carries within-stratum depth information that `B`'s two coarse columns —
+`log1p(n_pretreatment_cells)` and `n_lanes` — do not fully absorb. Separating them would need a
+selection-matched comparison, which is not in this stage's frozen design; I have not run one and
+am not claiming one mechanism over the other.
+
+What the bootstrap could not see is common to both: it resamples clones while holding the fitted
+models fixed, so neither selection nor the abundance channel enters the resampling at all.
+**This is the failure mode 23E exists to catch, and it caught it on the dataset where the effect
+was smallest.**
+
+**Does NOT prove:**
+- **That Rewind has no Role-A signal.** A failed permutation gate is not evidence of absence. It
+  says the observed statistic is not distinguishable from selection optimism at n = 200 with this
+  design. A larger primed-clone count, or a selection-matched comparison giving `R1` the same
+  candidate freedom as `R3`, could still resolve it. That is a design question for a later stage,
+  not a rerun of 23B.
+- **That WM989's effect is large.** It is not. Captured abundance still buys `0.0816` of log loss;
+  the entire full-state contribution is `0.0237`, under a third of that. Ordering unchanged:
+  abundance first, treatment-specific state second, additive state third.
+- **That the interaction generalises across treatments.** 23D's caveats stand — Doxorubicin is
+  negative on both endpoints, Cisplatin is flat on C1.
+- **That any of this transfers between datasets.** Role A and Role B were never a single claim, and
+  after 23E they are further apart than before.
+
+## Verdict
+
+```text
+ROLE_A_PERMUTATION_PASS                       False   -> Role A NOT promoted
+ROLE_B_ADDITIVE_PERMUTATION_PASS              True
+ROLE_B_INTERACTION_PERMUTATION_PASS           True
+C2_INTERACTION_SECONDARY_PERMUTATION_PASS     True
+STRUCTURAL_CONTROLS_PASS                      True
+```
+
+Applying the mechanical promotion rules frozen in V2:
+
+- **`ROLE_A_SIGNAL_PASS` (23B) is NOT promoted.** It reverts to unproven. The 23B record stays
+  exactly as written — it was an honest report of what the bootstrap showed — and this section is
+  the additive correction, not a rewrite.
+- **`ROLE_B_ADDITIVE_PASS` (23C) is promoted**, structural controls having passed.
+- **`INTERACTION_PASS_MULTI_TREATMENT` (23D) is promoted** on endpoint C1, both required statistics
+  having cleared their nulls.
+- **C2 interaction is retained as an independently tested secondary positive finding**, both of its
+  permutation statistics having passed.
+
+## Next action
+23F. Not started.

@@ -783,3 +783,256 @@ def test_no_convergence_warning_and_the_protocol_is_referenced(wi):
     assert wi["convergence_warnings"] == [], wi["convergence_warnings"]
     assert wi["protocol_sha256"] == S23.sha256_file(RES / "stage23_protocol.json")
     assert "23E" in wi["verdict_is_provisional_until"]
+
+
+# ============================================================================================== #
+# 23E — permutation nulls, structural controls, provenance sentinel, determinism.
+#
+# 23E is the substage most easily faked, because it is the one that decides whether the three
+# earlier PASS verdicts survive. The ways it can be faked are all mechanical:
+#
+#   * a permutation that leaks -- a profile crossing the outer train/test boundary, or leaving its
+#     stratum, quietly rebuilds the very structure the null is supposed to destroy;
+#   * caching that is convenient rather than exact -- reusing an outer-training basis is only valid
+#     because the permutation preserves the outer-training profile SET, and that has to be checked
+#     numerically, not asserted in a comment;
+#   * a p-value without the +1 correction, or a "pass" that needs only one of the two gates;
+#   * a failure quietly rounded into a pass.
+#
+# The last one is why `test_role_a_is_recorded_as_a_permutation_failure` exists.
+# ============================================================================================== #
+PERM_RESULTS = RES / "stage23_permutation_results.json"
+DET_RESULTS = RES / "stage23_determinism.json"
+ran_23e = pytest.mark.skipif(not PERM_RESULTS.exists(), reason="23E has not been run")
+
+
+@pytest.fixture(scope="module")
+def pe():
+    return json.loads(PERM_RESULTS.read_text(encoding="utf-8"))
+
+
+def test_permutation_p_uses_the_plus_one_correction():
+    """V2 §7.3. Without the +1 a null that never reaches the observed value reports p = 0, which
+    claims more resolution than 200 draws can carry."""
+    null = np.zeros(200)
+    got = S23.permutation_p(1.0, null)
+    assert got["n_null_ge_observed"] == 0
+    assert got["p_perm"] == pytest.approx(1 / 201)
+    assert got["p_perm"] > 0, "a finite null can never license p = 0"
+    got2 = S23.permutation_p(0.0, null)
+    assert got2["n_null_ge_observed"] == 200
+    assert got2["p_perm"] == pytest.approx(1.0)
+
+
+def test_a_pass_needs_both_the_p95_gate_and_the_p_value():
+    """Either gate alone is satisfiable by a statistic that is not actually extreme."""
+    heavy_tail = np.concatenate([np.zeros(190), np.full(10, 5.0)])
+    p95_only = S23.permutation_p(1.0, heavy_tail)
+    assert p95_only["exceeds_null_p95"] is True
+    assert p95_only["p_perm"] > 0.05
+    assert p95_only["passes"] is False, "the p95 gate alone must not promote a claim"
+
+    flat = np.linspace(0.0, 1.0, 200)
+    assert S23.permutation_p(0.5, flat)["passes"] is False
+    assert S23.permutation_p(2.0, flat)["passes"] is True
+
+
+def test_the_permutation_never_crosses_the_outer_boundary_or_leaves_its_stratum():
+    """V2 §7.1. A profile that moves across the fold boundary, or between strata, reintroduces
+    exactly the depth/lane structure the null exists to hold fixed."""
+    rng = np.random.default_rng(7)
+    strata = np.array(["a", "a", "a", "b", "b", "b", "b", "c"] * 4)
+    side = np.array([True, True, False, True, False, True, False, True] * 4)
+    for _ in range(50):
+        out = S23.permute_within(strata, side, rng)
+        assert (side[out] == side).all(), "a profile changed outer train/test side"
+        assert (strata[out] == strata).all(), "a profile left its stratum"
+        assert sorted(out.tolist()) == list(range(len(strata))), "not a bijection"
+
+
+def test_the_permutation_actually_moves_something():
+    """A 'null' that is the identity map would make every p-value 1.0 by construction."""
+    rng = np.random.default_rng(3)
+    strata = np.array(["a"] * 40)
+    side = np.array([True] * 30 + [False] * 10)
+    moved = sum(int((S23.permute_within(strata, side, rng) != np.arange(40)).any())
+                for _ in range(20))
+    assert moved >= 19, "the permutation is very nearly the identity"
+
+
+def test_rewind_strata_are_the_frozen_bins():
+    """V2 §7.1: n_pretreatment_cells in {1, 2, 3+} crossed with n_lanes."""
+    tbl = pd.DataFrame({"n_pretreatment_cells": [1, 2, 3, 9, 1], "n_lanes": [1, 1, 2, 2, 2]})
+    assert list(S23.rewind_strata(tbl)) == ["1|1", "2|1", "3+|2", "3+|2", "1|2"]
+
+
+@frozen
+def test_wm989_strata_never_leave_a_cell_under_four_clones():
+    """The frozen merge rule exists so a stratum of one cannot shuffle only with itself."""
+    wk = pd.read_csv(RES / "stage22_wm989_clones.csv")
+    strat = S23.wm989_strata(wk)
+    counts = pd.Series(strat).value_counts()
+    assert (counts >= 4).all(), counts[counts < 4].to_dict()
+    assert len(strat) == len(wk)
+
+
+def test_the_cached_outer_training_basis_equals_a_fresh_fit():
+    """The one claim that makes 23E affordable: the final outer-training transform depends on the
+    outer-training profile SET, which the permutation preserves, so it may be cached.
+
+    Checked numerically against `expression_block` rather than argued in a comment.
+    """
+    from scipy import sparse
+
+    rng = np.random.default_rng(11)
+    dense = rng.random((60, 200)) * (rng.random((60, 200)) < 0.4)
+    X = sparse.csr_matrix(dense)
+    tr = np.arange(0, 45)
+    te = np.arange(45, 60)
+    ztr, zte, n_keep, _ = S23.expression_block(X, tr, te, 10)
+    cache = S23._frozen_pipeline_cache(X, tr, 10)
+    assert len(cache["keep"]) == n_keep
+    assert np.allclose(S23._apply_cached(X, tr, cache), ztr)
+    assert np.allclose(S23._apply_cached(X, te, cache), zte)
+
+    shuffled = tr[rng.permutation(len(tr))]
+    reordered = S23._frozen_pipeline_cache(X, shuffled, 10)
+    assert list(reordered["keep"]) == list(cache["keep"]), \
+        "the basis must depend on the training SET, not on its order"
+
+
+def test_the_expression_free_models_are_reused_rather_than_refitted():
+    """R1/W1 carry no expression, so a permutation of X cannot move them. The null code takes them
+    from the frozen observed results instead of refitting -- refitting would burn hours and, worse,
+    would let a null run silently disagree with the observed run it is compared against."""
+    src = SRC.read_text(encoding="utf-8")
+    fam = src.split("def run_23e_family(")[1].split("\ndef ")[0]
+    assert 'rew["pooled_oof_metrics"]["R1"]["AP"]' in fam
+    assert 'wmc["endpoints"]["C1"]["pooled_oof_metrics"]["W1"]' in fam
+    body = src.split("def _wm989_null_once(")[1].split("\ndef ")[0]
+    assert '"W4"' in body and '"W5"' in body
+    for absent in ('"W0"', '"W2"', '"W3"'):
+        assert absent not in body, f"the null refits {absent}, which no permutation can move"
+
+
+@ran_23e
+def test_the_frozen_permutation_count_and_seed_were_used(pe):
+    assert pe["n_permutations"] == S23.N_PERMUTATION == 200
+    assert pe["permutation_base_seed"] == S23.SEED_PERMUTATION == 23323
+    for k, v in pe["permutation_tests"].items():
+        assert v["n_permutations"] == 200, f"{k} was tested on a shortened null"
+
+
+@ran_23e
+def test_every_reported_p_value_matches_its_own_null(pe):
+    """Recompute p from the cached null arrays rather than trusting the recorded number."""
+    nulls: dict = {}
+    for fam in ("rewind", "wm989c1", "wm989c2"):
+        pth = CACHE / f"stage23e_null_{fam}.json"
+        if pth.exists():
+            nulls.update(json.loads(pth.read_text(encoding="utf-8"))["nulls"])
+    if not nulls:
+        pytest.skip("null cache is absent")
+    for key, rec in pe["permutation_tests"].items():
+        arr = np.array(nulls[key])
+        assert len(arr) == 200
+        again = S23.permutation_p(rec["observed"], arr)
+        assert again["p_perm"] == pytest.approx(rec["p_perm"])
+        assert again["passes"] is rec["passes"]
+        assert again["null_p95"] == pytest.approx(rec["null_p95"])
+
+
+@ran_23e
+def test_role_a_is_recorded_as_a_permutation_failure(pe):
+    """The honest-reporting contract. Role A cleared its bootstrap CI in 23B and then failed here;
+    a later edit that quietly flips this to PASS without new evidence must break a test."""
+    ra = pe["permutation_tests"]["role_a_delta_AP_state"]
+    assert ra["passes"] is False
+    assert ra["p_perm"] > 0.05
+    assert ra["null_mean"] > 0, ("the null mean is positive -- selection optimism alone produces a "
+                                 "gain, which is the whole finding")
+    assert pe["claim_permutation_status"]["ROLE_A_PERMUTATION_PASS"] is False
+
+
+@ran_23e
+def test_the_non_candidate_statistic_is_declared_rather_than_silently_dropped(pe):
+    """Additive C2 failed its 23C bootstrap, so it is not a PASS candidate. Not testing it is
+    legitimate; not saying so would not be."""
+    assert "c2_delta_MAE_state" in pe["not_permutation_tested"]
+    assert "c2_delta_MAE_state" not in pe["permutation_tests"]
+
+
+@ran_23e
+def test_all_five_structural_controls_ran_and_passed(pe):
+    required = {"outer_test_isolation", "feature_firewall", "frozen_fold_identity",
+                "canonical_text_hash_lf_crlf", "fresh_clone_determinism"}
+    assert required <= set(pe["structural_controls"])
+    for name in required:
+        assert pe["structural_controls"][name]["ok"] is True, name
+    assert pe["STRUCTURAL_CONTROLS_PASS"] is True
+    assert pe["STRUCTURAL_CONTROLS_PASS"] == all(
+        v["ok"] for v in pe["structural_controls"].values())
+
+
+@ran_23e
+def test_determinism_compared_the_full_artifact_set_against_a_clean_tree():
+    if not DET_RESULTS.exists():
+        pytest.skip("the determinism check has not been run")
+    d = json.loads(DET_RESULTS.read_text(encoding="utf-8"))
+    assert d["artifacts_compared"] == len(S23.DETERMINISM_ARTIFACTS) == 12
+    assert d["working_tree_clean_for_builder_and_artifacts"] is True, (
+        "a dirty builder makes the provenance hashes unreproducible by construction")
+    assert d["mismatched"] == {}
+    assert d["all_match"] is True
+    assert set(d["committed_digests"]) == set(S23.DETERMINISM_ARTIFACTS)
+
+
+def test_the_determinism_set_covers_every_committed_stage23_artifact():
+    """A shrinking artifact list would make determinism trivially true."""
+    skip = {"stage23_permutation_results.json", "stage23_determinism.json"}
+    on_disk = {p.name for p in RES.glob("stage23_*") if p.name not in skip}
+    assert on_disk <= set(S23.DETERMINISM_ARTIFACTS), on_disk - set(S23.DETERMINISM_ARTIFACTS)
+
+
+def test_the_sentinel_sees_presence_flags_only():
+    """V2 §7.4. The sentinel is only meaningful if it is strictly weaker than the real models: no
+    expression, no captured counts, no clone identity."""
+    body = SRC.read_text(encoding="utf-8").split("def provenance_sentinel(")[1].split("\ndef ")[0]
+    assert "> 0).astype(float)" in body, "the sentinel must binarise, not read counts"
+    assert "get_dummies" not in body and "OneHot" not in body, \
+        "clone identity must never be encoded"
+    for banned in ("_load_rewind_x", "_load_wm989_x", "expression_block", "PCA("):
+        assert banned not in body, f"the sentinel reached expression via {banned}"
+
+
+@ran_23e
+def test_the_sentinel_does_not_reach_the_models_whose_gain_is_claimed(pe):
+    """The alert condition V2 §7.4 actually specifies: if library presence alone reaches R3/W4,
+    the claimed gain is library structure rather than biology."""
+    s = pe["provenance_sentinel"]
+    assert s["rewind"]["sentinel_AP"] < s["rewind"]["R3_AP"]
+    assert s["rewind"]["reaches_R3_without_expression"] is False
+    assert s["wm989_c1"]["sentinel_log_loss"] > s["wm989_c1"]["W4_log_loss"]
+    assert s["wm989_c1"]["reaches_W4_without_expression"] is False
+    assert s["rewind"]["alert"] is False and s["wm989_c1"]["alert"] is False
+
+
+@ran_23e
+def test_the_promotion_status_is_mechanical(pe):
+    """Every claim's status must follow from its own permutation result -- never from a judgement
+    call written into the record."""
+    t = pe["permutation_tests"]
+    st = pe["claim_permutation_status"]
+    assert st["ROLE_A_PERMUTATION_PASS"] == t["role_a_delta_AP_state"]["passes"]
+    assert st["ROLE_B_ADDITIVE_PERMUTATION_PASS"] == t["c1_delta_LL_state"]["passes"]
+    assert st["ROLE_B_INTERACTION_PERMUTATION_PASS"] == (
+        t["c1_delta_LL_interaction"]["passes"] and t["c1_delta_LL_full"]["passes"])
+    assert st["C2_INTERACTION_SECONDARY_PERMUTATION_PASS"] == (
+        t["c2_delta_MAE_interaction"]["passes"] and t["c2_delta_MAE_full"]["passes"])
+
+
+@ran_23e
+def test_23e_references_the_frozen_protocol_and_plan(pe):
+    assert pe["protocol_sha256"] == S23.sha256_file(RES / "stage23_protocol.json")
+    assert pe["plan"]["canonical_lf_sha256"] == S23.canonical_text_sha256(S23.PLAN)
+    assert pe["stage"] == "23E"

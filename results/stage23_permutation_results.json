@@ -1,0 +1,206 @@
+{
+  "stage": "23E",
+  "plan": {
+    "file": "STAGE_23_LEARNABILITY_INTERACTION_GATE_V2.md",
+    "version": "V2",
+    "canonical_lf_sha256": "bc783e6b7da8102de5b73dd50dbe02861c92d2ca907c0a80d2e2a1c37561df69"
+  },
+  "protocol_sha256": "a195d5c2a4ff8dd3dbb97def4334bf9cc464dc500ec18c59410fabfc0d26368d",
+  "n_permutations": 200,
+  "permutation_base_seed": 23323,
+  "permutation_design": {
+    "unit": "whole clone-level CP10K/log1p Gene Expression profile",
+    "within": "outer-training clones among themselves; outer-test clones among themselves",
+    "strata_rewind": "n_pretreatment_cells {1,2,3+} x n_lanes",
+    "strata_wm989": "depth bin {1,2,3-4,5-9,10+} x 3-bit naive presence, <4 merged",
+    "cached_because_mathematically_invariant": [
+      "R0/R1/W0/W1 use no expression, so an expression permutation cannot move them",
+      "the final outer-training transform is fitted on the outer-training profile SET, which the permutation preserves exactly"
+    ],
+    "never_cached": "inner-split gene filter / scaler / PCA"
+  },
+  "permutation_tests": {
+    "role_a_delta_AP_state": {
+      "observed": 0.01050162935116511,
+      "null_p95": 0.014545491038048794,
+      "null_mean": 0.003495157023790003,
+      "null_sd": 0.006305127914363404,
+      "null_min": -0.0010462907661630896,
+      "null_max": 0.05143707259326047,
+      "n_null_ge_observed": 16,
+      "n_permutations": 200,
+      "p_perm": 0.0845771144278607,
+      "exceeds_null_p95": false,
+      "passes": false
+    },
+    "c1_delta_LL_state": {
+      "observed": 0.009372233093424887,
+      "null_p95": 0.00010529784481495204,
+      "null_mean": -0.0007783203595592836,
+      "null_sd": 0.0006037120415531404,
+      "null_min": -0.0027916780286216802,
+      "null_max": 0.0009115356780285411,
+      "n_null_ge_observed": 0,
+      "n_permutations": 200,
+      "p_perm": 0.004975124378109453,
+      "exceeds_null_p95": true,
+      "passes": true
+    },
+    "c1_delta_LL_interaction": {
+      "observed": 0.014299986814330035,
+      "null_p95": 0.0008383045453672399,
+      "null_mean": -0.0003940562042526591,
+      "null_sd": 0.0008260895645490905,
+      "null_min": -0.002741341145675813,
+      "null_max": 0.001751936513122665,
+      "n_null_ge_observed": 0,
+      "n_permutations": 200,
+      "p_perm": 0.004975124378109453,
+      "exceeds_null_p95": true,
+      "passes": true
+    },
+    "c1_delta_LL_full": {
+      "observed": 0.023672219907754866,
+      "null_p95": 0.0003983520753238711,
+      "null_mean": -0.0011723765638119426,
+      "null_sd": 0.0009869296584438844,
+      "null_min": -0.004013073528987721,
+      "null_max": 0.0014456449296352814,
+      "n_null_ge_observed": 0,
+      "n_permutations": 200,
+      "p_perm": 0.004975124378109453,
+      "exceeds_null_p95": true,
+      "passes": true
+    },
+    "c2_delta_MAE_interaction": {
+      "observed": 0.009375579861020777,
+      "null_p95": 0.00017642776196034914,
+      "null_mean": -0.004177043187169982,
+      "null_sd": 0.0025538344008165827,
+      "null_min": -0.011241258294632073,
+      "null_max": 0.0029709597120173292,
+      "n_null_ge_observed": 0,
+      "n_permutations": 200,
+      "p_perm": 0.004975124378109453,
+      "exceeds_null_p95": true,
+      "passes": true
+    },
+    "c2_delta_MAE_full": {
+      "observed": 0.013782112409585823,
+      "null_p95": -0.00048300912162515196,
+      "null_mean": -0.004726235870597944,
+      "null_sd": 0.00262744082401532,
+      "null_min": -0.011669181786641558,
+      "null_max": 0.0033955061398858177,
+      "n_null_ge_observed": 0,
+      "n_permutations": 200,
+      "p_perm": 0.004975124378109453,
+      "exceeds_null_p95": true,
+      "passes": true
+    }
+  },
+  "not_permutation_tested": {
+    "c2_delta_MAE_state": "23C already failed its bootstrap criterion on additive C2, so it is not a PASS candidate (V2 \u00a77.2 -> PERMUTATION_NOT_REQUIRED_NO_PASS_CANDIDATE)"
+  },
+  "structural_controls": {
+    "outer_test_isolation": {
+      "ok": true,
+      "detail": "a test clone's expression was altered; the training gene filter and PC scores were bit-identical, so no test row reaches a fitted transform"
+    },
+    "feature_firewall": {
+      "ok": true,
+      "detail": {
+        "rewind_cols": 36601,
+        "wm989_cols": 36601,
+        "custom_features_excluded": 153055,
+        "tightened_vs_stage22": [
+          "post_tie_size",
+          "treatment_total_assigned_cells"
+        ]
+      }
+    },
+    "frozen_fold_identity": {
+      "ok": true,
+      "detail": "every Stage-23 OOF row carries the Stage-22 outer_fold; one row per clone"
+    },
+    "canonical_text_hash_lf_crlf": {
+      "ok": true,
+      "detail": "LF, CRLF and CR canonicalise to one digest"
+    },
+    "fresh_clone_determinism": {
+      "ok": true,
+      "detail": {
+        "head_commit": "515ef54b96d524aaf54791a1a4f8cdcdf7173f51",
+        "working_tree_clean_for_builder_and_artifacts": true,
+        "uncommitted_paths": [],
+        "artifacts_compared": 12,
+        "committed_digests": {
+          "stage23_protocol.json": "a195d5c2a4ff8dd3dbb97def4334bf9cc464dc500ec18c59410fabfc0d26368d",
+          "stage23_outer_fold_preprocessing.json": "7e8946842d457538b87893e7a06d9ff713e518d20b4bbfe01b10ebfb4a5ee844",
+          "stage23_rewind_clone_expression_manifest.json": "0c9cf8cdee32f1dc2c763f04c2682f87c0936b1a2dc095fe895e39f63ed72494",
+          "stage23_wm989_clone_expression_manifest.json": "3fe04188636849cf737337740ad605d929ac81bbb0e3661c74bd7a5390c320ed",
+          "stage23_rewind_results.json": "56e3d1b9c556ed1575a31829bae9b8b1c50d9bbe9d53d44c3346eaf8eb464041",
+          "stage23_wm989_results.json": "b1791f4f534dc85a9f14b2062194b6104ab892f2cc5699a89f4795fa302b5f9b",
+          "stage23_wm989_interaction_results.json": "771aab8de062034ad88f53b174be85104fce4e3519bebf787a51b9083c7c0acf",
+          "stage23_rewind_oof_predictions.csv": "6e602e09c8ffc089d1f9346425070aa32c90939e383c6dee5009a11f3723b761",
+          "stage23_wm989_detection_oof.csv": "ba09c1933e3039f1b097b3a4dba6f2df967e4d31c1e3509b29e0a50fc31aa820",
+          "stage23_wm989_abundance_oof.csv": "89f6c0db38c9dba2394ec7b28b8006f2b85990dfbb8f478b202c2c77f1bba887",
+          "stage23_wm989_interaction_oof.csv": "e727c5782ac67ec6324219f4662dee72b00285dd0562435065941a9d831874aa",
+          "stage23_wm989_interaction_abundance_oof.csv": "0ee593844f2ed3b70848466987de8eb7a445c43418eb66407af486c8217c750f"
+        },
+        "fresh_clone_digests": {
+          "stage23_protocol.json": "a195d5c2a4ff8dd3dbb97def4334bf9cc464dc500ec18c59410fabfc0d26368d",
+          "stage23_outer_fold_preprocessing.json": "7e8946842d457538b87893e7a06d9ff713e518d20b4bbfe01b10ebfb4a5ee844",
+          "stage23_rewind_clone_expression_manifest.json": "0c9cf8cdee32f1dc2c763f04c2682f87c0936b1a2dc095fe895e39f63ed72494",
+          "stage23_wm989_clone_expression_manifest.json": "3fe04188636849cf737337740ad605d929ac81bbb0e3661c74bd7a5390c320ed",
+          "stage23_rewind_results.json": "56e3d1b9c556ed1575a31829bae9b8b1c50d9bbe9d53d44c3346eaf8eb464041",
+          "stage23_wm989_results.json": "b1791f4f534dc85a9f14b2062194b6104ab892f2cc5699a89f4795fa302b5f9b",
+          "stage23_wm989_interaction_results.json": "771aab8de062034ad88f53b174be85104fce4e3519bebf787a51b9083c7c0acf",
+          "stage23_rewind_oof_predictions.csv": "6e602e09c8ffc089d1f9346425070aa32c90939e383c6dee5009a11f3723b761",
+          "stage23_wm989_detection_oof.csv": "ba09c1933e3039f1b097b3a4dba6f2df967e4d31c1e3509b29e0a50fc31aa820",
+          "stage23_wm989_abundance_oof.csv": "89f6c0db38c9dba2394ec7b28b8006f2b85990dfbb8f478b202c2c77f1bba887",
+          "stage23_wm989_interaction_oof.csv": "e727c5782ac67ec6324219f4662dee72b00285dd0562435065941a9d831874aa",
+          "stage23_wm989_interaction_abundance_oof.csv": "0ee593844f2ed3b70848466987de8eb7a445c43418eb66407af486c8217c750f"
+        },
+        "mismatched": {},
+        "all_match": true
+      }
+    }
+  },
+  "STRUCTURAL_CONTROLS_PASS": true,
+  "provenance_sentinel": {
+    "rewind": {
+      "sentinel_AP": 0.011335104651952334,
+      "R1_AP": 0.010346763671910921,
+      "R3_AP": 0.02084839302307603,
+      "sentinel_delta_vs_R1": 0.0009883409800414134,
+      "claimed_delta_AP_state": 0.01050162935116511,
+      "reaches_R3_without_expression": false,
+      "alert": false
+    },
+    "wm989_c1": {
+      "sentinel_log_loss": 0.49836616884429946,
+      "W0_log_loss": 0.5599155252285883,
+      "W1_log_loss": 0.47832325762628236,
+      "W4_log_loss": 0.4689510245328575,
+      "sentinel_gain_vs_W0": 0.06154935638428888,
+      "claimed_delta_LL_state": 0.009372233093424887,
+      "reaches_W4_without_expression": false,
+      "beats_W1_without_expression": false,
+      "alert": false
+    },
+    "note": "presence flags only; captured COUNTS stay in the scientific nuisance block B and clone_id is never one-hot encoded"
+  },
+  "claim_permutation_status": {
+    "ROLE_A_PERMUTATION_PASS": false,
+    "ROLE_B_ADDITIVE_PERMUTATION_PASS": true,
+    "ROLE_B_INTERACTION_PERMUTATION_PASS": true,
+    "C2_INTERACTION_SECONDARY_PERMUTATION_PASS": true
+  },
+  "runtime_minutes": 0.92,
+  "family_runtimes_minutes": {
+    "rewind": 310.14,
+    "wm989c1": 335.03,
+    "wm989c2": 298.44
+  }
+}
