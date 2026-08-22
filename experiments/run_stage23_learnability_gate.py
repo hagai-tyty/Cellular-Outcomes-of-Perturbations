@@ -1563,7 +1563,8 @@ def run_determinism(rewind_root: Path, wm989_root: Path) -> dict:
     import tempfile
 
     repo = Path(__file__).resolve().parents[1]
-    dirty = subprocess.run(["git", "status", "--porcelain", "--", "experiments", "results"],
+    watched = ["experiments"] + [f"results/{n}" for n in DETERMINISM_ARTIFACTS]
+    dirty = subprocess.run(["git", "status", "--porcelain", "--", *watched],
                            cwd=repo, capture_output=True, text=True).stdout.strip()
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo,
                           capture_output=True, text=True).stdout.strip()
@@ -1590,7 +1591,7 @@ def run_determinism(rewind_root: Path, wm989_root: Path) -> dict:
     bad = {n: {"committed": here[n], "fresh_clone": there[n]}
            for n in DETERMINISM_ARTIFACTS if here[n] != there[n]}
     out = {"head_commit": head,
-           "working_tree_clean_for_experiments_and_results": not dirty,
+           "working_tree_clean_for_builder_and_artifacts": not dirty,
            "uncommitted_paths": dirty.splitlines(),
            "artifacts_compared": len(DETERMINISM_ARTIFACTS),
            "committed_digests": here,
@@ -1949,9 +1950,9 @@ def main(argv=None) -> int:
                   f"byte-identical  all_match={d['all_match']}")
             for n in d["mismatched"]:
                 print(f"  MISMATCH {n}")
-            if not d["working_tree_clean_for_experiments_and_results"]:
-                print("  WARNING: experiments/ or results/ has uncommitted changes, so the "
-                      "clone cannot reproduce the provenance hashes")
+            if not d["working_tree_clean_for_builder_and_artifacts"]:
+                print("  WARNING: the builder or a compared artifact has uncommitted "
+                      "changes, so the clone cannot reproduce the provenance hashes")
             return 0
         if args.family:
             d = run_23e_family(args.family, args.permutations)

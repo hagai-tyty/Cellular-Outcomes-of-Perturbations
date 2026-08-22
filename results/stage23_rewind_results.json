@@ -7,7 +7,7 @@
     "version": "V2",
     "canonical_lf_sha256": "bc783e6b7da8102de5b73dd50dbe02861c92d2ca907c0a80d2e2a1c37561df69"
   },
-  "protocol_sha256": "65164d0507129fcab721de050674630c898df8df2b9b2393b06eafbf1c270ba2",
+  "protocol_sha256": "a195d5c2a4ff8dd3dbb97def4334bf9cc464dc500ec18c59410fabfc0d26368d",
   "clones": 3147,
   "positives": 35,
   "negatives": 3112,
