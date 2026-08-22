@@ -1,0 +1,163 @@
+{
+  "source": "GSE227151_family.xml",
+  "series": "GSE227151",
+  "n_samples_declared": 13,
+  "entries": [
+    {
+      "accession": "GSM7092515",
+      "title": "biol rep 1, sample 1, hiFT cells, ungated",
+      "declared_biological_replicate": "1",
+      "library_strategy": "RNA-Seq",
+      "library_source": "transcriptomic single cell",
+      "declared_gating": "ungated",
+      "role": "USED_BY_STAGE_23",
+      "locally_downloaded": true,
+      "matching_future_outcome_declared": null
+    },
+    {
+      "accession": "GSM7092516",
+      "title": "biol rep 1, sample 2, hiFT cells, ungated",
+      "declared_biological_replicate": "1",
+      "library_strategy": "RNA-Seq",
+      "library_source": "transcriptomic single cell",
+      "declared_gating": "ungated",
+      "role": "USED_BY_STAGE_23",
+      "locally_downloaded": true,
+      "matching_future_outcome_declared": null
+    },
+    {
+      "accession": "GSM7092517",
+      "title": "biol rep 2, sample 4, hiFT cells, ungated",
+      "declared_biological_replicate": "2",
+      "library_strategy": "RNA-Seq",
+      "library_source": "transcriptomic single cell",
+      "declared_gating": "ungated",
+      "role": "RESERVED_CANDIDATE",
+      "locally_downloaded": false,
+      "matching_future_outcome_declared": null
+    },
+    {
+      "accession": "GSM7092518",
+      "title": "biol rep 2, sample 5, hiFT cells, ungated",
+      "declared_biological_replicate": "2",
+      "library_strategy": "RNA-Seq",
+      "library_source": "transcriptomic single cell",
+      "declared_gating": "ungated",
+      "role": "RESERVED_CANDIDATE",
+      "locally_downloaded": false,
+      "matching_future_outcome_declared": null
+    },
+    {
+      "accession": "GSM7092519",
+      "title": "biol rep 3, sample 1, hiFT cells, ungated",
+      "declared_biological_replicate": "3",
+      "library_strategy": "RNA-Seq",
+      "library_source": "transcriptomic single cell",
+      "declared_gating": "ungated",
+      "role": "RESERVED_CANDIDATE",
+      "locally_downloaded": false,
+      "matching_future_outcome_declared": null
+    },
+    {
+      "accession": "GSM7092520",
+      "title": "biol rep 3, sample 2, hiFT cells, sorted for fast cycling",
+      "declared_biological_replicate": "3",
+      "library_strategy": "RNA-Seq",
+      "library_source": "transcriptomic single cell",
+      "declared_gating": "sorted",
+      "role": "RESERVED_DIFFERENT_DESIGN",
+      "locally_downloaded": false,
+      "matching_future_outcome_declared": null
+    },
+    {
+      "accession": "GSM7092521",
+      "title": "biol rep 3, sample 2, hifFT cells, sorted for slow cycling",
+      "declared_biological_replicate": "3",
+      "library_strategy": "RNA-Seq",
+      "library_source": "transcriptomic single cell",
+      "declared_gating": "sorted",
+      "role": "RESERVED_DIFFERENT_DESIGN",
+      "locally_downloaded": false,
+      "matching_future_outcome_declared": null
+    },
+    {
+      "accession": "GSM7092522",
+      "title": "biol rep 1, sample 1, iPS cells, DMSO",
+      "declared_biological_replicate": "1",
+      "library_strategy": "RNA-Seq",
+      "library_source": "transcriptomic single cell",
+      "declared_gating": "ungated",
+      "role": "OUTCOME_SIDE_NOT_PRE_STATE",
+      "locally_downloaded": false,
+      "matching_future_outcome_declared": null
+    },
+    {
+      "accession": "GSM7092523",
+      "title": "biol rep 1, sample 2, iPS cells, DMSO",
+      "declared_biological_replicate": "1",
+      "library_strategy": "RNA-Seq",
+      "library_source": "transcriptomic single cell",
+      "declared_gating": "ungated",
+      "role": "OUTCOME_SIDE_NOT_PRE_STATE",
+      "locally_downloaded": false,
+      "matching_future_outcome_declared": null
+    },
+    {
+      "accession": "GSM7092524",
+      "title": "biol rep 1, sample 3, iPS cells, LSD1 inhibition",
+      "declared_biological_replicate": "1",
+      "library_strategy": "RNA-Seq",
+      "library_source": "transcriptomic single cell",
+      "declared_gating": "ungated",
+      "role": "OUTCOME_SIDE_NOT_PRE_STATE",
+      "locally_downloaded": false,
+      "matching_future_outcome_declared": null
+    },
+    {
+      "accession": "GSM7092525",
+      "title": "biol rep 1, sample 4, iPS cells, LSD1 inhibition",
+      "declared_biological_replicate": "1",
+      "library_strategy": "RNA-Seq",
+      "library_source": "transcriptomic single cell",
+      "declared_gating": "ungated",
+      "role": "OUTCOME_SIDE_NOT_PRE_STATE",
+      "locally_downloaded": false,
+      "matching_future_outcome_declared": null
+    },
+    {
+      "accession": "GSM7092526",
+      "title": "biol rep 1, sample 5, iPS cells, DOT1L inhibition",
+      "declared_biological_replicate": "1",
+      "library_strategy": "RNA-Seq",
+      "library_source": "transcriptomic single cell",
+      "declared_gating": "ungated",
+      "role": "OUTCOME_SIDE_NOT_PRE_STATE",
+      "locally_downloaded": false,
+      "matching_future_outcome_declared": null
+    },
+    {
+      "accession": "GSM7092527",
+      "title": "biol rep 1, sample 6, iPS cells, DOT1L inhibition",
+      "declared_biological_replicate": "1",
+      "library_strategy": "RNA-Seq",
+      "library_source": "transcriptomic single cell",
+      "declared_gating": "ungated",
+      "role": "OUTCOME_SIDE_NOT_PRE_STATE",
+      "locally_downloaded": false,
+      "matching_future_outcome_declared": null
+    }
+  ],
+  "counts_by_role": {
+    "OUTCOME_SIDE_NOT_PRE_STATE": 6,
+    "RESERVED_CANDIDATE": 3,
+    "RESERVED_DIFFERENT_DESIGN": 2,
+    "USED_BY_STAGE_23": 2
+  },
+  "inspection_restrictions": [
+    "no raw matrix downloaded or opened for any reserved candidate",
+    "no expression, barcode, outcome or performance quantity computed",
+    "not used to choose any correction, model, label, nuisance block or threshold",
+    "reading a declared title is not inspecting evidence; reading a count matrix is"
+  ],
+  "matching_outcome_status": "UNVERIFIED -- stays unverified until 23.2F freezes STAGE_23_2_ROLE_A_CONFIRMATION_V1.md"
+}

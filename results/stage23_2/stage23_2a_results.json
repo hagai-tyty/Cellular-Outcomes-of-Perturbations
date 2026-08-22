@@ -1,0 +1,353 @@
+{
+  "stage": "23.2A",
+  "plan": {
+    "file": "STAGE_23_2_ROLE_A_RESOLUTION_V2.md",
+    "version": "V2",
+    "canonical_lf_sha256": "dec787ac1b9d745fc93e2ca4625ec30c627e07e67a02c014bbad726d777b4769"
+  },
+  "stage23_2_protocol_sha256": "78edd5d7f9900349925339169a5d5e3e5011fe23e3c7c22608ac98bfe3427bf4",
+  "preflight": {
+    "n_checks": 36,
+    "checks": [
+      {
+        "check": "stage23_final_synthesis exists",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "check": "role_a final verdict is FAIL",
+        "ok": true,
+        "detail": "ROLE_A_SIGNAL_FAIL"
+      },
+      {
+        "check": "role_b additive verdict unchanged",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "check": "role_b interaction verdict unchanged",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "check": "STRUCTURAL_CONTROLS_PASS is true",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "check": "roadmap gate is STAGE_24_BLOCKED_ROLE_A",
+        "ok": true,
+        "detail": "STAGE_24_BLOCKED_ROLE_A"
+      },
+      {
+        "check": "closure record exists and declares Stage 23 formally closed",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "check": "closure record states ROLE_A_SIGNAL_FAIL is permanent",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "check": "legacy STAGE 23R is only an alias, not a competing gate",
+        "ok": true,
+        "detail": "STAGE 23R -- Role-A Resolution / Failure Decomposition (roadmap V4)"
+      },
+      {
+        "check": "3,147 retained clones",
+        "ok": true,
+        "detail": 3147
+      },
+      {
+        "check": "35 positive clones",
+        "ok": true,
+        "detail": 35
+      },
+      {
+        "check": "3,112 negative clones",
+        "ok": true,
+        "detail": 3112
+      },
+      {
+        "check": "7 positives in every outer fold",
+        "ok": true,
+        "detail": [
+          7,
+          7,
+          7,
+          7,
+          7
+        ]
+      },
+      {
+        "check": "R0 pooled AP anchor",
+        "ok": true,
+        "detail": 0.01112
+      },
+      {
+        "check": "R1 pooled AP anchor",
+        "ok": true,
+        "detail": 0.01035
+      },
+      {
+        "check": "R2 pooled AP anchor",
+        "ok": true,
+        "detail": 0.01923
+      },
+      {
+        "check": "R3 pooled AP anchor",
+        "ok": true,
+        "detail": 0.02085
+      },
+      {
+        "check": "R3 ROC-AUC anchor 0.6628",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "check": "observed dAP anchor",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "check": "bootstrap CI anchor",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "check": "bootstrap block present with frozen fields (F4: no separate artifact exists)",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "check": "200 permutations recorded",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "check": "permutation base seed 23323",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "check": "historical null_mean anchor",
+        "ok": true,
+        "detail": 0.0035
+      },
+      {
+        "check": "historical null_sd anchor",
+        "ok": true,
+        "detail": 0.00631
+      },
+      {
+        "check": "historical null_p95 anchor",
+        "ok": true,
+        "detail": 0.01455
+      },
+      {
+        "check": "historical null_max anchor",
+        "ok": true,
+        "detail": 0.05144
+      },
+      {
+        "check": "16 of 200 nulls >= observed",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "check": "p_perm = 17/201",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "check": "ROLE_A_PERMUTATION_PASS is false",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "check": "committed permutation artifact holds summary statistics only (F3)",
+        "ok": true,
+        "detail": "no >=100-element array found"
+      },
+      {
+        "check": "per-permutation D00 values not yet committed anywhere",
+        "ok": true,
+        "detail": "8122"
+      },
+      {
+        "check": "OOF file has one row per clone",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "check": "OOF rows carry the frozen Stage-22 outer folds",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "check": "no artifact from a later Stage-23.2 substage exists",
+        "ok": true,
+        "detail": []
+      },
+      {
+        "check": "no Stage-24 model artifact exists",
+        "ok": true,
+        "detail": []
+      }
+    ],
+    "failed": [],
+    "ok": true,
+    "artifact_hashes": {
+      "stage23_final_synthesis.json": "e649719e92e54ac2fecf78085ecb5c7eabdfccffde91b1238cb52eda8b206c47",
+      "stage23_rewind_results.json": "dc64cc9e7ceedbfb6a6762d4f8429cdb9645b1ef1f12037a60e961b0b0412adb",
+      "stage23_permutation_results.json": "7cff9a33978da04b9e542cf89a8e82853ba352e4990bcdd8da9b86d4a0a10dda",
+      "stage23_rewind_oof_predictions.csv": "6e602e09c8ffc089d1f9346425070aa32c90939e383c6dee5009a11f3723b761",
+      "stage23_protocol.json": "04a7dab3fed5ebdd30a8ade118a638af0ae7eedf40e5a03843dfbdf8397fd9e2"
+    }
+  },
+  "within_r1_status": "WITHIN_R1_STRUCTURE_UNRESOLVED",
+  "lane_composition_sensitivity_permitted": false,
+  "gdna_rule": {
+    "selected_barcodes": 101,
+    "rank_100_cutoff_counts": 2365,
+    "tie_size_at_cutoff": 2,
+    "reconstructed_positive_clones": 35,
+    "reproduces_frozen_positives_exactly": true,
+    "sample_num_grouping_is_a_no_op": true
+  },
+  "bdepth": {
+    "columns": [
+      "log1p(n_pretreatment_cells)",
+      "n_lanes",
+      "log1p(total_raw_GE_UMI)",
+      "log1p(n_detected_GE_features_in_raw_pseudobulk)"
+    ],
+    "clones": 3147,
+    "all_positive_total_umi": true,
+    "detected_matches_normalised_nonzero_pattern": true,
+    "total_raw_GE_UMI": {
+      "min": 504,
+      "median": 24558.0,
+      "max": 283308,
+      "sum": 90850570
+    },
+    "n_detected_GE_features": {
+      "min": 380,
+      "median": 4969.0,
+      "max": 10506
+    },
+    "outcome_free": true,
+    "note": "Bdepth is diagnostic; V2 \u00a77.7 forbids automatic promotion to a Stage-24 baseline"
+  },
+  "permutation_recovery": {
+    "n_permutations": 200,
+    "base_seed": 23323,
+    "mapping_set_sha256": "6cff09bd5423b7f38b9cba12b88050e411fcc6b66c1456de7f58e1f5f243e74f",
+    "mapping_rows": 3147000,
+    "mapping_cache_dir": "_cc_cache/stage23_2/permutation_mappings",
+    "mapping_is_cache_only": true,
+    "fixed_clone_counts_by_fold_draw0": {
+      "0": 13,
+      "1": 12,
+      "2": 11,
+      "3": 10,
+      "4": 4
+    },
+    "mean_fixed_clone_count_by_fold": {
+      "0": 9.955,
+      "1": 9.695,
+      "2": 9.785,
+      "3": 10.5,
+      "4": 9.88
+    },
+    "structural_assertions": "train->train, test->test, within-stratum, bijective (all draws)",
+    "realized_strata": {
+      "cells": {
+        "1|1": 2584,
+        "2|1": 220,
+        "2|2": 196,
+        "3+|1": 37,
+        "3+|2": 110
+      },
+      "n_cells": 5,
+      "largest_cell_share": 0.8211,
+      "note": "always crossed; `1|2` cannot exist -- one cell cannot span two lanes"
+    },
+    "replay": {
+      "values_recomputed": 200,
+      "recomputed_summary": {
+        "mean": 0.003495157023790003,
+        "sd": 0.006305127914363404,
+        "p95": 0.014545491038048794,
+        "max": 0.05143707259326047,
+        "min": -0.0010462907661630896,
+        "n_ge_observed": 16,
+        "p_perm": 0.0845771144278607
+      },
+      "committed_summary": {
+        "mean": 0.003495157023790003,
+        "sd": 0.006305127914363404,
+        "p95": 0.014545491038048794,
+        "max": 0.05143707259326047,
+        "min": -0.0010462907661630896,
+        "n_ge_observed": 16,
+        "p_perm": 0.0845771144278607
+      },
+      "matches_committed_summary": {
+        "mean": true,
+        "sd": true,
+        "p95": true,
+        "max": true,
+        "min": true,
+        "n_ge_observed": true,
+        "p_perm": true
+      },
+      "all_summary_statistics_reproduced": true,
+      "bitwise_identical_to_stage23_cache": true,
+      "runtime_minutes": 96.47
+    }
+  },
+  "artifacts": {
+    "stage23_2_bdepth.csv": "d5e62d61743c62934937b46a264c5e91be2fe8f0da60632f749a50d8c8efc709",
+    "stage23_2_historical_null_d00.json": "5e41dae6be398e1bcf824fb8250f3c5b63ad57c5fc8c15954c48060a87a5d640",
+    "stage23_2_protocol.json": "2ef069f448794fc418ac4d73ce562a0feaebbe9900e4292afc9d3f2fc62a6ed8",
+    "stage23_2_reserved_confirmation_candidates.json": "9c78004c0bf43d0ac2c72573881a89361732c7cc6b5cc7ec55fb7f8bb45e7a26",
+    "stage23_2_source_design.json": "ee7cc52473d31cd5cb01290a041ca2344a2849cb4ca242f94896fa6cc5f66c07"
+  },
+  "gates": {
+    "historical artifacts verified": true,
+    "source-design audit recorded, within-R1 status emitted": true,
+    "reserved confirmation ledger written, metadata only": true,
+    "gDNA reconstruction inputs available and rule reproduced": true,
+    "Bdepth exactly computable for all 3,147 clones": true,
+    "historical permutation mappings exactly recoverable for ALL 200 draws": true,
+    "replayed D00 array reproduces the committed Stage-23 summary statistics": true,
+    "committed historical-null artifact written, mapping digest recorded": true,
+    "2x2 design, including all three fixed-K arms, executable in every fold": true,
+    "immutable protocol digest created": true
+  },
+  "verdict": "STAGE_23_2_PROTOCOL_FROZEN",
+  "runtime_minutes": 97.01,
+  "source_provenance": {
+    "git_commit": "2422ce4ff5061a2da8980edc7c2e82dec2340d6c",
+    "git_dirty_paths": [
+      "?? experiments/run_stage23_2_role_a_resolution.py",
+      "?? results/stage23_2/"
+    ],
+    "source_files": {
+      "stage23_2_builder": "b48d0bae4f14a817a317034cc18f4702a8634baf52cf1a90c8dad54aef9732dc",
+      "stage23_builder": "ce43d831b0c7585a226a61c340c95660fa14e67ab2ea0fa3714d822c64e8b7f7",
+      "plan_v2": "dec787ac1b9d745fc93e2ca4625ec30c627e07e67a02c014bbad726d777b4769",
+      "plan_v1_archived": "6bce724a625e32e527c9420a764cc457f18f185fd72e74cc92f2641796af3caf"
+    },
+    "versions": {
+      "python": "3.11.0",
+      "numpy": "2.4.6",
+      "pandas": "3.0.3",
+      "scipy": "1.17.1",
+      "sklearn": "1.9.0"
+    },
+    "platform": "Windows-10-10.0.19045-SP0"
+  }
+}

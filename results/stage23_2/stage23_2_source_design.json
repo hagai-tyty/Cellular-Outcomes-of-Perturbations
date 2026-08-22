@@ -1,0 +1,165 @@
+{
+  "stage": "23.2A",
+  "source_design": {
+    "question": "within-R1 sample / library / lane structure only",
+    "biological_replicate_count_is_settled": {
+      "value": 1,
+      "label": "R1",
+      "benchmark_evidence": {
+        "biological_replicate_column": [
+          "R1"
+        ],
+        "generalization_scope": [
+          "within_R1_clone_heldout"
+        ]
+      },
+      "geo_evidence": {
+        "GSM7092515": "biol rep 1, sample 1, hiFT cells, ungated",
+        "GSM7092516": "biol rep 1, sample 2, hiFT cells, ungated"
+      },
+      "note": "V2 \u00a72.1 -- not reopened by this stage and not changeable by it"
+    },
+    "sample_numbering_conflict": {
+      "geo_title_map": {
+        "1": "GSM7092515",
+        "2": "GSM7092516"
+      },
+      "file_naming_map": {
+        "2": "GSM7092515",
+        "1": "GSM7092516"
+      },
+      "benchmark_SampleNum_to_gsm": {
+        "1": "GSM7092516",
+        "2": "GSM7092515"
+      },
+      "conflict_present": true,
+      "tie_break_applied": "author SampleNum / file naming wins (V2 \u00a75.2, F2)",
+      "resolved_map": {
+        "2": "GSM7092515",
+        "1": "GSM7092516"
+      },
+      "benchmark_agrees_with_resolved_map": true,
+      "note": "identity/join only; the Stage-22 mapping is immutable and is not re-derived"
+    },
+    "declared_evidence": {
+      "titles": {
+        "GSM7092515": "biol rep 1, sample 1, hiFT cells, ungated",
+        "GSM7092516": "biol rep 1, sample 2, hiFT cells, ungated"
+      },
+      "biol_rep": {
+        "GSM7092515": "1",
+        "GSM7092516": "1"
+      },
+      "biosample": {
+        "GSM7092515": "BioSample: https://www.ncbi.nlm.nih.gov/biosample/SAMN33725733",
+        "GSM7092516": "BioSample: https://www.ncbi.nlm.nih.gov/biosample/SAMN33725732"
+      },
+      "sra": {
+        "GSM7092515": "SRA: https://www.ncbi.nlm.nih.gov/sra?term=SRX19639298",
+        "GSM7092516": "SRA: https://www.ncbi.nlm.nih.gov/sra?term=SRX19639299"
+      },
+      "file_naming": {
+        "GSM7092515": {
+          "file": "GSM7092515_1_2_control_matrix.mtx.gz",
+          "biol_rep": "1",
+          "sample": "2"
+        },
+        "GSM7092516": {
+          "file": "GSM7092516_1_1_control_matrix.mtx.gz",
+          "biol_rep": "1",
+          "sample": "1"
+        }
+      },
+      "series_overall_design": "Comparative gene expression profiling analysis of single-cell RNA-seq data for hiF-T cells, in some cases sorted by proliferation status, and induced pluripotent stem cells derived from hiF-T cells and exposed to drug. Biological replicates are included and indicated.",
+      "distinct_biosample_accessions": true,
+      "distinct_sra_experiments": true,
+      "extract_protocol_lines_read": 4,
+      "extract_protocol_mentions_per_sample_GEMs": true,
+      "extract_protocol_mentions_10x_sample_indexing": true,
+      "per_sample_gem_and_indexing_are_non_discriminating": true,
+      "metadata_declares_lane_split": false,
+      "metadata_declares_separate_source_material": false,
+      "declared_characteristics": {
+        "GSM7092515": [
+          "tissue: BJ skin fibroblast",
+          "cell line: hiF-T",
+          "cell type: human fibroblast-like cells with inducible hTERT expression",
+          "genotype: WT",
+          "treatment: none"
+        ],
+        "GSM7092516": [
+          "tissue: BJ skin fibroblast",
+          "cell line: hiF-T",
+          "cell type: human fibroblast-like cells with inducible hTERT expression",
+          "genotype: WT",
+          "treatment: none"
+        ]
+      },
+      "characteristics_differ_between_gsms": false
+    },
+    "clone_overlap": {
+      "clones_spanning_both_gsms": 306,
+      "note": "supporting only; V2 \u00a75.2 forbids proving handling structure from overlap"
+    },
+    "within_r1_status": "WITHIN_R1_STRUCTURE_UNRESOLVED",
+    "status_reason": "declared metadata does not distinguish a lane split of one suspension from separately handled libraries: the two samples share every declared characteristic, and distinct BioSample/SRA accessions plus per-sample GEM loading and 10x indexing are true of both designs, so they carry no discriminating information. The GEO Methods/supplement text that could settle it is not part of the local source materials",
+    "consequence_for_23_2C": "V2 \u00a77.5 lane-composition sensitivity is FORBIDDEN under this status",
+    "unresolved": "whether the two libraries came from one culture split before GEM loading or from separately maintained cultures within R1; the GEO Methods text needed to settle that is not part of the local source materials"
+  },
+  "gdna_rule": {
+    "source_file": "stepThreeStarcodeShavedReads_BC_gDNA.txt",
+    "frozen_rule_string": "gDNA arm -> group_by(BC50StarcodeD8, SampleNum) -> sum -> slice_max(n=100, with_ties=TRUE) -> inner_join(filtered10XCells)",
+    "grouping_key": [
+      "BC50StarcodeD8",
+      "SampleNum"
+    ],
+    "sample_num_values_in_gdna": [
+      3
+    ],
+    "sample_num_grouping_is_a_no_op": true,
+    "support_column": "counts",
+    "support_column_note": "M4 -- the gDNA table has `counts`; `nUMI` is a 10X-side column",
+    "gdna_rows": 49554,
+    "distinct_barcodes": 1936,
+    "total_counts_N": 782826,
+    "top_n": 100,
+    "rank_100_cutoff_counts": 2365,
+    "tie_size_at_cutoff": 2,
+    "selected_barcodes": 101,
+    "tie_yields_more_than_top_n": true,
+    "matches_anchor_101": true,
+    "ten_x_rows": 4975,
+    "filtered_rows": 3921,
+    "filtered_is_subset_of_10x": true,
+    "rows_dropped_by_filtering": 1054,
+    "reconstructed_positive_clones": 35,
+    "frozen_positive_clones": 35,
+    "reproduces_frozen_positives_exactly": true,
+    "positives_only_in_reconstruction": [],
+    "positives_only_in_frozen": []
+  },
+  "bdepth": {
+    "columns": [
+      "log1p(n_pretreatment_cells)",
+      "n_lanes",
+      "log1p(total_raw_GE_UMI)",
+      "log1p(n_detected_GE_features_in_raw_pseudobulk)"
+    ],
+    "clones": 3147,
+    "all_positive_total_umi": true,
+    "detected_matches_normalised_nonzero_pattern": true,
+    "total_raw_GE_UMI": {
+      "min": 504,
+      "median": 24558.0,
+      "max": 283308,
+      "sum": 90850570
+    },
+    "n_detected_GE_features": {
+      "min": 380,
+      "median": 4969.0,
+      "max": 10506
+    },
+    "outcome_free": true,
+    "note": "Bdepth is diagnostic; V2 \u00a77.7 forbids automatic promotion to a Stage-24 baseline"
+  }
+}

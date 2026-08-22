@@ -37,6 +37,7 @@ DATA_DEPENDENT_MODULES = [
     "tests/test_diag_stage21d_public_reconstruction.py",
     "tests/test_stage22_prospective_benchmarks.py",
     "tests/test_stage23_learnability_gate.py",
+    "tests/test_stage23_2_role_a_resolution.py",
 ]
 
 # Experiment modules that own a local root and must therefore honour the switch.

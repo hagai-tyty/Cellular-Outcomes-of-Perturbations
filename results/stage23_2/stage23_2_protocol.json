@@ -1,0 +1,145 @@
+{
+  "stage": "23.2A",
+  "protocol": {
+    "stage": "23.2",
+    "plan_version": "V2",
+    "plan_canonical_lf_sha256": "dec787ac1b9d745fc93e2ca4625ec30c627e07e67a02c014bbad726d777b4769",
+    "role": "A",
+    "dataset": "GSE227151",
+    "frozen_from_stage23": {
+      "outer_folds": 5,
+      "inner_folds": 3,
+      "inner_cv": "StratifiedKFold(shuffle=True, random_state=23023) on clones",
+      "K_candidates": [
+        10,
+        20,
+        50
+      ],
+      "logistic_C": [
+        0.01,
+        0.1,
+        1,
+        10
+      ],
+      "selection_metric": "mean average precision at clone grain",
+      "permutation_base_seed": 23323,
+      "n_permutations": 200,
+      "nuisance_B0": [
+        "log1p(n_pretreatment_cells)",
+        "n_lanes"
+      ]
+    },
+    "diagnostic_nuisance_Bdepth": [
+      "log1p(n_pretreatment_cells)",
+      "n_lanes",
+      "log1p(total_raw_GE_UMI)",
+      "log1p(n_detected_GE_features_in_raw_pseudobulk)"
+    ],
+    "decomposition_design": {
+      "cells": {
+        "00": "full K x C search + B0        (historical, read from the committed array)",
+        "01": "full K x C search + Bdepth",
+        "10": "no-K-selection mean + B0",
+        "11": "no-K-selection mean + Bdepth"
+      },
+      "no_k_selection_reference": {
+        "fixed_K_arms": [
+          10,
+          20,
+          50
+        ],
+        "weights": "equal, 1/3 each, fixed before execution",
+        "C_selection": "retained from the frozen grid inside every arm",
+        "rationale": "the historical R3 selected K = 50,10,10,10,10 -- K=20 in zero of five folds -- so a single fixed arm would conflate removing K selection with moving to a disfavoured subspace",
+        "per_arm_reporting": "mean, CI and arm dispersion, descriptive only"
+      },
+      "search_width_ladder": {
+        "rungs": [
+          4,
+          8,
+          12
+        ],
+        "conditional": false
+      },
+      "paired_unit": "permutation_id",
+      "bootstrap": {
+        "resamples": 10000,
+        "seed_23_2B": 23421,
+        "seed_23_2C": 23422
+      }
+    },
+    "label_reliability": {
+      "multinomial_resamples": 5000,
+      "seed": 23431,
+      "top_n_ladder": [
+        80,
+        90,
+        100,
+        110,
+        120
+      ],
+      "cross_gsm_gdna_concordance": "REMOVED -- gDNA is pooled SampleNum=3, not identifiable",
+      "not_supported_requires_independent_outcome_assay_replication": true
+    },
+    "power": {
+      "cohort_scales": [
+        1,
+        2,
+        4
+      ],
+      "target_oracle_AUC": [
+        0.66,
+        0.7
+      ],
+      "null_allocations": 200,
+      "alternative_simulations": 100,
+      "seeds": {
+        "covariate_resample": 23440,
+        "null": 23441,
+        "alternative": 23442,
+        "beta_calibration": 23443
+      },
+      "statuses": [
+        "WITHIN_R1_EVENT_COUNT_LIMITATION",
+        "BIOLOGICAL_REPLICATION_LIMITATION"
+      ],
+      "n_biological_replicates": 1
+    },
+    "within_r1_status": "WITHIN_R1_STRUCTURE_UNRESOLVED",
+    "lane_composition_sensitivity_permitted": false,
+    "feature_firewall": {
+      "molecular_state": "pretreatment Gene Expression only, 36,601 features",
+      "forbidden_inputs": [
+        "clone_id",
+        "cell_uid",
+        "outer_fold",
+        "outcome-rule fields",
+        "gDNA counts / ranks",
+        "future outcome fields",
+        "source paths"
+      ]
+    }
+  },
+  "canonical_sha256": "78edd5d7f9900349925339169a5d5e3e5011fe23e3c7c22608ac98bfe3427bf4",
+  "source_provenance": {
+    "git_commit": "2422ce4ff5061a2da8980edc7c2e82dec2340d6c",
+    "git_dirty_paths": [
+      "?? experiments/run_stage23_2_role_a_resolution.py",
+      "?? results/stage23_2/"
+    ],
+    "source_files": {
+      "stage23_2_builder": "b48d0bae4f14a817a317034cc18f4702a8634baf52cf1a90c8dad54aef9732dc",
+      "stage23_builder": "ce43d831b0c7585a226a61c340c95660fa14e67ab2ea0fa3714d822c64e8b7f7",
+      "plan_v2": "dec787ac1b9d745fc93e2ca4625ec30c627e07e67a02c014bbad726d777b4769",
+      "plan_v1_archived": "6bce724a625e32e527c9420a764cc457f18f185fd72e74cc92f2641796af3caf"
+    },
+    "versions": {
+      "python": "3.11.0",
+      "numpy": "2.4.6",
+      "pandas": "3.0.3",
+      "scipy": "1.17.1",
+      "sklearn": "1.9.0"
+    },
+    "platform": "Windows-10-10.0.19045-SP0"
+  }
+}

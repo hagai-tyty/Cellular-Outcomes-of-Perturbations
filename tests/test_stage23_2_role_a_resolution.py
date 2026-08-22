@@ -1,0 +1,345 @@
+"""Stage 23.2A — contracts for the resolution protocol and source-design freeze.
+
+23.2A is the substage that decides whether the whole failure decomposition is trustworthy, and it
+is unusually easy to get wrong in ways nothing downstream would notice:
+
+1. **Rewriting history.** Stage 23 is closed and read-only. A diagnostic stage that quietly touched
+   a Stage-23 artifact, or that let the closed Role-A verdict drift, would invalidate everything it
+   then claimed to explain.
+2. **A replay that is not the historical pipeline.** The paired 23.2B/C design only works because
+   `D00` really is the historical null. If the replay were a fresh sample rather than the frozen
+   mappings, "paired" would be a lie and the Monte-Carlo noise it removes would still be there.
+3. **Over-claiming the source design.** The two control GSMs are one biological replicate. A stage
+   that let `REPLICATE_STRUCTURE_BIOLOGICAL` back in, or that read a lane split into ambiguous
+   metadata, would manufacture experimental units that do not exist.
+4. **Peeking at reserved evidence.** The reserved ledger names biological replicates 2 and 3. If
+   anything beyond declared metadata reached it, the confirmation evidence would already be burned.
+
+These contracts test all four, plus the canonical-JSON provenance design that exists specifically
+so 23.2B's code cannot invalidate 23.2A's frozen protocol.
+"""
+from __future__ import annotations
+
+import hashlib
+import importlib.util
+import json
+import sys
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "experiments" / "run_stage23_2_role_a_resolution.py"
+spec = importlib.util.spec_from_file_location("s232", SRC)
+S232 = importlib.util.module_from_spec(spec)
+sys.modules["s232"] = S232
+spec.loader.exec_module(S232)
+
+RES = ROOT / "results"
+OUT = RES / "stage23_2"
+A_RESULTS = OUT / "stage23_2a_results.json"
+PROTOCOL = OUT / "stage23_2_protocol.json"
+LEDGER = OUT / "stage23_2_reserved_confirmation_candidates.json"
+D00 = OUT / "stage23_2_historical_null_d00.json"
+SOURCE_DESIGN = OUT / "stage23_2_source_design.json"
+
+ran = pytest.mark.skipif(not A_RESULTS.exists(), reason="23.2A has not been run")
+
+
+@pytest.fixture(scope="module")
+def a():
+    return json.loads(A_RESULTS.read_text(encoding="utf-8"))
+
+
+@pytest.fixture(scope="module")
+def design():
+    return json.loads(SOURCE_DESIGN.read_text(encoding="utf-8"))
+
+
+# ---- 1. Stage 23 stays read-only ------------------------------------------------------------- #
+@ran
+def test_the_closed_stage23_verdicts_are_untouched(a):
+    syn = json.loads((RES / "stage23_final_synthesis.json").read_text(encoding="utf-8"))
+    assert syn["final_verdicts"]["role_a"] == "ROLE_A_SIGNAL_FAIL"
+    assert syn["final_verdicts"]["role_b_additive"] == "ROLE_B_ADDITIVE_PASS"
+    assert syn["final_verdicts"]["role_b_interaction"] == "INTERACTION_PASS_MULTI_TREATMENT"
+    assert syn["STRUCTURAL_CONTROLS_PASS"] is True
+    assert syn["roadmap_gate"]["gate"] == "STAGE_24_BLOCKED_ROLE_A"
+
+
+@ran
+def test_the_historical_artifact_hashes_recorded_by_23_2a_still_match(a):
+    """If a Stage-23 artifact changed after 23.2A froze, every diagnostic below it is suspect."""
+    for name, digest in a["preflight"]["artifact_hashes"].items():
+        assert S232.sha256_file(RES / name) == digest, name
+
+
+@ran
+def test_23_2a_writes_nothing_outside_its_own_directory(a):
+    """Every artifact 23.2A claims to have written lives under results/stage23_2/."""
+    for name in a["artifacts"]:
+        assert (OUT / name).exists(), name
+    assert not list(RES.glob("stage23_2_*.json")), "an artifact escaped into results/"
+
+
+@ran
+def test_the_closure_record_still_declares_stage23_closed(a):
+    checks = {c["check"]: c["ok"] for c in a["preflight"]["checks"]}
+    assert checks["closure record exists and declares Stage 23 formally closed"]
+    assert checks["closure record states ROLE_A_SIGNAL_FAIL is permanent"]
+    assert checks["legacy STAGE 23R is only an alias, not a competing gate"]
+
+
+@ran
+def test_every_frozen_anchor_was_verified(a):
+    assert a["preflight"]["ok"] is True
+    assert a["preflight"]["failed"] == []
+    assert a["preflight"]["n_checks"] >= 30
+
+
+# ---- 2. the replay really is the historical pipeline ------------------------------------------ #
+@ran
+def test_the_committed_d00_array_has_200_values_and_a_matching_digest():
+    d = json.loads(D00.read_text(encoding="utf-8"))
+    assert d["n_permutations"] == len(d["values"]) == 200
+    assert d["base_seed"] == 23323
+    assert d["values_sha256"] == hashlib.sha256(np.array(d["values"]).tobytes()).hexdigest()
+
+
+@ran
+def test_the_replayed_array_reproduces_the_committed_stage23_summary_exactly(a):
+    """The load-bearing claim: this is the historical null, not a fresh sample of it."""
+    rep = a["permutation_recovery"]["replay"]
+    assert rep["values_recomputed"] == 200
+    assert rep["all_summary_statistics_reproduced"] is True
+    assert all(rep["matches_committed_summary"].values()), rep["matches_committed_summary"]
+
+    hist = json.loads((RES / "stage23_permutation_results.json").read_text(encoding="utf-8"))
+    t = hist["permutation_tests"]["role_a_delta_AP_state"]
+    arr = np.array(json.loads(D00.read_text(encoding="utf-8"))["values"])
+    assert round(float(arr.mean()), 12) == round(t["null_mean"], 12)
+    assert round(float(np.percentile(arr, 95)), 12) == round(t["null_p95"], 12)
+    assert int((arr >= t["observed"]).sum()) == t["n_null_ge_observed"] == 16
+    assert round(float((1 + (arr >= t["observed"]).sum()) / 201), 12) == round(t["p_perm"], 12)
+
+
+@ran
+def test_the_mapping_set_is_recorded_by_digest_and_kept_out_of_git(a):
+    m = a["permutation_recovery"]
+    assert m["n_permutations"] == 200
+    assert m["mapping_is_cache_only"] is True
+    assert len(m["mapping_set_sha256"]) == 64
+    assert m["mapping_rows"] == 200 * 5 * 3147
+    assert m["mapping_cache_dir"].startswith("_cc_cache/")
+    assert not list(OUT.glob("*mapping*")), "the mapping table must not be committed"
+
+
+def test_a_regenerated_mapping_obeys_the_frozen_permutation_structure():
+    """Recomputed here rather than trusted: no crossing, no stratum change, still a bijection."""
+    k = pd.read_csv(RES / "stage22_rewind_clones.csv")
+    clones = json.loads((ROOT / "_cc_cache" / "stage23" / "GSE227151_clones.json")
+                        .read_text(encoding="utf-8")) if (
+        ROOT / "_cc_cache" / "stage23" / "GSE227151_clones.json").exists() else None
+    if clones is None:
+        pytest.skip("23A clone cache absent")
+    k = k.set_index("clone_id").loc[clones]
+    strata = S232.S23.rewind_strata(k)
+    fold = k["outer_fold"].to_numpy()
+    for b in (0, 7, 199):
+        rng = np.random.default_rng(S232.S23.SEED_PERMUTATION + b)
+        for f in range(S232.S23.N_OUTER):
+            pmap = S232.S23.permute_within(strata, fold != f, rng)
+            side = fold != f
+            assert (side[pmap] == side).all()
+            assert (strata[pmap] == strata).all()
+            assert sorted(pmap.tolist()) == list(range(len(pmap)))
+
+
+@ran
+def test_the_realized_strata_are_the_five_non_empty_cells(a):
+    cells = a["permutation_recovery"]["realized_strata"]["cells"]
+    assert cells == {"1|1": 2584, "2|1": 220, "2|2": 196, "3+|1": 37, "3+|2": 110}
+    assert "1|2" not in cells, "one pretreatment cell cannot span two lanes"
+    assert sum(cells.values()) == 3147
+
+
+# ---- 3. the source design is not over-claimed ------------------------------------------------- #
+@ran
+def test_the_within_r1_status_is_one_of_the_three_allowed_values(a, design):
+    allowed = {"WITHIN_R1_TECHNICAL_LANES", "WITHIN_R1_SEPARATE_LIBRARIES",
+               "WITHIN_R1_STRUCTURE_UNRESOLVED"}
+    assert a["within_r1_status"] in allowed
+    assert design["source_design"]["within_r1_status"] == a["within_r1_status"]
+
+
+@ran
+def test_the_retired_replicate_vocabulary_never_appears_in_any_artifact():
+    """`REPLICATE_STRUCTURE_BIOLOGICAL` was removed as a possible finding in V2."""
+    for p in sorted(OUT.glob("*")):
+        text = p.read_text(encoding="utf-8", errors="replace")
+        for banned in ("REPLICATE_STRUCTURE_BIOLOGICAL", "REPLICATE_STRUCTURE_TECHNICAL_LANES",
+                       "REPLICATE_STRUCTURE_UNRESOLVED"):
+            assert banned not in text, f"{p.name} contains {banned}"
+
+
+@ran
+def test_the_benchmark_is_recorded_as_one_biological_replicate(design):
+    s = design["source_design"]["biological_replicate_count_is_settled"]
+    assert s["value"] == 1
+    assert s["label"] == "R1"
+    assert s["benchmark_evidence"]["biological_replicate_column"] == ["R1"]
+    cells = pd.read_csv(RES / "stage22_rewind_cells.csv")
+    assert sorted(cells["biological_replicate"].unique()) == ["R1"]
+
+
+@ran
+def test_the_lane_sensitivity_flag_follows_the_status(a):
+    """V2 §7.5 may run only under WITHIN_R1_TECHNICAL_LANES."""
+    assert a["lane_composition_sensitivity_permitted"] == (
+        a["within_r1_status"] == "WITHIN_R1_TECHNICAL_LANES")
+
+
+@ran
+def test_the_sample_numbering_conflict_is_recorded_and_the_benchmark_is_not_re_derived(design):
+    """F2: GEO titles and file naming disagree; the benchmark keyed on SampleNum and stays frozen."""
+    c = design["source_design"]["sample_numbering_conflict"]
+    assert c["conflict_present"] is True
+    assert c["geo_title_map"] != c["file_naming_map"]
+    assert c["benchmark_agrees_with_resolved_map"] is True
+    cells = pd.read_csv(RES / "stage22_rewind_cells.csv")
+    live = {str(k): sorted(set(v))[0]
+            for k, v in cells.groupby("SampleNum")["gsm"].agg(list).items()}
+    assert c["benchmark_SampleNum_to_gsm"] == live, "the frozen mapping was altered"
+
+
+@ran
+def test_non_discriminating_evidence_is_not_used_to_decide_the_status(design):
+    """Per-sample GEM loading and 10x indexing are true of both designs, so they must not decide."""
+    e = design["source_design"]["declared_evidence"]
+    assert e["per_sample_gem_and_indexing_are_non_discriminating"] is True
+    assert e["extract_protocol_lines_read"] >= 4, "the protocol spans several series-matrix lines"
+    if design["source_design"]["within_r1_status"] == "WITHIN_R1_STRUCTURE_UNRESOLVED":
+        assert e["metadata_declares_lane_split"] is False
+        assert e["metadata_declares_separate_source_material"] is False
+        assert e["characteristics_differ_between_gsms"] is False
+
+
+# ---- 4. reserved evidence stays untouched ------------------------------------------------------ #
+@ran
+def test_the_reserved_ledger_holds_declared_metadata_only():
+    led = json.loads(LEDGER.read_text(encoding="utf-8"))
+    allowed = {"accession", "title", "declared_biological_replicate", "library_strategy",
+               "library_source", "declared_gating", "role", "locally_downloaded",
+               "matching_future_outcome_declared"}
+    for e in led["entries"]:
+        assert set(e) <= allowed, set(e) - allowed
+        assert e["matching_future_outcome_declared"] is None, "outcome status must stay unverified"
+    assert led["n_samples_declared"] == 13
+    assert "UNVERIFIED" in led["matching_outcome_status"]
+
+
+@ran
+def test_the_ledger_names_the_reserved_replicates_without_evaluating_them():
+    led = json.loads(LEDGER.read_text(encoding="utf-8"))
+    by_acc = {e["accession"]: e for e in led["entries"]}
+    assert by_acc["GSM7092515"]["role"] == "USED_BY_STAGE_23"
+    assert by_acc["GSM7092516"]["role"] == "USED_BY_STAGE_23"
+    assert by_acc["GSM7092517"]["declared_biological_replicate"] == "2"
+    assert by_acc["GSM7092519"]["declared_biological_replicate"] == "3"
+    assert by_acc["GSM7092520"]["role"] == "RESERVED_DIFFERENT_DESIGN"
+    for e in led["entries"]:
+        if e["role"].startswith("RESERVED"):
+            assert e["locally_downloaded"] is False, f"{e['accession']} was downloaded"
+
+
+def test_the_module_never_opens_a_reserved_matrix():
+    """Source-level: only the two Stage-23 GSMs may be read from disk."""
+    src = SRC.read_text(encoding="utf-8")
+    assert 'STAGE23_GSMS = ("GSM7092515", "GSM7092516")' in src
+    for acc in ("GSM7092517", "GSM7092518", "GSM7092519", "GSM7092520", "GSM7092521"):
+        assert acc not in src, f"the builder names {acc}; the ledger must come from family.xml"
+
+
+# ---- 5. the gDNA rule and Bdepth ---------------------------------------------------------------#
+@ran
+def test_the_gdna_rule_reproduces_the_frozen_label_exactly(a, design):
+    g = design["gdna_rule"]
+    assert g["reproduces_frozen_positives_exactly"] is True
+    assert g["reconstructed_positive_clones"] == 35
+    assert g["selected_barcodes"] == 101, "the rank-100 tie yields 101 barcodes"
+    assert g["tie_size_at_cutoff"] == 2
+    assert g["rank_100_cutoff_counts"] == 2365
+    assert g["support_column"] == "counts", "M4: the gDNA table has no nUMI column"
+    assert g["sample_num_grouping_is_a_no_op"] is True
+    assert g["sample_num_values_in_gdna"] == [3], "gDNA is one pooled library"
+
+
+@ran
+def test_bdepth_is_complete_and_outcome_free(design):
+    b = design["bdepth"]
+    assert b["clones"] == 3147
+    assert b["all_positive_total_umi"] is True
+    assert b["detected_matches_normalised_nonzero_pattern"] is True
+    tbl = pd.read_csv(OUT / "stage23_2_bdepth.csv")
+    assert len(tbl) == 3147
+    for banned in ("y_primed", "outcome", "gdna", "counts", "primed"):
+        assert not [c for c in tbl.columns if banned in c.lower()], banned
+
+
+# ---- 6. the canonical-JSON provenance design ---------------------------------------------------#
+def test_the_protocol_digest_is_canonical_and_order_independent():
+    a = {"b": 1, "a": [1, 2], "c": {"z": 0, "y": 1}}
+    b = {"c": {"y": 1, "z": 0}, "a": [1, 2], "b": 1}
+    assert S232.canonical_json_sha256(a) == S232.canonical_json_sha256(b)
+    assert S232.canonical_json_sha256({"a": 1}) != S232.canonical_json_sha256({"a": 2})
+
+
+@ran
+def test_the_hashed_protocol_payload_excludes_source_and_runtime_provenance(a):
+    """V2 §4.1/§4.2 -- the fix for the Stage-23 builder-hash problem, which bit three times."""
+    doc = json.loads(PROTOCOL.read_text(encoding="utf-8"))
+    payload = doc["protocol"]
+    assert doc["canonical_sha256"] == S232.canonical_json_sha256(payload)
+    assert doc["canonical_sha256"] == a["stage23_2_protocol_sha256"]
+    blob = json.dumps(payload)
+    for banned in ("git_commit", "builder", "sha256_of_source", "timestamp", "platform",
+                   "D:\\\\", "/mnt/", "runtime_minutes"):
+        assert banned not in blob, f"the hashed payload contains {banned}"
+    assert "source_provenance" in doc, "provenance is recorded beside the payload, not inside it"
+    assert "git_commit" in doc["source_provenance"]
+
+
+@ran
+def test_adding_later_substage_code_cannot_move_the_frozen_protocol_digest(a):
+    """The digest depends on the scientific surface only, so 23.2B code cannot invalidate it."""
+    doc = json.loads(PROTOCOL.read_text(encoding="utf-8"))
+    payload = dict(doc["protocol"])
+    first = S232.canonical_json_sha256(payload)
+    # a source change is modelled by changing only the provenance block
+    doc["source_provenance"]["source_files"]["stage23_2_builder"] = "0" * 64
+    assert S232.canonical_json_sha256(payload) == first
+
+
+@ran
+def test_the_frozen_design_matches_the_plan(a):
+    doc = json.loads(PROTOCOL.read_text(encoding="utf-8"))["protocol"]
+    d = doc["decomposition_design"]
+    assert d["no_k_selection_reference"]["fixed_K_arms"] == [10, 20, 50]
+    assert "equal" in d["no_k_selection_reference"]["weights"]
+    assert d["search_width_ladder"]["conditional"] is False
+    assert set(d["cells"]) == {"00", "01", "10", "11"}
+    assert doc["label_reliability"]["not_supported_requires_independent_outcome_assay_replication"]
+    assert "REMOVED" in doc["label_reliability"]["cross_gsm_gdna_concordance"]
+    assert doc["power"]["n_biological_replicates"] == 1
+    assert set(doc["power"]["statuses"]) == {"WITHIN_R1_EVENT_COUNT_LIMITATION",
+                                             "BIOLOGICAL_REPLICATION_LIMITATION"}
+
+
+@ran
+def test_all_23_2a_gates_pass_and_the_verdict_is_derived(a):
+    assert all(a["gates"].values()), [k for k, v in a["gates"].items() if not v]
+    assert a["verdict"] == S232.PROTOCOL_FROZEN
+    assert a["verdict"] == (S232.PROTOCOL_FROZEN if all(a["gates"].values())
+                            else S232.INPUT_BLOCKED)
