@@ -1,5 +1,5 @@
 {
-  "head_commit": "d2433b1acb614a211b291be77f457ed9e43a84a0",
+  "head_commit": "0898ce84a136d9246657ba24c4829b02f0198b4c",
   "working_tree_clean_for_builder_and_artifacts": true,
   "uncommitted_paths": [],
   "artifacts_compared": 13,
@@ -16,7 +16,7 @@
     "stage23_wm989_abundance_oof.csv": "89f6c0db38c9dba2394ec7b28b8006f2b85990dfbb8f478b202c2c77f1bba887",
     "stage23_wm989_interaction_oof.csv": "e727c5782ac67ec6324219f4662dee72b00285dd0562435065941a9d831874aa",
     "stage23_wm989_interaction_abundance_oof.csv": "0ee593844f2ed3b70848466987de8eb7a445c43418eb66407af486c8217c750f",
-    "stage23_final_synthesis.json": "e83e1b16ed2ad24d8b899045083d46d685a531e503f2dc5aa48f872c36e169e4"
+    "stage23_final_synthesis.json": "e649719e92e54ac2fecf78085ecb5c7eabdfccffde91b1238cb52eda8b206c47"
   },
   "fresh_clone_digests": {
     "stage23_protocol.json": "04a7dab3fed5ebdd30a8ade118a638af0ae7eedf40e5a03843dfbdf8397fd9e2",
@@ -31,7 +31,7 @@
     "stage23_wm989_abundance_oof.csv": "89f6c0db38c9dba2394ec7b28b8006f2b85990dfbb8f478b202c2c77f1bba887",
     "stage23_wm989_interaction_oof.csv": "e727c5782ac67ec6324219f4662dee72b00285dd0562435065941a9d831874aa",
     "stage23_wm989_interaction_abundance_oof.csv": "0ee593844f2ed3b70848466987de8eb7a445c43418eb66407af486c8217c750f",
-    "stage23_final_synthesis.json": "e83e1b16ed2ad24d8b899045083d46d685a531e503f2dc5aa48f872c36e169e4"
+    "stage23_final_synthesis.json": "e649719e92e54ac2fecf78085ecb5c7eabdfccffde91b1238cb52eda8b206c47"
   },
   "mismatched": {},
   "all_match": true

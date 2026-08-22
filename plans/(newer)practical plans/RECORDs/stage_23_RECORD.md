@@ -862,3 +862,181 @@ Applying the mechanical promotion rules frozen in V2:
 
 ## Next action
 23F. Not started.
+
+---
+
+# 23F — mechanical evidence synthesis and roadmap gate
+
+## Goal
+Close Stage 23. Derive the final claim ledger and the roadmap gate from the frozen 23B–23E
+artifacts by boolean expression, with no new model, no new statistic, and no interpretation step.
+
+## Inputs — read only, never rewritten
+- `results/stage23_rewind_results.json` (23B) · `stage23_wm989_results.json` (23C) ·
+  `stage23_wm989_interaction_results.json` (23D) · `stage23_permutation_results.json` (23E),
+  each pinned by SHA-256 inside the 23F output
+- `results/stage23_protocol.json` (23A), pinned by SHA-256
+
+**Nothing is fitted in 23F.** It opens no matrix, builds no design and calls no estimator. A
+contract test walks the AST of the 23F code path and fails if it ever calls `fit`, `predict`,
+`_fit_*`, `expression_block` or `clone_pseudobulk`.
+
+## Files added
+- `results/stage23_final_synthesis.json`
+
+## Files modified
+- `experiments/run_stage23_learnability_gate.py` — `--stage 23f`; 23A–23E logic untouched
+- `tests/test_stage23_learnability_gate.py` — 11 further contracts (92 total)
+- `results/stage23_determinism.json` — re-verified at 13 artifacts including the synthesis file
+
+## Result
+
+### FROZEN 23F HEADLINE — the final Stage-23 ledger
+
+```text
+STRUCTURAL_CONTROLS_PASS = true
+
+Role A  (GSE227151, REQUIRED anchor)
+    23B bootstrap candidate     PASS    dAP = +0.01050, 95% lower bound +0.00397
+    23E permutation gate        FAIL    p_perm = 0.0846, null p95 +0.01455
+    final                       ROLE_A_SIGNAL_FAIL
+
+Role B additive  (GSE279162, endpoint C1)
+    23C bootstrap criterion     PASS    dLL = +0.00937, 97.5% lower bound +0.00516
+    23E permutation gate        PASS    p_perm = 0.0050
+    final                       ROLE_B_ADDITIVE_PASS
+
+Role B interaction  (GSE279162, endpoint C1)
+    W5 vs W4 permutation        PASS    +0.01430, p_perm = 0.0050
+    W5 vs W1 permutation        PASS    +0.02367, p_perm = 0.0050
+    final                       INTERACTION_PASS_MULTI_TREATMENT
+
+C2 interaction  (secondary, independently tested)
+    W5 vs W4 permutation        PASS    +0.00938, p_perm = 0.0050
+    W5 vs W1 permutation        PASS    +0.01378, p_perm = 0.0050
+    final                       C2_INTERACTION_SECONDARY_CONFIRMED
+
+ROADMAP GATE                    STAGE_24_BLOCKED_ROLE_A
+```
+
+**Role A's bootstrap candidacy is kept in the ledger, not erased.** 23B's PASS was an honest
+report; what changed is that it did not survive the gate it was always declared provisional
+against. Both facts are recorded side by side because collapsing them would hide how the failure
+was found.
+
+### The gate is a function of Role A alone
+
+Stage-23 V2 makes Role A the mandatory prospective anchor. Role B is positive on **three separate
+statistics** across **two endpoints** and still cannot open Stage 24. A contract test asserts the
+gate is derived from `role_a` and nothing else, and that `role_b_may_substitute_for_role_a` is
+`false`. This is the whole reason the roles were separated in Stage 21 rather than pooled.
+
+Per roadmap V4, `STAGE_24_BLOCKED_ROLE_A` routes to **Stage 23R — Role-A Resolution / Failure
+Decomposition**, not to Stage 24 and not to a redesign of Role A inside Stage 23.
+
+## Findings carried forward
+
+Each is a structured field in `stage23_final_synthesis.json`, re-checked by a test against the
+artifact it claims to come from.
+
+```text
+1  Rewind absolute signal was weak BEFORE any permutation
+       R0 0.01112   R1 0.01035   R2 0.01923   R3 0.02085   (average precision)
+       35 positive clones of 3,147; prevalence 1.11%
+       Even the provisional 23B PASS was a small absolute effect on a very rare outcome.
+
+2  Role-A permutation p_perm = 0.0846
+       observed +0.01050, null mean +0.00350, null p95 +0.01455, 16 of 200 draws >= observed
+
+3  Abundance remains the dominant WM989 predictor
+       captured abundance   W0 -> W1   = 0.08159 log loss
+       entire state effect  W1 -> W5   = 0.02367 log loss
+       ratio 3.45x. Ordering: abundance first, treatment-specific state second,
+       additive state third.
+
+4  Transcriptomic state nevertheless adds beyond abundance on C1
+       dLL_state = +0.00937, 97.5% lower bound +0.00516, p_perm 0.0050
+
+5  Explicit X x U adds further signal
+       dLL_interaction = +0.01430   dLL_full = +0.02367   both p_perm 0.0050
+       60.4% of the total C1 state contribution is treatment-specific, not additive.
+
+6  Doxorubicin is the consistent treatment-level exception
+       C1 -0.00332   C2 -0.00346   negative on BOTH endpoints
+       5/6 treatments improved on each endpoint, but Cisplatin C1 is +0.00002.
+       "Multi-treatment" means four treatments carry it, not six.
+
+7  No external generalization has been shown
+       external biological replicate   NOT TESTED
+       unseen treatment                NOT TESTED
+       cross-dataset transfer          NOT TESTED
+       Every Stage-23 result is within-dataset, inside the frozen Stage-22 clone folds,
+       over the six treatments present in training.
+```
+
+## Structural controls and determinism, re-verified at close
+
+```text
+STRUCTURAL_CONTROLS_PASS   true   (23E: outer-test isolation, feature firewall,
+                                   frozen-fold identity, canonical LF/CRLF hash,
+                                   fresh-clone determinism)
+fresh-clone determinism    13/13 artifacts byte-identical, clean tree, HEAD 0898ce84
+```
+
+The compared set grew from 12 to 13 with `stage23_final_synthesis.json`; a contract test asserts
+the set may never shrink.
+
+## Tests
+- **1932 passed** · ruff clean (CI scope) · 92 Stage-23 contracts, 11 new in 23F
+
+## Bugs found
+No bug in the science. Two contract failures fired during 23F, and both were controls working
+rather than defects:
+
+1. **Determinism evidence went stale by construction.** Adding `stage23_final_synthesis.json` to
+   the compared set moved it from 12 artifacts to 13, so the recorded evidence no longer described
+   the current set. The contract failed until the check was rerun against the committed tree.
+2. **23E was left pinning a protocol hash that no longer existed.** Rerunning 23A so the protocol
+   describes the 23F builder moved `builder_source_canonical_lf_sha256`, and
+   `stage23_permutation_results.json` still referenced the previous digest. Caught by
+   `test_23e_references_the_frozen_protocol_and_plan`, not by inspection.
+
+This is the third time the same structural issue has surfaced (23E recorded the first two): the
+protocol artifact hashes the builder, and the builder grows with every substage, so any artifact
+pinning the protocol must be re-pinned whenever the builder changes. It is a real design cost of
+hashing the whole builder rather than the frozen protocol surface, and it is recorded here rather
+than fixed, because 23A is frozen.
+
+## Deviations
+None affecting a result. No model was fitted, no substage was rerun for its numbers, and no
+threshold was introduced in 23F. Two provenance re-syncs were required and are recorded in full:
+
+- **23A–23D re-executed once** so their embedded `builder_source_canonical_lf_sha256` describes the
+  builder that now contains 23F. Every OOF prediction CSV is byte-identical; no frozen number moved.
+- **The 23E merge rerun from the SAME cached null draws** to re-pin the protocol hash. Verified
+  unchanged: every permutation statistic, null percentile and p-value, every
+  `claim_permutation_status` flag, and the entire provenance sentinel are byte-identical. **No
+  permutation was recomputed.** Three fields moved: `protocol_sha256` (re-pinned),
+  `runtime_minutes` (0.92 → 1.15, merge wall time only), and the embedded determinism detail
+  (12 → 13 artifacts, new HEAD). The 23E record's "0.92 min" is therefore superseded by 1.15 min
+  for the merge step; the 23E section is left unedited per the additive-record rule, and this note
+  is the correction.
+
+## Scientific interpretation
+
+**Proves:** Stage 23 closes with one clean negative and three clean positives, and the negative is
+on the axis the roadmap declared mandatory. On WM989, pretreatment transcriptional state carries
+outcome information beyond captured abundance, and more of that information is treatment-specific
+than additive — both surviving a permutation null that preserves the abundance structure. On
+Rewind, the state effect is not distinguishable from what the null produces.
+
+**Does NOT prove:**
+- **That Rewind has no Role-A signal.** A failed gate is not evidence of absence; that is Stage
+  23R's question, and 23E could not separate selection flexibility from residual depth structure.
+- **That Role B rescues the thesis.** It does not, by design. The prospective anchor is Role A.
+- **That the WM989 effect is large.** It is a third of what abundance alone buys.
+- **That anything generalises.** Finding 7 is the honest ceiling on every claim above.
+
+## Next action
+**Stage 23R — Role-A Resolution / Failure Decomposition** (roadmap V4). Not started. Stage 23 is
+closed; its verdicts are final and additive corrections only.
