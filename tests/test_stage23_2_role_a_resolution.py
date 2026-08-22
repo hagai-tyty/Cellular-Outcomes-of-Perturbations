@@ -343,3 +343,119 @@ def test_all_23_2a_gates_pass_and_the_verdict_is_derived(a):
     assert a["verdict"] == S232.PROTOCOL_FROZEN
     assert a["verdict"] == (S232.PROTOCOL_FROZEN if all(a["gates"].values())
                             else S232.INPUT_BLOCKED)
+
+
+# ============================================================================================== #
+# 23.2B — model-selection null decomposition.
+#
+# The substage is only meaningful if three things hold, and each can fail silently:
+#
+#   * the paired basis really is the historical one. `S_j = D00_j - D10_j` is a paired statistic;
+#     if `D00` were recomputed rather than read, or the mappings redrawn, the pairing would be
+#     fictional and the CI too wide or too narrow for reasons nothing would report.
+#   * the no-K-selection reference is the equal-weight mean of the three fixed-K arms, with weights
+#     fixed before execution. Promoting whichever arm looks best would be exactly the selection
+#     effect the substage claims to measure.
+#   * the status is derived from the CI, not chosen. UNRESOLVED must be reachable and reported.
+# ============================================================================================== #
+B_RESULTS = OUT / "stage23_2_model_selection_decomposition.json"
+ran_b = pytest.mark.skipif(not B_RESULTS.exists(), reason="23.2B has not been run")
+
+
+@pytest.fixture(scope="module")
+def b():
+    return json.loads(B_RESULTS.read_text(encoding="utf-8"))
+
+
+@ran_b
+def test_cell_00_is_read_from_the_committed_array_and_recomputes_bitwise(b):
+    """The paired basis. A recomputation that differed would mean the engine is not the historical
+    pipeline, and every paired CI below would be measuring the wrong thing."""
+    c = b["cell_00_recomputation"]
+    assert c["reproduces_committed_D00_exactly"] is True
+    assert c["max_abs_difference"] == 0.0
+    committed = np.array(json.loads(D00.read_text(encoding="utf-8"))["values"])
+    assert round(b["D00"]["mean"], 12) == round(float(committed.mean()), 12)
+    assert b["historical_null_artifact_sha256"] == S232.sha256_file(D00)
+
+
+@ran_b
+def test_the_expression_free_reference_reproduces_the_historical_r1_exactly(b):
+    rb = json.loads((RES / "stage23_rewind_results.json").read_text(encoding="utf-8"))
+    assert b["reference"]["reproduces_historical_R1_exactly"] is True
+    assert b["reference"]["r1_reference_AP"] == rb["pooled_oof_metrics"]["R1"]["AP"]
+
+
+@ran_b
+def test_the_no_k_reference_is_the_equal_weight_mean_of_three_arms(b):
+    arms = [b["per_arm"][f"K{k}"]["mean"] for k in (10, 20, 50)]
+    assert len(arms) == 3
+    assert round(b["D10_no_k_selection"]["mean"], 10) == round(float(np.mean(arms)), 10), (
+        "the reference must be the equal-weight mean, not a chosen arm")
+    for k in (10, 20, 50):
+        assert f"K{k}" in b["per_arm"], f"arm K{k} must be reported as a diagnostic"
+    assert b["arm_dispersion"] == pytest.approx(max(arms) - min(arms))
+
+
+@ran_b
+def test_no_arm_was_promoted_to_the_primary_reference(b):
+    """If the reference equalled the best-looking arm, the equal weighting would be cosmetic."""
+    arms = {k: v["mean"] for k, v in b["per_arm"].items()}
+    ref = b["D10_no_k_selection"]["mean"]
+    best = max(arms.values())
+    assert ref != best or len(set(arms.values())) == 1, "the reference equals the strongest arm"
+
+
+@ran_b
+def test_the_selection_shift_is_the_paired_difference(b):
+    s = b["selection_shift"]
+    assert round(s["mean"], 10) == round(b["D00"]["mean"] - b["D10_no_k_selection"]["mean"], 10)
+    assert s["resamples"] == 10_000
+    assert s["seed"] == 23421
+    assert s["ci95_low"] < s["mean"] < s["ci95_high"]
+
+
+@ran_b
+def test_the_status_is_derived_from_the_confidence_interval(b):
+    s = b["selection_shift"]
+    expected = ("SUPPORTED" if s["ci95_low"] > 0
+                else "NOT_SUPPORTED" if s["ci95_high"] <= 0 else "UNRESOLVED")
+    assert b["MODEL_SELECTION_NULL_INFLATION"] == expected
+
+
+@ran_b
+def test_the_search_width_ladder_ran_unconditionally(b):
+    """V2 §6.4 made the ladder unconditional; it must be present whatever the primary status."""
+    ladder = b["search_width_ladder"]
+    assert set(ladder) == {"4_candidate_fixed_K_mean", "8_candidate", "12_candidate"}
+    assert ladder["12_candidate"] == pytest.approx(b["D00"]["mean"])
+    assert b["ladder_monotone_increase"] == (
+        ladder["4_candidate_fixed_K_mean"] <= ladder["8_candidate"] <= ladder["12_candidate"])
+
+
+@ran_b
+def test_the_fraction_explained_is_only_reported_for_a_positive_null_mean(b):
+    frac = b["fraction_null_mean_explained_by_search"]
+    if b["D00"]["mean"] > 0:
+        assert frac == pytest.approx(b["selection_shift"]["mean"] / b["D00"]["mean"])
+    else:
+        assert frac is None
+
+
+@ran_b
+def test_the_observed_sensitivity_keeps_the_historical_value_intact(b):
+    """V2 §6.5 is effect attribution, not a rescue: the historical observed dAP must be unchanged."""
+    o = b["observed_sensitivity"]["delta_AP"]
+    assert o["hist12"] == pytest.approx(0.01050162935116511, abs=1e-9)
+    assert o["no_k_selection"] == pytest.approx(np.mean([o["K10"], o["K20"], o["K50"]]))
+    assert "p_value" not in json.dumps(b["observed_sensitivity"]), \
+        "no rescue p-value may be computed here"
+
+
+@ran_b
+def test_23_2b_pins_the_frozen_protocol_and_mapping_set(b):
+    proto = json.loads(PROTOCOL.read_text(encoding="utf-8"))
+    a = json.loads(A_RESULTS.read_text(encoding="utf-8"))
+    assert b["stage23_2_protocol_sha256"] == proto["canonical_sha256"]
+    assert b["mapping_set_sha256"] == a["permutation_recovery"]["mapping_set_sha256"]
+    assert b["n_permutations"] == 200
