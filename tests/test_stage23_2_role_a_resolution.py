@@ -459,3 +459,140 @@ def test_23_2b_pins_the_frozen_protocol_and_mapping_set(b):
     assert b["stage23_2_protocol_sha256"] == proto["canonical_sha256"]
     assert b["mapping_set_sha256"] == a["permutation_recovery"]["mapping_set_sha256"]
     assert b["n_permutations"] == 200
+
+
+# ============================================================================================== #
+# 23.2D — outcome-label reliability.
+#
+# The contract that matters most here is the asymmetry V2 design change 3 introduced. Every one of
+# V1's four stability criteria is met by this data, so V1's rule would have returned NOT_SUPPORTED
+# and the ledger would have recorded "the label is sound" on the strength of two diagnostics that
+# observe only sequencing-count noise and cutoff position. V2 makes NOT_SUPPORTED additionally
+# require independent outcome-assay replication, which does not exist in the Rewind materials.
+#
+# If a later edit ever relaxes that gate, this file should fail loudly.
+# ============================================================================================== #
+D_RESULTS = OUT / "stage23_2_label_reliability.json"
+ran_d = pytest.mark.skipif(not D_RESULTS.exists(), reason="23.2D has not been run")
+
+
+@pytest.fixture(scope="module")
+def d():
+    return json.loads(D_RESULTS.read_text(encoding="utf-8"))
+
+
+@ran_d
+def test_reliability_analysis_only_runs_after_the_label_reproduces_exactly(d):
+    """V2 §8.1 makes exact reproduction a precondition, not a finding."""
+    assert d["source_rule_reproduces_35_positives"] is True
+    assert d["cutoff_sensitivity"]["top100"]["positive_clones"] == 35
+    assert d["cutoff_sensitivity"]["top100"]["selected_barcodes"] == 101
+    assert d["tie_size_at_rank_100"] == 2
+
+
+@ran_d
+def test_not_supported_is_unreachable_without_independent_replication(d):
+    """Design change 3, tested literally: stability alone must NOT clear the label."""
+    m = d["multinomial_stability"]
+    ladder = d["cutoff_sensitivity"]
+    all_v1_criteria_met = (m["mean_frozen_positive_retention"] >= 0.90
+                           and m["n_positives_below_0_80"] <= 3
+                           and ladder["top90"]["jaccard_vs_top100"] >= 0.90
+                           and ladder["top110"]["jaccard_vs_top100"] >= 0.90)
+    if all_v1_criteria_met and not d["independent_outcome_assay_replication_available"]:
+        assert d["OUTCOME_LABEL_LIMITATION"] == "UNRESOLVED", (
+            "V1's rule would have said NOT_SUPPORTED here; V2 must not")
+    assert d["not_supported_reachable"] == d["independent_outcome_assay_replication_available"]
+    if d["OUTCOME_LABEL_LIMITATION"] == "NOT_SUPPORTED":
+        assert d["independent_outcome_assay_replication_available"] is True
+
+
+@ran_d
+def test_instability_can_still_reach_supported(d):
+    """The asymmetry must be one-directional: fragility is still demonstrable."""
+    m = d["multinomial_stability"]
+    ladder = d["cutoff_sensitivity"]
+    unstable_a = (m["mean_frozen_positive_retention"] < 0.80
+                  or m["n_positives_below_0_50"] >= 7)
+    unstable_b = min(ladder["top90"]["jaccard_vs_top100"],
+                     ladder["top110"]["jaccard_vs_top100"]) < 0.80
+    if unstable_a and unstable_b:
+        assert d["OUTCOME_LABEL_LIMITATION"] == "SUPPORTED"
+
+
+@ran_d
+def test_the_multinomial_scope_is_declared_and_single_unit(d):
+    m = d["multinomial_stability"]
+    assert m["selection_units"] == 1, "the gDNA table is one pooled library"
+    assert m["resamples"] == 5000
+    assert m["seed"] == 23431
+    assert m["total_gdna_counts_N"] == 782826
+    assert m["distinct_barcodes"] == 1936
+    assert "sequencing-count sampling noise only" in m["scope"]
+
+
+@ran_d
+def test_the_cutoff_geometry_covers_ranks_80_to_120(d):
+    g = d["cutoff_geometry_ranks_80_to_120"]
+    assert [x["rank"] for x in g] == list(range(80, 121))
+    at_100 = next(x for x in g if x["rank"] == 100)
+    assert at_100["counts"] == d["rank_100_cutoff_counts"] == 2365
+    assert at_100["tie_size_at_this_value"] == 2
+    assert at_100["ratio_to_rank_100_cutoff"] == 1.0
+
+
+@ran_d
+def test_every_frozen_positive_has_a_recorded_selection_probability(d):
+    per = d["multinomial_stability"]["per_frozen_positive"]
+    assert len(per) == 35
+    assert all(0.0 <= x["P_selected"] <= 1.0 for x in per)
+    assert per == sorted(per, key=lambda x: x["P_selected"]), "reported least-stable first"
+
+
+@ran_d
+def test_the_cutoff_ladder_is_complete_and_consistent(d):
+    ladder = d["cutoff_sensitivity"]
+    assert set(ladder) == {f"top{n}" for n in (80, 90, 100, 110, 120)}
+    assert ladder["top100"]["jaccard_vs_top100"] == 1.0
+    assert ladder["top100"]["frozen_positives_lost"] == 0
+    assert ladder["top100"]["frozen_negatives_gained"] == 0
+    for n in (80, 90):
+        assert ladder[f"top{n}"]["frozen_negatives_gained"] == 0, "a smaller N cannot add positives"
+    for n in (110, 120):
+        assert ladder[f"top{n}"]["frozen_positives_lost"] == 0, "a larger N cannot drop positives"
+
+
+@ran_d
+def test_cross_gsm_gdna_concordance_stays_removed(d):
+    assert "REMOVED IN V2" in d["cross_gsm_gdna_concordance"]
+    blob = json.dumps(d)
+    assert "GSM7092515" not in blob and "GSM7092516" not in blob, (
+        "per-GSM gDNA quantities are not identifiable and must not appear")
+
+
+@ran_d
+def test_no_predictor_was_fitted_and_no_label_was_shopped(d):
+    """V2 §3.7 -- alternate labels may be studied, never selected for predictive performance."""
+    assert d["no_predictive_model_fitted"] is True
+    assert d["candidate_future_formulations"]["status"] == "EXPLORATORY_PROPOSAL_ONLY"
+    if d["OUTCOME_LABEL_LIMITATION"] != "SUPPORTED":
+        assert d["candidate_future_formulations"]["candidates"] == []
+    # scan the payload for predictive QUANTITIES, after dropping the declarative fields whose
+    # own names contain the word ("no_predictive_model_fitted") -- otherwise the check matches
+    # the very statement it is verifying
+    scan = {k: v for k, v in d.items()
+            if k not in ("no_predictive_model_fitted", "candidate_future_formulations",
+                         "cross_gsm_gdna_concordance", "status_reason")}
+    blob = json.dumps(scan).lower()
+    for banned in ("average_precision", "roc_auc", "delta_ap", "auc", "log_loss",
+                   "predict_proba"):
+        assert banned not in blob, f"23.2D reported a predictive quantity: {banned}"
+
+
+def test_the_top_n_rule_keeps_ties_at_the_cutoff():
+    """The behaviour that turns top-100 into 101 barcodes, checked on a synthetic case."""
+    counts = np.array([10, 9, 8, 8, 7, 6])
+    mask = S232._select_top_n(counts, 3)
+    assert mask.tolist() == [True, True, True, True, False, False]
+    assert S232._select_top_n(counts, 6).sum() == 6
+    assert S232._select_top_n(counts, 99).sum() == 6

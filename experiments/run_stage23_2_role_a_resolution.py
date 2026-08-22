@@ -1332,9 +1332,200 @@ def _residual_depth_status(depth_shift_full: dict, retention: dict) -> str:
     return "UNRESOLVED"
 
 
+
+
+# --------------------------------------------------------------------------------------------- #
+# 23.2D — outcome-label reliability.
+#
+# This substage studies the MEASUREMENT, not predictive performance. No alternate outcome may
+# become a new prediction target here (V2 §3.7), and no predictor is fitted at all.
+#
+# The asymmetry in §8.6 is the whole point and is implemented literally: instability can establish
+# that the label IS fragile, but stability cannot establish that it is sound, because the two
+# diagnostics available -- multinomial resampling of one pooled sequencing library, and sensitivity
+# to the cutoff position -- observe only two noise sources. Colony-level biological sampling, PCR
+# duplication and assay repetition are unobserved. `NOT_SUPPORTED` therefore additionally requires
+# independent outcome-assay replication of the same clones, which the Rewind materials do not
+# contain, so in practice the reachable outcomes here are SUPPORTED or UNRESOLVED.
+#
+# V1's §8.5 cross-GSM gDNA concordance is absent by design: the gDNA table is a single pooled
+# library (SampleNum = 3), so per-GSM outcome support is not identifiable.
+# --------------------------------------------------------------------------------------------- #
+D_RESULTS = _OUT / "stage23_2_label_reliability.json"
+N_MULTINOMIAL = 5000
+SEED_MULTINOMIAL = 23431
+TOP_N_LADDER = (80, 90, 100, 110, 120)
+
+
+def _select_top_n(counts: np.ndarray, n: int) -> np.ndarray:
+    """The frozen source rule: rank by support, take the top n, keep every tie at the cutoff.
+
+    Returns a boolean mask over the barcode axis. `slice_max(n=..., with_ties=TRUE)` in the author's
+    dplyr code means the cutoff VALUE is retained, so a tie at rank n yields more than n rows -- the
+    behaviour that produces 101 barcodes at n = 100.
+    """
+    if n >= len(counts):
+        return np.ones(len(counts), dtype=bool)
+    cutoff = np.partition(counts, -n)[-n]
+    return counts >= cutoff
+
+
+def run_23_2d() -> dict:
+    """V2 §8. Is the frozen 35-positive hard label stable enough to carry the Role-A claim?"""
+    t0 = time.perf_counter()
+    g = pd.read_csv(REWIND_ROOT / GDNA_FILE, sep="\t")
+    cells = pd.read_csv(_RESULTS / "stage22_rewind_cells.csv")
+    retained = sorted(cells["clone_id"].unique())
+    retained_set = set(retained)
+    frozen_pos = set(cells.loc[cells["y_primed"] == 1, "clone_id"].unique())
+
+    agg = g.groupby("BC50StarcodeD8")["counts"].sum().sort_values(ascending=False)
+    barcodes = agg.index.to_numpy()
+    counts = agg.to_numpy().astype(np.int64)
+    total_n = int(counts.sum())
+
+    # ---- 8.1 exact reproduction is a precondition, not a result ------------------------------ #
+    base_mask = _select_top_n(counts, ANCHOR_TOP_N)
+    base_pos = {b for b in barcodes[base_mask] if b in retained_set}
+    reproduced = base_pos == frozen_pos
+    if not reproduced:
+        return {"stage": "23.2D", "verdict": "LABEL_RECONSTRUCTION_FAILED",
+                "reconstructed": len(base_pos), "frozen": len(frozen_pos),
+                "note": "V2 §21 stop condition: the source rule cannot reproduce 35 positives"}
+
+    # ---- 8.2 cutoff geometry, ranks 80..120 --------------------------------------------------- #
+    cutoff_100 = int(counts[ANCHOR_TOP_N - 1])
+    geometry = []
+    for rank in range(80, 121):
+        v = int(counts[rank - 1])
+        geometry.append({
+            "rank": rank, "counts": v,
+            "tie_size_at_this_value": int((counts == v).sum()),
+            "gap_to_previous_rank": int(counts[rank - 2] - v) if rank > 1 else None,
+            "gap_to_next_rank": int(v - counts[rank]) if rank < len(counts) else None,
+            "ratio_to_rank_100_cutoff": round(v / cutoff_100, 6)})
+
+    # ---- 8.3 conditional multinomial sampling stability --------------------------------------- #
+    p = counts / total_n
+    rng = np.random.default_rng(SEED_MULTINOMIAL)
+    frozen_idx = np.array([i for i, b in enumerate(barcodes) if b in frozen_pos])
+    retained_idx = np.array([i for i, b in enumerate(barcodes) if b in retained_set])
+    hits = np.zeros(len(barcodes), dtype=np.int64)
+    n_pos_draws = np.empty(N_MULTINOMIAL, dtype=np.int64)
+    jacc_draws = np.empty(N_MULTINOMIAL)
+    for i in range(N_MULTINOMIAL):
+        c_star = rng.multinomial(total_n, p)
+        mask = _select_top_n(c_star, ANCHOR_TOP_N)
+        hits += mask
+        sel = set(barcodes[mask]) & retained_set
+        n_pos_draws[i] = len(sel)
+        union = len(sel | frozen_pos)
+        jacc_draws[i] = len(sel & frozen_pos) / union if union else 1.0
+
+    retention = hits[frozen_idx] / N_MULTINOMIAL
+    per_positive = sorted(
+        ({"clone_id": str(barcodes[j]), "counts": int(counts[j]),
+          "rank": int(np.flatnonzero(barcodes == barcodes[j])[0] + 1),
+          "P_selected": float(hits[j] / N_MULTINOMIAL)} for j in frozen_idx),
+        key=lambda d: d["P_selected"])
+    # a false-positive view: retained clones that are NOT frozen positives but get selected
+    non_pos_idx = np.array([i for i in retained_idx if barcodes[i] not in frozen_pos])
+    intruder_rate = float((hits[non_pos_idx] / N_MULTINOMIAL).sum())
+
+    multinomial = {
+        "resamples": N_MULTINOMIAL, "seed": SEED_MULTINOMIAL,
+        "total_gdna_counts_N": total_n, "distinct_barcodes": int(len(barcodes)),
+        "selection_units": 1,
+        "mean_frozen_positive_retention": float(retention.mean()),
+        "median_frozen_positive_retention": float(np.median(retention)),
+        "min_frozen_positive_retention": float(retention.min()),
+        "n_positives_below_0_50": int((retention < 0.50).sum()),
+        "n_positives_below_0_80": int((retention < 0.80).sum()),
+        "expected_intruding_retained_clones_per_draw": intruder_rate,
+        "positive_clone_count_per_draw": {
+            "mean": float(n_pos_draws.mean()), "sd": float(n_pos_draws.std()),
+            "min": int(n_pos_draws.min()), "max": int(n_pos_draws.max())},
+        "jaccard_vs_frozen_set": {
+            "mean": float(jacc_draws.mean()), "p05": float(np.percentile(jacc_draws, 5)),
+            "median": float(np.median(jacc_draws))},
+        "per_frozen_positive": per_positive,
+        "scope": "sequencing-count sampling noise only, from ONE pooled library; colony-level "
+                 "biological sampling, PCR duplication and assay repetition are unobserved",
+    }
+
+    # ---- 8.4 cutoff sensitivity ---------------------------------------------------------------- #
+    ladder = {}
+    for n in TOP_N_LADDER:
+        mask = _select_top_n(counts, n)
+        sel = {b for b in barcodes[mask] if b in retained_set}
+        union = len(sel | frozen_pos)
+        ladder[f"top{n}"] = {
+            "selected_barcodes": int(mask.sum()),
+            "tie_expansion": int(mask.sum() - n),
+            "positive_clones": len(sel),
+            "jaccard_vs_top100": (len(sel & frozen_pos) / union if union else 1.0),
+            "frozen_positives_lost": len(frozen_pos - sel),
+            "frozen_negatives_gained": len(sel - frozen_pos)}
+
+    # ---- 8.6 status, with the V2 asymmetry ----------------------------------------------------- #
+    unstable_a = (multinomial["mean_frozen_positive_retention"] < 0.80
+                  or multinomial["n_positives_below_0_50"] >= 7)
+    unstable_b = min(ladder["top90"]["jaccard_vs_top100"],
+                     ladder["top110"]["jaccard_vs_top100"]) < 0.80
+    stable_all = (multinomial["mean_frozen_positive_retention"] >= 0.90
+                  and multinomial["n_positives_below_0_80"] <= 3
+                  and ladder["top90"]["jaccard_vs_top100"] >= 0.90
+                  and ladder["top110"]["jaccard_vs_top100"] >= 0.90)
+    independent_replication_exists = False        # none in the Rewind materials; see V2 §8.6
+
+    if unstable_a and unstable_b:
+        status = "SUPPORTED"
+        why = "both the multinomial-stability and cutoff-sensitivity criteria indicate instability"
+    elif stable_all and independent_replication_exists:
+        status = "NOT_SUPPORTED"
+        why = "stability criteria met AND independent outcome-assay replication agrees"
+    else:
+        status = "UNRESOLVED"
+        why = ("stability criteria met" if stable_all else "criteria are mixed") + \
+              "; NOT_SUPPORTED additionally requires independent outcome-assay replication of the " \
+              "same clones, which the Rewind materials do not contain (V2 §8.6)"
+
+    out = {
+        "stage": "23.2D",
+        "plan": {"file": PLAN.name, "version": PLAN_VERSION},
+        "stage23_2_protocol_sha256": json.loads(
+            PROTOCOL.read_text(encoding="utf-8"))["canonical_sha256"],
+        "source_rule_reproduces_35_positives": reproduced,
+        "cutoff_geometry_ranks_80_to_120": geometry,
+        "rank_100_cutoff_counts": cutoff_100,
+        "tie_size_at_rank_100": int((counts == cutoff_100).sum()),
+        "multinomial_stability": multinomial,
+        "cutoff_sensitivity": ladder,
+        "cross_gsm_gdna_concordance": "REMOVED IN V2 -- gDNA is one pooled library (SampleNum=3), "
+                                      "so per-GSM outcome concordance is not identifiable",
+        "independent_outcome_assay_replication_available": independent_replication_exists,
+        "not_supported_reachable": bool(independent_replication_exists),
+        "OUTCOME_LABEL_LIMITATION": status,
+        "status_reason": why,
+        "candidate_future_formulations": {
+            "status": "EXPLORATORY_PROPOSAL_ONLY",
+            "note": "V2 §8.7 -- listed only if the limitation is SUPPORTED, and frozen for "
+                    "confirmation at 23.2F before any evidence is inspected",
+            "candidates": (["continuous gDNA support", "soft probabilistic positive membership",
+                            "a margin-separated hard label",
+                            "a source-author validated alternate outcome"]
+                           if status == "SUPPORTED" else [])},
+        "no_predictive_model_fitted": True,
+        "runtime_minutes": round((time.perf_counter() - t0) / 60, 2),
+        "source_provenance": source_provenance(),
+    }
+    write_json(D_RESULTS, out)
+    return out
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Stage 23.2 Role-A resolution")
-    ap.add_argument("--stage", default="23.2a", choices=["23.2a", "23.2b", "23.2c"])
+    ap.add_argument("--stage", default="23.2a", choices=["23.2a", "23.2b", "23.2c", "23.2d"])
     ap.add_argument("--permutations", type=int, default=200)
     ap.add_argument("--no-replay", action="store_true",
                     help="recover mappings without replaying D00 (audit convenience only)")
@@ -1352,6 +1543,20 @@ def main(argv=None) -> int:
         print(f"  ladder {r['search_width_ladder']}  monotone={r['ladder_monotone_increase']}")
         print("OVERALL:", r["MODEL_SELECTION_NULL_INFLATION"])
         return 0
+    if args.stage == "23.2d":
+        r = run_23_2d()
+        m = r["multinomial_stability"]
+        print(f"  source rule reproduces 35 positives: {r['source_rule_reproduces_35_positives']}")
+        print(f"  mean frozen-positive retention  {m['mean_frozen_positive_retention']:.4f}")
+        print(f"  positives with P(selected)<0.50 {m['n_positives_below_0_50']} / 35")
+        print(f"  positives with P(selected)<0.80 {m['n_positives_below_0_80']} / 35")
+        for n, v in r["cutoff_sensitivity"].items():
+            print(f"    {n:<7} barcodes {v['selected_barcodes']:>4}  positives {v['positive_clones']:>3}  "
+                  f"Jaccard {v['jaccard_vs_top100']:.4f}  lost {v['frozen_positives_lost']}  gained {v['frozen_negatives_gained']}")
+        print(f"  NOT_SUPPORTED reachable: {r['not_supported_reachable']}")
+        print("OVERALL:", r["OUTCOME_LABEL_LIMITATION"])
+        return 0
+
     if args.stage == "23.2c":
         r = run_23_2c(args.permutations)
         print(f"  null means {r['null_means']}")
