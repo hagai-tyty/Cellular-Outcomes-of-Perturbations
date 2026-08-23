@@ -1643,7 +1643,27 @@ def _build_cohort(scale: int):
     return X[rows], nuis[rows], fold[rows], rows
 
 
-def _delta_ap_once(X, nuis, y, fold) -> float:
+def _outer_blocks(X, nuis, fold) -> dict:
+    """The final outer-training transform per fold.
+
+    EXECUTION-NEUTRAL CACHE. `expression_block(X, tr, te, 50)` and the nuisance standardisation
+    depend only on the cohort matrix and the frozen outer-fold assignment -- never on `y`. Within
+    one shard the cohort and folds are fixed, so these five blocks are bit-identical across all
+    simulations and are computed once instead of once per simulation. They are ~25 MB in total.
+
+    This removes 5 of the ~20 expression blocks per simulation. It changes no value: the arrays
+    handed to the estimator are the same objects the per-simulation code would have rebuilt.
+    """
+    out = {}
+    for f in range(S23.N_OUTER):
+        tr, te = np.flatnonzero(fold != f), np.flatnonzero(fold == f)
+        ztr, zte, _, _ = S23.expression_block(X, tr, te, max(S23.K_CANDIDATES))
+        btr, bte = S23.standardize_train_only(nuis[tr], nuis[te])
+        out[f] = (tr, te, ztr, zte, btr, bte)
+    return out
+
+
+def _delta_ap_once(X, nuis, y, fold, outer=None) -> float:
     """The historical R1/R3 nested pipeline on one synthetic cohort. ΔAP = AP(R3) - AP(R1)."""
     from sklearn.metrics import average_precision_score
     from sklearn.model_selection import StratifiedKFold
@@ -1651,7 +1671,11 @@ def _delta_ap_once(X, nuis, y, fold) -> float:
     oof1 = np.full(len(y), np.nan)
     oof3 = np.full(len(y), np.nan)
     for f in range(S23.N_OUTER):
-        tr, te = np.flatnonzero(fold != f), np.flatnonzero(fold == f)
+        if outer is not None:
+            tr, te, fztr, fzte, fbtr, fbte = outer[f]
+        else:
+            tr, te = np.flatnonzero(fold != f), np.flatnonzero(fold == f)
+            fztr = fzte = fbtr = fbte = None
         skf = StratifiedKFold(n_splits=S23.N_INNER, shuffle=True, random_state=S23.SEED_PROTOCOL)
         s1: dict = {}
         s3: dict = {}
@@ -1674,13 +1698,46 @@ def _delta_ap_once(X, nuis, y, fold) -> float:
             return max(sc.items(), key=lambda kv: (round(float(np.mean(kv[1])), 12),
                                                    -(kv[0][0] or 0), -kv[0][1]))[0]
 
-        ztr, zte, _, _ = S23.expression_block(X, tr, te, max(S23.K_CANDIDATES))
-        btr, bte = S23.standardize_train_only(nuis[tr], nuis[te])
+        if fztr is None:
+            ztr, zte, _, _ = S23.expression_block(X, tr, te, max(S23.K_CANDIDATES))
+            btr, bte = S23.standardize_train_only(nuis[tr], nuis[te])
+        else:
+            ztr, zte, btr, bte = fztr, fzte, fbtr, fbte
         oof1[te] = S23._fit_logistic(btr, y[tr], bte, pick(s1)[1], [])
         kk, C = pick(s3)
         oof3[te] = S23._fit_logistic(np.hstack([ztr[:, :kk], btr]), y[tr],
                                      np.hstack([zte[:, :kk], bte]), C, [])
     return float(average_precision_score(y, oof3) - average_precision_score(y, oof1))
+
+
+def _shard_name(scale: int, kind: str, target_auc: float | None) -> str:
+    return f"scale{scale}_{kind}" + (f"_auc{int(target_auc * 100)}" if target_auc else "")
+
+
+def _load_partial(name: str, protocol_sha: str) -> dict:
+    """V2 §18: resume from completed simulation IDs, refusing a mixed-protocol cache.
+
+    Simulation `i` draws from `default_rng(base + offset + i)` and nothing else, so its value does
+    not depend on how many simulations ran before it. Resuming therefore reproduces exactly the
+    values an uninterrupted run would have produced.
+    """
+    p = E_SHARD_DIR / f"{name}.partial.jsonl"
+    if not p.exists():
+        return {}
+    done = {}
+    for line in p.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        rec = json.loads(line)
+        if "protocol_sha256" in rec:
+            if rec["protocol_sha256"] != protocol_sha:
+                raise RuntimeError(
+                    f"{name}: partial cache was written under protocol "
+                    f"{rec['protocol_sha256'][:12]} but the frozen protocol is "
+                    f"{protocol_sha[:12]} -- refusing a mixed-protocol cache (V2 §18)")
+            continue
+        done[int(rec["i"])] = (float(rec["delta_ap"]), float(rec["oracle_auc"]))
+    return done
 
 
 def run_23_2e_shard(scale: int, kind: str, target_auc: float | None, n_sims: int) -> dict:
@@ -1697,26 +1754,56 @@ def run_23_2e_shard(scale: int, kind: str, target_auc: float | None, n_sims: int
 
     base = SEED_NULL if kind == "null" else SEED_ALT
     offset = scale * 1000 + (0 if kind == "null" else int(target_auc * 100))
-    vals, aucs = [], []
-    for i in range(n_sims):
-        rng = np.random.default_rng(base + offset + i)
-        if kind == "null":
-            y = _assign_positives(z, fold, n_pos_per_fold, 0.0, rng)
-        else:
-            y = _assign_positives(z, fold, n_pos_per_fold, beta_info["beta"], rng)
-        aucs.append(_oracle_auc(z, y))
-        vals.append(_delta_ap_once(X, nuis, y, fold))
-        if (i + 1) % 10 == 0:
-            el = time.perf_counter() - t0
-            print(f"  [s{scale}-{kind}{target_auc or ''}] {i + 1}/{n_sims}  {el / 60:.1f} min  "
-                  f"eta {el / (i + 1) * (n_sims - i - 1) / 60:.1f} min", flush=True)
+    name = _shard_name(scale, kind, target_auc)
+    protocol_sha = json.loads(PROTOCOL.read_text(encoding="utf-8"))["canonical_sha256"]
 
     E_SHARD_DIR.mkdir(parents=True, exist_ok=True)
-    name = f"scale{scale}_{kind}" + (f"_auc{int(target_auc * 100)}" if target_auc else "")
+    done = _load_partial(name, protocol_sha)
+    partial = E_SHARD_DIR / f"{name}.partial.jsonl"
+    if not partial.exists():
+        partial.write_text(json.dumps({"protocol_sha256": protocol_sha}) + "\n",
+                           encoding="utf-8", newline="\n")
+    if done:
+        print(f"  [{name}] resuming: {len(done)}/{n_sims} simulations already complete",
+              flush=True)
+
+    outer = _outer_blocks(X, nuis, fold)
+    setup_min = (time.perf_counter() - t0) / 60
+    print(f"  [{name}] setup {setup_min:.1f} min (direction + cohort + outer-block cache)",
+          flush=True)
+
+    results: dict = dict(done)
+    t_loop = time.perf_counter()
+    n_new = 0
+    with partial.open("a", encoding="utf-8", newline="\n") as fh:
+        for i in range(n_sims):
+            if i in results:
+                continue
+            rng = np.random.default_rng(base + offset + i)
+            beta = 0.0 if kind == "null" else beta_info["beta"]
+            y = _assign_positives(z, fold, n_pos_per_fold, beta, rng)
+            auc = _oracle_auc(z, y)
+            dap = _delta_ap_once(X, nuis, y, fold, outer)
+            results[i] = (dap, auc)
+            fh.write(json.dumps({"i": i, "delta_ap": dap, "oracle_auc": auc}) + "\n")
+            fh.flush()
+            n_new += 1
+            if n_new % 5 == 0:
+                el = time.perf_counter() - t_loop
+                left = n_sims - len(results)
+                print(f"  [{name}] {len(results)}/{n_sims}  {el / 60:.1f} min  "
+                      f"{el / n_new / 60:.2f} min/sim  eta {el / n_new * left / 60:.1f} min",
+                      flush=True)
+
+    vals = [results[i][0] for i in range(n_sims)]
+    aucs = [results[i][1] for i in range(n_sims)]
     payload = {"scale": scale, "kind": kind, "target_auc": target_auc, "n_sims": n_sims,
                "cohort_N": int(X.shape[0]), "positives_per_fold": n_pos_per_fold,
                "beta": beta_info, "delta_ap": [float(v) for v in vals],
                "oracle_auc": [float(v) for v in aucs],
+               "protocol_sha256": protocol_sha,
+               "simulations_reused_from_partial": len(done),
+               "simulations_computed_this_run": n_new,
                "runtime_minutes": round((time.perf_counter() - t0) / 60, 2)}
     (E_SHARD_DIR / f"{name}.json").write_text(json.dumps(payload), encoding="utf-8", newline="\n")
     return payload
@@ -1811,6 +1898,10 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Stage 23.2 Role-A resolution")
     ap.add_argument("--stage", default="23.2a", choices=["23.2a", "23.2b", "23.2c", "23.2d", "23.2e", "23.2e-merge"])
     ap.add_argument("--permutations", type=int, default=200)
+    ap.add_argument("--threads", type=int,
+                    help="BLAS threads for this process. Set it when running shards "
+                         "concurrently so N processes x T threads does not exceed the core "
+                         "count -- oversubscription made an earlier run ~4x slower per process.")
     ap.add_argument("--scale", type=int, choices=[1, 2, 4])
     ap.add_argument("--kind", choices=["null", "alt"])
     ap.add_argument("--target-auc", type=float)
@@ -1818,6 +1909,13 @@ def main(argv=None) -> int:
     ap.add_argument("--no-replay", action="store_true",
                     help="recover mappings without replaying D00 (audit convenience only)")
     args = ap.parse_args(argv)
+    if getattr(args, "threads", None):
+        try:
+            from threadpoolctl import threadpool_limits
+            threadpool_limits(limits=args.threads)
+            print(f"  BLAS threads limited to {args.threads}")
+        except ImportError:
+            print("  threadpoolctl unavailable; set OMP_NUM_THREADS in the environment instead")
 
     if args.stage == "23.2b":
         r = run_23_2b(args.permutations)
