@@ -2493,9 +2493,176 @@ frozen Stage-24 model.
     CONFIRMATION_MD.write_text(md, encoding="utf-8", newline="\n")
 
 
+
+
+# --------------------------------------------------------------------------------------------- #
+# 23.2G — independent confirmation / roadmap resolution.
+#
+# Step 1 of the frozen execution order (confirmation protocol V4 §19.0): qualify candidates on the
+# §11 source criteria using declared metadata, author code and file organisation, and FIX the
+# qualifying replicate set. No outcome value and no performance quantity is read for any reserved
+# candidate at this step, and no matrix is downloaded.
+#
+# The decisive criterion here turns out not to be power or geometry but the plainest one on the
+# list: "independently measured later outcome". A pre-state measurement without a later outcome
+# cannot confirm a prospective claim, however good the transcriptomes are.
+# --------------------------------------------------------------------------------------------- #
+G_QUALIFICATION = _OUT / "stage23_2g_qualification.json"
+
+QUALIFY_EMPTY = "QUALIFYING_SET_EMPTY_FROM_FROZEN_SEARCH_SPACE"
+NEEDS_EVIDENCE = "ROLE_A_UNRESOLVED_NEEDS_NEW_EVIDENCE"
+
+# The frozen Stage-21C Pass-1 candidate families and their recorded dispositions. Copied from the
+# committed 21C record so the external-pass reasoning rests on frozen prior work rather than a new
+# unbounded search.
+STAGE21C_PASS1 = {
+    "GSE227151": {"family": "Rewind", "disposition": "QUALIFIED_ROLE_A"},
+    "GSE99915": {"family": "CellTag", "disposition": "SURROGATE_ONLY"},
+    "GSE216518": {"family": "CellTag-multi", "disposition": "SURROGATE_ONLY"},
+    "GSE216521": {"family": "CellTag-multi", "disposition": "SURROGATE_ONLY"},
+    "GSE223003": {"family": "ReSisTrace", "disposition": "RETAINED_PROSPECTIVE_REPLICATION"},
+    "GSE279162": {"family": "WM989", "disposition": "QUALIFIED_ROLE_B"},
+    "GSE253739": {"family": "secondary", "disposition": "RETAINED_SECONDARY_SEQUENTIAL"},
+}
+
+
+def _declared_series_structure() -> dict:
+    """Per-replicate pre-state and outcome-side sample counts, from declared GEO metadata only."""
+    xml = (REWIND_ROOT / FAMILY_XML).read_text(encoding="utf-8", errors="replace")
+    per_rep: dict = {}
+    for acc, body in re.findall(r'<Sample iid="(GSM\d+)">(.*?)</Sample>', xml, re.S):
+        title = re.search(r"<Title>(.*?)</Title>", body, re.S).group(1).strip()
+        rep = re.search(r"biol rep (\d+)", title)
+        rep = rep.group(1) if rep else "unknown"
+        kind = "outcome_side_iPS" if "iPS" in title else "pre_state_hiFT"
+        sup = [f.split("/")[-1] for _t, f in
+               re.findall(r'<Supplementary-Data type="([^"]*)">\s*([^<\s]+)', body)]
+        entry = per_rep.setdefault(rep, {"pre_state_hiFT": [], "outcome_side_iPS": [],
+                                         "declared_outcome_tables": []})
+        entry[kind].append(acc)
+        # a gDNA / barcode outcome table would show up as a non-10X supplementary file
+        entry["declared_outcome_tables"] += [f for f in sup if not re.search(
+            r"(barcodes|features|matrix)\.tsv\.gz|matrix\.mtx\.gz", f)]
+    return per_rep
+
+
+def _outcome_table_coverage() -> dict:
+    """Which selection units the ONE available outcome table covers. R1 evidence, already consumed."""
+    g = pd.read_csv(REWIND_ROOT / GDNA_FILE, sep="\t")
+    x = pd.read_csv(REWIND_ROOT / BC10X_FILE, sep="\t")
+    return {"outcome_table": GDNA_FILE,
+            "is_a_geo_supplementary_file": False,
+            "provenance": "author Zenodo materials, not a per-GSM GEO supplementary file",
+            "gdna_sample_num_values": sorted(int(v) for v in g["SampleNum"].unique()),
+            "tenx_sample_num_values": sorted(int(v) for v in x["SampleNum"].unique()),
+            "distinct_selection_units": int(g["SampleNum"].nunique()),
+            "note": "one selection unit only; it belongs to the biological replicate Stage 23 "
+                    "already consumed"}
+
+
+def run_23_2g_qualification() -> dict:
+    """Confirmation protocol V4 §11 + §19.0 step 1. Fixes the qualifying replicate set."""
+    t0 = time.perf_counter()
+    ledger = json.loads(RESERVED_LEDGER.read_text(encoding="utf-8"))
+    structure = _declared_series_structure()
+    coverage = _outcome_table_coverage()
+
+    reserved = [e for e in ledger["entries"] if e["role"].startswith("RESERVED")]
+    candidates = []
+    for e in reserved:
+        rep = e["declared_biological_replicate"]
+        st = structure.get(rep, {})
+        n_outcome = len(st.get("outcome_side_iPS", []))
+        has_outcome_table = bool(st.get("declared_outcome_tables"))
+        sorted_gate = e["declared_gating"] == "sorted"
+        crit = {
+            "pre_intervention_molecular_measurement": True,
+            "independently_measured_later_outcome": bool(n_outcome or has_outcome_table),
+            "clone_lineage_linkage_for_grouped_evaluation": bool(n_outcome or has_outcome_table),
+            "data_sufficient_to_reconstruct_the_endpoint": bool(n_outcome or has_outcome_table),
+            "no_same_state_outcome_leakage": True,
+            "outcome_unit_structure_establishable": bool(n_outcome or has_outcome_table),
+            "biological_replicate_independent_of_R1": rep not in (None, "1"),
+            "same_scientific_claim_population": not sorted_gate,
+        }
+        candidates.append({
+            "accession": e["accession"], "declared_biological_replicate": rep,
+            "title": e["title"], "role_in_ledger": e["role"],
+            "declared_outcome_side_samples_for_this_replicate": n_outcome,
+            "declared_outcome_tables_for_this_replicate": st.get("declared_outcome_tables", []),
+            "criteria": crit,
+            "qualifies": all(crit.values()),
+            "failed_criteria": [k for k, v in crit.items() if not v],
+        })
+
+    qualifying_replicates = sorted({c["declared_biological_replicate"] for c in candidates
+                                    if c["qualifies"]})
+
+    # ---- the frozen Stage-21C search space, reasoned over rather than re-searched -------------- #
+    external = {}
+    for acc, meta in STAGE21C_PASS1.items():
+        d = meta["disposition"]
+        if d == "QUALIFIED_ROLE_A":
+            verdict, why = "CONSUMED", "this is R1's series; consumed by the 23.2 diagnosis"
+        elif d == "QUALIFIED_ROLE_B":
+            verdict, why = "CONSUMED", "consumed by the Stage-23 Role-B analysis"
+        elif d == "SURROGATE_ONLY":
+            verdict, why = ("DISQUALIFIED",
+                            "Stage 21C recorded it as surrogate-only, i.e. not a prospective "
+                            "future-outcome anchor")
+        else:
+            verdict, why = ("DISQUALIFIED_DIFFERENT_CLAIM",
+                            "retained in the Role-B / drug-resistance context. Its later outcome "
+                            "is not the reprogramming-priming endpoint this Role-A hypothesis "
+                            "concerns, so it cannot satisfy the same scientific claim")
+        external[acc] = {"family": meta["family"], "stage21c_disposition": d,
+                         "confirmation_verdict": verdict, "reason": why}
+
+    n_qual = len(qualifying_replicates)
+    gate_18_1 = n_qual >= 2
+    status = QUALIFY_EMPTY if n_qual == 0 else "QUALIFYING_SET_NON_EMPTY"
+
+    out = {
+        "stage": "23.2G",
+        "step": "1 of the V4 §19.0 execution order -- source qualification only",
+        "confirmation_protocol": {"file": "STAGE_23_2_ROLE_A_CONFIRMATION_V4.md",
+                                  "canonical_lf_sha256": S23.canonical_text_sha256(
+                                      _PLANS / "STAGE_23_2_ROLE_A_CONFIRMATION_V4.md")},
+        "stage23_2_protocol_sha256": json.loads(
+            PROTOCOL.read_text(encoding="utf-8"))["canonical_sha256"],
+        "nothing_downloaded": True,
+        "no_outcome_value_read_for_any_reserved_candidate": True,
+        "declared_series_structure": structure,
+        "outcome_table_coverage": coverage,
+        "reserved_ledger_candidates": candidates,
+        "qualifying_biological_replicates": qualifying_replicates,
+        "n_qualifying_biological_replicates": n_qual,
+        "gate_18_1_two_independent_non_R1_replicates": gate_18_1,
+        "frozen_stage21c_search_space": external,
+        "external_search_pass": {
+            "status": "NOT_SPENT",
+            "authorised_by": "confirmation protocol V4 §12 -- one bounded external pass",
+            "blocker": "V4 §12 authorises 'a single external search pass' but does not define its "
+                       "budget. Stage 21C's own Pass 2 was recorded as NOT TRIGGERED and remains "
+                       "unspent. Spending it is a scope decision, not a mechanical step, so it is "
+                       "left for explicit authorisation rather than taken unilaterally.",
+            "note": "every Stage-21C Pass-1 family is already dispositioned above; none provides a "
+                    "non-R1 Role-A confirmation replicate"},
+        "qualification_status": status,
+        "projected_exit_if_external_pass_not_spent_or_fails": NEEDS_EVIDENCE,
+        "biological_replication_limitation": "SUPPORTED (unchanged -- a qualifying set of "
+                                             f"{n_qual} cannot clear it)",
+        "stage_24": "BLOCKED",
+        "runtime_minutes": round((time.perf_counter() - t0) / 60, 3),
+        "source_provenance": source_provenance(),
+    }
+    write_json(G_QUALIFICATION, out)
+    return out
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Stage 23.2 Role-A resolution")
-    ap.add_argument("--stage", default="23.2a", choices=["23.2a", "23.2b", "23.2c", "23.2d", "23.2e", "23.2e-merge", "23.2f"])
+    ap.add_argument("--stage", default="23.2a", choices=["23.2a", "23.2b", "23.2c", "23.2d", "23.2e", "23.2e-merge", "23.2f", "23.2g-qualify"])
     ap.add_argument("--permutations", type=int, default=200)
     ap.add_argument("--threads", type=int,
                     help="BLAS threads for this process. Set it when running shards "
@@ -2528,6 +2695,21 @@ def main(argv=None) -> int:
         print(f"  ladder {r['search_width_ladder']}  monotone={r['ladder_monotone_increase']}")
         print("OVERALL:", r["MODEL_SELECTION_NULL_INFLATION"])
         return 0
+    if args.stage == "23.2g-qualify":
+        r = run_23_2g_qualification()
+        print("  reserved-ledger candidates:")
+        for c in r["reserved_ledger_candidates"]:
+            print(f"    {c['accession']}  rep {c['declared_biological_replicate']}  "
+                  f"qualifies={c['qualifies']}  failed={c['failed_criteria']}")
+        print(f"  qualifying non-R1 biological replicates: {r['n_qualifying_biological_replicates']}")
+        print(f"  gate 18.1 (>= 2): {r['gate_18_1_two_independent_non_R1_replicates']}")
+        print("  frozen Stage-21C search space:")
+        for acc, v in r["frozen_stage21c_search_space"].items():
+            print(f"    {acc:<12} {v['stage21c_disposition']:<34} -> {v['confirmation_verdict']}")
+        print(f"  external search pass: {r['external_search_pass']['status']}")
+        print("OVERALL:", r["qualification_status"])
+        return 0
+
     if args.stage == "23.2f":
         r = run_23_2f()
         print("  diagnostic ledger:")

@@ -897,7 +897,19 @@ F_RESULTS = OUT / "stage23_2_diagnostic_synthesis.json"
 HANDOFF_JSON = OUT / "stage23_2_handoff_to_stage24.json"
 PLANS = ROOT / "plans" / "(newer)practical plans"
 HANDOFF_MD = PLANS / "STAGE_23_2_HANDOFF_TO_STAGE_24.md"
-CONFIRMATION_MD = PLANS / "STAGE_23_2_ROLE_A_CONFIRMATION_V1.md"
+def _protocol_version(v: str) -> Path:
+    """Resolve a confirmation-protocol version in its live or archived location.
+
+    Superseded versions move to `arcive/`. Without this, every contract keyed to an older version
+    would silently start SKIPPING the moment it was archived -- and a skipped contract protects
+    nothing.
+    """
+    name = f"STAGE_23_2_ROLE_A_CONFIRMATION_{v}.md"
+    live = PLANS / name
+    return live if live.exists() else PLANS / "arcive" / name
+
+
+CONFIRMATION_MD = _protocol_version("V1")
 ran_f = pytest.mark.skipif(not F_RESULTS.exists(), reason="23.2F has not been run")
 
 
@@ -1114,8 +1126,8 @@ def test_23_2f_pins_every_substage_it_synthesised(f):
 #
 # These contracts pin the clarification and, just as importantly, pin V1 as historical.
 # ============================================================================================== #
-CONFIRMATION_V1 = PLANS / "STAGE_23_2_ROLE_A_CONFIRMATION_V1.md"
-CONFIRMATION_V2 = PLANS / "STAGE_23_2_ROLE_A_CONFIRMATION_V2.md"
+CONFIRMATION_V1 = _protocol_version("V1")
+CONFIRMATION_V2 = _protocol_version("V2")
 has_v2 = pytest.mark.skipif(not CONFIRMATION_V2.exists(), reason="confirmation V2 not written")
 
 
@@ -1236,8 +1248,11 @@ def test_no_reserved_matrix_has_been_downloaded():
 # And V2 left the confirmatory fold construction unspecified, which is the one remaining place a
 # geometry could have been chosen after seeing the data.
 # ============================================================================================== #
-CONFIRMATION_V3 = PLANS / "STAGE_23_2_ROLE_A_CONFIRMATION_V3.md"
-CONFIRMATION_CURRENT = CONFIRMATION_V3
+CONFIRMATION_V3 = _protocol_version("V3")
+CONFIRMATION_V4 = _protocol_version("V4")
+# "current" is the newest version present; the V3 clarification contracts below assert against it,
+# so they keep verifying the LIVE protocol rather than a frozen ancestor.
+CONFIRMATION_CURRENT = CONFIRMATION_V4 if CONFIRMATION_V4.exists() else CONFIRMATION_V3
 has_v3 = pytest.mark.skipif(not CONFIRMATION_V3.exists(), reason="confirmation V3 not written")
 
 
@@ -1247,9 +1262,14 @@ def test_every_earlier_confirmation_version_is_preserved():
     import subprocess
     for p in (CONFIRMATION_V1, CONFIRMATION_V2):
         assert p.exists(), p.name
-        committed = subprocess.run(
-            ["git", "show", f"HEAD:plans/(newer)practical plans/{p.name}"],
-            cwd=ROOT, capture_output=True).stdout
+        committed = b""
+        for rel in (f"plans/(newer)practical plans/{p.name}",
+                    f"plans/(newer)practical plans/arcive/{p.name}"):
+            got = subprocess.run(["git", "show", f"HEAD:{rel}"],
+                                 cwd=ROOT, capture_output=True).stdout
+            if got:
+                committed = got
+                break
         if committed:
             canon = lambda b: b.replace(b"\r\n", b"\n").replace(b"\r", b"\n")  # noqa: E731
             assert canon(committed) == canon(p.read_bytes()), f"{p.name} was modified"
@@ -1296,6 +1316,8 @@ def test_the_floor_is_evaluated_once_on_the_combined_set():
 def test_gate_18_1_counts_biological_replicates_not_units():
     v3 = CONFIRMATION_CURRENT.read_text(encoding="utf-8")
     assert ">= 2 independent BIOLOGICAL REPLICATES qualify" in v3
+    # V4 also corrects the failure case in 18.2a to count replicates
+    assert "fewer than two qualifying non-R1 biological replicates" in v3
     assert "count as ONE replicate for this gate" in v3
     assert "a replicate contributes at most 1 toward the \">= 2\" requirement" in v3
     assert "18.1b Replicates, not units" in v3
@@ -1363,3 +1385,109 @@ def test_the_forbidden_accommodations_are_named():
 def test_still_no_reserved_matrix_downloaded():
     for acc in ("GSM7092517", "GSM7092518", "GSM7092519", "GSM7092520", "GSM7092521"):
         assert not (S232.REWIND_ROOT / acc).exists(), f"{acc} was downloaded"
+
+
+# ============================================================================================== #
+# 23.2G step 1 — source qualification.
+#
+# The stage that could burn the confirmation evidence. These contracts assert it did not: nothing
+# was downloaded, no outcome value was read for a reserved candidate, and the qualifying set was
+# fixed from declared metadata alone.
+#
+# They also pin the finding itself, because it is the kind of negative that invites being softened
+# later: reps 2 and 3 have pre-state transcriptomes and no later outcome at all.
+# ============================================================================================== #
+G_QUALIFICATION = OUT / "stage23_2g_qualification.json"
+ran_g = pytest.mark.skipif(not G_QUALIFICATION.exists(), reason="23.2G step 1 has not been run")
+
+
+@pytest.fixture(scope="module")
+def g():
+    return json.loads(G_QUALIFICATION.read_text(encoding="utf-8"))
+
+
+@ran_g
+def test_qualification_touched_no_reserved_evidence(g):
+    assert g["nothing_downloaded"] is True
+    assert g["no_outcome_value_read_for_any_reserved_candidate"] is True
+    for acc in ("GSM7092517", "GSM7092518", "GSM7092519", "GSM7092520", "GSM7092521"):
+        assert not (S232.REWIND_ROOT / acc).exists(), f"{acc} was downloaded"
+    # no per-candidate outcome quantity may appear anywhere in the artifact
+    blob = json.dumps(g).lower()
+    for banned in ("positive_clones", "delta_ap", "average_precision", "p_perm"):
+        assert banned not in blob, f"a performance/outcome quantity leaked in: {banned}"
+
+
+@ran_g
+def test_reps_two_and_three_have_no_later_outcome(g):
+    """The decisive criterion, and the plainest one: a pre-state without an outcome."""
+    st = g["declared_series_structure"]
+    assert len(st["1"]["outcome_side_iPS"]) == 6, "R1's outcome samples should be declared"
+    for rep in ("2", "3"):
+        assert st[rep]["pre_state_hiFT"], f"rep {rep} should have pre-state samples"
+        assert st[rep]["outcome_side_iPS"] == [], f"rep {rep} unexpectedly has outcome samples"
+        assert st[rep]["declared_outcome_tables"] == []
+
+
+@ran_g
+def test_every_reserved_candidate_fails_on_outcome_availability(g):
+    for c in g["reserved_ledger_candidates"]:
+        assert c["qualifies"] is False
+        assert "independently_measured_later_outcome" in c["failed_criteria"], c["accession"]
+        assert c["declared_outcome_side_samples_for_this_replicate"] == 0
+    # the sorted samples fail on population as well, independently
+    sorted_ones = [c for c in g["reserved_ledger_candidates"]
+                   if c["accession"] in ("GSM7092520", "GSM7092521")]
+    assert len(sorted_ones) == 2
+    for c in sorted_ones:
+        assert "same_scientific_claim_population" in c["failed_criteria"]
+
+
+@ran_g
+def test_the_only_outcome_table_covers_one_consumed_selection_unit(g):
+    cov = g["outcome_table_coverage"]
+    assert cov["gdna_sample_num_values"] == [3]
+    assert cov["distinct_selection_units"] == 1
+    assert cov["is_a_geo_supplementary_file"] is False
+
+
+@ran_g
+def test_gate_18_1_fails_and_stage_24_stays_blocked(g):
+    assert g["n_qualifying_biological_replicates"] == 0
+    assert g["qualifying_biological_replicates"] == []
+    assert g["gate_18_1_two_independent_non_R1_replicates"] is False
+    assert g["stage_24"] == "BLOCKED"
+    assert g["projected_exit_if_external_pass_not_spent_or_fails"] == \
+        "ROLE_A_UNRESOLVED_NEEDS_NEW_EVIDENCE"
+    assert g["biological_replication_limitation"].startswith("SUPPORTED")
+
+
+@ran_g
+def test_the_frozen_stage21c_space_is_fully_dispositioned(g):
+    ext = g["frozen_stage21c_search_space"]
+    assert set(ext) == {"GSE227151", "GSE99915", "GSE216518", "GSE216521",
+                        "GSE223003", "GSE279162", "GSE253739"}
+    assert not [a for a, v in ext.items() if v["confirmation_verdict"].startswith("QUALIF")]
+    assert ext["GSE227151"]["confirmation_verdict"] == "CONSUMED"
+    assert ext["GSE279162"]["confirmation_verdict"] == "CONSUMED"
+    # the two retained candidates fail on claim, not on convenience
+    for acc in ("GSE223003", "GSE253739"):
+        assert ext[acc]["confirmation_verdict"] == "DISQUALIFIED_DIFFERENT_CLAIM"
+        assert "same scientific claim" in ext[acc]["reason"]
+
+
+@ran_g
+def test_the_external_pass_is_recorded_as_unspent_with_its_blocker(g):
+    e = g["external_search_pass"]
+    assert e["status"] == "NOT_SPENT"
+    assert "§12" in e["authorised_by"]
+    assert "does not define its" in e["blocker"], "the missing budget must be named"
+
+
+@ran_g
+def test_qualification_pins_the_live_confirmation_protocol(g):
+    live = PLANS / "STAGE_23_2_ROLE_A_CONFIRMATION_V4.md"
+    assert g["confirmation_protocol"]["file"] == live.name
+    assert g["confirmation_protocol"]["canonical_lf_sha256"] == S232.S23.canonical_text_sha256(live)
+    proto = json.loads(PROTOCOL.read_text(encoding="utf-8"))
+    assert g["stage23_2_protocol_sha256"] == proto["canonical_sha256"]
