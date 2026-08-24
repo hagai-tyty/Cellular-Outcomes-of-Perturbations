@@ -34,7 +34,7 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
-_RESULTS = ROOT / "results"
+_RESULTS = Path(__file__).resolve().parents[1] / "results"
 _OUT = _RESULTS / "stage23_2"
 _CACHE = ROOT / "_cc_cache" / "stage23_2"
 
@@ -1894,9 +1894,601 @@ def _historical_geometry() -> dict:
             "distance_to_null_p95": t["observed"] - t["null_p95"]}
 
 
+
+
+# --------------------------------------------------------------------------------------------- #
+# 23.2F — diagnostic synthesis + confirmatory protocol freeze.
+#
+# Fits nothing. It reads 23.2A-23.2E and evaluates boolean expressions over them, exactly as
+# Stage 23F did for Stage 23.
+#
+# Two rules from V2 do the real work here, and both are asymmetries that exist to stop an absence
+# of measurable problems being recorded as positive evidence:
+#
+#   * §10.1 -- ROBUST_STATE_SIGNAL_COMPATIBLE_WITH_DATA can only reach NOT_SUPPORTED when the label
+#     and event-count limitations are themselves NOT_SUPPORTED. Since §8.6 makes the label status
+#     unreachable without independent assay replication, "no biological signal" is not a
+#     conclusion this stage can produce from the current Rewind data. That is intended.
+#   * §10.4 -- the corrected hypothesis must be a MECHANICAL consequence of the ledger. Choosing
+#     among several corrections by which gave the largest same-data effect is the exact failure the
+#     stage exists to prevent, so the rule is: one indicated correction, or
+#     ROLE_A_UNRESOLVED_NEEDS_NEW_EVIDENCE.
+# --------------------------------------------------------------------------------------------- #
+F_RESULTS = _OUT / "stage23_2_diagnostic_synthesis.json"
+HANDOFF_JSON = _OUT / "stage23_2_handoff_to_stage24.json"
+_PLANS = ROOT / "plans" / "(newer)practical plans"
+HANDOFF_MD = _PLANS / "STAGE_23_2_HANDOFF_TO_STAGE_24.md"
+CONFIRMATION_MD = _PLANS / "STAGE_23_2_ROLE_A_CONFIRMATION_V1.md"
+
+MECHANISM_DIAGNOSED = "MECHANISM_DIAGNOSED_ON_EXISTING_REWIND"
+NEEDS_NEW_EVIDENCE = "ROLE_A_UNRESOLVED_NEEDS_NEW_EVIDENCE"
+
+
+def _load_substage_artifacts() -> dict:
+    return {
+        "a": json.loads(A_RESULTS.read_text(encoding="utf-8")),
+        "b": json.loads(B_RESULTS.read_text(encoding="utf-8")),
+        "c": json.loads(C_RESULTS.read_text(encoding="utf-8")),
+        "d": json.loads(D_RESULTS.read_text(encoding="utf-8")),
+        "e": json.loads(E_RESULTS.read_text(encoding="utf-8")),
+    }
+
+
+def _ledger(art: dict) -> dict:
+    """V2 §10.1. Multi-label, each status taken from its own frozen substage rule."""
+    corrected = art["c"]["corrected_same_data_diagnostic"][
+        "CORRECTED_SAME_DATA_SIGNAL_DIAGNOSTIC"]
+    label = art["d"]["OUTCOME_LABEL_LIMITATION"]
+    events = art["e"]["WITHIN_R1_EVENT_COUNT_LIMITATION"]
+
+    if corrected == "POSITIVE" and label != "SUPPORTED":
+        robust = "SUPPORTED"
+    elif corrected == "NEGATIVE" and label == "NOT_SUPPORTED" and events == "NOT_SUPPORTED":
+        robust = "NOT_SUPPORTED"
+    else:
+        robust = "UNRESOLVED"
+
+    return {
+        "MODEL_SELECTION_NULL_INFLATION": art["b"]["MODEL_SELECTION_NULL_INFLATION"],
+        "RESIDUAL_DEPTH_STRUCTURE": art["c"]["RESIDUAL_DEPTH_STRUCTURE"],
+        "OUTCOME_LABEL_LIMITATION": label,
+        "WITHIN_R1_EVENT_COUNT_LIMITATION": events,
+        "BIOLOGICAL_REPLICATION_LIMITATION": art["e"]["BIOLOGICAL_REPLICATION_LIMITATION"],
+        "ROBUST_STATE_SIGNAL_COMPATIBLE_WITH_DATA": robust,
+        "_robust_derivation": {
+            "corrected_same_data_diagnostic": corrected,
+            "rule": "SUPPORTED requires POSITIVE and label != SUPPORTED; NOT_SUPPORTED requires "
+                    "NEGATIVE and label == NOT_SUPPORTED and event count == NOT_SUPPORTED",
+            "not_supported_reachable": bool(label == "NOT_SUPPORTED" and events == "NOT_SUPPORTED"),
+            "note": "V2 §8.6 makes OUTCOME_LABEL_LIMITATION = NOT_SUPPORTED unreachable without "
+                    "independent outcome-assay replication, so 'no biological signal' cannot be "
+                    "concluded from the current Rewind data. Intended, not a defect."},
+    }
+
+
+def _decomposition_table(art: dict) -> dict:
+    """V2 §10.2."""
+    b, c = art["b"], art["c"]
+    return {
+        "historical_observed_delta_AP": c["observed_2x2"]["O00"],
+        "null_means": c["null_means"],
+        "observed_cells": {k: c["observed_2x2"][k] for k in ("O00", "O10", "O01", "O11")},
+        "contrasts": {k: {kk: v[kk] for kk in ("mean", "ci95_low", "ci95_high")}
+                      for k, v in c["contrasts"].items()},
+        "per_arm_B0": {k: v["mean"] for k, v in b["per_arm"].items()},
+        "per_arm_Bdepth": {k: v["mean"] for k, v in c["per_arm_Bdepth"].items()},
+        "arm_dispersion": {"B0": b["arm_dispersion"], "Bdepth": c["arm_dispersion_Bdepth"]},
+        "search_width_ladder": b["search_width_ladder"],
+        "technical_retention_median": {k: v["median"]
+                                       for k, v in c["technical_retention"].items()
+                                       if isinstance(v, dict)},
+        "corrected_same_data": c["corrected_same_data_diagnostic"],
+        "fraction_of_null_centre_removed": (
+            (c["null_means"]["mu00"] - c["null_means"]["mu11"]) / c["null_means"]["mu00"]),
+        "power_ladder": {s: {"cohort_N": v["cohort_N"],
+                             "positives_per_fold": v["positives_per_fold"],
+                             "q95_null": v["q95_null"],
+                             "power": {a_: p["estimated_power"] for a_, p in v["power"].items()}}
+                         for s, v in art["e"]["per_scale"].items()},
+    }
+
+
+def _corrected_hypothesis(ledger: dict, art: dict) -> dict:
+    """V2 §10.4. The correction must be a mechanical consequence of the ledger, or there is none."""
+    indicated = []
+    if ledger["RESIDUAL_DEPTH_STRUCTURE"] == "SUPPORTED":
+        indicated.append("depth_complete_nuisance_control")
+    if ledger["MODEL_SELECTION_NULL_INFLATION"] == "SUPPORTED":
+        indicated.append("search_matched_pipeline")
+    if ledger["OUTCOME_LABEL_LIMITATION"] == "SUPPORTED":
+        indicated.append("alternative_outcome_representation")
+
+    material_change = False           # see V2 §10.7 -- checked explicitly below
+    changed_semantics = []
+    if "alternative_outcome_representation" in indicated:
+        material_change = True
+        changed_semantics = ["outcome definition", "positive / negative ontology"]
+
+    if len(indicated) == 1:
+        status = "ONE_CORRECTION_INDICATED"
+        hypothesis = {
+            "name": indicated[0],
+            "statement": (
+                "Under the historical Rewind outcome and the frozen Stage-22/23 evaluation "
+                "geometry, pretreatment transcriptional state predicts the Role-A outcome beyond a "
+                "DEPTH-COMPLETE nuisance baseline Bdepth = [log1p(n_pretreatment_cells), n_lanes, "
+                "log1p(total_raw_GE_UMI), log1p(n_detected_GE_features_in_raw_pseudobulk)]."),
+            "why_mechanical": (
+                "RESIDUAL_DEPTH_STRUCTURE is the only SUPPORTED mechanism that implies a "
+                "correction. MODEL_SELECTION_NULL_INFLATION is UNRESOLVED, so search matching is "
+                "not indicated; OUTCOME_LABEL_LIMITATION is UNRESOLVED, so V2 §8.7 forbids "
+                "adopting an alternative outcome. The correction was not chosen by effect size."),
+            "nuisance_block": ["log1p(n_pretreatment_cells)", "n_lanes",
+                               "log1p(total_raw_GE_UMI)",
+                               "log1p(n_detected_GE_features_in_raw_pseudobulk)"],
+            "outcome": "historical hard label, top-100 gDNA barcodes with ties, unchanged",
+            "search": "the frozen historical K x C grid, unchanged",
+        }
+    elif len(indicated) == 0:
+        status = "NO_CORRECTION_INDICATED"
+        hypothesis = None
+    else:
+        status = "MULTIPLE_CORRECTIONS_EQUALLY_PLAUSIBLE"
+        hypothesis = None
+
+    return {"indicated_corrections": indicated, "status": status, "hypothesis": hypothesis,
+            "material_benchmark_change": material_change,
+            "changed_semantics": changed_semantics,
+            "rejected_because_not_indicated": {
+                "search_matched_pipeline":
+                    ledger["MODEL_SELECTION_NULL_INFLATION"] != "SUPPORTED",
+                "alternative_outcome_representation":
+                    ledger["OUTCOME_LABEL_LIMITATION"] != "SUPPORTED"}}
+
+
+def _minimum_design_requirement(art: dict) -> dict:
+    """The confirmation protocol's event-count floor, read off the tested ladder only."""
+    per = art["e"]["per_scale"]
+    rows = sorted(((int(s), v) for s, v in per.items()), key=lambda kv: kv[0])
+    reached = [(s, v) for s, v in rows if v["power"]["0.66"]["estimated_power"] >= 0.80]
+    smallest = reached[0] if reached else None
+    return {
+        "target_oracle_AUC": 0.66,
+        "required_power": 0.80,
+        "tested_ladder": {str(s): {"positive_clones": v["positives_per_fold"] * S23.N_OUTER,
+                                   "power": v["power"]["0.66"]["estimated_power"]}
+                          for s, v in rows},
+        "smallest_tested_cohort_reaching_0_80": (
+            None if smallest is None else
+            {"scale": smallest[0], "cohort_N": smallest[1]["cohort_N"],
+             "positive_clones": smallest[1]["positives_per_fold"] * S23.N_OUTER,
+             "power": smallest[1]["power"]["0.66"]["estimated_power"]}),
+        "minimum_positive_clones": (None if smallest is None
+                                    else smallest[1]["positives_per_fold"] * S23.N_OUTER),
+        "do_not_interpolate": (
+            "the ladder is coarse (35 / 70 / 140 positive clones). The requirement is the smallest "
+            "TESTED cohort reaching 0.80, not an interpolated value between rungs -- V2 §9.5 "
+            "forbids extrapolating a precise required N."),
+    }
+
+
+def run_23_2f() -> dict:
+    """V2 §10. Synthesis, corrected-hypothesis freeze, confirmatory protocol and handoff."""
+    t0 = time.perf_counter()
+    art = _load_substage_artifacts()
+    ledger = _ledger(art)
+    table = _decomposition_table(art)
+    corrected = _corrected_hypothesis(ledger, art)
+    design_req = _minimum_design_requirement(art)
+
+    same_data_status = MECHANISM_DIAGNOSED if any(
+        v == "SUPPORTED" for k, v in ledger.items()
+        if k in ("MODEL_SELECTION_NULL_INFLATION", "RESIDUAL_DEPTH_STRUCTURE",
+                 "OUTCOME_LABEL_LIMITATION", "WITHIN_R1_EVENT_COUNT_LIMITATION",
+                 "BIOLOGICAL_REPLICATION_LIMITATION")) else "NO_MECHANISM_DIAGNOSED"
+
+    confirmable = corrected["status"] == "ONE_CORRECTION_INDICATED"
+    projected_exit = (NEEDS_NEW_EVIDENCE if not confirmable
+                      else "AWAITING_23_2G_CONFIRMATION")
+
+    res = {
+        "stage": "23.2F",
+        "plan": {"file": PLAN.name, "version": PLAN_VERSION},
+        "stage23_2_protocol_sha256": json.loads(
+            PROTOCOL.read_text(encoding="utf-8"))["canonical_sha256"],
+        "synthesis_is_mechanical": True,
+        "models_fitted_in_23_2f": 0,
+        "source_artifacts": {k: sha256_file(p) for k, p in
+                             (("23.2A", A_RESULTS), ("23.2B", B_RESULTS), ("23.2C", C_RESULTS),
+                              ("23.2D", D_RESULTS), ("23.2E", E_RESULTS))},
+        "diagnostic_ledger": ledger,
+        "decomposition_table": table,
+        "same_data_status": same_data_status,
+        "no_same_data_rescue": (
+            "V2 §10.3 -- however strong a corrected same-data comparison looks, the result is "
+            f"{MECHANISM_DIAGNOSED}, never ROLE_A_CONFIRMATORY_SUPPORTED"),
+        "corrected_hypothesis": corrected,
+        "minimum_design_requirement": design_req,
+        "material_benchmark_change_firewall": {
+            "triggered": corrected["material_benchmark_change"],
+            "changed_semantics": corrected["changed_semantics"],
+            "rule": "V2 §10.7 -- a correction that changes outcome definition, ontology, "
+                    "experimental unit, source reconstruction, leakage firewall or split rule "
+                    "cannot be confirmed directly; the benchmark must be versioned and the "
+                    "affected Stage-22/23 gates rerun first",
+            "note": "the indicated correction changes only the NUISANCE BLOCK of the model, which "
+                    "is not a benchmark semantic, so the firewall does not trigger"},
+        "historical_role_a_verdict": "ROLE_A_SIGNAL_FAIL (permanent, unchanged)",
+        "projected_23_2G_exit": projected_exit,
+        "stage_24_ready": False,
+        "runtime_minutes": round((time.perf_counter() - t0) / 60, 3),
+        "source_provenance": source_provenance(),
+    }
+    write_json(F_RESULTS, res)
+    _write_handoff(res, art)
+    if confirmable:
+        _write_confirmation_protocol(res, art)
+    return res
+
+
+def _write_handoff(res: dict, art: dict) -> None:
+    """V2 §10.6. Machine- and human-readable, and explicitly NOT Stage-24-ready."""
+    syn = json.loads((_RESULTS / "stage23_final_synthesis.json").read_text(encoding="utf-8"))
+    wm = json.loads((_RESULTS / "stage23_wm989_results.json").read_text(encoding="utf-8"))
+    wi = json.loads((_RESULTS / "stage23_wm989_interaction_results.json")
+                    .read_text(encoding="utf-8"))
+    led = art["a"]
+    ledger = res["diagnostic_ledger"]
+    ch = res["corrected_hypothesis"]
+
+    payload = {
+        "stage": "23.2F handoff draft",
+        "stage_24_ready": False,
+        "not_ready_reason": "V2 §10.6 -- a handoff is not Stage-24-ready until 23.2G confirms "
+                            "Role A on untouched evidence. 23.2G has not been executed.",
+        "role_a": {
+            "historical_stage23_failure": {
+                "verdict": "ROLE_A_SIGNAL_FAIL",
+                "observed_delta_AP": res["decomposition_table"]["historical_observed_delta_AP"],
+                "p_perm": art["e"]["historical_test_geometry"]["p_perm"],
+                "permanent": True},
+            "stage23_2_diagnostic_ledger": {k: v for k, v in ledger.items()
+                                            if not k.startswith("_")},
+            "corrected_confirmatory_hypothesis": ch["hypothesis"],
+            "outcome_version": "historical top-100 gDNA barcode label with ties, 35 positive "
+                               "clones of 3,147; unchanged by Stage 23.2",
+            "experimental_unit": "clone, frozen Stage-22 outer folds",
+            "replicate_status": {
+                "n_biological_replicates": 1, "label": "R1",
+                "within_r1_structure": led["within_r1_status"],
+                "note": "settled from the benchmark record and GEO titles; the within-R1 "
+                        "sample/lane question is unresolved from local materials"},
+            "nuisance_variables": (ch["hypothesis"]["nuisance_block"] if ch["hypothesis"]
+                                   else ["log1p(n_pretreatment_cells)", "n_lanes"]),
+            "primary_metric_and_gate": {
+                "metric": "average precision at clone grain",
+                "statistic": "delta_AP = AP(state + nuisance) - AP(nuisance)",
+                "gate": "observed > null p95 AND p_perm <= 0.05 under the frozen permutation "
+                        "design, on untouched confirmation evidence"},
+            "minimum_design_requirement": res["minimum_design_requirement"],
+            "allowed_claims": [
+                "Stage 23's Role-A permutation failure is partly explained by residual technical "
+                "depth structure surviving the abundance-preserving permutation",
+                "the historical experiment was underpowered for an AUC-0.66 signal at 35 positives",
+                "a depth-complete nuisance control is the single mechanically indicated correction"],
+            "forbidden_claims": [
+                "Role A has a demonstrated signal",
+                "the corrected same-data analysis confirms anything",
+                "Rewind has no biological signal",
+                "more clones from R1 would resolve the biological-replication limitation"],
+            "evidence_consumed_by_diagnosis": ["GSM7092515", "GSM7092516",
+                                               "stepThreeStarcodeShavedReads_BC_gDNA.txt",
+                                               "the full Stage-22 Rewind benchmark"],
+            "evidence_reserved_for_confirmation": [
+                e["accession"] for e in json.loads(
+                    RESERVED_LEDGER.read_text(encoding="utf-8"))["entries"]
+                if e["role"].startswith("RESERVED")],
+        },
+        "role_b": {
+            "frozen_additive_verdict": syn["final_verdicts"]["role_b_additive"],
+            "frozen_interaction_verdict": syn["final_verdicts"]["role_b_interaction"],
+            "c2_secondary_verdict": syn["final_verdicts"]["c2_interaction_secondary"],
+            "strongest_frozen_simple_baseline": {
+                "model": "W5 = X + B + U + X x U on endpoint C1",
+                "pooled_log_loss": wi["endpoints"]["C1"]["pooled"]["W5"],
+                "must_be_beaten_by_stage_24": True},
+            "endpoint_roles": {"C1": "primary, detection (log loss)",
+                               "C2": "secondary, conditional abundance (clone-balanced MAE)"},
+            "nuisance_block_B": wm["nuisance_block_B"] if "nuisance_block_B" in wm else [
+                "log1p(n_naive_cells)", "log1p(n_naive1_cells)", "log1p(n_naive2_cells)",
+                "log1p(n_naive3_cells)"],
+            "treatment_coding": "6 treatments, reference Acid, 5 dummies, never standardized",
+            "treatment_level_limitations": [
+                "Doxorubicin: W5 is WORSE than W4 on BOTH endpoints (-0.00332 C1, -0.00346 C2)",
+                "Cisplatin C1 improvement is +0.00002, numerically negligible",
+                "'multi-treatment' means four treatments carry the interaction, not six",
+                "captured abundance remains the dominant predictor (~3.45x the state contribution)"],
+        },
+        "global": {
+            "feature_universe": "pretreatment Gene Expression only, 36,601 features; WM989's "
+                                "153,055 Custom lineage features permanently excluded",
+            "benchmark_versions": {"stage22": "frozen at 8d6011a",
+                                   "stage23": "closed at 2e04ccf",
+                                   "stage23_2_protocol": res["stage23_2_protocol_sha256"]},
+            "split_group_policy": "clone-level outer folds frozen in Stage 22; never re-drawn",
+            "datasets_already_inspected": ["GSE227151 biol rep 1 (GSM7092515, GSM7092516)",
+                                           "GSE279162 WM989 full benchmark"],
+            "datasets_reserved_for_stage_27": [
+                "any dataset not used by 23.2G; Stage 27 must retain an independent biological "
+                "replication test of the eventual frozen Stage-24 model"],
+            "unresolved_limitations": [
+                k for k, v in ledger.items()
+                if not k.startswith("_") and v == "UNRESOLVED"],
+            "exact_stage_24_opening_rule": (
+                "Stage 24 opens only on ROLE_A_CONFIRMATORY_SUPPORTED from 23.2G -- a "
+                "pre-registered confirmatory analysis succeeding on evidence not used to design "
+                "the correction -- together with a complete, benchmark-compatible handoff. Role B "
+                "positives cannot substitute for it without an explicit roadmap revision."),
+        },
+    }
+    write_json(HANDOFF_JSON, payload)
+
+    ch_h = ch["hypothesis"]
+    md = [
+        "# STAGE 23.2 → STAGE 24 HANDOFF (DRAFT)",
+        "",
+        "**Status: NOT Stage-24-ready.** V2 §10.6 — a handoff becomes Stage-24-ready only when "
+        "23.2G confirms Role A on untouched evidence. 23.2G has not been executed.",
+        "",
+        f"Stage-23.2 protocol `{res['stage23_2_protocol_sha256']}`",
+        "",
+        "## Role A",
+        "",
+        "```text",
+        "historical Stage-23 verdict   ROLE_A_SIGNAL_FAIL   (permanent)",
+        f"  observed delta_AP           {res['decomposition_table']['historical_observed_delta_AP']:+.5f}",
+        f"  p_perm                      {art['e']['historical_test_geometry']['p_perm']:.4f}",
+        "",
+        "diagnostic ledger",
+    ]
+    for k, v in ledger.items():
+        if not k.startswith("_"):
+            md.append(f"  {k:<42} {v}")
+    md += [
+        "```",
+        "",
+        "### Corrected confirmatory hypothesis",
+        "",
+        (f"**{ch_h['name']}** — {ch_h['statement']}" if ch_h else
+         "**None.** " + ch["status"] + " → " + NEEDS_NEW_EVIDENCE),
+        "",
+        (f"*Why this and nothing else:* {ch_h['why_mechanical']}" if ch_h else ""),
+        "",
+        "### Minimum design requirement for confirmation",
+        "",
+        "```text",
+    ]
+    dr = res["minimum_design_requirement"]
+    for s, v in dr["tested_ladder"].items():
+        md.append(f"  scale {s}: {v['positive_clones']:>4} positive clones -> power "
+                  f"{v['power']:.3f} at oracle AUC 0.66")
+    md += [
+        f"  requirement: >= {dr['minimum_positive_clones']} positive clones "
+        f"(smallest TESTED cohort reaching 0.80)",
+        "```",
+        "",
+        dr["do_not_interpolate"],
+        "",
+        "### Claims",
+        "",
+        "**Allowed:**",
+    ]
+    md += [f"- {c}" for c in payload["role_a"]["allowed_claims"]]
+    md += ["", "**Forbidden:**"]
+    md += [f"- {c}" for c in payload["role_a"]["forbidden_claims"]]
+    md += [
+        "",
+        "### Evidence firewall",
+        "",
+        "```text",
+        "consumed by diagnosis   " + ", ".join(payload["role_a"]["evidence_consumed_by_diagnosis"]),
+        "reserved for confirmation   "
+        + ", ".join(payload["role_a"]["evidence_reserved_for_confirmation"]),
+        "```",
+        "",
+        "Reserved accessions have been read at declared-metadata level only. No matrix has been "
+        "downloaded, and no outcome or performance quantity computed for any of them.",
+        "",
+        "## Role B — frozen, carried forward unchanged",
+        "",
+        "```text",
+        f"additive          {payload['role_b']['frozen_additive_verdict']}",
+        f"interaction       {payload['role_b']['frozen_interaction_verdict']}",
+        f"C2 secondary      {payload['role_b']['c2_secondary_verdict']}",
+        f"baseline to beat  W5 on C1, pooled log loss "
+        f"{payload['role_b']['strongest_frozen_simple_baseline']['pooled_log_loss']:.5f}",
+        "```",
+        "",
+        "Treatment-level limitations that must remain visible:",
+    ]
+    md += [f"- {c}" for c in payload["role_b"]["treatment_level_limitations"]]
+    md += [
+        "",
+        "## Global",
+        "",
+        "```text",
+        "feature universe   " + payload["global"]["feature_universe"],
+        "split policy       " + payload["global"]["split_group_policy"],
+        "unresolved         " + ", ".join(payload["global"]["unresolved_limitations"]),
+        "```",
+        "",
+        "### Exact Stage-24 opening rule",
+        "",
+        payload["global"]["exact_stage_24_opening_rule"],
+        "",
+    ]
+    HANDOFF_MD.write_text("\n".join(md), encoding="utf-8", newline="\n")
+
+
+def _write_confirmation_protocol(res: dict, art: dict) -> None:
+    """V2 §10.5. Frozen BEFORE any untouched confirmation evidence is inspected."""
+    ch = res["corrected_hypothesis"]["hypothesis"]
+    dr = res["minimum_design_requirement"]
+    md = f"""# STAGE 23.2 — ROLE-A CONFIRMATION PROTOCOL V1
+
+**Frozen at 23.2F, before any untouched confirmation evidence was inspected.**
+Stage-23.2 protocol `{res['stage23_2_protocol_sha256']}`.
+
+This protocol may only be executed in 23.2G, and only on evidence that was **not** used to design
+the correction. Executing it on the already-inspected Rewind biological replicate R1 is forbidden:
+that analysis is exploratory by construction and is already recorded in 23.2C.
+
+---
+
+# 1. Confirmed scientific hypothesis
+
+{ch['statement']}
+
+Mechanically derived: {ch['why_mechanical']}
+
+# 2. Outcome definition
+
+```text
+{ch['outcome']}
+```
+
+The historical hard label is retained deliberately. `OUTCOME_LABEL_LIMITATION` is UNRESOLVED, not
+SUPPORTED, so V2 §8.7 forbids adopting an alternative outcome representation here. If a future
+substage establishes the limitation, this protocol must be re-frozen and the material
+benchmark-change firewall (V2 §10.7) applies.
+
+# 3. Allowed input X
+
+```text
+pretreatment Gene Expression only, 36,601 features
+clone pseudobulk: sum RAW counts, then CP10K and log1p exactly once
+no lineage-assay feature, no clone identifier, no outcome-derived quantity
+```
+
+# 4. Nuisance block
+
+```text
+{chr(10).join('  ' + v for v in ch['nuisance_block'])}
+```
+
+All continuous terms standardised training-only. This is the correction under test: the confirmation
+asks whether state predicts outcome **beyond** this depth-complete baseline.
+
+# 5. Model family, grid and preprocessing
+
+```text
+family        l2 logistic regression, liblinear, class_weight None
+C grid        {list(S23.LOGISTIC_C)}
+K grid        {list(S23.K_CANDIDATES)}   (PCA fitted once at max K; K values are prefixes)
+preprocessing training-only gene filter, gene scaler, PCA, PC scaler -- refitted inside every
+              inner split
+inner CV      {S23.N_INNER}-fold StratifiedKFold(shuffle=True, random_state={S23.SEED_PROTOCOL})
+```
+
+Unchanged from the historical pipeline. The search path is **not** matched or narrowed:
+`MODEL_SELECTION_NULL_INFLATION` is UNRESOLVED, so narrowing it is not an indicated correction.
+
+# 6. Grouping unit
+
+```text
+clone. Outer folds grouped at clone level. Cells are never independent outcome replicates.
+```
+
+# 7. Primary metric and statistic
+
+```text
+metric      average precision at clone grain
+statistic   delta_AP = AP(PCA(X) + Bdepth) - AP(Bdepth)
+```
+
+# 8. Permutation / null design
+
+```text
+whole clone-level expression profiles permuted as intact vectors
+within outer-training and within outer-test separately
+inside strata: n_pretreatment_cells {{1,2,3+}} x n_lanes
+200 permutations, full nested-CV rerun per draw
+p_perm = (1 + #{{null >= observed}}) / (n_perm + 1)
+```
+
+**Known conservatism, declared in advance.** 23.2C established that this null retains technical
+similarity between donor and recipient profiles at Spearman ~0.34, which is why its centre is
+positive. The design is retained unchanged so the confirmation is comparable to the historical
+test; the depth-complete nuisance block is the correction, not a weakened null.
+
+# 9. PASS threshold
+
+```text
+observed > null p95   AND   p_perm <= 0.05
+```
+
+Both required. No alternative threshold, one-sided relaxation or post-hoc adjustment is permitted.
+
+# 10. Minimum positive-count / design requirement
+
+```text
+{chr(10).join(f"  scale {s}: {v['positive_clones']:>4} positive clones -> power {v['power']:.3f}" for s, v in dr['tested_ladder'].items())}
+
+  requirement: >= {dr['minimum_positive_clones']} positive clones at oracle AUC 0.66
+```
+
+{dr['do_not_interpolate']}
+
+A confirmation cohort below this floor may be run, but a null result from it is **not** evidence
+against the hypothesis and must be reported as underpowered.
+
+# 11. Source-qualification criteria
+
+```text
+pre-intervention molecular measurement present
+independently measured later outcome
+clone / lineage linkage sufficient for grouped evaluation
+raw or processed data sufficient to reconstruct the endpoint
+no same-state outcome leakage
+at least the section-10 positive-count floor
+a biological replicate INDEPENDENT of R1
+```
+
+The last criterion is what distinguishes confirmation from more of the same: R1 is consumed.
+
+# 12. Search budget for confirmation data
+
+```text
+one bounded search, executed only after this protocol is committed
+candidates enumerated from the 23.2A reserved ledger first
+then a single external search pass
+inclusion criteria may NOT be relaxed if results are sparse
+```
+
+# 13. Forbidden data — already inspected
+
+```text
+GSE227151 biological replicate R1  (GSM7092515, GSM7092516)
+the Stage-22 Rewind benchmark and every Stage-23 / 23.2 artifact derived from it
+the gDNA table stepThreeStarcodeShavedReads_BC_gDNA.txt
+```
+
+Reserved candidates `GSM7092517`-`GSM7092521` have been read at declared-metadata level only and
+remain eligible. Whether they carry a reconstructable Role-A outcome is **UNVERIFIED** and must be
+established under section 11 before any performance quantity is computed.
+
+# 14. Stage-27 firewall
+
+Any dataset used here becomes development/confirmation evidence and is **not** an untouched
+Stage-27 replication set. Stage 27 must preserve an independent biological test of the eventual
+frozen Stage-24 model.
+"""
+    CONFIRMATION_MD.write_text(md, encoding="utf-8", newline="\n")
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Stage 23.2 Role-A resolution")
-    ap.add_argument("--stage", default="23.2a", choices=["23.2a", "23.2b", "23.2c", "23.2d", "23.2e", "23.2e-merge"])
+    ap.add_argument("--stage", default="23.2a", choices=["23.2a", "23.2b", "23.2c", "23.2d", "23.2e", "23.2e-merge", "23.2f"])
     ap.add_argument("--permutations", type=int, default=200)
     ap.add_argument("--threads", type=int,
                     help="BLAS threads for this process. Set it when running shards "
@@ -1929,6 +2521,22 @@ def main(argv=None) -> int:
         print(f"  ladder {r['search_width_ladder']}  monotone={r['ladder_monotone_increase']}")
         print("OVERALL:", r["MODEL_SELECTION_NULL_INFLATION"])
         return 0
+    if args.stage == "23.2f":
+        r = run_23_2f()
+        print("  diagnostic ledger:")
+        for k, v in r["diagnostic_ledger"].items():
+            if not k.startswith("_"):
+                print(f"    {k:<42} {v}")
+        ch = r["corrected_hypothesis"]
+        print(f"  corrected hypothesis: {ch['status']}"
+              + (f" -> {ch['hypothesis']['name']}" if ch["hypothesis"] else ""))
+        print(f"  benchmark-change firewall triggered: {r['material_benchmark_change_firewall']['triggered']}")
+        print(f"  minimum positive clones for confirmation: {r['minimum_design_requirement']['minimum_positive_clones']}")
+        print(f"  same-data status: {r['same_data_status']}")
+        print(f"  stage_24_ready: {r['stage_24_ready']}")
+        print("OVERALL:", r["projected_23_2G_exit"])
+        return 0
+
     if args.stage == "23.2e":
         n = args.sims if args.sims else (N_NULL_ALLOC if args.kind == "null" else N_ALT_SIM)
         r = run_23_2e_shard(args.scale, args.kind, args.target_auc, n)

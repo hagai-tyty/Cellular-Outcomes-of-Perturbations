@@ -297,7 +297,11 @@ def test_23a_fits_no_model_and_reuses_no_production_estimator():
 
 
 def test_23a_does_not_write_a_large_matrix_into_results():
+    # `stage23_*` also matches the Stage-23.2 subdirectory, which is a different stage with its own
+    # artifacts and its own contracts. Stage 23 never owned it, so it is out of scope here.
     for p in RES.glob("stage23_*"):
+        if p.is_dir() or p.name.startswith("stage23_2"):
+            continue
         assert p.suffix in {".json", ".csv"}, p.name
         assert p.stat().st_size < 2_000_000, f"{p.name} is too large to commit"
     assert not list(RES.glob("*pseudobulk*")), "the matrix must stay in the gitignored cache"
@@ -991,7 +995,8 @@ def test_determinism_compared_the_full_artifact_set_against_a_clean_tree():
 def test_the_determinism_set_covers_every_committed_stage23_artifact():
     """A shrinking artifact list would make determinism trivially true."""
     skip = {"stage23_permutation_results.json", "stage23_determinism.json"}
-    on_disk = {p.name for p in RES.glob("stage23_*") if p.name not in skip}
+    on_disk = {p.name for p in RES.glob("stage23_*")
+               if p.name not in skip and p.is_file() and not p.name.startswith("stage23_2")}
     assert on_disk <= set(S23.DETERMINISM_ARTIFACTS), on_disk - set(S23.DETERMINISM_ARTIFACTS)
 
 

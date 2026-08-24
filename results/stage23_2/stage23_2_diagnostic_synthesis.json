@@ -1,0 +1,207 @@
+{
+  "stage": "23.2F",
+  "plan": {
+    "file": "STAGE_23_2_ROLE_A_RESOLUTION_V2.md",
+    "version": "V2"
+  },
+  "stage23_2_protocol_sha256": "78edd5d7f9900349925339169a5d5e3e5011fe23e3c7c22608ac98bfe3427bf4",
+  "synthesis_is_mechanical": true,
+  "models_fitted_in_23_2f": 0,
+  "source_artifacts": {
+    "23.2A": "ac4e9eb12280226ebf26e834d00349501877551032eafd5b133bda8e3600170d",
+    "23.2B": "c2bb770613f4a3f5868d04c5d129e37afcec9144fde1f59a7cdd75742e4a299b",
+    "23.2C": "50d5eb1f1fe3f9c504e8b19c65ee9334f2114b903a5a120417d5a4d34ea876fe",
+    "23.2D": "6946bb3856e4226d421c8eed4bb0bc08b7957549597b9ae88c88ff9d0f2abd7e",
+    "23.2E": "b9abb758e22b8d9bde4787859d95a6f74569634f5613759eb0e50f7a0e41c973"
+  },
+  "diagnostic_ledger": {
+    "MODEL_SELECTION_NULL_INFLATION": "UNRESOLVED",
+    "RESIDUAL_DEPTH_STRUCTURE": "SUPPORTED",
+    "OUTCOME_LABEL_LIMITATION": "UNRESOLVED",
+    "WITHIN_R1_EVENT_COUNT_LIMITATION": "SUPPORTED",
+    "BIOLOGICAL_REPLICATION_LIMITATION": "SUPPORTED",
+    "ROBUST_STATE_SIGNAL_COMPATIBLE_WITH_DATA": "UNRESOLVED",
+    "_robust_derivation": {
+      "corrected_same_data_diagnostic": "NEGATIVE",
+      "rule": "SUPPORTED requires POSITIVE and label != SUPPORTED; NOT_SUPPORTED requires NEGATIVE and label == NOT_SUPPORTED and event count == NOT_SUPPORTED",
+      "not_supported_reachable": false,
+      "note": "V2 \u00a78.6 makes OUTCOME_LABEL_LIMITATION = NOT_SUPPORTED unreachable without independent outcome-assay replication, so 'no biological signal' cannot be concluded from the current Rewind data. Intended, not a defect."
+    }
+  },
+  "decomposition_table": {
+    "historical_observed_delta_AP": 0.01050162935116511,
+    "null_means": {
+      "mu00": 0.003495157023790003,
+      "mu10": 0.002987955791652897,
+      "mu01": 0.002326377012261806,
+      "mu11": 0.0016116478742497656
+    },
+    "observed_cells": {
+      "O00": 0.01050162935116511,
+      "O10": 0.009618847221988186,
+      "O01": 0.0069373642052549915,
+      "O11": 0.008716611851819373
+    },
+    "contrasts": {
+      "selection_main_contrast": {
+        "mean": 0.0005072012321371057,
+        "ci95_low": -9.94512685740939e-05,
+        "ci95_high": 0.0012409193730043623
+      },
+      "depth_main_contrast": {
+        "mean": 0.001168780011528197,
+        "ci95_low": 0.0005720883394475872,
+        "ci95_high": 0.0018043300393462468
+      },
+      "factor_interaction": {
+        "mean": -0.0002075279058749347,
+        "ci95_low": -0.0007494785877165956,
+        "ci95_high": 0.0003621009875888124
+      }
+    },
+    "per_arm_B0": {
+      "K10": 0.0030078891929862074,
+      "K20": 0.0026420803865594184,
+      "K50": 0.0033138977954130667
+    },
+    "per_arm_Bdepth": {
+      "K10": 0.0013814731073765129,
+      "K20": 0.0015082964089075728,
+      "K50": 0.0019451741064652112
+    },
+    "arm_dispersion": {
+      "B0": 0.0006718174088536483,
+      "Bdepth": 0.0005637009990886984
+    },
+    "search_width_ladder": {
+      "4_candidate_fixed_K_mean": 0.002987955791652898,
+      "8_candidate": 0.0030687098475250607,
+      "12_candidate": 0.003495157023790003
+    },
+    "technical_retention_median": {
+      "donor_nonzero_vs_recipient_log1p_total_UMI": 0.33720248090821847,
+      "donor_nonzero_vs_recipient_log1p_detected": 0.34401238036995807,
+      "donor_total_UMI_vs_recipient_total_UMI": 0.33062853887800137
+    },
+    "corrected_same_data": {
+      "O11": 0.008716611851819373,
+      "q95_11": 0.008350830276890807,
+      "p_diag_11": 0.05472636815920398,
+      "CORRECTED_SAME_DATA_SIGNAL_DIAGNOSTIC": "NEGATIVE",
+      "note": "exploratory same-Rewind diagnostic; a POSITIVE result cannot emit ROLE_A_CONFIRMATORY_SUPPORTED"
+    },
+    "fraction_of_null_centre_removed": 0.5388911390017718,
+    "power_ladder": {
+      "1": {
+        "cohort_N": 3147,
+        "positives_per_fold": 7,
+        "q95_null": 0.006435976310449608,
+        "power": {
+          "0.66": 0.29,
+          "0.70": 0.31
+        }
+      },
+      "2": {
+        "cohort_N": 6294,
+        "positives_per_fold": 14,
+        "q95_null": 0.004655463720385331,
+        "power": {
+          "0.66": 0.52,
+          "0.70": 0.74
+        }
+      },
+      "4": {
+        "cohort_N": 12588,
+        "positives_per_fold": 28,
+        "q95_null": 0.0022717547178295137,
+        "power": {
+          "0.66": 0.94,
+          "0.70": 1.0
+        }
+      }
+    }
+  },
+  "same_data_status": "MECHANISM_DIAGNOSED_ON_EXISTING_REWIND",
+  "no_same_data_rescue": "V2 \u00a710.3 -- however strong a corrected same-data comparison looks, the result is MECHANISM_DIAGNOSED_ON_EXISTING_REWIND, never ROLE_A_CONFIRMATORY_SUPPORTED",
+  "corrected_hypothesis": {
+    "indicated_corrections": [
+      "depth_complete_nuisance_control"
+    ],
+    "status": "ONE_CORRECTION_INDICATED",
+    "hypothesis": {
+      "name": "depth_complete_nuisance_control",
+      "statement": "Under the historical Rewind outcome and the frozen Stage-22/23 evaluation geometry, pretreatment transcriptional state predicts the Role-A outcome beyond a DEPTH-COMPLETE nuisance baseline Bdepth = [log1p(n_pretreatment_cells), n_lanes, log1p(total_raw_GE_UMI), log1p(n_detected_GE_features_in_raw_pseudobulk)].",
+      "why_mechanical": "RESIDUAL_DEPTH_STRUCTURE is the only SUPPORTED mechanism that implies a correction. MODEL_SELECTION_NULL_INFLATION is UNRESOLVED, so search matching is not indicated; OUTCOME_LABEL_LIMITATION is UNRESOLVED, so V2 \u00a78.7 forbids adopting an alternative outcome. The correction was not chosen by effect size.",
+      "nuisance_block": [
+        "log1p(n_pretreatment_cells)",
+        "n_lanes",
+        "log1p(total_raw_GE_UMI)",
+        "log1p(n_detected_GE_features_in_raw_pseudobulk)"
+      ],
+      "outcome": "historical hard label, top-100 gDNA barcodes with ties, unchanged",
+      "search": "the frozen historical K x C grid, unchanged"
+    },
+    "material_benchmark_change": false,
+    "changed_semantics": [],
+    "rejected_because_not_indicated": {
+      "search_matched_pipeline": true,
+      "alternative_outcome_representation": true
+    }
+  },
+  "minimum_design_requirement": {
+    "target_oracle_AUC": 0.66,
+    "required_power": 0.8,
+    "tested_ladder": {
+      "1": {
+        "positive_clones": 35,
+        "power": 0.29
+      },
+      "2": {
+        "positive_clones": 70,
+        "power": 0.52
+      },
+      "4": {
+        "positive_clones": 140,
+        "power": 0.94
+      }
+    },
+    "smallest_tested_cohort_reaching_0_80": {
+      "scale": 4,
+      "cohort_N": 12588,
+      "positive_clones": 140,
+      "power": 0.94
+    },
+    "minimum_positive_clones": 140,
+    "do_not_interpolate": "the ladder is coarse (35 / 70 / 140 positive clones). The requirement is the smallest TESTED cohort reaching 0.80, not an interpolated value between rungs -- V2 \u00a79.5 forbids extrapolating a precise required N."
+  },
+  "material_benchmark_change_firewall": {
+    "triggered": false,
+    "changed_semantics": [],
+    "rule": "V2 \u00a710.7 -- a correction that changes outcome definition, ontology, experimental unit, source reconstruction, leakage firewall or split rule cannot be confirmed directly; the benchmark must be versioned and the affected Stage-22/23 gates rerun first",
+    "note": "the indicated correction changes only the NUISANCE BLOCK of the model, which is not a benchmark semantic, so the firewall does not trigger"
+  },
+  "historical_role_a_verdict": "ROLE_A_SIGNAL_FAIL (permanent, unchanged)",
+  "projected_23_2G_exit": "AWAITING_23_2G_CONFIRMATION",
+  "stage_24_ready": false,
+  "runtime_minutes": 0.0,
+  "source_provenance": {
+    "git_commit": "ad13ed4dbf438e7bdae383f2520cd1d8a9e668b5",
+    "git_dirty_paths": [
+      "M experiments/run_stage23_2_role_a_resolution.py"
+    ],
+    "source_files": {
+      "stage23_2_builder": "d94a974b757a531e0f087424e08702be845bb1fbf87f735d6755b31cea71f957",
+      "stage23_builder": "ce43d831b0c7585a226a61c340c95660fa14e67ab2ea0fa3714d822c64e8b7f7",
+      "plan_v2": "dec787ac1b9d745fc93e2ca4625ec30c627e07e67a02c014bbad726d777b4769",
+      "plan_v1_archived": "6bce724a625e32e527c9420a764cc457f18f185fd72e74cc92f2641796af3caf"
+    },
+    "versions": {
+      "python": "3.11.0",
+      "numpy": "2.4.6",
+      "pandas": "3.0.3",
+      "scipy": "1.17.1",
+      "sklearn": "1.9.0"
+    },
+    "platform": "Windows-10-10.0.19045-SP0"
+  }
+}

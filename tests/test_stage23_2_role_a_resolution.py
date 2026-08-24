@@ -255,11 +255,34 @@ def test_the_ledger_names_the_reserved_replicates_without_evaluating_them():
 
 
 def test_the_module_never_opens_a_reserved_matrix():
-    """Source-level: only the two Stage-23 GSMs may be read from disk."""
+    """Source-level: only the two Stage-23 GSMs may be read from disk.
+
+    A reserved accession may be NAMED in prose -- the 23.2F confirmation protocol has to list them
+    as forbidden-until-qualified, and 23.2A's ledger describes them. What must never happen is a
+    reserved accession appearing in code that reaches the filesystem. So the check is scoped: the
+    only function permitted to mention one is the confirmation-protocol writer, which emits
+    documentation, and the ledger must still be derived from family.xml rather than hardcoded.
+    """
+    import ast
+
     src = SRC.read_text(encoding="utf-8")
     assert 'STAGE23_GSMS = ("GSM7092515", "GSM7092516")' in src
-    for acc in ("GSM7092517", "GSM7092518", "GSM7092519", "GSM7092520", "GSM7092521"):
-        assert acc not in src, f"the builder names {acc}; the ledger must come from family.xml"
+    reserved = ("GSM7092517", "GSM7092518", "GSM7092519", "GSM7092520", "GSM7092521")
+    documentation_only = {"_write_confirmation_protocol"}
+
+    tree = ast.parse(src)
+    for fn in (n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)):
+        if fn.name in documentation_only:
+            continue
+        body = ast.get_source_segment(src, fn) or ""
+        for acc in reserved:
+            assert acc not in body, f"{fn.name} names {acc}; data access must not reach a reserved GSM"
+
+    # the ledger is still built from the declared metadata file, not from a hardcoded list
+    ledger_fn = src.split("def reserved_confirmation_ledger(")[1].split(chr(10) + "def ")[0]
+    assert "FAMILY_XML" in ledger_fn
+    for acc in reserved:
+        assert acc not in ledger_fn
 
 
 # ---- 5. the gDNA rule and Bdepth ---------------------------------------------------------------#
@@ -855,3 +878,227 @@ def test_23_2e_pins_the_frozen_protocol(e):
     assert e["stage23_2_protocol_sha256"] == proto["canonical_sha256"]
     assert e["design"]["cohort_scales"] == proto["protocol"]["power"]["cohort_scales"]
     assert proto["protocol"]["power"]["n_biological_replicates"] == 1
+
+
+# ============================================================================================== #
+# 23.2F — diagnostic synthesis + confirmatory protocol freeze.
+#
+# Synthesis is where a stage that found real mechanisms is most tempted to over-deliver. Three
+# things must hold and each would fail silently:
+#
+#   * the corrected hypothesis must be a MECHANICAL consequence of the ledger. Picking whichever
+#     correction produced the biggest same-data effect is precisely the failure mode 23.2 exists
+#     to prevent.
+#   * no same-data result may become a confirmation, however good it looks.
+#   * the confirmation protocol must be frozen BEFORE any untouched evidence is inspected, and must
+#     forbid the evidence already consumed.
+# ============================================================================================== #
+F_RESULTS = OUT / "stage23_2_diagnostic_synthesis.json"
+HANDOFF_JSON = OUT / "stage23_2_handoff_to_stage24.json"
+PLANS = ROOT / "plans" / "(newer)practical plans"
+HANDOFF_MD = PLANS / "STAGE_23_2_HANDOFF_TO_STAGE_24.md"
+CONFIRMATION_MD = PLANS / "STAGE_23_2_ROLE_A_CONFIRMATION_V1.md"
+ran_f = pytest.mark.skipif(not F_RESULTS.exists(), reason="23.2F has not been run")
+
+
+@pytest.fixture(scope="module")
+def f():
+    return json.loads(F_RESULTS.read_text(encoding="utf-8"))
+
+
+def test_23_2f_fits_nothing():
+    import ast
+
+    tree = ast.parse(SRC.read_text(encoding="utf-8"))
+    names = {"run_23_2f", "_ledger", "_decomposition_table", "_corrected_hypothesis",
+             "_minimum_design_requirement", "_write_handoff", "_write_confirmation_protocol"}
+    for fn in (n for n in ast.walk(tree)
+               if isinstance(n, ast.FunctionDef) and n.name in names):
+        for call in (c for c in ast.walk(fn) if isinstance(c, ast.Call)):
+            if isinstance(call.func, ast.Attribute):
+                assert call.func.attr not in {"fit", "fit_transform", "predict", "predict_proba"}
+            if isinstance(call.func, ast.Name):
+                assert not call.func.id.startswith("_fit_")
+                assert call.func.id not in {"_delta_ap_once", "_load_rewind_x", "expression_block"}
+
+
+@ran_f
+def test_the_ledger_is_recomputable_from_the_substage_artifacts(f):
+    """Re-derive all six statuses without reading 23.2F's own conclusions."""
+    b = json.loads((OUT / "stage23_2_model_selection_decomposition.json").read_text())
+    c = json.loads((OUT / "stage23_2_depth_decomposition.json").read_text())
+    d = json.loads((OUT / "stage23_2_label_reliability.json").read_text())
+    e = json.loads((OUT / "stage23_2_power_identifiability.json").read_text())
+    led = f["diagnostic_ledger"]
+    assert led["MODEL_SELECTION_NULL_INFLATION"] == b["MODEL_SELECTION_NULL_INFLATION"]
+    assert led["RESIDUAL_DEPTH_STRUCTURE"] == c["RESIDUAL_DEPTH_STRUCTURE"]
+    assert led["OUTCOME_LABEL_LIMITATION"] == d["OUTCOME_LABEL_LIMITATION"]
+    assert led["WITHIN_R1_EVENT_COUNT_LIMITATION"] == e["WITHIN_R1_EVENT_COUNT_LIMITATION"]
+    assert led["BIOLOGICAL_REPLICATION_LIMITATION"] == e["BIOLOGICAL_REPLICATION_LIMITATION"]
+
+    corrected = c["corrected_same_data_diagnostic"]["CORRECTED_SAME_DATA_SIGNAL_DIAGNOSTIC"]
+    label = d["OUTCOME_LABEL_LIMITATION"]
+    events = e["WITHIN_R1_EVENT_COUNT_LIMITATION"]
+    expected = ("SUPPORTED" if (corrected == "POSITIVE" and label != "SUPPORTED")
+                else "NOT_SUPPORTED" if (corrected == "NEGATIVE" and label == "NOT_SUPPORTED"
+                                         and events == "NOT_SUPPORTED")
+                else "UNRESOLVED")
+    assert led["ROBUST_STATE_SIGNAL_COMPATIBLE_WITH_DATA"] == expected
+
+
+@ran_f
+def test_no_biological_signal_cannot_be_concluded_from_this_data(f):
+    """The intended consequence of the §8.6 and §9.5.2 asymmetries."""
+    led = f["diagnostic_ledger"]
+    if led["OUTCOME_LABEL_LIMITATION"] != "NOT_SUPPORTED":
+        assert led["ROBUST_STATE_SIGNAL_COMPATIBLE_WITH_DATA"] != "NOT_SUPPORTED", (
+            "'no robust signal' was concluded while the label limitation is unresolved")
+    assert led["_robust_derivation"]["not_supported_reachable"] is False
+
+
+@ran_f
+def test_the_corrected_hypothesis_is_mechanical_not_chosen_by_effect_size(f):
+    ch = f["corrected_hypothesis"]
+    led = f["diagnostic_ledger"]
+    indicated = []
+    if led["RESIDUAL_DEPTH_STRUCTURE"] == "SUPPORTED":
+        indicated.append("depth_complete_nuisance_control")
+    if led["MODEL_SELECTION_NULL_INFLATION"] == "SUPPORTED":
+        indicated.append("search_matched_pipeline")
+    if led["OUTCOME_LABEL_LIMITATION"] == "SUPPORTED":
+        indicated.append("alternative_outcome_representation")
+    assert ch["indicated_corrections"] == indicated
+    assert ch["status"] == ("ONE_CORRECTION_INDICATED" if len(indicated) == 1
+                            else "NO_CORRECTION_INDICATED" if not indicated
+                            else "MULTIPLE_CORRECTIONS_EQUALLY_PLAUSIBLE")
+    if ch["status"] != "ONE_CORRECTION_INDICATED":
+        assert ch["hypothesis"] is None
+        assert f["projected_23_2G_exit"] == "ROLE_A_UNRESOLVED_NEEDS_NEW_EVIDENCE"
+    # a correction that is not indicated must be explicitly rejected, not silently dropped
+    for name, rejected in ch["rejected_because_not_indicated"].items():
+        assert rejected == (name not in indicated), name
+
+
+@ran_f
+def test_an_unindicated_correction_is_not_smuggled_into_the_hypothesis(f):
+    ch = f["corrected_hypothesis"]
+    if ch["hypothesis"] is None:
+        pytest.skip("no hypothesis frozen")
+    led = f["diagnostic_ledger"]
+    if led["MODEL_SELECTION_NULL_INFLATION"] != "SUPPORTED":
+        assert "search" not in ch["hypothesis"]["name"]
+        assert ch["hypothesis"]["search"].startswith("the frozen historical")
+    if led["OUTCOME_LABEL_LIMITATION"] != "SUPPORTED":
+        assert "unchanged" in ch["hypothesis"]["outcome"]
+
+
+@ran_f
+def test_no_same_data_result_can_become_a_confirmation(f):
+    assert f["same_data_status"] == "MECHANISM_DIAGNOSED_ON_EXISTING_REWIND"
+    assert "never ROLE_A_CONFIRMATORY_SUPPORTED" in f["no_same_data_rescue"]
+    assert f["projected_23_2G_exit"] != "ROLE_A_CONFIRMATORY_SUPPORTED"
+    assert "ROLE_A_CONFIRMATORY_SUPPORTED" not in json.dumps(f["diagnostic_ledger"])
+
+
+@ran_f
+def test_the_historical_verdict_is_restated_as_permanent(f):
+    assert "ROLE_A_SIGNAL_FAIL" in f["historical_role_a_verdict"]
+    assert "permanent" in f["historical_role_a_verdict"]
+
+
+@ran_f
+def test_the_benchmark_change_firewall_matches_the_correction(f):
+    """V2 §10.7 -- a nuisance-block change is not a benchmark semantic; an outcome change is."""
+    ch = f["corrected_hypothesis"]
+    fw = f["material_benchmark_change_firewall"]
+    assert fw["triggered"] == ch["material_benchmark_change"]
+    if "alternative_outcome_representation" in ch["indicated_corrections"]:
+        assert fw["triggered"] is True
+    else:
+        assert fw["triggered"] is False
+        assert fw["changed_semantics"] == []
+
+
+@ran_f
+def test_the_design_requirement_uses_only_tested_rungs(f):
+    dr = f["minimum_design_requirement"]
+    e = json.loads((OUT / "stage23_2_power_identifiability.json").read_text())
+    tested = {v["positives_per_fold"] * 5 for v in e["per_scale"].values()}
+    if dr["minimum_positive_clones"] is not None:
+        assert dr["minimum_positive_clones"] in tested, "an untested cohort size was interpolated"
+        smallest = dr["smallest_tested_cohort_reaching_0_80"]
+        assert smallest["power"] >= 0.80
+        below = [v["power"] for k, v in dr["tested_ladder"].items()
+                 if v["positive_clones"] < dr["minimum_positive_clones"]]
+        assert all(p < 0.80 for p in below), "a smaller tested cohort already reached 0.80"
+    assert "forbids extrapolating" in dr["do_not_interpolate"]
+
+
+@ran_f
+def test_the_handoff_is_not_stage_24_ready(f):
+    assert f["stage_24_ready"] is False
+    h = json.loads(HANDOFF_JSON.read_text(encoding="utf-8"))
+    assert h["stage_24_ready"] is False
+    assert "23.2G" in h["not_ready_reason"]
+    assert "NOT Stage-24-ready" in HANDOFF_MD.read_text(encoding="utf-8")
+
+
+@ran_f
+def test_the_handoff_carries_role_b_forward_unchanged():
+    h = json.loads(HANDOFF_JSON.read_text(encoding="utf-8"))
+    syn = json.loads((RES / "stage23_final_synthesis.json").read_text(encoding="utf-8"))
+    rb = h["role_b"]
+    assert rb["frozen_additive_verdict"] == syn["final_verdicts"]["role_b_additive"]
+    assert rb["frozen_interaction_verdict"] == syn["final_verdicts"]["role_b_interaction"]
+    assert rb["strongest_frozen_simple_baseline"]["must_be_beaten_by_stage_24"] is True
+    limits = " ".join(rb["treatment_level_limitations"])
+    assert "Doxorubicin" in limits and "Cisplatin" in limits
+
+
+@ran_f
+def test_the_handoff_records_the_evidence_firewall():
+    h = json.loads(HANDOFF_JSON.read_text(encoding="utf-8"))
+    consumed = " ".join(h["role_a"]["evidence_consumed_by_diagnosis"])
+    assert "GSM7092515" in consumed and "GSM7092516" in consumed
+    reserved = h["role_a"]["evidence_reserved_for_confirmation"]
+    assert set(reserved) >= {"GSM7092517", "GSM7092518", "GSM7092519"}
+    assert not (set(reserved) & {"GSM7092515", "GSM7092516"}), "consumed evidence was reserved"
+    assert h["role_a"]["replicate_status"]["n_biological_replicates"] == 1
+
+
+@ran_f
+def test_the_handoff_forbids_the_claims_that_would_overreach():
+    h = json.loads(HANDOFF_JSON.read_text(encoding="utf-8"))
+    forbidden = " ".join(h["role_a"]["forbidden_claims"]).lower()
+    for must in ("demonstrated signal", "no biological signal", "confirms anything"):
+        assert must in forbidden, must
+
+
+@ran_f
+def test_the_confirmation_protocol_is_frozen_and_excludes_consumed_evidence(f):
+    if f["corrected_hypothesis"]["status"] != "ONE_CORRECTION_INDICATED":
+        assert not CONFIRMATION_MD.exists(), "a confirmation protocol was written without a "
+        return
+    text = CONFIRMATION_MD.read_text(encoding="utf-8")
+    assert "before any untouched confirmation evidence was inspected" in text.lower()
+    assert "GSM7092515" in text and "GSM7092516" in text, "consumed GSMs must be named as forbidden"
+    forbidden_block = text.split("Forbidden data")[1]
+    assert "GSM7092515" in forbidden_block
+    for required in ("Confirmed scientific hypothesis", "Outcome definition", "Nuisance block",
+                     "Permutation / null design", "PASS threshold",
+                     "Minimum positive-count", "Source-qualification criteria",
+                     "Search budget", "Stage-27 firewall"):
+        assert required.lower() in text.lower(), f"the protocol omits: {required}"
+    assert "observed > null p95" in text and "p_perm <= 0.05" in text
+
+
+@ran_f
+def test_23_2f_pins_every_substage_it_synthesised(f):
+    for stage, name in (("23.2A", "stage23_2a_results.json"),
+                        ("23.2B", "stage23_2_model_selection_decomposition.json"),
+                        ("23.2C", "stage23_2_depth_decomposition.json"),
+                        ("23.2D", "stage23_2_label_reliability.json"),
+                        ("23.2E", "stage23_2_power_identifiability.json")):
+        assert f["source_artifacts"][stage] == S232.sha256_file(OUT / name), stage
+    assert f["models_fitted_in_23_2f"] == 0
+    assert f["synthesis_is_mechanical"] is True
