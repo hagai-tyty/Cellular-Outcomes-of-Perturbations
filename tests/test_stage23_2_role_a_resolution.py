@@ -1102,3 +1102,120 @@ def test_23_2f_pins_every_substage_it_synthesised(f):
         assert f["source_artifacts"][stage] == S232.sha256_file(OUT / name), stage
     assert f["models_fitted_in_23_2f"] == 0
     assert f["synthesis_is_mechanical"] is True
+
+
+# ============================================================================================== #
+# Confirmation protocol V2 — the multi-replicate clarification.
+#
+# V1 left a gap: the >=140 floor came from within-R1 simulation, and V1 never said what happens when
+# confirmation evidence spans more than one biological replicate. Read literally it could have
+# licensed pooling separate outcome libraries to reach 140 — which would change the outcome
+# definition and destroy the very replicate structure confirmation exists to establish.
+#
+# These contracts pin the clarification and, just as importantly, pin V1 as historical.
+# ============================================================================================== #
+CONFIRMATION_V1 = PLANS / "STAGE_23_2_ROLE_A_CONFIRMATION_V1.md"
+CONFIRMATION_V2 = PLANS / "STAGE_23_2_ROLE_A_CONFIRMATION_V2.md"
+has_v2 = pytest.mark.skipif(not CONFIRMATION_V2.exists(), reason="confirmation V2 not written")
+
+
+def test_a_rerun_can_never_overwrite_the_historical_confirmation_protocol():
+    """23.2F used to write V1 unconditionally; a re-run would have silently rewritten history."""
+    body = SRC.read_text(encoding="utf-8").split(
+        "def _write_confirmation_protocol(")[1].split("\ndef ")[0]
+    assert "if CONFIRMATION_MD.exists():" in body
+    guard = body.split("if CONFIRMATION_MD.exists():")[1].split("CONFIRMATION_MD.write_text")[0]
+    assert "return" in guard, "the guard must return before writing"
+
+
+@has_v2
+def test_v1_is_preserved_and_v2_is_additive():
+    v1 = CONFIRMATION_V1.read_text(encoding="utf-8")
+    v2 = CONFIRMATION_V2.read_text(encoding="utf-8")
+    assert v1.startswith("# STAGE 23.2 — ROLE-A CONFIRMATION PROTOCOL V1")
+    assert v2.startswith("# STAGE 23.2 — ROLE-A CONFIRMATION PROTOCOL V2")
+    assert len(v2) > len(v1), "V2 must add, not replace"
+    # every V1 section heading survives in V2
+    import re
+    v1_heads = re.findall(r"^# (\d+)\. (.+)$", v1, re.M)
+    v2_heads = dict(re.findall(r"^# (\d+)\. (.+)$", v2, re.M))
+    for num, title in v1_heads:
+        assert num in v2_heads, f"V2 dropped section {num}"
+        assert v2_heads[num] == title, f"V2 renamed section {num}: {title!r} -> {v2_heads[num]!r}"
+    assert set(v2_heads) >= {str(i) for i in range(1, 19)}, "V2 must carry sections 1-18"
+
+
+@has_v2
+def test_the_floor_is_restated_as_within_r1_and_not_sufficient():
+    v2 = CONFIRMATION_V2.read_text(encoding="utf-8")
+    assert "necessary but **not** sufficient" in v2 or "NECESSARY, NOT SUFFICIENT" in v2
+    assert "within-R1 event-count detectability" in v2
+    assert "Between-replicate variance is not modelled" in v2
+    assert "IS NOT   a per-replicate requirement" in v2
+
+
+@has_v2
+def test_outcome_libraries_may_never_be_pooled_before_selection():
+    v2 = CONFIRMATION_V2.read_text(encoding="utf-8")
+    assert "pooling libraries from different biological replicates before selection" in v2
+    assert "changing N from 100" in v2
+    assert "changing or relaxing the tie rule" in v2
+    assert "selecting a unit definition because it yields more positives" in v2
+    # and the firewall is named as the consequence
+    assert "§10.7" in v2 and "material" in v2.lower()
+
+
+@has_v2
+def test_the_four_predefinitions_are_all_present():
+    v2 = CONFIRMATION_V2.read_text(encoding="utf-8")
+    for required in (
+            "# 15. Independent biological outcome units and per-unit reconstruction",
+            "# 16. Combining independent replicates for the confirmatory analysis",
+            "# 17. How the positive-clone floor applies across replicates",
+            "# 18. Replicate-level evidence required for `ROLE_A_CONFIRMATORY_SUPPORTED`"):
+        assert required in v2, required
+
+
+@has_v2
+def test_confirmation_requires_two_non_r1_units_and_a_total_floor():
+    v2 = CONFIRMATION_V2.read_text(encoding="utf-8")
+    assert ">= 2 independent biological outcome units" in v2
+    assert "NONE of them is R1" in v2
+    assert "TOTAL positive-clone count" in v2
+    assert "R1 is consumed by diagnosis and its 35 positives never count toward this floor." in v2
+    # both reasons R1 is excluded, including the one that is easy to miss
+    assert "R1 does not support the claim" in v2
+    assert "p_diag 0.0547" in v2
+
+
+@has_v2
+def test_replicate_identity_is_nuisance_only():
+    v2 = CONFIRMATION_V2.read_text(encoding="utf-8")
+    assert "may **not** be a predictor of interest" in v2
+    assert "may\n**not** be interacted with `X`" in v2 or "not** be interacted with `X`" in v2
+    assert "within\nreplicate x stratum" in v2 or "replicate x stratum" in v2
+
+
+@has_v2
+def test_a_sub_floor_cohort_cannot_emit_a_confirmation():
+    v2 = CONFIRMATION_V2.read_text(encoding="utf-8")
+    assert "cannot** emit `ROLE_A_CONFIRMATORY_SUPPORTED`" in v2
+    assert "ROLE_A_UNRESOLVED_NEEDS_NEW_EVIDENCE" in v2
+    assert "is **not** evidence against the hypothesis" in v2
+
+
+@has_v2
+def test_the_feasibility_risk_is_declared_before_any_inspection():
+    """Recorded in advance so it cannot later read as a post-hoc excuse."""
+    v2 = CONFIRMATION_V2.read_text(encoding="utf-8")
+    assert "Declared feasibility risk" in v2
+    assert "roughly four R1-sized" in v2
+    assert "UNVERIFIED" in v2
+    assert "must not be worked around" in v2
+
+
+def test_no_reserved_matrix_has_been_downloaded():
+    """The clarification was written without touching any reserved evidence."""
+    rewind = S232.REWIND_ROOT
+    for acc in ("GSM7092517", "GSM7092518", "GSM7092519", "GSM7092520", "GSM7092521"):
+        assert not (rewind / acc).exists(), f"{acc} was downloaded; confirmation evidence is burned"

@@ -185,12 +185,13 @@
   "stage_24_ready": false,
   "runtime_minutes": 0.0,
   "source_provenance": {
-    "git_commit": "ad13ed4dbf438e7bdae383f2520cd1d8a9e668b5",
+    "git_commit": "d2706a23775670bf8736110e00f0617d9bcc8aa3",
     "git_dirty_paths": [
-      "M experiments/run_stage23_2_role_a_resolution.py"
+      "M experiments/run_stage23_2_role_a_resolution.py",
+      " M results/stage23_2/stage23_2_diagnostic_synthesis.json"
     ],
     "source_files": {
-      "stage23_2_builder": "d94a974b757a531e0f087424e08702be845bb1fbf87f735d6755b31cea71f957",
+      "stage23_2_builder": "63f3d866b44c0be9a33f6d9f2ca3a58a2f97f156ab4680c52cf1c3770bc64a10",
       "stage23_builder": "ce43d831b0c7585a226a61c340c95660fa14e67ab2ea0fa3714d822c64e8b7f7",
       "plan_v2": "dec787ac1b9d745fc93e2ca4625ec30c627e07e67a02c014bbad726d777b4769",
       "plan_v1_archived": "6bce724a625e32e527c9420a764cc457f18f185fd72e74cc92f2641796af3caf"

@@ -2483,6 +2483,13 @@ Any dataset used here becomes development/confirmation evidence and is **not** a
 Stage-27 replication set. Stage 27 must preserve an independent biological test of the eventual
 frozen Stage-24 model.
 """
+    # V1 is historical and must never be rewritten by a re-run. Later clarifications become a
+    # new version file (V2, V3, ...), reviewed and frozen on their own, exactly as the plan
+    # versions are.
+    if CONFIRMATION_MD.exists():
+        print(f"  {CONFIRMATION_MD.name} already exists and is historical -- preserved, not "
+              "overwritten. A clarification must be issued as a new version file.")
+        return
     CONFIRMATION_MD.write_text(md, encoding="utf-8", newline="\n")
 
 
