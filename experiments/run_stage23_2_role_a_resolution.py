@@ -1830,7 +1830,7 @@ def merge_23_2e() -> dict:
             if alt is None:
                 continue
             arr = np.array(alt["delta_ap"])
-            entry["power"][str(auc)] = {
+            entry["power"][f"{auc:.2f}"] = {
                 "n_alt": alt["n_sims"], "estimated_power": float((arr > q95).mean()),
                 "alt_mean_delta_ap": float(arr.mean()),
                 "achieved_median_oracle_AUC": float(np.median(alt["oracle_auc"])),

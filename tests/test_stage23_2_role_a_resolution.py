@@ -717,3 +717,141 @@ def test_lane_composition_sensitivity_respects_the_23_2a_status(c):
 def test_bdepth_is_not_promoted_to_a_production_baseline(c):
     assert "forbids promoting it into a" in c["critical_interpretation"]
     assert "§7.7" in c["critical_interpretation"] or "7.7" in c["critical_interpretation"]
+
+
+# ============================================================================================== #
+# 23.2E — power / identifiability.
+#
+# The result is a clean monotone ladder, which is exactly when a power study is most dangerous:
+# it invites being read as "we just need more clones". The contracts here pin the three boundaries
+# V2 draws around that reading.
+#
+#   * the generating direction must be LABEL-FREE. If `z` had seen `y_primed`, the whole curve
+#     would be circular and would overstate detectability.
+#   * the two statuses are different KINDS of claim. Event-count detectability is estimated from
+#     the curve; biological-replication limitation is a design fact that no simulation can move,
+#     and it admits only SUPPORTED / NOT_SUPPORTED.
+#   * no bias direction may be claimed for the resampled scales, and the curve may never be
+#     described as an independent-sample power curve.
+# ============================================================================================== #
+E_RESULTS = OUT / "stage23_2_power_identifiability.json"
+ran_e = pytest.mark.skipif(not E_RESULTS.exists(), reason="23.2E has not been run")
+
+
+@pytest.fixture(scope="module")
+def e():
+    return json.loads(E_RESULTS.read_text(encoding="utf-8"))
+
+
+@ran_e
+def test_all_nine_shards_ran_at_the_frozen_counts(e):
+    """V2 §9.4 forbids reducing simulation counts after execution starts."""
+    d = e["design"]
+    assert d["cohort_scales"] == [1, 2, 4]
+    assert sorted(d["target_AUCs"]) == [0.66, 0.70]
+    assert d["null_allocations"] == 200
+    assert d["alternative_simulations"] == 100
+    for s in ("1", "2", "4"):
+        v = e["per_scale"][s]
+        assert v["n_null"] == 200, f"scale {s} null was shortened"
+        assert set(v["power"]) == {"0.66", "0.70"}, f"scale {s} is missing a target AUC"
+        for pw in v["power"].values():
+            assert pw["n_alt"] == 100
+
+
+@ran_e
+def test_the_frozen_seeds_were_used(e):
+    assert e["design"]["seeds"] == {"covariate_resample": 23440, "null": 23441,
+                                    "alternative": 23442, "beta_calibration": 23443}
+
+
+@ran_e
+def test_the_cohort_ladder_preserves_the_historical_prevalence(e):
+    """Scaling adds events by growing the cohort, not by enriching a fixed one."""
+    for s, expect_n, expect_pos in (("1", 3147, 7), ("2", 6294, 14), ("4", 12588, 28)):
+        v = e["per_scale"][s]
+        assert v["cohort_N"] == expect_n
+        assert v["positives_per_fold"] == expect_pos
+        prevalence = (v["positives_per_fold"] * 5) / v["cohort_N"]
+        assert prevalence == pytest.approx(35 / 3147, rel=0.02), s
+
+
+@ran_e
+def test_beta_calibration_hit_its_targets(e):
+    for s in ("1", "2", "4"):
+        for target, pw in e["per_scale"][s]["power"].items():
+            assert pw["achieved_median_oracle_AUC"] == pytest.approx(float(target), abs=0.02), (
+                f"scale {s} target {target} achieved {pw['achieved_median_oracle_AUC']}")
+
+
+@ran_e
+def test_the_null_tightens_and_power_rises_with_cohort_size(e):
+    q95 = [e["per_scale"][s]["q95_null"] for s in ("1", "2", "4")]
+    assert q95[0] > q95[1] > q95[2], "a larger cohort must tighten the null"
+    for target in ("0.66", "0.70"):
+        p = [e["per_scale"][s]["power"][target]["estimated_power"] for s in ("1", "2", "4")]
+        assert p[0] <= p[1] <= p[2], f"power is not monotone in cohort size at AUC {target}"
+
+
+@ran_e
+def test_the_event_count_status_follows_the_frozen_rule(e):
+    p1 = e["per_scale"]["1"]["power"]["0.66"]["estimated_power"]
+    reached = any(e["per_scale"][s]["power"]["0.66"]["estimated_power"] >= 0.80
+                  for s in ("2", "4"))
+    expected = ("NOT_SUPPORTED" if p1 >= 0.80
+                else "SUPPORTED" if (p1 < 0.50 and reached) else "UNRESOLVED")
+    assert e["WITHIN_R1_EVENT_COUNT_LIMITATION"] == expected
+
+
+@ran_e
+def test_biological_replication_is_a_design_fact_not_an_estimate(e):
+    """V2 §9.5.2 -- SUPPORTED while the claim rests on one replicate; UNRESOLVED is not available."""
+    assert e["BIOLOGICAL_REPLICATION_LIMITATION"] in {"SUPPORTED", "NOT_SUPPORTED"}
+    assert e["BIOLOGICAL_REPLICATION_LIMITATION"] != "UNRESOLVED"
+    assert e["BIOLOGICAL_REPLICATION_LIMITATION"] == "SUPPORTED"
+    note = e["biological_replication_note"]
+    assert "design fact" in note and "n_biological_" in note
+    # a high power curve must NOT clear it
+    best = max(e["per_scale"][s]["power"][t]["estimated_power"]
+               for s in ("1", "2", "4") for t in ("0.66", "0.70"))
+    assert best >= 0.80 and e["BIOLOGICAL_REPLICATION_LIMITATION"] == "SUPPORTED", (
+        "a power curve reaching 0.80+ must not clear the replication limitation")
+
+
+@ran_e
+def test_no_bias_direction_is_claimed_for_the_resampled_scales(e):
+    """The V2 §9.6 wording correction, tested literally."""
+    caveat = e["bias_direction_caveat"]
+    assert "bias direction is not guaranteed" in caveat
+    assert "empirical resamples of biological replicate R1" in caveat
+    assert "does not estimate power gained from additional independent biological" in caveat
+    blob = json.dumps(e).lower()
+    for banned in ("optimistic", "conservative"):
+        assert banned not in blob, f"23.2E claimed a bias direction: {banned}"
+
+
+@ran_e
+def test_the_stated_limits_of_the_study_are_recorded(e):
+    cannot = " ".join(e["what_this_cannot_do"]).lower()
+    for required in ("create biological replicate diversity",
+                     "estimate between-replicate variance",
+                     "independent-sample power curve"):
+        assert required in cannot, required
+
+
+def test_the_synthetic_direction_never_sees_the_outcome():
+    """Source-level: `z` is built from expression residualised on Bdepth, never from y_primed."""
+    src = SRC.read_text(encoding="utf-8")
+    body = src.split("def synthetic_direction(")[1].split("\ndef ")[0]
+    for banned in ("y_primed", "y_prim", "outcome", "_assign_positives", "roc_auc"):
+        assert banned not in body, f"the simulation generator touched {banned}"
+    assert "BDEPTH_TABLE" in body, "the direction must be residualised on Bdepth"
+    assert "PCA" in body
+
+
+@ran_e
+def test_23_2e_pins_the_frozen_protocol(e):
+    proto = json.loads(PROTOCOL.read_text(encoding="utf-8"))
+    assert e["stage23_2_protocol_sha256"] == proto["canonical_sha256"]
+    assert e["design"]["cohort_scales"] == proto["protocol"]["power"]["cohort_scales"]
+    assert proto["protocol"]["power"]["n_biological_replicates"] == 1

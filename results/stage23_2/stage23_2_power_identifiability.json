@@ -1,0 +1,138 @@
+{
+  "stage": "23.2E",
+  "plan": {
+    "file": "STAGE_23_2_ROLE_A_RESOLUTION_V2.md",
+    "version": "V2"
+  },
+  "stage23_2_protocol_sha256": "78edd5d7f9900349925339169a5d5e3e5011fe23e3c7c22608ac98bfe3427bf4",
+  "design": {
+    "cohort_scales": [
+      1,
+      2,
+      4
+    ],
+    "target_AUCs": [
+      0.66,
+      0.7
+    ],
+    "null_allocations": 200,
+    "alternative_simulations": 100,
+    "seeds": {
+      "covariate_resample": 23440,
+      "null": 23441,
+      "alternative": 23442,
+      "beta_calibration": 23443
+    }
+  },
+  "historical_test_geometry": {
+    "observed_delta_AP": 0.01050162935116511,
+    "null_mean": 0.003495157023790003,
+    "null_sd": 0.006305127914363404,
+    "null_p95": 0.014545491038048794,
+    "p_perm": 0.0845771144278607,
+    "null_centered_separation": 0.007006472327375106,
+    "distance_to_null_p95": -0.004043861686883685
+  },
+  "per_scale": {
+    "1": {
+      "cohort_N": 3147,
+      "positives_per_fold": 7,
+      "n_null": 200,
+      "q95_null": 0.006435976310449608,
+      "null_mean": 0.0014219505194689515,
+      "power": {
+        "0.66": {
+          "n_alt": 100,
+          "estimated_power": 0.29,
+          "alt_mean_delta_ap": 0.0055878544300777735,
+          "achieved_median_oracle_AUC": 0.6734759456481823,
+          "beta": 0.6597390562565124
+        },
+        "0.70": {
+          "n_alt": 100,
+          "estimated_power": 0.31,
+          "alt_mean_delta_ap": 0.007058259419044096,
+          "achieved_median_oracle_AUC": 0.7005692251193536,
+          "beta": 0.8487854176091787
+        }
+      }
+    },
+    "2": {
+      "cohort_N": 6294,
+      "positives_per_fold": 14,
+      "n_null": 200,
+      "q95_null": 0.004655463720385331,
+      "null_mean": 0.0009723047054952335,
+      "power": {
+        "0.66": {
+          "n_alt": 100,
+          "estimated_power": 0.52,
+          "alt_mean_delta_ap": 0.005536394567072421,
+          "achieved_median_oracle_AUC": 0.6582881931692985,
+          "beta": 0.6441381626973453
+        },
+        "0.70": {
+          "n_alt": 100,
+          "estimated_power": 0.74,
+          "alt_mean_delta_ap": 0.007797928516164185,
+          "achieved_median_oracle_AUC": 0.7017472686375321,
+          "beta": 0.8603737023622671
+        }
+      }
+    },
+    "4": {
+      "cohort_N": 12588,
+      "positives_per_fold": 28,
+      "n_null": 200,
+      "q95_null": 0.0022717547178295137,
+      "null_mean": 0.00048269058543355767,
+      "power": {
+        "0.66": {
+          "n_alt": 100,
+          "estimated_power": 0.94,
+          "alt_mean_delta_ap": 0.0051449178934454935,
+          "achieved_median_oracle_AUC": 0.6590592579416086,
+          "beta": 0.6199578074774763
+        },
+        "0.70": {
+          "n_alt": 100,
+          "estimated_power": 1.0,
+          "alt_mean_delta_ap": 0.0069899967142278245,
+          "achieved_median_oracle_AUC": 0.6940031961531399,
+          "beta": 0.818236536844779
+        }
+      }
+    }
+  },
+  "WITHIN_R1_EVENT_COUNT_LIMITATION": "SUPPORTED",
+  "BIOLOGICAL_REPLICATION_LIMITATION": "SUPPORTED",
+  "biological_replication_note": "V2 \u00a79.5.2 -- a design fact, not an estimate. The claim rests on n_biological_replicates = 1, and no simulation can change that. It can become NOT_SUPPORTED only when a Role-A claim is supported by >= 2 independent biological replicates.",
+  "bias_direction_caveat": "Scales 2 and 4 remain empirical resamples of biological replicate R1. Repeated covariate profiles reduce effective covariate diversity and therefore make the projected power curve an approximation whose bias direction is not guaranteed. The simulation estimates within-R1 event-count detectability under the empirical R1 covariate distribution; it does not estimate power gained from additional independent biological replicates.",
+  "what_this_cannot_do": [
+    "create biological replicate diversity",
+    "estimate between-replicate variance",
+    "establish that a corrected same-data result would replicate",
+    "be read as an independent-sample power curve"
+  ],
+  "source_provenance": {
+    "git_commit": "6dda7ed70d384fb6791596878d0f6616c3433235",
+    "git_dirty_paths": [
+      "M experiments/run_stage23_2_role_a_resolution.py",
+      "?? results/stage23_2/stage23_2_power_identifiability.json"
+    ],
+    "source_files": {
+      "stage23_2_builder": "80aabff2714c0138f4055b8d9962ca5d18f303416416e194d8a8a176727e2828",
+      "stage23_builder": "ce43d831b0c7585a226a61c340c95660fa14e67ab2ea0fa3714d822c64e8b7f7",
+      "plan_v2": "dec787ac1b9d745fc93e2ca4625ec30c627e07e67a02c014bbad726d777b4769",
+      "plan_v1_archived": "6bce724a625e32e527c9420a764cc457f18f185fd72e74cc92f2641796af3caf"
+    },
+    "versions": {
+      "python": "3.11.0",
+      "numpy": "2.4.6",
+      "pandas": "3.0.3",
+      "scipy": "1.17.1",
+      "sklearn": "1.9.0"
+    },
+    "platform": "Windows-10-10.0.19045-SP0"
+  }
+}
