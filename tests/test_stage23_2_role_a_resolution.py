@@ -1219,3 +1219,147 @@ def test_no_reserved_matrix_has_been_downloaded():
     rewind = S232.REWIND_ROOT
     for acc in ("GSM7092517", "GSM7092518", "GSM7092519", "GSM7092520", "GSM7092521"):
         assert not (rewind / acc).exists(), f"{acc} was downloaded; confirmation evidence is burned"
+
+
+# ============================================================================================== #
+# Confirmation protocol V3 — three mechanical clarifications.
+#
+# V2 carried two defects that would only have surfaced once real confirmation evidence arrived, at
+# which point relaxing them would have looked like a reasonable accommodation:
+#
+#   * section 11 listed the positive-count floor among the PER-CANDIDATE criteria, so every
+#     individual replicate appeared to need 140 positives. Nothing realistically available could
+#     have met that, and it contradicted section 17.
+#   * section 18.1 counted "outcome units", so one biological replicate whose gDNA was split across
+#     two libraries would have satisfied a gate whose whole purpose is biological replication.
+#
+# And V2 left the confirmatory fold construction unspecified, which is the one remaining place a
+# geometry could have been chosen after seeing the data.
+# ============================================================================================== #
+CONFIRMATION_V3 = PLANS / "STAGE_23_2_ROLE_A_CONFIRMATION_V3.md"
+CONFIRMATION_CURRENT = CONFIRMATION_V3
+has_v3 = pytest.mark.skipif(not CONFIRMATION_V3.exists(), reason="confirmation V3 not written")
+
+
+@has_v3
+def test_every_earlier_confirmation_version_is_preserved():
+    """V1 and V2 are historical. Only the newest version is live."""
+    import subprocess
+    for p in (CONFIRMATION_V1, CONFIRMATION_V2):
+        assert p.exists(), p.name
+        committed = subprocess.run(
+            ["git", "show", f"HEAD:plans/(newer)practical plans/{p.name}"],
+            cwd=ROOT, capture_output=True).stdout
+        if committed:
+            canon = lambda b: b.replace(b"\r\n", b"\n").replace(b"\r", b"\n")  # noqa: E731
+            assert canon(committed) == canon(p.read_bytes()), f"{p.name} was modified"
+
+
+@has_v3
+def test_v3_carries_every_v2_section_forward():
+    import re
+
+    v2 = CONFIRMATION_V2.read_text(encoding="utf-8")
+    v3 = CONFIRMATION_V3.read_text(encoding="utf-8")
+    v2_heads = dict(re.findall(r"^# (\d+)\. (.+)$", v2, re.M))
+    v3_heads = dict(re.findall(r"^# (\d+)\. (.+)$", v3, re.M))
+    for num, title in v2_heads.items():
+        assert num in v3_heads, f"V3 dropped section {num}"
+        assert v3_heads[num] == title, f"V3 renamed section {num}"
+    assert set(v3_heads) >= {str(i) for i in range(1, 20)}, "V3 must carry sections 1-19"
+    assert len(v3) > len(v2), "V3 must add, not replace"
+
+
+# ---- clarification 1: the floor is a property of the SET ---------------------------------------#
+@has_v3
+def test_no_per_candidate_positive_count_criterion_survives():
+    v3 = CONFIRMATION_CURRENT.read_text(encoding="utf-8")
+    qualification = v3.split("# 11. Source-qualification criteria")[1].split("## 11.1")[0]
+    assert "positive-count floor" not in qualification, (
+        "section 11's per-candidate list still carries a positive-count criterion")
+    assert "11.1 The positive-count criterion is a property of the SET" in v3
+    assert "requiring any individual replicate to reach 140 positives" in v3
+    assert "WRONG, and removed" in v3
+
+
+@has_v3
+def test_the_floor_is_evaluated_once_on_the_combined_set():
+    v3 = CONFIRMATION_CURRENT.read_text(encoding="utf-8")
+    assert "COMBINED set of qualifying" in v3
+    assert "evaluate the >= 140 floor once, on that sum" in v3
+    # and the set may not be tuned to hit the floor
+    assert "may **not** be added to or dropped from the qualifying set on the basis of how it moves" in v3
+
+
+# ---- clarification 2: the gate counts biological replicates ------------------------------------#
+@has_v3
+def test_gate_18_1_counts_biological_replicates_not_units():
+    v3 = CONFIRMATION_CURRENT.read_text(encoding="utf-8")
+    assert ">= 2 independent BIOLOGICAL REPLICATES qualify" in v3
+    assert "count as ONE replicate for this gate" in v3
+    assert "a replicate contributes at most 1 toward the \">= 2\" requirement" in v3
+    assert "18.1b Replicates, not units" in v3
+
+
+@has_v3
+def test_units_and_replicates_stay_distinct_concepts():
+    """Sections 15/16 operate on units; only the replication gate counts replicates."""
+    v3 = CONFIRMATION_CURRENT.read_text(encoding="utf-8")
+    assert "Sections 15 and 16 continue to operate on **outcome units**" in v3
+    assert "Only the replication gate counts replicates" in v3
+    assert "which units it" in v3, "the record must name each replicate's constituent units"
+    # unestablishable replicate identity disqualifies, mirroring 15.2
+    assert "cannot be counted toward gate 18.1 at all" in v3
+
+
+# ---- clarification 3: the frozen fold construction ---------------------------------------------#
+@has_v3
+def test_the_confirmatory_fold_geometry_is_fully_specified():
+    v3 = CONFIRMATION_CURRENT.read_text(encoding="utf-8")
+    assert "# 19. Confirmatory outer-fold construction" in v3
+    assert "outer folds        5" in v3
+    assert "StratifiedKFold(shuffle=True, random_state=23023)" in v3
+    assert "seed                       23451" in v3
+    assert "(biological replicate) x (outcome class y)" in v3
+    assert "round-robin" in v3
+    # the construction must not read expression or performance
+    assert "reads **no** expression value and **no** performance quantity" in v3
+
+
+@has_v3
+def test_the_fold_table_is_frozen_by_digest_before_any_model_runs():
+    v3 = CONFIRMATION_CURRENT.read_text(encoding="utf-8")
+    assert "stage23_2g_confirmation_folds.csv" in v3
+    assert "before** any model is fitted" in v3
+    assert "does not match the committed digest invalidates the run" in v3
+
+
+@has_v3
+def test_the_feasibility_conditions_and_fail_closed_rule_are_frozen():
+    v3 = CONFIRMATION_CURRENT.read_text(encoding="utf-8")
+    for cond in ("F1", "F2", "F3", "F4"):
+        assert f"{cond}  " in v3, cond
+    assert "StratifiedKFold(n_splits=3) is not constructible" in v3
+    assert "CONFIRMATION_GEOMETRY_INFEASIBLE" in v3
+    assert "ROLE_A_UNRESOLVED_NEEDS_NEW_EVIDENCE" in v3
+
+
+@has_v3
+def test_the_forbidden_accommodations_are_named():
+    """Every way a geometry could be bent to fit the data is enumerated and forbidden."""
+    v3 = CONFIRMATION_CURRENT.read_text(encoding="utf-8")
+    forbidden = v3.split("**Forbidden responses to an infeasible geometry:**")[1].split("```")[1]
+    for item in ("reducing the outer-fold count below 5",
+                 "changing the inner CV scheme",
+                 "merging biological replicates",
+                 "dropping a qualifying replicate",
+                 "pooling outcome libraries",
+                 "re-drawing folds with a different seed"):
+        assert item in forbidden, item
+    assert "may NOT be changed after any performance quantity has been seen" in v3
+    assert "issue a new protocol version — not to re-draw folds inside the current run" in v3
+
+
+def test_still_no_reserved_matrix_downloaded():
+    for acc in ("GSM7092517", "GSM7092518", "GSM7092519", "GSM7092520", "GSM7092521"):
+        assert not (S232.REWIND_ROOT / acc).exists(), f"{acc} was downloaded"
