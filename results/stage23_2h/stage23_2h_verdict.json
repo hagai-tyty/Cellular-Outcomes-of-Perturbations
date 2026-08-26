@@ -1,0 +1,71 @@
+{
+  "stage": "23.2H-E",
+  "protocol": {
+    "file": "STAGE_23_2_ROLE_A_CONFIRMATION_V5.md",
+    "canonical_lf_sha256": "b576c95aa1036470db1d041e2540f1ca66f4aee1e60e0f088edd34d1b4ba04fb"
+  },
+  "gates": {
+    "18.1_two_independent_non_R1_biological_replicates": true,
+    "18.2_source_faithful_reconstruction": true,
+    "18.3_measured_design_power": false,
+    "18.4_pooled_dual_gate": true,
+    "18.5_every_replicate_positive": true,
+    "18.6_no_un_re_gated_material_benchmark_change": true
+  },
+  "failing_gates": [
+    "18.3_measured_design_power"
+  ],
+  "primary": {
+    "delta_AP": 0.03050403852138639,
+    "p_perm": 0.0399800099950025,
+    "exceeds_null_p95": true,
+    "per_replicate_delta_AP": {
+      "2": 0.058250852707348644,
+      "3": 0.023291409278453412
+    }
+  },
+  "sensitivity_authorbug_arm": {
+    "delta_AP": 0.0216863419981196,
+    "p_perm": 0.004975124378109453,
+    "exceeds_null_p95": true,
+    "agrees_with_primary_on_the_dual_gate": true,
+    "agrees_with_primary_on_direction": true,
+    "per_replicate_delta_AP": {
+      "2": 0.004288650385740465,
+      "3": 0.05626735409704163
+    },
+    "dominant_replicate_agrees_with_primary": false
+  },
+  "exit": "ROLE_A_UNRESOLVED_NEEDS_NEW_EVIDENCE",
+  "stage_24": "BLOCKED",
+  "underpowered_reporting_required": true,
+  "standing_limitations": [
+    "replicates 1, 2 and 3 use three different source-defined operationalisations of the same biological endpoint (V5 \u00a76.2)",
+    "prevalence differs markedly between the confirmation replicates (1.4% in rep 2 vs 10.4% in rep 3)",
+    "the R2 cutoff is a fixed 26 or equivalently any threshold in (33.34, 60.22]; the shipped object cannot distinguish them (V5 \u00a75.1)",
+    "replicates 2 and 3 are consumed here and are NOT available to Stage 27 (V5 \u00a712)",
+    "PER-REPLICATE ATTRIBUTION IS NOT STABLE. The primary and sensitivity arms differ by one positive clone, yet they disagree about which replicate carries the larger delta_AP -- primary favours replicate 2, the author-coefficient arm favours replicate 3. Both arms agree on direction and on the pooled dual gate. No claim may be made about which replicate the signal lives in.",
+    "the design is underpowered (measured 0.64 against a 0.80 threshold), so the observed effect size is likely inflated by selection-on-significance and must not be quoted as an effect estimate"
+  ],
+  "source_provenance": {
+    "git_commit": "d534b85df801baef3b4fc82e521765616529d96e",
+    "git_dirty_paths": [
+      "M experiments/run_stage23_2_role_a_resolution.py",
+      "?? experiments/run_stage23_2h_confirmation.py"
+    ],
+    "source_files": {
+      "stage23_2_builder": "b42793c2828629536c499e5c34ddc42ef70e2512b536f7f6a09cc043c4bfc1fe",
+      "stage23_builder": "ce43d831b0c7585a226a61c340c95660fa14e67ab2ea0fa3714d822c64e8b7f7",
+      "plan_v2": "dec787ac1b9d745fc93e2ca4625ec30c627e07e67a02c014bbad726d777b4769",
+      "plan_v1_archived": "6bce724a625e32e527c9420a764cc457f18f185fd72e74cc92f2641796af3caf"
+    },
+    "versions": {
+      "python": "3.11.0",
+      "numpy": "2.4.6",
+      "pandas": "3.0.3",
+      "scipy": "1.17.1",
+      "sklearn": "1.9.0"
+    },
+    "platform": "Windows-10-10.0.19045-SP0"
+  }
+}

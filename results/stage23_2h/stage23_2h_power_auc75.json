@@ -1,0 +1,67 @@
+{
+  "stage": "23.2H-C",
+  "cohort_geometry": {
+    "clones": 2310,
+    "positive_clones": 75,
+    "prevalence": 0.032468,
+    "positives_per_fold": {
+      "0": 16,
+      "1": 14,
+      "2": 15,
+      "3": 15,
+      "4": 15
+    }
+  },
+  "calibration": {
+    "beta": 1.1116612363584863,
+    "achieved_median_oracle_AUC": 0.7523161819537658,
+    "target_AUC": 0.75,
+    "calibration_draws": 200,
+    "seed": 23543
+  },
+  "target_AUC": 0.75,
+  "threshold": 0.8,
+  "is_the_pre_registered_gate_point": false,
+  "null": {
+    "n": 200,
+    "p95": 0.007374123000790814,
+    "mean": 0.000182712150490321,
+    "median_oracle_AUC": 0.5005577926920208
+  },
+  "alternative": {
+    "n": 100,
+    "mean": 0.035390752199280284,
+    "median_oracle_AUC": 0.7485577926920208
+  },
+  "power": 0.97,
+  "gate_18_3_measured_power": true,
+  "verdict": "DESIGN_POWER_ADEQUATE",
+  "historical_v4_floor_comparison": {
+    "v4_rule": ">= 140 positive clones, imported from the within-R1 23.2E ladder",
+    "v4_rule_would_say": "FAIL",
+    "v5_rule": "measured power >= 0.80 under the realized confirmation geometry",
+    "note": "V4 \u00a710.1 states the ladder estimates within-R1 detectability under R1's covariate distribution and nothing else; this cohort has ~3x R1's prevalence"
+  },
+  "runtime_minutes": 50.118,
+  "source_provenance": {
+    "git_commit": "d534b85df801baef3b4fc82e521765616529d96e",
+    "git_dirty_paths": [
+      "M experiments/run_stage23_2_role_a_resolution.py",
+      "?? experiments/run_stage23_2h_confirmation.py"
+    ],
+    "source_files": {
+      "stage23_2_builder": "b42793c2828629536c499e5c34ddc42ef70e2512b536f7f6a09cc043c4bfc1fe",
+      "stage23_builder": "ce43d831b0c7585a226a61c340c95660fa14e67ab2ea0fa3714d822c64e8b7f7",
+      "plan_v2": "dec787ac1b9d745fc93e2ca4625ec30c627e07e67a02c014bbad726d777b4769",
+      "plan_v1_archived": "6bce724a625e32e527c9420a764cc457f18f185fd72e74cc92f2641796af3caf"
+    },
+    "versions": {
+      "python": "3.11.0",
+      "numpy": "2.4.6",
+      "pandas": "3.0.3",
+      "scipy": "1.17.1",
+      "sklearn": "1.9.0"
+    },
+    "platform": "Windows-10-10.0.19045-SP0"
+  }
+}

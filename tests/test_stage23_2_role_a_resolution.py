@@ -1250,8 +1250,11 @@ def test_no_reserved_matrix_has_been_downloaded():
 # ============================================================================================== #
 CONFIRMATION_V3 = _protocol_version("V3")
 CONFIRMATION_V4 = _protocol_version("V4")
-# "current" is the newest version present; the V3 clarification contracts below assert against it,
-# so they keep verifying the LIVE protocol rather than a frozen ancestor.
+# The V3 clarification contracts below assert against V4, the last version that carries all three
+# clarifications verbatim. V5 supersedes two of them ON THE RECORD -- the >= 140 floor becomes a
+# measured power gate, and the fold construction is redrawn for a new cohort -- so pointing these
+# contracts at V5 would assert text V5 deliberately replaced. V5 has its own contract module,
+# tests/test_stage23_2h_confirmation.py, which checks both what V5 retains and what it supersedes.
 CONFIRMATION_CURRENT = CONFIRMATION_V4 if CONFIRMATION_V4.exists() else CONFIRMATION_V3
 has_v3 = pytest.mark.skipif(not CONFIRMATION_V3.exists(), reason="confirmation V3 not written")
 
@@ -1486,8 +1489,10 @@ def test_the_external_pass_is_recorded_as_unspent_with_its_blocker(g):
 
 @ran_g
 def test_qualification_pins_the_live_confirmation_protocol(g):
-    live = PLANS / "STAGE_23_2_ROLE_A_CONFIRMATION_V4.md"
-    assert g["confirmation_protocol"]["file"] == live.name
-    assert g["confirmation_protocol"]["canonical_lf_sha256"] == S232.S23.canonical_text_sha256(live)
+    # 23.2G ran under V4. V4 is now archived and V5 is live, so resolve it in either location --
+    # the artifact pins the protocol it actually executed against, which does not move.
+    v4 = _protocol_version("V4")
+    assert g["confirmation_protocol"]["file"] == v4.name
+    assert g["confirmation_protocol"]["canonical_lf_sha256"] == S232.S23.canonical_text_sha256(v4)
     proto = json.loads(PROTOCOL.read_text(encoding="utf-8"))
     assert g["stage23_2_protocol_sha256"] == proto["canonical_sha256"]

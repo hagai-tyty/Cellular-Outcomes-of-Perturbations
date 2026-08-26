@@ -2526,6 +2526,17 @@ STAGE21C_PASS1 = {
 }
 
 
+def _confirmation_protocol_path(version: str) -> Path:
+    """Resolve a confirmation-protocol version in its live or archived location.
+
+    Superseded versions move to `arcive/`. 23.2G executed against V4 and pins V4's digest, so the
+    lookup must keep finding V4 after V5 supersedes it.
+    """
+    name = f"STAGE_23_2_ROLE_A_CONFIRMATION_{version}.md"
+    live = _PLANS / name
+    return live if live.exists() else _PLANS / "arcive" / name
+
+
 def _declared_series_structure() -> dict:
     """Per-replicate pre-state and outcome-side sample counts, from declared GEO metadata only."""
     xml = (REWIND_ROOT / FAMILY_XML).read_text(encoding="utf-8", errors="replace")
@@ -2627,7 +2638,7 @@ def run_23_2g_qualification() -> dict:
         "step": "1 of the V4 §19.0 execution order -- source qualification only",
         "confirmation_protocol": {"file": "STAGE_23_2_ROLE_A_CONFIRMATION_V4.md",
                                   "canonical_lf_sha256": S23.canonical_text_sha256(
-                                      _PLANS / "STAGE_23_2_ROLE_A_CONFIRMATION_V4.md")},
+                                      _confirmation_protocol_path("V4"))},
         "stage23_2_protocol_sha256": json.loads(
             PROTOCOL.read_text(encoding="utf-8"))["canonical_sha256"],
         "nothing_downloaded": True,

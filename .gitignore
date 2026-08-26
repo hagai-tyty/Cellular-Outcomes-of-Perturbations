@@ -57,3 +57,10 @@ gene2vec_cache.txt
 
 # --- Never commit archives of directories that are themselves committed ---
 *.zip
+
+# --- Stage 23.2H caches ---
+# The clone pseudobulk matrix (35 MB) and its clone index are rebuilt in ~1.3 min by
+# `run_stage23_2h_confirmation.py --stage 23.2h-b`. The simulation shards beside them are
+# ~80 h of compute and ARE tracked.
+results/.cache/*.npz
+results/.cache/stage23_2h_clones.json

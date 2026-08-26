@@ -1,0 +1,54 @@
+{
+  "stage": "23.2H-SMOKE",
+  "arm": "PRIMARY",
+  "draws_used": 6,
+  "measured_seconds_per_draw": 26.19,
+  "note": "measured single-process and unloaded; parallel shards contend, so real per-draw cost rises ~10-30% per extra concurrent shard",
+  "eta": {
+    "n_perm=500": {
+      "one_process_hours": 3.64,
+      "two_shards_hours": 1.82,
+      "three_shards_hours": 1.21
+    },
+    "n_perm=1000": {
+      "one_process_hours": 7.28,
+      "two_shards_hours": 3.64,
+      "three_shards_hours": 2.43
+    },
+    "n_perm=2000": {
+      "one_process_hours": 14.55,
+      "two_shards_hours": 7.28,
+      "three_shards_hours": 4.85
+    }
+  },
+  "checks": [
+    {
+      "check": "sequential run produced every draw",
+      "pass": true,
+      "detail": "6/6"
+    },
+    {
+      "check": "3 shards, run out of order, are BIT-IDENTICAL to sequential",
+      "pass": true,
+      "detail": "max abs diff 0.000e+00"
+    },
+    {
+      "check": "interrupt-and-resume reproduces sequential exactly",
+      "pass": true,
+      "detail": "6/6 draws"
+    },
+    {
+      "check": "mixed-protocol cache is refused",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "the frozen 200-permutation result is preserved on disk",
+      "pass": true,
+      "detail": "stage23_2h_confirmation_n200.json"
+    }
+  ],
+  "all_passed": true,
+  "already_cached_for_the_real_run": 0,
+  "runtime_minutes": 8.121
+}

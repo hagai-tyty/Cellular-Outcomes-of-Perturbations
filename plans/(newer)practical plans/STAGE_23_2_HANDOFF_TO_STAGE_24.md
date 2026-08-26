@@ -1,6 +1,66 @@
-# STAGE 23.2 → STAGE 24 HANDOFF (DRAFT)
+# STAGE 23.2 → STAGE 24 HANDOFF
 
-**Status: NOT Stage-24-ready.** V2 §10.6 — a handoff becomes Stage-24-ready only when 23.2G confirms Role A on untouched evidence. 23.2G has not been executed.
+**Status: NOT Stage-24-ready.** 23.2H has now been executed under confirmation protocol V5 and
+returned `ROLE_A_UNRESOLVED_NEEDS_NEW_EVIDENCE`. Five of the six §18 gates pass; the measured
+design-power gate does not. Stage 24 remains BLOCKED.
+
+> **23.2G's `QUALIFYING_SET_EMPTY` verdict is superseded.** It rested on the premise that
+> biological replicates 2 and 3 carry no later outcome. That premise was false: their outcome
+> materials were never deposited in GEO, and a GEO-complete search therefore returned a true answer
+> to the wrong question. `stage_23_2G_RECORD.md` stands unedited; see
+> `RECORDs/stage_23_2G_step1_REOPENED_NEW_EVIDENCE.md` and `RECORDs/stage_23_2H_RECORD.md`.
+
+## 23.2H result — independent confirmation on replicates 2 and 3
+
+```text
+  cohort            2310 clones, 4078 cells, 75 positive clones, prevalence 3.25%
+                    rep 2 = GSM7092517/18 (S4+S5)    rep 3 = GSM7092519 (S1)    ungated only
+
+  PRIMARY ARM       delta_AP  +0.030504     null p95 0.028101     p_perm 0.0299
+    rep 2           delta_AP  +0.058251     CI95 [+0.003038, +0.163776]
+    rep 3           delta_AP  +0.023291     CI95 [-0.035922, +0.088588]
+    transfer        2->3 +0.019420          3->2 +0.028963
+
+  SENSITIVITY ARM   delta_AP  +0.021686     null p95 0.009472     p_perm 0.0050
+    (author spike-in coefficients; agrees on the dual gate and on direction)
+
+  18.1 replicates      PASS        18.4 pooled dual gate     PASS
+  18.2 source-faithful PASS        18.5 direction per rep    PASS
+  18.3 power >= 0.80   FAIL 0.64   18.6 benchmark compat     PASS
+
+  EXIT  ROLE_A_UNRESOLVED_NEEDS_NEW_EVIDENCE       STAGE 24  BLOCKED
+```
+
+### Claims this adds
+
+**Allowed:**
+- the corrected Role-A hypothesis is **supported as underpowered evidence** on two independent
+  biological replicates not used to design the correction
+- the direction is positive in both replicates and in both cross-replicate transfer directions
+- the result is not an artifact of the author spike-in indexing bug
+
+**Forbidden:**
+- Role A is confirmed, or Stage 24 may open
+- `+0.0305` is an effect estimate — an underpowered design selected on significance overstates
+- any statement about which replicate carries the signal (the two arms disagree, on a one-clone
+  difference)
+- describing replicates 1/2/3 as sharing a uniform endpoint
+
+### Evidence firewall — updated
+
+```text
+  consumed by diagnosis      GSM7092515, GSM7092516, ..._BC_gDNA.txt, the Stage-22 Rewind benchmark
+  consumed by CONFIRMATION   GSM7092517, GSM7092518, GSM7092519  (+ the R2/R3 author outcome objects)
+  still reserved             GSM7092520, GSM7092521  -- sorted, a DIFFERENT pre-state population,
+                             disqualified from this claim rather than saved for it
+```
+
+Replicates 2 and 3 are no longer available to Stage 27. Stage 27 must preserve an independent
+biological test on a system not used here.
+
+---
+
+## Historical record below — the pre-23.2H state, retained unedited
 
 Stage-23.2 protocol `78edd5d7f9900349925339169a5d5e3e5011fe23e3c7c22608ac98bfe3427bf4`
 
@@ -84,4 +144,4 @@ unresolved         MODEL_SELECTION_NULL_INFLATION, OUTCOME_LABEL_LIMITATION, ROB
 
 ### Exact Stage-24 opening rule
 
-Stage 24 opens only on ROLE_A_CONFIRMATORY_SUPPORTED from 23.2G -- a pre-registered confirmatory analysis succeeding on evidence not used to design the correction -- together with a complete, benchmark-compatible handoff. Role B positives cannot substitute for it without an explicit roadmap revision.
+Stage 24 opens only on ROLE_A_CONFIRMATORY_SUPPORTED from 23.2G/23.2H -- a pre-registered confirmatory analysis succeeding on evidence not used to design the correction -- together with a complete, benchmark-compatible handoff. Role B positives cannot substitute for it without an explicit roadmap revision.

@@ -1,0 +1,41 @@
+{
+  "stage": "23.2H-B",
+  "matrix": {
+    "clones": 2310,
+    "genes": 36601,
+    "nnz": 14695880,
+    "content_sha256": "06b6525fca2a20719f6cdea52d60f2f7bf8762b2f4f8e35bd541807592f7677b"
+  },
+  "normalization": "sum raw counts per clone -> CP10K -> log1p, applied exactly once",
+  "bdepth_columns": [
+    "log1p(n_pretreatment_cells)",
+    "n_lanes",
+    "log1p(total_raw_GE_UMI)",
+    "log1p(n_detected_GE_features_in_raw_pseudobulk)"
+  ],
+  "all_positive_total_umi": true,
+  "detected_matches_normalised_nonzero_pattern": true,
+  "outcome_free": true,
+  "runtime_minutes": 1.253,
+  "source_provenance": {
+    "git_commit": "d534b85df801baef3b4fc82e521765616529d96e",
+    "git_dirty_paths": [
+      "M experiments/run_stage23_2_role_a_resolution.py",
+      "?? experiments/run_stage23_2h_confirmation.py"
+    ],
+    "source_files": {
+      "stage23_2_builder": "b42793c2828629536c499e5c34ddc42ef70e2512b536f7f6a09cc043c4bfc1fe",
+      "stage23_builder": "ce43d831b0c7585a226a61c340c95660fa14e67ab2ea0fa3714d822c64e8b7f7",
+      "plan_v2": "dec787ac1b9d745fc93e2ca4625ec30c627e07e67a02c014bbad726d777b4769",
+      "plan_v1_archived": "6bce724a625e32e527c9420a764cc457f18f185fd72e74cc92f2641796af3caf"
+    },
+    "versions": {
+      "python": "3.11.0",
+      "numpy": "2.4.6",
+      "pandas": "3.0.3",
+      "scipy": "1.17.1",
+      "sklearn": "1.9.0"
+    },
+    "platform": "Windows-10-10.0.19045-SP0"
+  }
+}

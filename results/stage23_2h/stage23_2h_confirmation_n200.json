@@ -1,0 +1,131 @@
+{
+  "stage": "23.2H-D",
+  "arm": "PRIMARY",
+  "protocol": {
+    "file": "STAGE_23_2_ROLE_A_CONFIRMATION_V5.md",
+    "canonical_lf_sha256": "b576c95aa1036470db1d041e2540f1ca66f4aee1e60e0f088edd34d1b4ba04fb"
+  },
+  "pooled": {
+    "AP_R1_bdepth_only": 0.06901320381913849,
+    "AP_R3_state_plus_bdepth": 0.09951724234052488,
+    "delta_AP": 0.03050403852138639,
+    "selected_per_fold": {
+      "0": {
+        "R1_C": 10,
+        "R3_K": 10,
+        "R3_C": 1
+      },
+      "1": {
+        "R1_C": 1,
+        "R3_K": 20,
+        "R3_C": 0.01
+      },
+      "2": {
+        "R1_C": 1,
+        "R3_K": 50,
+        "R3_C": 1
+      },
+      "3": {
+        "R1_C": 0.1,
+        "R3_K": 10,
+        "R3_C": 0.01
+      },
+      "4": {
+        "R1_C": 0.01,
+        "R3_K": 10,
+        "R3_C": 0.01
+      }
+    }
+  },
+  "nuisance_columns": [
+    "log1p(n_pretreatment_cells)",
+    "n_lanes",
+    "log1p(total_raw_GE_UMI)",
+    "log1p(n_detected_GE_features)",
+    "is_biological_replicate_3"
+  ],
+  "per_replicate": {
+    "2": {
+      "clones": 1827,
+      "positive_clones": 26,
+      "AP_R1_bdepth_only": 0.02012817611749856,
+      "AP_R3_state_plus_bdepth": 0.07837902882484721,
+      "delta_AP": 0.058250852707348644,
+      "bootstrap_ci95": [
+        0.003038204341876418,
+        0.1637763560195749
+      ],
+      "bootstrap_replicates": 2000,
+      "underpowered_alone": true
+    },
+    "3": {
+      "clones": 483,
+      "positive_clones": 49,
+      "AP_R1_bdepth_only": 0.11468176899964994,
+      "AP_R3_state_plus_bdepth": 0.13797317827810335,
+      "delta_AP": 0.023291409278453412,
+      "bootstrap_ci95": [
+        -0.03592159529593294,
+        0.08858837397465001
+      ],
+      "bootstrap_replicates": 2000,
+      "underpowered_alone": true
+    }
+  },
+  "cross_replicate_transfer": {
+    "2->3": {
+      "AP_R1_bdepth_only": 0.1129863032488217,
+      "AP_R3_state_plus_bdepth": 0.13240590421820864,
+      "delta_AP": 0.01941960096938694,
+      "K": 50,
+      "C": 1.0
+    },
+    "3->2": {
+      "AP_R1_bdepth_only": 0.01189095095550788,
+      "AP_R3_state_plus_bdepth": 0.040854162058057066,
+      "delta_AP": 0.028963211102549187,
+      "K": 50,
+      "C": 1.0
+    },
+    "note": "V4 \u00a716.3: a single split per direction, far too noisy to carry a verdict. Strongly negative in BOTH directions while the pooled test passes would indicate a within-replicate-structure artifact."
+  },
+  "permutation": {
+    "n_permutations": 200,
+    "seed_base": 23550,
+    "strata": "size{1,2,3+} x n_lanes x biological_replicate",
+    "observed": 0.03050403852138639,
+    "null_p95": 0.028100915604423744,
+    "null_mean": 0.0077440338840401805,
+    "null_sd": 0.010240761538035196,
+    "null_min": -0.012463595096269618,
+    "null_max": 0.05708554481511639,
+    "n_null_ge_observed": 5,
+    "p_perm": 0.029850746268656716,
+    "exceeds_null_p95": true,
+    "passes": true
+  },
+  "gate_18_4_pooled": true,
+  "gate_18_5_every_replicate_positive": true,
+  "runtime_minutes": 115.331,
+  "source_provenance": {
+    "git_commit": "d534b85df801baef3b4fc82e521765616529d96e",
+    "git_dirty_paths": [
+      "M experiments/run_stage23_2_role_a_resolution.py",
+      "?? experiments/run_stage23_2h_confirmation.py"
+    ],
+    "source_files": {
+      "stage23_2_builder": "b42793c2828629536c499e5c34ddc42ef70e2512b536f7f6a09cc043c4bfc1fe",
+      "stage23_builder": "ce43d831b0c7585a226a61c340c95660fa14e67ab2ea0fa3714d822c64e8b7f7",
+      "plan_v2": "dec787ac1b9d745fc93e2ca4625ec30c627e07e67a02c014bbad726d777b4769",
+      "plan_v1_archived": "6bce724a625e32e527c9420a764cc457f18f185fd72e74cc92f2641796af3caf"
+    },
+    "versions": {
+      "python": "3.11.0",
+      "numpy": "2.4.6",
+      "pandas": "3.0.3",
+      "scipy": "1.17.1",
+      "sklearn": "1.9.0"
+    },
+    "platform": "Windows-10-10.0.19045-SP0"
+  }
+}

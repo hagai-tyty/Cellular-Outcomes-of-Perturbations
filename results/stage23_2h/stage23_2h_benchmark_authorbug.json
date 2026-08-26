@@ -1,0 +1,301 @@
+{
+  "stage": "23.2H-A",
+  "arm": "R3_MAX_PAIRED_TOP200_UNION_AUTHORBUG",
+  "protocol": {
+    "file": "STAGE_23_2_ROLE_A_CONFIRMATION_V5.md",
+    "canonical_lf_sha256": "b576c95aa1036470db1d041e2540f1ca66f4aee1e60e0f088edd34d1b4ba04fb"
+  },
+  "author_object_validation": {
+    "R2": {
+      "object": "primedCellsInd.rds",
+      "author_lineages": 26,
+      "author_cells": 79,
+      "reconstructed_lineages": 26,
+      "reconstructed_cells": 79,
+      "lineage_sets_identical": true,
+      "cell_sets_identical": true,
+      "coefficient_agreement": {
+        "LSD1_4A": {
+          "reconstructed": 0.007452741453020926,
+          "author_stored": 0.007452741453020923,
+          "relative_error": 3.491447047194253e-16
+        },
+        "LSD1_4B": {
+          "reconstructed": 0.045557698817538426,
+          "author_stored": 0.04555769881753843,
+          "relative_error": 1.523100174944734e-16
+        }
+      },
+      "author_SampleNum_values": [
+        "S4",
+        "S5"
+      ],
+      "rule": {
+        "unit": "LSD1_4",
+        "libraries": [
+          "LSD1_4A",
+          "LSD1_4B"
+        ],
+        "coef": {
+          "LSD1_4A": 0.007452741453020926,
+          "LSD1_4B": 0.045557698817538426
+        },
+        "lineages_full_join": 5035,
+        "lineages_inner_join": 636,
+        "lineages_inner_and_linked": 92,
+        "n": 26,
+        "boundary_kept": 60.2182,
+        "boundary_dropped": 33.3361,
+        "selected_lineages": 26
+      }
+    },
+    "R3": {
+      "object": "primedCellIDList.rds elements 6, 15, 24",
+      "author_bug_arm_reproduces_author_object": true,
+      "per_unit": [
+        {
+          "unit": "FS_1",
+          "reconstructed_cells": 27,
+          "author_cells": 27,
+          "identical": true
+        },
+        {
+          "unit": "FS_2",
+          "reconstructed_cells": 75,
+          "author_cells": 75,
+          "identical": true
+        },
+        {
+          "unit": "FS_3",
+          "reconstructed_cells": 83,
+          "author_cells": 83,
+          "identical": true
+        }
+      ],
+      "author_bug_rule": {
+        "n": 200,
+        "coefficients_used": {
+          "FS_1": {
+            "FS_1A": 0.00673140388618269,
+            "FS_1B": 0.014702339472804856
+          },
+          "FS_2": {
+            "FS_2A": 0.014702339472804856,
+            "FS_2B": 0.009232116865618816
+          },
+          "FS_3": {
+            "FS_3A": 0.009232116865618816,
+            "FS_3B": 0.008199715901447557
+          }
+        },
+        "author_bug": true,
+        "per_unit_selected": {
+          "FS_1": 200,
+          "FS_2": 200,
+          "FS_3": 200
+        }
+      },
+      "corrected_rule": {
+        "n": 200,
+        "coefficients_used": {
+          "FS_1": {
+            "FS_1A": 0.00673140388618269,
+            "FS_1B": 0.014702339472804856
+          },
+          "FS_2": {
+            "FS_2A": 0.009232116865618816,
+            "FS_2B": 0.008199715901447557
+          },
+          "FS_3": {
+            "FS_3A": 0.013495691570758913,
+            "FS_3B": 0.016653375889630347
+          }
+        },
+        "author_bug": false,
+        "per_unit_selected": {
+          "FS_1": 200,
+          "FS_2": 200,
+          "FS_3": 200
+        }
+      },
+      "corrected_vs_bugged_lineage_overlap": {
+        "FS_1": 200,
+        "FS_2": 186,
+        "FS_3": 170
+      }
+    }
+  },
+  "eligibility": {
+    "included": {
+      "2": [
+        "S4",
+        "S5"
+      ],
+      "3": [
+        "S1"
+      ]
+    },
+    "excluded": [
+      "S2",
+      "S3"
+    ],
+    "reason": "sorted for proliferation speed -- a different pre-state population from the ungated Stage-22 R1 benchmark"
+  },
+  "outcome_rules": {
+    "2": {
+      "unit": "LSD1_4",
+      "libraries": [
+        "LSD1_4A",
+        "LSD1_4B"
+      ],
+      "coef": {
+        "LSD1_4A": 0.007452741453020926,
+        "LSD1_4B": 0.045557698817538426
+      },
+      "lineages_full_join": 5035,
+      "lineages_inner_join": 636,
+      "lineages_inner_and_linked": 92,
+      "n": 26,
+      "boundary_kept": 60.2182,
+      "boundary_dropped": 33.3361,
+      "selected_lineages": 26
+    },
+    "3": {
+      "n": 200,
+      "coefficients_used": {
+        "FS_1": {
+          "FS_1A": 0.00673140388618269,
+          "FS_1B": 0.014702339472804856
+        },
+        "FS_2": {
+          "FS_2A": 0.014702339472804856,
+          "FS_2B": 0.009232116865618816
+        },
+        "FS_3": {
+          "FS_3A": 0.009232116865618816,
+          "FS_3B": 0.008199715901447557
+        }
+      },
+      "author_bug": true,
+      "per_unit_selected": {
+        "FS_1": 200,
+        "FS_2": 200,
+        "FS_3": 200
+      }
+    }
+  },
+  "ambiguity_exclusions": [],
+  "realized": {
+    "2": {
+      "cells": 3480,
+      "clones": 1827,
+      "positive_cells": 79,
+      "positive_clones": 26,
+      "prevalence": 0.014231
+    },
+    "3": {
+      "cells": 598,
+      "clones": 483,
+      "positive_cells": 61,
+      "positive_clones": 50,
+      "prevalence": 0.10352
+    }
+  },
+  "totals": {
+    "clones": 2310,
+    "cells": 4078,
+    "positive_clones": 76,
+    "positive_cells": 140,
+    "prevalence": 0.0329
+  },
+  "expected_vs_realized_mismatch": {},
+  "folds": {
+    "seed": 23511,
+    "n_outer": 5,
+    "stratified_on": "(biological_replicate, y_primed)",
+    "per_fold": [
+      {
+        "outer_fold": 0,
+        "biological_replicate": "2",
+        "clones": 366,
+        "positives": 6
+      },
+      {
+        "outer_fold": 0,
+        "biological_replicate": "3",
+        "clones": 96,
+        "positives": 10
+      },
+      {
+        "outer_fold": 1,
+        "biological_replicate": "2",
+        "clones": 366,
+        "positives": 5
+      },
+      {
+        "outer_fold": 1,
+        "biological_replicate": "3",
+        "clones": 96,
+        "positives": 10
+      },
+      {
+        "outer_fold": 2,
+        "biological_replicate": "2",
+        "clones": 365,
+        "positives": 5
+      },
+      {
+        "outer_fold": 2,
+        "biological_replicate": "3",
+        "clones": 97,
+        "positives": 10
+      },
+      {
+        "outer_fold": 3,
+        "biological_replicate": "2",
+        "clones": 365,
+        "positives": 5
+      },
+      {
+        "outer_fold": 3,
+        "biological_replicate": "3",
+        "clones": 97,
+        "positives": 10
+      },
+      {
+        "outer_fold": 4,
+        "biological_replicate": "2",
+        "clones": 365,
+        "positives": 5
+      },
+      {
+        "outer_fold": 4,
+        "biological_replicate": "3",
+        "clones": 97,
+        "positives": 10
+      }
+    ]
+  },
+  "runtime_minutes": 0.111,
+  "source_provenance": {
+    "git_commit": "d534b85df801baef3b4fc82e521765616529d96e",
+    "git_dirty_paths": [
+      "M experiments/run_stage23_2_role_a_resolution.py",
+      "?? experiments/run_stage23_2h_confirmation.py"
+    ],
+    "source_files": {
+      "stage23_2_builder": "b42793c2828629536c499e5c34ddc42ef70e2512b536f7f6a09cc043c4bfc1fe",
+      "stage23_builder": "ce43d831b0c7585a226a61c340c95660fa14e67ab2ea0fa3714d822c64e8b7f7",
+      "plan_v2": "dec787ac1b9d745fc93e2ca4625ec30c627e07e67a02c014bbad726d777b4769",
+      "plan_v1_archived": "6bce724a625e32e527c9420a764cc457f18f185fd72e74cc92f2641796af3caf"
+    },
+    "versions": {
+      "python": "3.11.0",
+      "numpy": "2.4.6",
+      "pandas": "3.0.3",
+      "scipy": "1.17.1",
+      "sklearn": "1.9.0"
+    },
+    "platform": "Windows-10-10.0.19045-SP0"
+  }
+}

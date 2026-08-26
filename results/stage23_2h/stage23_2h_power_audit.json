@@ -1,0 +1,72 @@
+{
+  "stage": "23.2H-POWER-AUDIT",
+  "question": "what is the power of the test AS ACTUALLY RUN -- against the profile-permutation null with R1 pinned -- rather than against the label-randomisation null the 23.2E instrument builds?",
+  "target_AUC": 0.66,
+  "calibration": {
+    "beta": 0.6206630039778247,
+    "achieved_median_oracle_AUC": 0.6596002982848621,
+    "target_AUC": 0.66,
+    "calibration_draws": 200,
+    "seed": 23543
+  },
+  "per_synthetic_y": [
+    {
+      "y_index": 0,
+      "positives": 75,
+      "observed_delta_AP": 0.0167840594888723,
+      "null_p95": 0.010833780517588086,
+      "null_mean": 0.003042765300871658,
+      "null_sd": 0.004458776492611788,
+      "n_perm": 150
+    },
+    {
+      "y_index": 1,
+      "positives": 75,
+      "observed_delta_AP": 0.0145695697623736,
+      "null_p95": 0.014089702161473644,
+      "null_mean": 0.003680133146501635,
+      "null_sd": 0.004722409846014834,
+      "n_perm": 150
+    }
+  ],
+  "threshold_spread": {
+    "min": 0.010833780517588086,
+    "max": 0.014089702161473644,
+    "ratio": 1.30053420766645
+  },
+  "recorded_instrument": {
+    "null_p95": 0.007374123000790814,
+    "power": 0.64
+  },
+  "corrected_power_per_y": {
+    "y0": 0.55,
+    "y1": 0.4
+  },
+  "corrected_power": 0.45,
+  "mean_threshold": 0.012461741339530865,
+  "n_alternative_draws": 100,
+  "threshold": 0.8,
+  "note": "REPORTED, not gating. Gate 18.3 was evaluated and recorded under the frozen V5 instrument and its FAILED verdict stands regardless of this number. This audit establishes how far that instrument was off, which bears on how much weight the Role-A result can carry -- not on whether the gate passed.",
+  "runtime_minutes": 1.539,
+  "source_provenance": {
+    "git_commit": "d534b85df801baef3b4fc82e521765616529d96e",
+    "git_dirty_paths": [
+      "M experiments/run_stage23_2_role_a_resolution.py",
+      "?? experiments/run_stage23_2h_confirmation.py"
+    ],
+    "source_files": {
+      "stage23_2_builder": "b42793c2828629536c499e5c34ddc42ef70e2512b536f7f6a09cc043c4bfc1fe",
+      "stage23_builder": "ce43d831b0c7585a226a61c340c95660fa14e67ab2ea0fa3714d822c64e8b7f7",
+      "plan_v2": "dec787ac1b9d745fc93e2ca4625ec30c627e07e67a02c014bbad726d777b4769",
+      "plan_v1_archived": "6bce724a625e32e527c9420a764cc457f18f185fd72e74cc92f2641796af3caf"
+    },
+    "versions": {
+      "python": "3.11.0",
+      "numpy": "2.4.6",
+      "pandas": "3.0.3",
+      "scipy": "1.17.1",
+      "sklearn": "1.9.0"
+    },
+    "platform": "Windows-10-10.0.19045-SP0"
+  }
+}
