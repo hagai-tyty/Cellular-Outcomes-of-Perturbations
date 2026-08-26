@@ -18,6 +18,25 @@ ship, so it is frozen rather than superseded.
 
 No Stage-25 ranking statistic exists. The 1,000-draw permutation run has **not** been started.
 
+## Inputs
+- `STAGE_23_5_GEN1_ROLE_B_SHIP_PLAN_V1.md`, drafted externally and imported unmodified for audit
+- repository evidence base, commit `c52c7ac9a73abcf121624112d52f4f463db06f7a`
+- `results/stage22_wm989_clones.csv`, `results/stage22_wm989_clone_treatment.csv`
+- `results/stage23_wm989_interaction_results.json`, `results/stage23_final_synthesis.json`
+- `results/stage23_wm989_detection_oof.csv`, `results/stage23_wm989_interaction_oof.csv`
+- `results/stage23_2h/stage23_2h_verdict.json`
+- `CELLFATE_RX_CURRENT_VISION_ROADMAP_V5.md`, for the stage-numbering check
+
+## Files added
+- `plans/(newer)practical plans/STAGE_23_5_GEN1_ROLE_B_SHIP_PLAN_V1.md`
+- `plans/(newer)practical plans/RECORDs/stage_23_5_RECORD.md`
+- `results/stage23_5_protocol.json` — the digest-bearing freeze artifact
+- `results/stage23_5_handoff_to_stage24.json`
+
+## Files modified
+- none. The imported plan was corrected in place before it was ever committed, so no committed
+  artifact was edited. No Stage-22, Stage-23 or Stage-23.2 file was touched.
+
 ## Provenance
 The plan was drafted externally and imported. It was **not** accepted as given: every number was
 re-derived from the repository at commit `c52c7ac9a73abcf121624112d52f4f463db06f7a`.
@@ -260,6 +279,59 @@ The plan cannot contain its own digest without recursion, so the protocol is aut
 Stage 24 is a bounded predictor-engineering stage: reproduce W1/W4/W5 under the §7.1 gate, build
 and freeze the W5 tool, emit one frozen OOF prediction per clone-condition row, hand them to Stage
 25. It may not inspect the ranking metric, replace W5 on the same folds, or add data.
+
+## Tests
+
+The section-12 checklist was the stage's own gate: **38 / 38**, walked once in full, mechanical
+where mechanical was possible. Two items were added beyond the plan's own list — that the stage
+numbering does not collide with the live roadmap, and that no historical verdict was altered.
+
+**The repository test suite was RED at the freeze commit (`ed7e280`), and that is on the record.**
+The two new `results/stage23_5_*.json` artifacts tripped
+`test_the_determinism_set_covers_every_committed_stage23_artifact`, which globs `results/stage23_*`
+and excluded interstitials with a hardcoded `startswith("stage23_2")`. Stage 23.5's files start
+`stage23_5`, so the exclusion stopped covering. `test_ci_portability` re-ran the suite and inherited
+the same failure.
+
+This was a bookkeeping omission in the freeze commit, not a defect in the plan or its verification,
+and it was repaired in the next commit (`9506c1d`) by generalising the exclusion to
+`stage23_<digit>` and asserting the wider rule had not swallowed a real Stage-23 artifact. After
+that fix: **2092 passed, 1 skipped**, ruff clean. It is recorded here rather than quietly fixed
+because a freeze commit that leaves CI red is worth seeing.
+
+## Result
+
+```text
+  STAGE 23.5 FROZEN
+  plan canonical-LF sha256   8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48
+  plan version               V1 -- frozen rather than superseded, being the first version the
+                             project believes will ship
+  section-12 checklist       38 / 38
+  quantities verified        28 / 28 exact
+  specification defects      4 found, 4 repaired pre-freeze
+  criteria relaxed           1, logged: delta_TOP1 "> 0" -> ">= 0"
+  exit                       STAGE_24_OPEN_ROLE_B_PRIMARY_GEN1
+```
+
+## Scientific interpretation
+
+**Proves:** the Generation-1 claim architecture and its one load-bearing future test are frozen
+honestly. Every quantity the plan quotes matches its source artifact; the ranking metric, null,
+population, thresholds and reporting rule are fixed before any ranking statistic exists; and both
+verdicts lead to the same mandatory shipment, so there is no incentive to steer the result.
+
+**Does NOT prove:**
+- **anything about the ranking claim.** No Stage-25 statistic exists. A frozen protocol is a
+  guarantee about process, not evidence about biology.
+- **that Role B replicates.** No independent biological replication has been performed;
+  clone-held-out folds and two endpoint families are not replication.
+- **that Role A is confirmed.** It remains positive-but-underpowered supporting evidence, and gate
+  18.3 stands FAILED at 0.64 (audited 0.45) permanently.
+- **that Stage 24 will succeed.** Opening a stage is not passing it.
+
+## Next action
+Stage 24 under `STAGE_24_OPEN_ROLE_B_PRIMARY_GEN1`. The §8.7 permutation run belongs to Stage 25 and
+must not be started by Stage 24.
 
 ## Not started
 

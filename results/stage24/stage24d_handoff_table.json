@@ -1,0 +1,39 @@
+{
+  "stage": "24D",
+  "table": "stage24_oof_for_stage25.csv",
+  "sha256": "abdc2999c0ee388fb2f2928318ff8a935921aaa72462d6d3c0ed64384e12e9a6",
+  "rows": 8406,
+  "clones": 1401,
+  "eligible_clones": 892,
+  "expected_eligible": 892,
+  "eligibility_rule": ">=1 C1-positive condition AND >=1 C1-zero condition (plan 8.4)",
+  "excluded": {
+    "all_zero": 472,
+    "all_positive": 37
+  },
+  "columns": [
+    "clone_id",
+    "treatment",
+    "outer_fold",
+    "y",
+    "pred_W1",
+    "pred_W4",
+    "pred_W5",
+    "detected_post",
+    "ranking_eligible"
+  ],
+  "checks": {
+    "rows": true,
+    "clones": true,
+    "six_rows_per_clone": true,
+    "one_fold_per_clone": true,
+    "no_missing_scores": true,
+    "y_matches_detected_post": true,
+    "eligible_count_is_892": true,
+    "treatment_vocabulary_exact": true
+  },
+  "all_checks_pass": true,
+  "ranking_statistic_computed": false,
+  "note": "Stage 24 may not inspect the ranking metric. No AUC, delta_RANK or top-1 quantity is computed here. The 892 count is an input-integrity check that plan 8.4 requires performed before scoring.",
+  "runtime_minutes": 0.002
+}

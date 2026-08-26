@@ -191,3 +191,33 @@ def test_pseudobulk_normalisation_is_applied_exactly_once():
     # summing already-normalised cells would double-normalise; a zero clone is a blocking condition
     with pytest.raises(PredictionError):
         clone_pseudobulk_from_counts(np.zeros((2, 3)))
+
+
+# ============================================================================================== #
+# The CLI — a refusal must be visible in the exit code, not only in the payload
+# ============================================================================================== #
+@has_artifact
+def test_the_cli_exit_code_distinguishes_scored_refused_and_unreadable():
+    import subprocess
+    import sys as _sys
+    base = [_sys.executable, "-m", "cellfate.gen1_cli",
+            "--artifact", str(ART_NPZ), "--meta", str(ART_META)]
+    env = {"PYTHONPATH": str(ROOT / "src"), "PYTHONUTF8": "1",
+           "PATH": __import__("os").environ.get("PATH", "")}
+
+    bad_schema = subprocess.run([*base, "--expression", "1,2,3"], capture_output=True, env=env)
+    assert bad_schema.returncode == 2, "a refusal must not exit 0"
+    assert b"UNSUPPORTED_FEATURE_SCHEMA" in bad_schema.stdout
+
+    unreadable = subprocess.run([*base, "--expression", "/nope/missing.npy"],
+                                capture_output=True, env=env)
+    assert unreadable.returncode == 3
+    assert b"OUT_OF_CONTRACT_INPUT" in unreadable.stderr
+
+
+def test_the_cli_documents_its_exit_codes():
+    doc = (ROOT / "src" / "cellfate" / "gen1_cli.py").read_text(encoding="utf-8")
+    flat = " ".join(doc.split())
+    assert "0 every requested condition was scored" in flat
+    assert "2 at least one condition was refused" in flat
+    assert "a missing score is never silently a zero" in flat

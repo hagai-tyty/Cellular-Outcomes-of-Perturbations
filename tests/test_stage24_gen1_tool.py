@@ -173,3 +173,115 @@ def test_24b_could_not_have_run_before_24a():
     src = (ROOT / "experiments" / "run_stage24_gen1_tool.py").read_text(encoding="utf-8")
     assert 'raise RuntimeError("24A must run before 24B")' in src
     assert 'raise RuntimeError("24A did not pass; 24B may not run")' in src
+
+
+# ============================================================================================== #
+# 24D–24G — the handoff Stage 25 consumes
+# ============================================================================================== #
+D_JSON = OUT / "stage24d_handoff_table.json"
+E_JSON = OUT / "stage24e_determinism_and_leakage.json"
+F_JSON = OUT / "stage24f_tool_freeze.json"
+G_JSON = RESULTS / "stage24_handoff_to_stage25.json"
+D_CSV = OUT / "stage24_oof_for_stage25.csv"
+
+ran_d = pytest.mark.skipif(not D_JSON.exists(), reason="24D has not been run")
+ran_e = pytest.mark.skipif(not E_JSON.exists(), reason="24E has not been run")
+ran_f = pytest.mark.skipif(not F_JSON.exists(), reason="24F has not been run")
+ran_g = pytest.mark.skipif(not G_JSON.exists(), reason="24G has not been run")
+
+
+@ran_d
+def test_the_handoff_table_is_complete_and_the_population_is_892():
+    d = _json(D_JSON)
+    assert d["all_checks_pass"] is True
+    assert d["rows"] == 8406 and d["clones"] == 1401
+    assert d["eligible_clones"] == 892 == d["expected_eligible"]
+    assert d["excluded"] == {"all_zero": 472, "all_positive": 37}
+    for k in ("pred_W1", "pred_W4", "pred_W5", "ranking_eligible", "outer_fold"):
+        assert k in d["columns"], k
+
+
+@ran_d
+def test_stage_24_computed_no_ranking_statistic():
+    """Stage 24 emits Stage 25's inputs. It is forbidden from looking at the answer."""
+    d = _json(D_JSON)
+    assert d["ranking_statistic_computed"] is False
+    # Scan the DATA, not the prose. `note` and `eligibility_rule` deliberately name the quantities
+    # that were NOT computed, so including them would make this contract fail on its own wording.
+    data = {k: v for k, v in d.items() if k not in ("note", "eligibility_rule")}
+    blob = json.dumps(data).lower()
+    for banned in ("delta_rank", "auroc", "auc_i", "top1", "delta_top1"):
+        assert banned not in blob, f"a ranking quantity leaked into the handoff table: {banned}"
+
+
+@ran_e
+def test_scoring_is_deterministic_and_reproduces_the_frozen_column():
+    e = _json(E_JSON)
+    assert e["determinism"]["within_session"] is True
+    assert e["determinism"]["across_loads"] is True
+    assert e["determinism"]["max_abs_diff_vs_frozen"] < 1e-12
+    assert e["clones_sampled"] >= 50
+
+
+@ran_e
+def test_every_fold_component_is_isolated_from_the_clones_it_scores():
+    """Verified from the artifact's own recorded training set, not inferred from the OOF."""
+    e = _json(E_JSON)
+    assert e["leakage"]["every_fold_isolated"] is True
+    for f in range(5):
+        iso = e["leakage"]["fold_isolation"][f"fold{f}"]
+        assert iso["overlap"] == 0, f"fold{f} trained on clones it is used to score"
+        assert iso["held_out_clones"] > 0 and iso["train_clones"] > 0
+    assert e["leakage"]["deployment_trained_on_all_clones"] is True
+
+
+@ran_e
+def test_the_artifact_carries_no_outcome_and_no_lineage_feature():
+    e = _json(E_JSON)
+    assert e["leakage"]["no_outcome_length_array_in_artifact"] is True
+    assert e["leakage"]["outcome_length_arrays_found"] == []
+    assert e["leakage"]["n_expression_features"] == 36601
+    assert e["leakage"]["feature_space_is_gene_expression_only"] is True
+
+
+@ran_f
+def test_every_plan_6_5_deliverable_exists():
+    f = _json(F_JSON)
+    assert f["all_deliverables_present"] is True
+    for k in ("python_prediction_api", "command_line_interface", "frozen_model_artifact",
+              "machine_readable_schemas", "model_card", "example_dataset", "unit_tests",
+              "end_to_end_reproduction"):
+        assert k in f["deliverables"], k
+    for name in ("MODEL_CARD.md", "io_schema.json", "example_clones.csv"):
+        assert name in f["hashes"]
+
+
+@ran_f
+def test_the_model_card_carries_the_limitations_and_the_ranking_caveat():
+    card = (OUT / "tool" / "MODEL_CARD.md").read_text(encoding="utf-8")
+    flat = " ".join(card.replace("**", "").split())
+    assert "not validated on held-out data" in flat
+    assert "order is not a validated condition ranking" in flat
+    assert "Not a clinical tool" in flat
+    assert "3.45x the state contribution" in flat
+
+
+@ran_g
+def test_stage_24_hands_off_ready_and_names_what_stage_25_may_not_do():
+    g = _json(G_JSON)
+    assert g["stage_24_verdict"] == "STAGE_24_GEN1_TOOL_READY"
+    assert g["substage_results"]["24B"] == "BYTE_IDENTICAL"
+    assert g["substage_results"]["24C"] == "SERIALIZED_AND_EQUIVALENT"
+    assert g["ranking_metric_inspected_by_stage_24"] is False
+    assert g["ranking_statistic_computed_by_stage_24"] is False
+    assert g["ranking_population"]["eligible_clones"] == 892
+    may_not = " ".join(g["stage_25_may_not"])
+    for item in ("change the metric", "reduce the permutation count", "rescue a failed C1",
+                 "add a dataset", "revise the plan after seeing a result"):
+        assert item in may_not, item
+
+
+@ran_g
+def test_the_handoff_table_hash_matches_the_file_on_disk():
+    g = _json(G_JSON)
+    assert hashlib.sha256(D_CSV.read_bytes()).hexdigest() == g["frozen_oof_table"]["sha256"]

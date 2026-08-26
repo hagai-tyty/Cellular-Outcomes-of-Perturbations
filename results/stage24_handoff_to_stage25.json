@@ -1,0 +1,63 @@
+{
+  "from_stage": "24",
+  "to_stage": "25",
+  "plan_canonical_lf_sha256": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48",
+  "stage_24_verdict": "STAGE_24_GEN1_TOOL_READY",
+  "substage_results": {
+    "24A": true,
+    "24B": "BYTE_IDENTICAL",
+    "24C": "SERIALIZED_AND_EQUIVALENT",
+    "24D": true,
+    "24E": true,
+    "24F": true
+  },
+  "frozen_oof_table": {
+    "path": "results/stage24/stage24_oof_for_stage25.csv",
+    "sha256": "abdc2999c0ee388fb2f2928318ff8a935921aaa72462d6d3c0ed64384e12e9a6",
+    "rows": 8406,
+    "clones": 1401,
+    "columns": [
+      "clone_id",
+      "treatment",
+      "outer_fold",
+      "y",
+      "pred_W1",
+      "pred_W4",
+      "pred_W5",
+      "detected_post",
+      "ranking_eligible"
+    ]
+  },
+  "ranking_population": {
+    "eligible_clones": 892,
+    "rule": ">=1 C1-positive condition AND >=1 C1-zero condition (plan 8.4)",
+    "excluded": {
+      "all_zero": 472,
+      "all_positive": 37
+    },
+    "verified_mechanically": true
+  },
+  "model_artifact": {
+    "path": "results/stage24/stage24_w5_artifact.npz",
+    "sha256": "954cef7cff296d994d10bae3741ced1c8c9c5c7f97b13877a2916cf26b713315",
+    "meta": "results/stage24/stage24_w5_artifact.json",
+    "gitignored": true,
+    "rebuild": "run_stage24_gen1_tool.py --stage 24c, ~0.5 min"
+  },
+  "ranking_metric_inspected_by_stage_24": false,
+  "ranking_statistic_computed_by_stage_24": false,
+  "stage_25_must": [
+    "compute delta_RANK from THIS table only; no retraining, no re-selection",
+    "verify the 892-clone eligible population before scoring",
+    "run the 1,000-draw full-refit null with per-shard cache files and a completeness assertion; ~19-20 h across three shards; no early stopping",
+    "record STAGE_25_RANKING_SUPPORTED or STAGE_25_RANKING_NOT_SUPPORTED once",
+    "proceed to GEN1_MANDATORY_SHIP on either verdict"
+  ],
+  "stage_25_may_not": [
+    "change the metric, population, weighting, comparator, endpoint or null",
+    "reduce the permutation count or stop early",
+    "use C2 or a per-treatment result to rescue a failed C1 ranking",
+    "add a dataset",
+    "revise the plan after seeing a result"
+  ]
+}

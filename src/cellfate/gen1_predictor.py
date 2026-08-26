@@ -72,6 +72,7 @@ class _Component:
     C: float
     coef: np.ndarray
     intercept: float
+    train_clones_sha256: str = ""
 
     def score(self, x: np.ndarray, b: np.ndarray, dummies: np.ndarray) -> np.ndarray:
         """Apply the frozen transform chain, then the linear model, for one clone x N conditions."""
@@ -111,7 +112,9 @@ class Gen1Predictor:
                 pc_mu=g["pc_mu"], pc_sd=g["pc_sd"],
                 nuis_mu=g["nuis_mu"], nuis_sd=g["nuis_sd"],
                 K=int(g["K"]), C=float(g["C"]),
-                coef=g["coef"], intercept=float(g["intercept"]))
+                coef=g["coef"], intercept=float(g["intercept"]),
+                train_clones_sha256=str(g["train_clones_sha256"])
+                if "train_clones_sha256" in g else "")
 
         prefixes = sorted({k.split("__", 1)[0] for k in z.files})
         components = {p: build(p) for p in prefixes}

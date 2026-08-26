@@ -10,16 +10,49 @@ stage, not an architecture search.
 `8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48`, recorded in
 `results/stage23_5_protocol.json`. Opening status `STAGE_24_OPEN_ROLE_B_PRIMARY_GEN1`.
 
+## Inputs
+- `STAGE_23_5_GEN1_ROLE_B_SHIP_PLAN_V1.md` @ `8da16fca...bced48`, plus
+  `results/stage23_5_protocol.json` and `results/stage23_5_handoff_to_stage24.json`
+- the frozen Stage-23 WM989 artifacts, read-only: `stage23_wm989_detection_oof.csv`,
+  `stage23_wm989_abundance_oof.csv`, `stage23_wm989_interaction_oof.csv`,
+  `stage23_wm989_interaction_abundance_oof.csv`, `stage23_wm989_results.json`,
+  `stage23_wm989_interaction_results.json`
+- `results/stage22_wm989_clones.csv` for the nuisance block
+- `_cc_cache/stage23/GSE279162_pseudobulk.npz`, the frozen clone-level representation
+- `D:/GSE279162` for the feature-schema contract
+
+## Files added
+- `experiments/run_stage24_gen1_tool.py`
+- `src/cellfate/gen1_predictor.py` — the shipped API
+- `tests/test_stage24_gen1_tool.py`, `tests/test_gen1_predictor.py`
+- `results/stage24/` — engineering plan, reproduction report, serialization report, artifact
+  metadata, and `repro/` holding the regenerated files the gate compared against
+
+## Files modified
+- `tests/test_stage23_learnability_gate.py` — generalised the interstitial exclusion
+- `.gitignore` — the 44 MB tool artifact
+- no Stage-22, Stage-23, Stage-23.2 or Stage-23.5 artifact was modified
+
+## What changed
+- Stage 24 opened and 24A-24C executed
+- W5 serialized into a loadable artifact with a public prediction API
+
+## What did NOT change
+- `src/cellfate/` gained a new module but no existing module was altered
+- the W5 model, its features, its grid and its selection rule are the frozen Stage-23 ones
+- every frozen Stage-23 artifact still hash-matches `git HEAD`, asserted by contract
+- no Stage-25 statistic exists; the ranking metric has not been inspected
+
 ## Progress
 
 ```text
   24A  consume handoff, freeze engineering plan     DONE
   24B  reproduce W1/W4/W5 under the §7.1 gate       DONE   BYTE_IDENTICAL
   24C  serialization, preprocessing, prediction API  DONE   SERIALIZED_AND_EQUIVALENT
-  24D  frozen OOF per clone-condition row            --
-  24E  deterministic scoring + leakage contracts     --
-  24F  freeze W5 tool artifacts                      --
-  24G  hand frozen predictions/model to Stage 25     --
+  24D  frozen OOF per clone-condition row           DONE   8,406 rows, 892 eligible
+  24E  deterministic scoring + leakage contracts     DONE   7/7 checks
+  24F  freeze W5 tool artifacts                      DONE   all §6.5 deliverables
+  24G  hand frozen predictions/model to Stage 25     DONE   STAGE_24_GEN1_TOOL_READY
 ```
 
 ---
@@ -155,6 +188,80 @@ over ~18k retained genes. It rebuilds in ~0.5 min from committed inputs, its sha
 the committed `stage24_w5_artifact.json`, and for the reproducibility package it ships as a release
 asset.
 
+## 24D — the table Stage 25 consumes
+
+```text
+  rows                    8,406      one per clone x condition
+  clones                  1,401      six rows each, one outer fold each
+  columns                 clone_id, treatment, outer_fold, y, pred_W1, pred_W4, pred_W5,
+                          detected_post, ranking_eligible
+  ranking-eligible        892        >=1 C1-positive AND >=1 C1-zero  (plan §8.4)
+  excluded                472 all-zero, 37 all-positive -- within-clone AUROC undefined
+  integrity checks        8 / 8
+```
+
+`y` was asserted equal to `detected_post` rather than assumed. The 892 count is verified here
+because §8.4 requires it verified **before** scoring, and 24D is the last point at which Stage 24
+touches the table.
+
+**No ranking statistic was computed.** Stage 24 is forbidden from inspecting the ranking metric, so
+24D emits inputs and asserts their integrity — no AUC, no `delta_RANK`, no top-1 quantity. A
+contract scans the artifact for those names to keep it that way.
+
+## 24E — determinism and leakage
+
+```text
+  deterministic within a session                 True    60 clones
+  deterministic across independent loads         True
+  reproduces the frozen out-of-fold column       max |diff| 2.498e-16
+
+  fold isolation      every fold component verified DISJOINT from the clones it scores,
+                      read from the artifact's own recorded training set rather than
+                      inferred from the fact that the OOF reproduces
+  deployment          trained on all 1,401 clones, as declared
+  no outcome array    the artifact carries no array of the outcome's length
+  feature space       36,601 Gene Expression features; the 153,055 WM989 Custom lineage
+                      features cannot be addressed by a filter indexing into a GE space
+```
+
+That fold-isolation check is why 24C started recording each component's training clone set: proving
+a model never saw what it scores is worth more than inferring it.
+
+## 24F — the §6.5 deliverables, frozen and hashed
+
+```text
+  Python prediction API        src/cellfate/gen1_predictor.py
+  command-line interface       src/cellfate/gen1_cli.py
+  frozen model artifact        stage24_w5_artifact.npz  (gitignored, 44 MB, rebuilds in ~0.5 min)
+  frozen vocabularies          treatments, nuisance order, feature contract
+  preprocessing artifact       gene filter + PCA basis + scalers, per component
+  machine-readable schemas     tool/io_schema.json
+  model card                   tool/MODEL_CARD.md
+  example dataset              tool/example_clones.csv, from permitted benchmark material only
+  unit tests                   36 contracts across two modules
+  end-to-end reproduction      24B BYTE_IDENTICAL, 24C equivalence 5e-16
+```
+
+The CLI distinguishes outcomes in its **exit code**: `0` every condition scored, `2` at least one
+refused, `3` input unreadable. A refusal that exits `0` would let a caller treat a missing score as
+a real one.
+
+## 24G — handoff
+
+```text
+  STAGE_24_GEN1_TOOL_READY
+
+  table            results/stage24/stage24_oof_for_stage25.csv, hashed in the handoff
+  model            stage24_w5_artifact.npz + its metadata
+  population       892 eligible clones, verified mechanically
+  ranking metric   NOT inspected by Stage 24
+  ranking stat     NOT computed by Stage 24
+```
+
+The handoff also names what Stage 25 may not do: change the metric, population, weighting,
+comparator, endpoint or null; reduce the permutation count or stop early; use C2 or a per-treatment
+result to rescue a failed C1 ranking; add a dataset; or revise the plan after seeing a result.
+
 ## Tests
 - 12 Stage-24 contracts + 13 predictor contracts, 0 skipped
 - **Mutation-tested**, all five caught: flipping `gate_self_consistent`, changing C2's row
@@ -174,6 +281,23 @@ Two existing CI invariants caught real omissions of mine, both fixed:
 
 Neither was a CI defect. Both were the checks doing exactly what they exist for.
 
+## Result
+
+```text
+  24A   handoff integrity                 12 / 12 checks
+  24B   reproduction                      BYTE_IDENTICAL on all three files
+          R2 worst absolute difference     0.0 over every prediction cell
+          R3 within-clone orderings        1,401 clones, W4 and W5, unchanged
+  24C   serialization                     SERIALIZED_AND_EQUIVALENT
+          artifact vs frozen pred_W5       max |diff| 4.996e-16 over 8,406 rows
+          shipped API vs frozen            max |diff| 2.220e-16 over 40 clones
+          deployment component             K=50, C=0.1, 18,290 genes, 309 columns
+  24D   handoff table                     8,406 rows, 892 eligible, 8/8 checks
+  24E   determinism + leakage             7/7 checks, every fold component isolated
+  24F   §6.5 deliverables                 all present and hashed
+  24G   handoff                           STAGE_24_GEN1_TOOL_READY
+```
+
 ## Scientific interpretation
 
 **Proves:** the frozen Stage-23 W5 result is exactly reproducible from the committed code and data —
@@ -186,5 +310,9 @@ forbidden from inspecting the ranking metric. Reproducibility is a property of t
 evidence for the hypothesis.
 
 ## Next action
-24C — serialization, preprocessing and the prediction API. The §8.7 permutation run (~19-20 h across
-three shards) belongs to Stage 25 and has **not** been started.
+**Stage 25.** Compute `delta_RANK` from the frozen table only, verify the 892-clone population
+before scoring, and run the 1,000-draw full-refit null (~19-20 h across three shards, per-shard
+cache files, completeness assertion, no early stopping). Record `STAGE_25_RANKING_SUPPORTED` or
+`STAGE_25_RANKING_NOT_SUPPORTED` once; either verdict proceeds to `GEN1_MANDATORY_SHIP`.
+
+That permutation run has **not** been started.

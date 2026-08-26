@@ -43,6 +43,6 @@
     "frozen_artifacts_are_read_only": true,
     "how_reproduction_avoids_overwriting": "run_stage23_learnability_gate writes WM989 outputs to module-level path constants. 24B rebinds those constants to results/stage24/repro/ for the duration of the call, so the frozen files are the comparison target and are never written to."
   },
-  "runtime_minutes": 0.0014,
+  "runtime_minutes": 0.0005,
   "source_provenance": {}
 }

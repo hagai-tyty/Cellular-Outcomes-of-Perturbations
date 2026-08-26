@@ -1,0 +1,33 @@
+{
+  "stage": "24F",
+  "artifact_sha256": "954cef7cff296d994d10bae3741ced1c8c9c5c7f97b13877a2916cf26b713315",
+  "deliverables": {
+    "python_prediction_api": "src/cellfate/gen1_predictor.py",
+    "command_line_interface": "src/cellfate/gen1_cli.py",
+    "frozen_model_artifact": "results/stage24/stage24_w5_artifact.npz",
+    "frozen_vocabularies": "stage24_w5_artifact.json (treatments, nuisance, feature contract)",
+    "deterministic_preprocessing_artifact": "gene filter + PCA basis + scalers, serialized per component in the npz",
+    "machine_readable_schemas": "results/stage24/tool/io_schema.json",
+    "model_card": "results/stage24/tool/MODEL_CARD.md",
+    "example_dataset": "results/stage24/tool/example_clones.csv",
+    "unit_tests": "tests/test_gen1_predictor.py, tests/test_stage24_gen1_tool.py",
+    "end_to_end_reproduction": "24B BYTE_IDENTICAL, 24C artifact equivalence 5e-16"
+  },
+  "deliverables_present": {
+    "python_prediction_api": true,
+    "command_line_interface": true,
+    "frozen_model_artifact": true,
+    "machine_readable_schemas": true,
+    "model_card": true,
+    "example_dataset": true
+  },
+  "all_deliverables_present": true,
+  "hashes": {
+    "MODEL_CARD.md": "d60630bbcb146854b9889ca8eed86ef73fd923ac0a68292bc7881339e624b766",
+    "io_schema.json": "67bf76e1cbb3436b2f1f3922da792cb8c094c4ede4001940f1cb03f4a1a33199",
+    "example_clones.csv": "330cc7c8a68d77c0eabfef5da015f48c8969f0ce7cd1a4281a73af4028621c2e",
+    "stage24_oof_for_stage25.csv": "abdc2999c0ee388fb2f2928318ff8a935921aaa72462d6d3c0ed64384e12e9a6",
+    "stage24_w5_artifact.json": "87ebfe9ad31d0645db9829a38fd3a26e7c685a05814532066f3e9078ac4c83f9"
+  },
+  "runtime_minutes": 0.014
+}

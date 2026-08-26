@@ -1,0 +1,62 @@
+{
+  "stage": "24E",
+  "clones_sampled": 60,
+  "determinism": {
+    "within_session": true,
+    "across_loads": true,
+    "max_abs_diff_vs_frozen": 2.498001805406602e-16
+  },
+  "leakage": {
+    "fold_isolation": {
+      "fold0": {
+        "train_clones": 1120,
+        "held_out_clones": 281,
+        "overlap": 0,
+        "isolated": true
+      },
+      "fold1": {
+        "train_clones": 1121,
+        "held_out_clones": 280,
+        "overlap": 0,
+        "isolated": true
+      },
+      "fold2": {
+        "train_clones": 1121,
+        "held_out_clones": 280,
+        "overlap": 0,
+        "isolated": true
+      },
+      "fold3": {
+        "train_clones": 1121,
+        "held_out_clones": 280,
+        "overlap": 0,
+        "isolated": true
+      },
+      "fold4": {
+        "train_clones": 1121,
+        "held_out_clones": 280,
+        "overlap": 0,
+        "isolated": true
+      }
+    },
+    "every_fold_isolated": true,
+    "deployment_trained_on_all_clones": true,
+    "no_outcome_length_array_in_artifact": true,
+    "outcome_length_arrays_found": [],
+    "feature_space_is_gene_expression_only": true,
+    "n_expression_features": 36601,
+    "wm989_custom_lineage_features_excluded": true,
+    "note": "the 153,055 WM989 Custom lineage features are excluded by construction -- the artifact's gene filter indexes into a 36,601-feature GE space and cannot address a lineage column"
+  },
+  "checks": {
+    "deterministic_within_a_session": true,
+    "deterministic_across_loads": true,
+    "reproduces_frozen_oof": true,
+    "every_fold_component_isolated_from_its_test_clones": true,
+    "deployment_component_saw_all_clones_as_declared": true,
+    "artifact_carries_no_outcome_length_array": true,
+    "feature_space_is_36601_gene_expression": true
+  },
+  "all_checks_pass": true,
+  "runtime_minutes": 0.028
+}

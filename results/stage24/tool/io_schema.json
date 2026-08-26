@@ -1,0 +1,58 @@
+{
+  "input": {
+    "form_A_raw": {
+      "expression_counts": "cells x 36601 raw pretreatment GE counts",
+      "clone_id": "string, for aggregation",
+      "naive_sample_identity": "required to reconstruct B"
+    },
+    "form_B_aggregated": {
+      "expression": "float[36601], clone-level CP10K/log1p",
+      "nuisance": {
+        "order": [
+          "log1p(n_naive_cells)",
+          "log1p(n_naive1_cells)",
+          "log1p(n_naive2_cells)",
+          "log1p(n_naive3_cells)"
+        ],
+        "required": true,
+        "imputation": "FORBIDDEN -- a missing block returns MISSING_REQUIRED_NUISANCE"
+      }
+    },
+    "treatments": {
+      "enum": [
+        "Acid",
+        "Cisplatin",
+        "CoCl2",
+        "Dabrafenib",
+        "Doxorubicin",
+        "Trametinib"
+      ],
+      "unknown": "returns UNSUPPORTED_TREATMENT; never mapped or embedded"
+    }
+  },
+  "output": {
+    "condition": "string",
+    "future_detection_score": "float in (0,1) or null",
+    "support_status": {
+      "enum": [
+        "SUPPORTED_KNOWN_CONDITION",
+        "UNSUPPORTED_TREATMENT",
+        "UNSUPPORTED_FEATURE_SCHEMA",
+        "MISSING_REQUIRED_NUISANCE",
+        "OUT_OF_CONTRACT_INPUT",
+        "RANKING_NOT_VALIDATED"
+      ]
+    },
+    "model_version": "string",
+    "feature_contract_version": "string",
+    "ranking_status": {
+      "enum": [
+        "SUPPORTED",
+        "NOT_SUPPORTED"
+      ]
+    },
+    "known_limitations": "array of strings, always present",
+    "validated_condition_order": "array, ONLY when ranking_status == SUPPORTED",
+    "calibrated_probability": "NEVER emitted in Generation 1"
+  }
+}

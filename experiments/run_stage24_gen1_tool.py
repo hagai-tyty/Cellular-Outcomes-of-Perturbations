@@ -80,6 +80,15 @@ def sha256_file(p: Path) -> str:
     return hashlib.sha256(Path(p).read_bytes()).hexdigest()
 
 
+def _rel(p: Path) -> str:
+    """Repo-relative path with forward slashes.
+
+    `str(Path.relative_to())` emits backslashes on Windows, and a committed artifact carrying
+    `results\stage24\...` is not portable. tests/test_ci_portability.py enforces this.
+    """
+    return p.relative_to(ROOT).as_posix()
+
+
 def write_json(p: Path, obj: dict) -> None:
     p.write_text(json.dumps(obj, indent=2) + "\n", encoding="utf-8")
 
@@ -295,7 +304,7 @@ def run_24b(wm989_root: Path) -> dict:
         # reproduction. Surface that rather than letting byte-identity paper over it.
         gate_self_consistent = (not byte_identical) or all_r
         gates[label] = {
-            "frozen": frozen_path.name, "reproduced": str(repro_path.relative_to(ROOT)),
+            "frozen": frozen_path.name, "reproduced": _rel(repro_path),
             "byte_identical": byte_identical,
             "R1_shape_and_key": r1, "R2_every_score": r2, "R3_within_clone_ordering": r3,
             "gate_self_consistent": gate_self_consistent,
@@ -315,9 +324,9 @@ def run_24b(wm989_root: Path) -> dict:
     out = {
         "stage": "24B",
         "plan_canonical_lf_sha256": a["plan"]["canonical_lf_sha256"],
-        "reproduction_root": str(REPRO.relative_to(ROOT)),
+        "reproduction_root": _rel(REPRO),
         "frozen_artifacts_untouched": {
-            k: {"sha256": sha256_file(v), "path": str(v.relative_to(ROOT))}
+            k: {"sha256": sha256_file(v), "path": _rel(v)}
             for k, v in FROZEN.items() if v.exists()},
         "gates": gates,
         "all_byte_identical": all_byte,
@@ -400,11 +409,17 @@ def _fit_w5_component(X, clone_pos, nuis_clone, ckey, dummies, yv, fit_clones, k
     m = LogisticRegression(penalty="l2", solver="liblinear", C=hp, fit_intercept=True,
                            class_weight=None, max_iter=5000, random_state=S23.SEED_PROTOCOL)
     m.fit(A, yv[rows])
+    # The training clone list is stored so 24E can verify fold isolation DIRECTLY -- that a
+    # component never saw the clones it is used to score -- rather than inferring it from the
+    # fact that the OOF reproduces.
+    train_sha = hashlib.sha256(chr(10).join(sorted(fit_clones)).encode()).hexdigest()
     return {"keep": cache["keep"], "gene_mu": cache["mu"], "gene_sd": cache["sd"],
             "pca_mean": cache["pca"].mean_, "pca_components": cache["pca"].components_,
             "pc_mu": cache["zmu"], "pc_sd": cache["zsd"], "pca_k": cache["k"],
             "nuis_mu": nmu, "nuis_sd": nsd, "K": int(k), "C": float(hp),
-            "coef": m.coef_.ravel(), "intercept": float(m.intercept_[0])}
+            "coef": m.coef_.ravel(), "intercept": float(m.intercept_[0]),
+            "train_clones": np.array(chr(10).join(sorted(fit_clones))),
+            "train_clones_sha256": np.array(train_sha)}
 
 
 def _apply_w5_component(comp, X, clone_pos, nuis_clone, clone_ids, treatments):
@@ -596,10 +611,373 @@ def _wm989_feature_ids() -> list[str]:
     return ids[:S23.N_GENES]
 
 
+
+# =============================================================================================== #
+# 24D — the frozen out-of-fold table Stage 25 consumes
+#
+# One row per clone x condition, carrying the W1/W4/W5 out-of-fold scores and the eligibility flag
+# section 8.4 defines. Stage 24 may NOT inspect the ranking metric, so this computes no AUC, no
+# delta_RANK, and no top-1 anything. It emits inputs and asserts their integrity.
+#
+# The 892-clone count is verified here because section 8.4 requires it verified BEFORE scoring, and
+# 24D is the last point at which Stage 24 touches the table.
+# =============================================================================================== #
+D_JSON = OUT / "stage24d_handoff_table.json"
+D_CSV = OUT / "stage24_oof_for_stage25.csv"
+EXPECTED_ELIGIBLE = 892
+
+
+def run_24d() -> dict:
+    if not C_JSON.exists():
+        raise RuntimeError("24C must run before 24D")
+    t0 = time.perf_counter()
+
+    frozen = pd.read_csv(FROZEN["C1_W5"])
+    ct = pd.read_csv(_RESULTS / "stage22_wm989_clone_treatment.csv")
+    det = dict(zip(zip(ct["clone_id"], ct["treatment"], strict=True),
+                   ct["detected_post"].astype(bool), strict=True))
+
+    tbl = frozen[["clone_id", "treatment", "outer_fold", "y", "pred_W1", "pred_W4",
+                  "pred_W5"]].copy()
+    tbl["detected_post"] = [det[(c, t)] for c, t in zip(tbl["clone_id"], tbl["treatment"],
+                                                        strict=True)]
+    # y IS the C1 endpoint; assert rather than assume the two agree
+    y_matches = bool((tbl["y"].astype(bool) == tbl["detected_post"]).all())
+
+    per_clone = tbl.groupby("clone_id")["y"].agg(["sum", "size"])
+    eligible = set(per_clone[(per_clone["sum"] >= 1) & (per_clone["sum"] < 6)].index)
+    tbl["ranking_eligible"] = tbl["clone_id"].isin(eligible)
+    tbl = tbl.sort_values(["clone_id", "treatment"]).reset_index(drop=True)
+    tbl.to_csv(D_CSV, index=False, lineterminator="\n")
+
+    checks = {
+        "rows": int(len(tbl)) == EXPECTED_ROWS["C1"],
+        "clones": int(tbl["clone_id"].nunique()) == EXPECTED_CLONES,
+        "six_rows_per_clone": bool((per_clone["size"] == 6).all()),
+        "one_fold_per_clone": bool(tbl.groupby("clone_id")["outer_fold"].nunique().eq(1).all()),
+        "no_missing_scores": bool(tbl[["pred_W1", "pred_W4", "pred_W5"]].notna().all().all()),
+        "y_matches_detected_post": y_matches,
+        "eligible_count_is_892": len(eligible) == EXPECTED_ELIGIBLE,
+        "treatment_vocabulary_exact": set(tbl["treatment"]) == set(TREATMENTS),
+    }
+    out = {
+        "stage": "24D", "table": D_CSV.name, "sha256": sha256_file(D_CSV),
+        "rows": int(len(tbl)), "clones": int(tbl["clone_id"].nunique()),
+        "eligible_clones": len(eligible), "expected_eligible": EXPECTED_ELIGIBLE,
+        "eligibility_rule": ">=1 C1-positive condition AND >=1 C1-zero condition (plan 8.4)",
+        "excluded": {"all_zero": int((per_clone["sum"] == 0).sum()),
+                     "all_positive": int((per_clone["sum"] == 6).sum())},
+        "columns": list(tbl.columns),
+        "checks": checks, "all_checks_pass": all(checks.values()),
+        "ranking_statistic_computed": False,
+        "note": "Stage 24 may not inspect the ranking metric. No AUC, delta_RANK or top-1 "
+                "quantity is computed here. The 892 count is an input-integrity check that "
+                "plan 8.4 requires performed before scoring.",
+        "runtime_minutes": round((time.perf_counter() - t0) / 60, 3),
+    }
+    write_json(D_JSON, out)
+    if not out["all_checks_pass"]:
+        raise RuntimeError(f"24D integrity failure: {[k for k, v in checks.items() if not v]}")
+    return out
+
+
+# =============================================================================================== #
+# 24E — determinism and leakage
+#
+# Two questions a shipped predictor has to survive: does it return the same number twice, and can it
+# see anything it should not? Both are checked against the artifact itself rather than against the
+# code that produced it.
+# =============================================================================================== #
+E_JSON = OUT / "stage24e_determinism_and_leakage.json"
+
+
+def run_24e() -> dict:
+    if not D_JSON.exists():
+        raise RuntimeError("24D must run before 24E")
+    sys.path.insert(0, str(ROOT / "src"))
+    from cellfate.gen1_predictor import Gen1Predictor
+
+    t0 = time.perf_counter()
+    X, clones = S23._load_wm989_x()
+    cpos = {c: i for i, c in enumerate(clones)}
+    ck = pd.read_csv(_RESULTS / "stage22_wm989_clones.csv").set_index("clone_id").loc[clones]
+    nuis = _nuisance_matrix(ck)
+    tbl = pd.read_csv(D_CSV)
+
+    p1 = Gen1Predictor.load(ARTIFACT_NPZ, ARTIFACT_META)
+    p2 = Gen1Predictor.load(ARTIFACT_NPZ, ARTIFACT_META)
+
+    # ---- determinism ------------------------------------------------------------------------- #
+    sample = list(tbl["clone_id"].unique())[:60]
+    same_session, across_loads, vs_frozen = [], [], []
+    for cid in sample:
+        g = tbl[tbl.clone_id == cid]
+        f = int(g["outer_fold"].iloc[0])
+        x, b = np.asarray(X[cpos[cid]].todense()).ravel(), nuis[cpos[cid]]
+        a = np.array([r["future_detection_score"] for r in
+                      p1.predict(x, b, treatments=list(g["treatment"]), component=f"fold{f}")])
+        aa = np.array([r["future_detection_score"] for r in
+                       p1.predict(x, b, treatments=list(g["treatment"]), component=f"fold{f}")])
+        bb = np.array([r["future_detection_score"] for r in
+                       p2.predict(x, b, treatments=list(g["treatment"]), component=f"fold{f}")])
+        same_session.append(bool((a == aa).all()))
+        across_loads.append(bool((a == bb).all()))
+        vs_frozen.append(float(np.abs(a - g["pred_W5"].to_numpy()).max()))
+
+    # ---- leakage ------------------------------------------------------------------------------ #
+    z = np.load(ARTIFACT_NPZ, allow_pickle=False)
+    fold_of = dict(zip(tbl["clone_id"], tbl["outer_fold"], strict=True))
+    isolation = {}
+    for f in range(S23.N_OUTER):
+        trained_on = set(str(z[f"fold{f}__train_clones"]).split("\n"))
+        held_out = {c for c, ff in fold_of.items() if ff == f}
+        isolation[f"fold{f}"] = {
+            "train_clones": len(trained_on), "held_out_clones": len(held_out),
+            "overlap": len(trained_on & held_out),
+            "isolated": not (trained_on & held_out)}
+
+    y_vec = tbl["y"].to_numpy(dtype=float)
+    outcome_shaped = [k for k in z.files
+                      if z[k].ndim == 1 and z[k].shape[0] == len(y_vec)]
+    n_features = int(json.loads(ARTIFACT_META.read_text(encoding="utf-8"))
+                     ["n_expression_features_expected"])
+
+    leakage = {
+        "fold_isolation": isolation,
+        "every_fold_isolated": all(v["isolated"] for v in isolation.values()),
+        "deployment_trained_on_all_clones":
+            len(str(z["deployment__train_clones"]).split("\n")) == EXPECTED_CLONES,
+        "no_outcome_length_array_in_artifact": not outcome_shaped,
+        "outcome_length_arrays_found": outcome_shaped,
+        "feature_space_is_gene_expression_only": n_features == S23.N_GENES,
+        "n_expression_features": n_features,
+        "wm989_custom_lineage_features_excluded": True,
+        "note": "the 153,055 WM989 Custom lineage features are excluded by construction -- the "
+                "artifact's gene filter indexes into a 36,601-feature GE space and cannot address "
+                "a lineage column",
+    }
+
+    checks = {
+        "deterministic_within_a_session": all(same_session),
+        "deterministic_across_loads": all(across_loads),
+        "reproduces_frozen_oof": max(vs_frozen) < 1e-12,
+        "every_fold_component_isolated_from_its_test_clones": leakage["every_fold_isolated"],
+        "deployment_component_saw_all_clones_as_declared":
+            leakage["deployment_trained_on_all_clones"],
+        "artifact_carries_no_outcome_length_array":
+            leakage["no_outcome_length_array_in_artifact"],
+        "feature_space_is_36601_gene_expression":
+            leakage["feature_space_is_gene_expression_only"],
+    }
+    out = {
+        "stage": "24E", "clones_sampled": len(sample),
+        "determinism": {"within_session": all(same_session), "across_loads": all(across_loads),
+                        "max_abs_diff_vs_frozen": max(vs_frozen)},
+        "leakage": leakage, "checks": checks, "all_checks_pass": all(checks.values()),
+        "runtime_minutes": round((time.perf_counter() - t0) / 60, 3),
+    }
+    write_json(E_JSON, out)
+    if not out["all_checks_pass"]:
+        raise RuntimeError(f"24E failure: {[k for k, v in checks.items() if not v]}")
+    return out
+
+
+# =============================================================================================== #
+# 24F — freeze the tool artifacts
+#
+# The plan 6.5 deliverable list, made concrete and hashed. A model card and I/O schemas ship beside
+# the model so the limitations travel with it rather than living only in a record nobody reads.
+# =============================================================================================== #
+F_JSON = OUT / "stage24f_tool_freeze.json"
+TOOL_DIR = OUT / "tool"
+MODEL_CARD = TOOL_DIR / "MODEL_CARD.md"
+IO_SCHEMA = TOOL_DIR / "io_schema.json"
+EXAMPLE_CSV = TOOL_DIR / "example_clones.csv"
+
+
+def run_24f() -> dict:
+    if not E_JSON.exists():
+        raise RuntimeError("24E must run before 24F")
+    TOOL_DIR.mkdir(parents=True, exist_ok=True)
+    t0 = time.perf_counter()
+    meta = json.loads(ARTIFACT_META.read_text(encoding="utf-8"))
+    e = json.loads(E_JSON.read_text(encoding="utf-8"))
+    d = json.loads(D_JSON.read_text(encoding="utf-8"))
+
+    # ---- example dataset, built only from permitted benchmark material ------------------------ #
+    X, clones = S23._load_wm989_x()
+    cpos = {c: i for i, c in enumerate(clones)}
+    ck = pd.read_csv(_RESULTS / "stage22_wm989_clones.csv").set_index("clone_id").loc[clones]
+    nuis = _nuisance_matrix(ck)
+    tbl = pd.read_csv(D_CSV)
+    ex_ids = list(tbl["clone_id"].unique())[:3]
+    rows = []
+    for cid in ex_ids:
+        g = tbl[tbl.clone_id == cid]
+        rows.append({"clone_id": cid, "outer_fold": int(g["outer_fold"].iloc[0]),
+                     **{f"nuisance_{n}": float(v) for n, v in
+                        zip(meta["nuisance_columns"], nuis[cpos[cid]], strict=True)},
+                     **{f"expected_pred_W5_{t}": float(v) for t, v in
+                        zip(g["treatment"], g["pred_W5"], strict=True)}})
+    pd.DataFrame(rows).to_csv(EXAMPLE_CSV, index=False, lineterminator="\n")
+
+    write_json(IO_SCHEMA, {
+        "input": {
+            "form_A_raw": {"expression_counts": "cells x 36601 raw pretreatment GE counts",
+                           "clone_id": "string, for aggregation",
+                           "naive_sample_identity": "required to reconstruct B"},
+            "form_B_aggregated": {
+                "expression": f"float[{meta['n_expression_features_expected']}], "
+                              "clone-level CP10K/log1p",
+                "nuisance": {"order": meta["nuisance_columns"],
+                             "required": True,
+                             "imputation": "FORBIDDEN -- a missing block returns "
+                                           "MISSING_REQUIRED_NUISANCE"}},
+            "treatments": {"enum": meta["treatment_vocabulary"],
+                           "unknown": "returns UNSUPPORTED_TREATMENT; never mapped or embedded"}},
+        "output": {"condition": "string", "future_detection_score": "float in (0,1) or null",
+                   "support_status": {"enum": meta["support_flags"]},
+                   "model_version": "string", "feature_contract_version": "string",
+                   "ranking_status": {"enum": ["SUPPORTED", "NOT_SUPPORTED"]},
+                   "known_limitations": "array of strings, always present",
+                   "validated_condition_order": "array, ONLY when ranking_status == SUPPORTED",
+                   "calibrated_probability": "NEVER emitted in Generation 1"}})
+
+    card = f"""# CellFate-Rx Gen-1 — Model Card
+
+**Model** `{meta['model_version']}` — W5 = `X + B + U + X*U`
+**Feature contract** `{meta['feature_contract_version']}`
+**Endpoint** C1, post-treatment clone detection
+**System** WM989 (GSE279162), {EXPECTED_CLONES} lineage-traced clones, six conditions
+
+## What it does
+For one starting clone it returns a `future_detection_score` for each of the six observed
+conditions: the model's propensity that the clone is still detected after that condition.
+
+## What it does NOT do
+```text
+{chr(10).join('  ' + x for x in meta['known_limitations'])}
+```
+
+## Validation
+```text
+  frozen out-of-fold reproduction   max |diff| vs the Stage-23 frozen column   {e['determinism']['max_abs_diff_vs_frozen']:.3e}
+  determinism, same session         {e['determinism']['within_session']}
+  determinism, across loads         {e['determinism']['across_loads']}
+  fold isolation                    every fold component verified disjoint from its test clones
+  eligible ranking clones           {d['eligible_clones']} of {EXPECTED_CLONES}
+```
+
+The **deployment** component is packaging, not validation: it is the same specification and the same
+selection rule fitted once on all clones, and it is **not** validated on held-out data. Its
+performance is estimated by the frozen out-of-fold result, which came from the fold components.
+
+## Ranking
+`ranking_status` is `NOT_SUPPORTED` until Stage 25 records `STAGE_25_RANKING_SUPPORTED` under its
+pre-registered test. Until then the six scores are returned but their **order is not a validated
+condition ranking** and `validated_condition_order` is withheld.
+
+## Intended use
+Research use on WM989-like lineage-traced pretreatment data, for the six observed experimental
+conditions. **Not** a clinical tool, **not** a treatment recommendation, **not** a calibrated
+probability, and **not** applicable to unseen treatments, other cell lines, or patients.
+"""
+    MODEL_CARD.write_text(card, encoding="utf-8")
+
+    deliverables = {
+        "python_prediction_api": "src/cellfate/gen1_predictor.py",
+        "command_line_interface": "src/cellfate/gen1_cli.py",
+        "frozen_model_artifact": _rel(ARTIFACT_NPZ),
+        "frozen_vocabularies": "stage24_w5_artifact.json (treatments, nuisance, feature contract)",
+        "deterministic_preprocessing_artifact":
+            "gene filter + PCA basis + scalers, serialized per component in the npz",
+        "machine_readable_schemas": _rel(IO_SCHEMA),
+        "model_card": _rel(MODEL_CARD),
+        "example_dataset": _rel(EXAMPLE_CSV),
+        "unit_tests": "tests/test_gen1_predictor.py, tests/test_stage24_gen1_tool.py",
+        "end_to_end_reproduction": "24B BYTE_IDENTICAL, 24C artifact equivalence 5e-16",
+    }
+    present = {k: (ROOT / v).exists() if v.startswith(("src", "results", "tests")) else True
+               for k, v in deliverables.items() if "," not in v}
+    out = {
+        "stage": "24F",
+        "artifact_sha256": sha256_file(ARTIFACT_NPZ),
+        "deliverables": deliverables,
+        "deliverables_present": present,
+        "all_deliverables_present": all(present.values()),
+        "hashes": {p.name: sha256_file(p) for p in
+                   (MODEL_CARD, IO_SCHEMA, EXAMPLE_CSV, D_CSV, ARTIFACT_META)},
+        "runtime_minutes": round((time.perf_counter() - t0) / 60, 3),
+    }
+    write_json(F_JSON, out)
+    if not out["all_deliverables_present"]:
+        raise RuntimeError(f"24F: missing {[k for k, v in present.items() if not v]}")
+    return out
+
+
+# =============================================================================================== #
+# 24G — hand off to Stage 25
+# =============================================================================================== #
+G_JSON = _RESULTS / "stage24_handoff_to_stage25.json"
+
+
+def run_24g() -> dict:
+    if not F_JSON.exists():
+        raise RuntimeError("24F must run before 24G")
+    a = json.loads(A_JSON.read_text(encoding="utf-8"))
+    b = json.loads(B_JSON.read_text(encoding="utf-8"))
+    c = json.loads(C_JSON.read_text(encoding="utf-8"))
+    d = json.loads(D_JSON.read_text(encoding="utf-8"))
+    e = json.loads(E_JSON.read_text(encoding="utf-8"))
+    f = json.loads(F_JSON.read_text(encoding="utf-8"))
+
+    passed = (a["all_checks_pass"] and b["reproduction_verdict"] != "INPUT_INTEGRITY_STOP"
+              and c["verdict"] == "SERIALIZED_AND_EQUIVALENT" and d["all_checks_pass"]
+              and e["all_checks_pass"] and f["all_deliverables_present"])
+    out = {
+        "from_stage": "24", "to_stage": "25",
+        "plan_canonical_lf_sha256": a["plan"]["canonical_lf_sha256"],
+        "stage_24_verdict": "STAGE_24_GEN1_TOOL_READY" if passed else "STAGE_24_INCOMPLETE",
+        "substage_results": {
+            "24A": a["all_checks_pass"], "24B": b["reproduction_verdict"],
+            "24C": c["verdict"], "24D": d["all_checks_pass"],
+            "24E": e["all_checks_pass"], "24F": f["all_deliverables_present"]},
+        "frozen_oof_table": {"path": _rel(D_CSV), "sha256": sha256_file(D_CSV),
+                             "rows": d["rows"], "clones": d["clones"],
+                             "columns": d["columns"]},
+        "ranking_population": {"eligible_clones": d["eligible_clones"],
+                               "rule": d["eligibility_rule"], "excluded": d["excluded"],
+                               "verified_mechanically": True},
+        "model_artifact": {"path": _rel(ARTIFACT_NPZ),
+                           "sha256": f["artifact_sha256"],
+                           "meta": _rel(ARTIFACT_META),
+                           "gitignored": True,
+                           "rebuild": "run_stage24_gen1_tool.py --stage 24c, ~0.5 min"},
+        "ranking_metric_inspected_by_stage_24": False,
+        "ranking_statistic_computed_by_stage_24": False,
+        "stage_25_must": [
+            "compute delta_RANK from THIS table only; no retraining, no re-selection",
+            "verify the 892-clone eligible population before scoring",
+            "run the 1,000-draw full-refit null with per-shard cache files and a completeness "
+            "assertion; ~19-20 h across three shards; no early stopping",
+            "record STAGE_25_RANKING_SUPPORTED or STAGE_25_RANKING_NOT_SUPPORTED once",
+            "proceed to GEN1_MANDATORY_SHIP on either verdict",
+        ],
+        "stage_25_may_not": [
+            "change the metric, population, weighting, comparator, endpoint or null",
+            "reduce the permutation count or stop early",
+            "use C2 or a per-treatment result to rescue a failed C1 ranking",
+            "add a dataset", "revise the plan after seeing a result",
+        ],
+    }
+    write_json(G_JSON, out)
+    return out
+
+
 # =============================================================================================== #
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Stage 24 — Gen-1 Role-B predictor engineering")
-    ap.add_argument("--stage", required=True, choices=["24a", "24b", "24c"])
+    ap.add_argument("--stage", required=True, choices=["24a", "24b", "24c", "24d", "24e", "24f", "24g"])
     ap.add_argument("--wm989-root", type=Path, default=Path("D:/GSE279162"))
     a = ap.parse_args(argv)
 
@@ -615,11 +993,14 @@ def main(argv=None) -> int:
             print(f"  {label:<12} {g['verdict']:<20} "
                   f"R1={g['R1_shape_and_key']['pass']} R2={g['R2_every_score']['pass']} "
                   f"R3={g['R3_within_clone_ordering']['pass']}")
-    else:
+    elif a.stage == "24c":
         r = run_24c()
         print(json.dumps({k: r[k] for k in
                           ("stage", "verdict", "oof_equivalence", "deployment_component",
                            "runtime_minutes")}, indent=2, default=str))
+    else:
+        r = {"24d": run_24d, "24e": run_24e, "24f": run_24f, "24g": run_24g}[a.stage]()
+        print(json.dumps(r, indent=2, default=str)[:2600])
     return 0
 
 

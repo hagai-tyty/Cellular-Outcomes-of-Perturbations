@@ -1,7 +1,7 @@
 {
   "artifact": "stage24_w5_artifact.npz",
-  "sha256": "858d7903c4c67ef2c65b5ffb8541788256a6ae0b78926c809e8ad1f7e44c06b7",
-  "size_bytes": 44400290,
+  "sha256": "954cef7cff296d994d10bae3741ced1c8c9c5c7f97b13877a2916cf26b713315",
+  "size_bytes": 44431126,
   "model": "W5 = X + B + U + X*U",
   "endpoint": "C1 post-treatment clone detection",
   "model_version": "gen1-w5-c1-v1",
