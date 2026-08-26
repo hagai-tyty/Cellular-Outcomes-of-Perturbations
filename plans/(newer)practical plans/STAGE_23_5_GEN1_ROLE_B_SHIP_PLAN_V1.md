@@ -1,6 +1,12 @@
 # STAGE 23.5 — GEN-1 ROLE-B CLAIM REVISION, RANKING PREREGISTRATION, AND STAGE-24 OPENING
 
-**Status:** DRAFT, PRE-EXECUTION. No ranking statistic may be computed and no Stage-24 model/tool work may begin until this plan is independently audited, committed, and recorded by canonical-LF SHA-256.
+**Status:** **FROZEN.** Audited, corrected, and committed. Its canonical-LF SHA-256 is recorded in
+`results/stage23_5_protocol.json`, which is the authoritative digest-bearing artifact (this document
+cannot contain its own digest without recursion). Stage 24 is open under
+`STAGE_24_OPEN_ROLE_B_PRIMARY_GEN1`.
+
+No Stage-25 ranking statistic exists. After this freeze no post-result revision of the section-8
+contract is authorized for Generation 1.
 
 **Plan version:** V1
 
@@ -131,8 +137,15 @@ this plan            1,000 draws, W4 and W5 refit per draw
                      measured for this pipeline in Stage 23.2H
 ```
 
-Section 8.7 forbids early stopping, so this cost cannot be trimmed once started. It must be
-accepted before the plan is frozen.
+Section 8.7 forbids early stopping, so this cost cannot be trimmed once started.
+
+```text
+BUDGET STATUS   ACCEPTED by the decision owner, 2026-08-26, before freeze
+                1,000 full-refit permutations
+                three independent shards
+                approximately 19-20 hours
+                no early stopping
+```
 
 **Sharding is required, and each shard MUST write its own cache file.** Stage 23.2H lost a
 completed draw to a race when three shards appended to one shared file; the loss was silent and was
@@ -579,26 +592,54 @@ reproduction. "Tolerance-declared" is not a licence to accept whatever comes out
 PRIMARY REQUIREMENT
   the regenerated out-of-fold prediction files are BYTE-IDENTICAL to the committed
   Stage-23 artifacts:
-      results/stage23_wm989_detection_oof.csv
-      results/stage23_wm989_interaction_oof.csv
+      results/stage23_wm989_detection_oof.csv      8,406 rows
+      results/stage23_wm989_interaction_oof.csv    8,406 rows
   -> reproduction PASSES, no tolerance argument needed
 
-FALLBACK, permitted only when byte-identity fails
-  every pooled metric (W1, W4, W5 on C1 and C2) agrees with the committed value to
-      absolute difference <= 1e-12
-  AND the cause of the non-identity is diagnosed and logged as an environment
-      difference (library version, BLAS threading, platform), naming the specific cause
-  -> reproduction PASSES as TOLERANCE_DECLARED, with the diagnosis recorded
+ROW-LEVEL REPRODUCTION GATE, permitted only when byte-identity fails
+  ALL FOUR must hold. There is no pooled-metric route.
+
+  R1  SHAPE AND KEY
+      both files carry exactly 8,406 rows, and the ordered sequence of
+      (clone_id, treatment, outer_fold, y) tuples is identical to the frozen files
+
+  R2  EVERY SCORE
+      every prediction cell of every model column present in the frozen file
+      (pred_W0, pred_W1, pred_W2, pred_W3, pred_W4, and pred_W5 in the interaction
+      file) satisfies  |regenerated - frozen| <= 1e-12
+      This is checked cell by cell. A maximum, a mean, or an aggregate is not a
+      substitute and may not be reported in its place.
+
+  R3  WITHIN-CLONE ORDERING UNCHANGED
+      for every one of the 1,401 clones, and for W4 and W5 independently, the ordering
+      of that clone's six condition scores is identical to the frozen ordering,
+      INCLUDING tie structure:
+          sign(s_iu - s_iv) is unchanged for every condition pair (u, v) within
+          every clone, where sign(0) is its own case
+      This is the load-bearing check. The section-8 ranking test is a function of
+      within-clone orderings and nothing else, so a reproduction that preserves every
+      pooled metric while flipping one near-tie has NOT reproduced the input the test
+      consumes.
+
+  R4  CAUSE NAMED
+      the reason for non-identity is diagnosed and logged as a specific environment
+      difference -- library version, BLAS threading, platform -- and named. "Floating
+      point" alone is not a cause.
+
+  -> reproduction PASSES as TOLERANCE_DECLARED, with R1-R4 evidence recorded
 
 STOP
-  any pooled metric differing by more than 1e-12, or non-identity whose cause cannot be
-  named, is an INPUT-INTEGRITY STOP. It permits only a correctness repair to the frozen
-  W5 implementation. It does not authorize a new model, metric, endpoint, dataset,
-  analysis path, or a relaxed tolerance.
+  any failure of R1, R2, R3 or R4 is an INPUT-INTEGRITY STOP. It permits only a
+  correctness repair to the frozen W5 implementation. It does not authorize a new model,
+  metric, endpoint, dataset, analysis path, or a relaxed tolerance, and it does not
+  authorize proceeding on pooled agreement.
 ```
 
-The 1e-12 bound is chosen to be far tighter than any real modelling difference and loose enough to
-absorb last-bit floating-point variation. A discrepancy larger than that is a defect, not noise.
+Why row-level rather than pooled: pooled metrics can agree to any precision while individual rows
+differ in compensating directions, and the ranking test never reads a pooled metric. R2 bounds the
+scores the test actually consumes; R3 bounds the orderings it actually computes. The 1e-12 bound is
+far tighter than any real modelling difference and loose enough to absorb last-bit floating-point
+variation, so a larger discrepancy is a defect rather than noise.
 
 Stage 24 may not inspect the ranking metric defined below. It generates the frozen inputs Stage 25 consumes.
 
@@ -864,6 +905,40 @@ CRITERION 5, restated
 This remains deliberately conservative and may still produce a false negative. That is accepted
 and stated. `delta_TOP1` cannot overturn an unsupported primary `delta_RANK` result in the other
 direction: it can only withhold support, never grant it.
+
+### This change is a limited relaxation, and is recorded as one
+
+The restatement has two parts and they are not the same kind of change:
+
+```text
+  RECLASSIFICATION, not a relaxation
+    calling this a directional-consistency check rather than a significance criterion.
+    It removes an internal contradiction -- the plan previously used an unpowered point
+    estimate as a veto while disclaiming significance testing -- and changes no boundary.
+
+  RELAXATION, limited but real
+    delta_TOP1 > 0  ->  delta_TOP1 >= 0
+    This admits exactly one additional outcome: delta_TOP1 exactly zero, meaning W5 and
+    W4 select the same-quality top-1 condition on average. delta_TOP1 is a difference of
+    two means of binary indicators over 892 clones, so it lives on a grid of 1/892 and
+    exact zero is an attainable value, not a measure-zero curiosity. Calling this
+    "merely a clarification" would be false.
+```
+
+What it does **not** touch:
+
+```text
+  delta_RANK > 0                              unchanged
+  lower CI95 bootstrap endpoint > 0           unchanged
+  observed delta_RANK > null p95              unchanged
+  p_perm <= 0.05 at 1,000 full-refit draws    unchanged
+  primary metric, comparator, population,
+    weighting, endpoint, null construction    unchanged
+```
+
+Every primary threshold stands exactly as drafted. The relaxation is confined to the secondary
+consistency boundary, it was made before any statistic was computed, and it is logged here and in
+`RECORDs/stage_23_5_RECORD.md` so that it can be weighed rather than discovered.
 
 This diagnostic does not establish clinical treatment utility because C1 is an observed detection proxy and the six conditions include non-clinical stress contexts.
 
@@ -1131,6 +1206,9 @@ An independent audit must verify before commit:
 [ ] the bootstrap interval is declared conditional on the fitted models (8.6)
 [ ] the 892-clone eligibility count is verified mechanically before scoring (8.4)
 [ ] section 0 states the six criteria and the forbidden list
+[ ] the reproduction gate is ROW-LEVEL, with no pooled-metric route (7.1 R1-R4)
+[ ] within-clone ordering preservation is an explicit reproduction requirement (7.1 R3)
+[ ] the delta_TOP1 boundary change is logged as a limited relaxation, not a clarification
 ```
 
 Every item must be settled during the single pre-freeze audit. Once the plan digest and commit are recorded, no new Generation-1 analysis route or post-result amendment is permitted.

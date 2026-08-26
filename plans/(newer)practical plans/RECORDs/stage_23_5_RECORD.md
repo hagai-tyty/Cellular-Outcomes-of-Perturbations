@@ -6,8 +6,17 @@ against its source artifact, and repair any specification defect while no statis
 computed.
 
 ## Status
-The plan remains **V1** and remains **DRAFT, PRE-EXECUTION**. This record is the audit the plan's
-own status line requires. No ranking statistic exists. No Stage-24 work has begun.
+**FROZEN.** The plan remains **V1** — it is the first version the project believes will actually
+ship, so it is frozen rather than superseded.
+
+```text
+  plan canonical-LF sha256   8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48
+  section-12 checklist       38 / 38 PASS, walked once in full
+  compute budget             ACCEPTED by the decision owner before freeze
+  Stage 24                   OPEN under STAGE_24_OPEN_ROLE_B_PRIMARY_GEN1
+```
+
+No Stage-25 ranking statistic exists. The 1,000-draw permutation run has **not** been started.
 
 ## Provenance
 The plan was drafted externally and imported. It was **not** accepted as given: every number was
@@ -166,3 +175,93 @@ stops before §8 still sees them. §11 and §12 were extended to cover the new f
 ```
 
 Until those are done the plan is audited but not frozen, and Stage 24 may not open.
+
+
+---
+
+# FREEZE — two corrections applied after the audit, then frozen
+
+The decision owner accepted the §0.2 compute budget (1,000 full-refit permutations, three
+independent shards, ~19–20 h, no early stopping) and required two corrections before freeze. Both
+were applied; nothing else was reopened.
+
+## Correction 1 — §7.1 is now a row-level reproduction gate
+
+The pooled-metric fallback is **removed entirely**. Pooled metrics can agree to any precision while
+individual rows differ in compensating directions, and the §8 ranking test never reads a pooled
+metric — it is a function of within-clone orderings and nothing else. The fallback is replaced by
+four requirements, all of which must hold:
+
+```text
+  R1  8,406 rows in each file; identical ordered (clone_id, treatment, outer_fold, y) tuples
+  R2  |regenerated - frozen| <= 1e-12 for EVERY prediction cell of EVERY model column,
+      checked cell by cell; a maximum, mean or aggregate is not a substitute
+  R3  for all 1,401 clones, and for W4 and W5 independently, sign(s_iu - s_iv) unchanged for
+      every within-clone condition pair, INCLUDING tie structure
+  R4  the cause of non-identity named as a specific environment difference;
+      "floating point" alone is not a cause
+```
+
+R3 is the load-bearing addition. A reproduction that preserved every pooled metric while flipping a
+single near-tie would not have reproduced the input the ranking test consumes.
+
+## Correction 2 — the `delta_TOP1` change is logged as a relaxation
+
+The earlier record described the `delta_TOP1` change as repairing an internal contradiction "rather
+than lowering a bar." That was not the whole truth, and §8.8 now separates the two components:
+
+```text
+  RECLASSIFICATION, not a relaxation
+    calling it a directional-consistency check rather than a significance criterion.
+    Removes a contradiction — an unpowered point estimate was vetoing a result that had
+    cleared a bootstrap interval and a 1,000-draw null — and moves no boundary.
+
+  RELAXATION, limited but real
+    delta_TOP1 > 0  ->  delta_TOP1 >= 0
+    Admits exactly one additional outcome: delta_TOP1 exactly zero, meaning W5 and W4
+    select the same-quality top-1 condition on average. The statistic is a difference of
+    two means of binary indicators over 892 clones, so it lives on a grid of 1/892 and
+    exact zero is attainable, not a measure-zero curiosity.
+```
+
+Untouched: `delta_RANK > 0`, the bootstrap lower endpoint, the null-p95 comparison, `p_perm <= 0.05`
+at 1,000 full-refit draws, and the primary metric, comparator, population, weighting, endpoint and
+null construction. **Every primary threshold stands exactly as drafted.** The relaxation is confined
+to the secondary consistency boundary and was made before any statistic existed.
+
+## Section-12 checklist — 38 / 38
+
+Walked once, in full, mechanically where mechanical was possible. Every quoted number was
+re-derived from source; every textual commitment was asserted present in the frozen plan; the
+absence of any Stage-25 artifact was checked on disk. Two extra items were added beyond the plan's
+own list: that the stage numbering does not collide with the live roadmap, and that no historical
+verdict was altered. The full item-by-item result is embedded in
+`results/stage23_5_protocol.json` under `audit.items`.
+
+One check failed on first run and was traced to the **check**, not the plan: an assertion had
+assumed a line wrap that does not exist inside a fenced block. The assertion was corrected to be
+whitespace-insensitive and the checklist re-run clean. The plan was not edited to satisfy it.
+
+## Freeze artifacts
+
+```text
+  results/stage23_5_protocol.json              digest-bearing freeze artifact
+  results/stage23_5_handoff_to_stage24.json    mechanical handoff
+```
+
+The plan cannot contain its own digest without recursion, so the protocol is authoritative for it.
+
+## Stage 24 is open
+
+```text
+  STAGE_24_OPEN_ROLE_B_PRIMARY_GEN1
+```
+
+Stage 24 is a bounded predictor-engineering stage: reproduce W1/W4/W5 under the §7.1 gate, build
+and freeze the W5 tool, emit one frozen OOF prediction per clone-condition row, hand them to Stage
+25. It may not inspect the ranking metric, replace W5 on the same folds, or add data.
+
+## Not started
+
+The §8.7 permutation run has **not** been started. It is ~19–20 h across three shards and is Stage
+25's, not Stage 24's.

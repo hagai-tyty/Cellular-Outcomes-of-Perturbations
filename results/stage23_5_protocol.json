@@ -1,0 +1,333 @@
+{
+  "stage": "23.5",
+  "plan_filename": "STAGE_23_5_GEN1_ROLE_B_SHIP_PLAN_V1.md",
+  "plan_version": "V1",
+  "plan_status": "FROZEN",
+  "plan_canonical_lf_sha256": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48",
+  "frozen_on": "2026-08-26",
+  "repository": "hagai-tyty/Cellular-Outcomes-of-Perturbations",
+  "evidence_base_commit": "c52c7ac9a73abcf121624112d52f4f463db06f7a",
+  "note_on_recursion": "The plan cannot contain its own commit hash. This protocol is the authoritative digest-bearing freeze artifact; the plan's digest above is over its canonical LF text.",
+  "source_artifacts": {
+    "results/stage22_wm989_clones.csv": "750e47623b9bd473ce9a642d551352883b84b25c274c584617be839e964eb08f",
+    "results/stage22_wm989_clone_treatment.csv": "113da618839a4cc9c9cd61adfaeceffe934fb2c7808c7f67e38a1f44321a52a7",
+    "results/stage23_wm989_interaction_results.json": "f1b9fbebb5fcf9e7b66dbb960bdc177d4a748a146559fbe477f19465ece75dc4",
+    "results/stage23_wm989_detection_oof.csv": "ba09c1933e3039f1b097b3a4dba6f2df967e4d31c1e3509b29e0a50fc31aa820",
+    "results/stage23_wm989_interaction_oof.csv": "e727c5782ac67ec6324219f4662dee72b00285dd0562435065941a9d831874aa",
+    "results/stage23_final_synthesis.json": "e649719e92e54ac2fecf78085ecb5c7eabdfccffde91b1238cb52eda8b206c47",
+    "results/stage23_2h/stage23_2h_verdict.json": "0ac07f05b066b7cfdae87dafe2ba8cee0f6a9aed4765eca5d7684d974d19f0f7"
+  },
+  "roadmap_amendments": {
+    "AMENDMENT_1_STAGE_24_OPENING_RULE": "Stage 24 may open under ROLE_B_PRIMARY_GEN1 after this plan, its audit, its digest and its handoff are complete. This is an explicit claim-architecture revision. It is NOT a Stage-23 PASS and it changes no historical Role-A verdict.",
+    "AMENDMENT_2_GEN1_COMPLETION_PATH": "Independent new-system replication moves from a Generation-1 publication gate to Generation 2. Stage 26 receives a known-treatment-only scoped limit; Stage 27 external replication and Stage 28 broad calibration/OOD claims become future work rather than prerequisites for the first paper.",
+    "must_never_be_collapsed": true
+  },
+  "dataset_firewall": {
+    "primary_development_and_evaluation": "GSE279162 / WM989",
+    "supporting_evidence_only": "GSE227151 / Rewind",
+    "new_datasets_authorized": false,
+    "rewind_evidence_well": "CLOSED -- all usable GSE227151 replicates have influenced diagnosis, confirmation or the decision record"
+  },
+  "models": {
+    "W1": "B + U",
+    "W4": "X + B + U",
+    "W5": "X + B + U + X*U",
+    "gen1_predictor": "W5",
+    "definitions_source": "loaded and asserted equal to the frozen Stage-23 protocol/results; never retyped from memory",
+    "eligible_X_features": 36601,
+    "forbidden_X_features": 153055
+  },
+  "ranking_population_rule": {
+    "rule": ">=1 C1-positive condition AND >=1 C1-zero condition AND all six frozen OOF scores present for both W4 and W5",
+    "expected_eligible_clones": 892,
+    "verified_mechanically": true,
+    "derivation": "1401 clones; 929 detected in >=1 condition; 37 detected in all 6; 929 - 37 = 892 recomputed directly from stage22_wm989_clone_treatment.csv",
+    "excluded": {
+      "all_zero_clones": 472,
+      "all_positive_clones": 37,
+      "reason": "within-clone AUROC undefined"
+    }
+  },
+  "primary_metric": {
+    "name": "equal-clone-weighted within-clone AUROC",
+    "statistic": "delta_RANK = R(W5) - R(W4)",
+    "tie_rule": "score ties contribute 0.5 to AUC_i",
+    "weighting": "every eligible clone weighted equally",
+    "primary_comparator": "W4",
+    "secondary_comparator": "W1 (delta_RANK_FULL, reported, cannot rescue)",
+    "endpoint": "C1 post-treatment clone detection"
+  },
+  "bootstrap_contract": {
+    "resampling_unit": "eligible clone, all six condition rows kept together",
+    "replicates": 2000,
+    "base_seed": 23501,
+    "interval": "two-sided 95% percentile",
+    "criterion": "lower endpoint of CI95(delta_RANK) > 0",
+    "declared_asymmetry": "conditional on the fitted models; the permutation null refits the whole pipeline, this interval does not"
+  },
+  "permutation_contract": {
+    "type": "full-refit expression permutation, Stage-23 WM989 geometry",
+    "n_perm": 1000,
+    "base_seed": 23523,
+    "early_stopping": false,
+    "strata": "depth bin {1,2,3-4,5-9,10+} x 3-bit naive-sample presence pattern, with the Stage-23 V2 deterministic small-stratum merge rule",
+    "boundary": "profiles permuted within stratum separately on each side of the outer train/test boundary; never across it",
+    "p_perm": "(1 + #{null delta_RANK >= observed}) / 1001",
+    "criterion": "observed > percentile_95(null) AND p_perm <= 0.05",
+    "sharding": "each shard writes its OWN cache file; draw b seeded from a function of b alone; the merge asserts every index in 0..999 is present before any statistic is computed",
+    "compute_budget": {
+      "measured_precedent": "Stage 23E, WM989 C1, 200 full-refit draws, 335.03 min",
+      "per_draw_seconds_approx": 100,
+      "single_process_hours_approx": 28,
+      "three_shard_hours_approx": "19-20",
+      "accepted_by_decision_owner": true,
+      "accepted_on": "2026-08-26"
+    }
+  },
+  "reproduction_gate": {
+    "primary": "byte-identical regeneration of stage23_wm989_detection_oof.csv and stage23_wm989_interaction_oof.csv",
+    "fallback": "ROW-LEVEL only. There is no pooled-metric route.",
+    "R1_shape_and_key": "8406 rows each; identical ordered (clone_id, treatment, outer_fold, y) tuples",
+    "R2_every_score": "|regenerated - frozen| <= 1e-12 for every prediction cell of every model column; checked cell by cell, no aggregate substitute",
+    "R3_within_clone_ordering": "for all 1401 clones, and for W4 and W5 independently, sign(s_iu - s_iv) unchanged for every condition pair, including tie structure",
+    "R4_cause_named": "specific environment difference identified; 'floating point' alone is not a cause",
+    "failure": "INPUT-INTEGRITY STOP -- permits only a correctness repair to the frozen W5 implementation"
+  },
+  "verdict_logic": {
+    "STAGE_25_RANKING_SUPPORTED_requires_all": [
+      "observed delta_RANK > 0",
+      "lower CI95 bootstrap endpoint > 0",
+      "observed delta_RANK > null p95",
+      "p_perm <= 0.05 at 1000 full-refit draws",
+      "delta_TOP1 >= 0  (directional-consistency check, not a significance test)",
+      "all integrity, leakage and determinism checks pass"
+    ],
+    "otherwise": "STAGE_25_RANKING_NOT_SUPPORTED",
+    "both_verdicts": "GEN1_MANDATORY_SHIP",
+    "terminal": "neither verdict returns the project to Stage 22, 23, 23.2, 23.5 or 24"
+  },
+  "recorded_relaxation": {
+    "what": "delta_TOP1 criterion moved from '> 0' to '>= 0'",
+    "classification": "LIMITED RELAXATION of the secondary consistency boundary, not a clarification",
+    "admits": "exactly one additional outcome -- delta_TOP1 exactly zero. The statistic is a difference of two means of binary indicators over 892 clones, so it lives on a grid of 1/892 and exact zero is attainable, not measure-zero.",
+    "accompanying_reclassification": "labelling it a directional-consistency check rather than a significance criterion removes an internal contradiction and moves no boundary",
+    "primary_thresholds_unchanged": true,
+    "made_before_any_statistic_existed": true
+  },
+  "forbidden_rescue_actions": [
+    "changing the primary metric",
+    "changing clone eligibility",
+    "micro- instead of equal-clone weighting",
+    "changing W4 as primary comparator",
+    "changing the null construction",
+    "reducing permutation count",
+    "early stopping permutations",
+    "choosing a different endpoint",
+    "introducing a new model",
+    "changing treatment direction or tie handling",
+    "subsetting treatments because Doxorubicin hurts",
+    "dropping Cisplatin because its interaction is negligible",
+    "using C2 or a per-treatment result to rescue failed C1 ranking",
+    "adding another dataset",
+    "any post-result plan revision for Generation 1"
+  ],
+  "audit": {
+    "checklist_items": 38,
+    "checklist_passed": 38,
+    "walked_once_in_full": true,
+    "record": "plans/(newer)practical plans/RECORDs/stage_23_5_RECORD.md",
+    "items": [
+      {
+        "item": "every quoted Stage-23/23.2 number matches its source artifact",
+        "pass": true,
+        "verified_by": "28/28 re-derived from stage22_wm989_*.csv, stage23_wm989_interaction_results.json, stage23_final_synthesis.json"
+      },
+      {
+        "item": "p_perm is described as 0/200 and 1/201, not as precise tail estimation",
+        "pass": true,
+        "verified_by": "plan 2.2 text"
+      },
+      {
+        "item": "observed/null ratios are not called effect sizes",
+        "pass": true,
+        "verified_by": "plan 2.2"
+      },
+      {
+        "item": "four / negligible Cisplatin / negative Doxorubicin wording is preserved",
+        "pass": true,
+        "verified_by": "plan 2.2 required summary"
+      },
+      {
+        "item": "no independent Role-B biological replication is claimed",
+        "pass": true,
+        "verified_by": "plan 2.3 and 3.5"
+      },
+      {
+        "item": "all Rewind evidence is marked consumed for future confirmation purposes",
+        "pass": true,
+        "verified_by": "plan 2.1"
+      },
+      {
+        "item": "the two roadmap amendments are separately named",
+        "pass": true,
+        "verified_by": "plan 0"
+      },
+      {
+        "item": "no new dataset is authorized",
+        "pass": true,
+        "verified_by": "plan 0 and 4.3"
+      },
+      {
+        "item": "W5/W4/W1 definitions match the frozen Stage-23 implementation",
+        "pass": true,
+        "verified_by": "plan 5.1; W1/W4/W5 pooled metrics match stage23_wm989_interaction_results.json exactly"
+      },
+      {
+        "item": "B and treatment coding are referenced mechanically, not re-invented",
+        "pass": true,
+        "verified_by": "plan 5.1"
+      },
+      {
+        "item": "primary ranking population is mechanically reproducible",
+        "pass": true,
+        "verified_by": "recomputed from stage22_wm989_clone_treatment.csv: 892"
+      },
+      {
+        "item": "whole-clone equal weighting is explicit",
+        "pass": true,
+        "verified_by": "plan 8.5"
+      },
+      {
+        "item": "score ties receive 0.5 in AUC_i",
+        "pass": true,
+        "verified_by": "plan 8.5"
+      },
+      {
+        "item": "all six treatment rows stay together",
+        "pass": true,
+        "verified_by": "plan 8.4, 8.6"
+      },
+      {
+        "item": "full-refit permutation preserves the outer boundary",
+        "pass": true,
+        "verified_by": "plan 8.7"
+      },
+      {
+        "item": "depth \u00d7 naive-presence strata and merge rules match Stage 23",
+        "pass": true,
+        "verified_by": "plan 8.7; matches wm989_strata() in run_stage23_learnability_gate.py"
+      },
+      {
+        "item": "1,000 permutations and no early stopping are enforced",
+        "pass": true,
+        "verified_by": "plan 8.7"
+      },
+      {
+        "item": "C2 cannot rescue C1 ranking",
+        "pass": true,
+        "verified_by": "plan 8.9, 8.11"
+      },
+      {
+        "item": "W5 tool and manuscript shipment do not depend on ranking support",
+        "pass": true,
+        "verified_by": "plan 3.2, 6.1"
+      },
+      {
+        "item": "unsupported ranking removes only the validated ordering claim",
+        "pass": true,
+        "verified_by": "plan 8.10"
+      },
+      {
+        "item": "both ranking labels lead directly to GEN1_MANDATORY_SHIP",
+        "pass": true,
+        "verified_by": "plan 9"
+      },
+      {
+        "item": "no result can return the project to an earlier stage",
+        "pass": true,
+        "verified_by": "plan 8.10"
+      },
+      {
+        "item": "no calibrated probability or clinical recommendation is promised",
+        "pass": true,
+        "verified_by": "plan 3.5, 6.4"
+      },
+      {
+        "item": "the tool requires B or derives it from supported raw input",
+        "pass": true,
+        "verified_by": "plan 6.2, 6.4"
+      },
+      {
+        "item": "Stage 24 cannot inspect the ranking result",
+        "pass": true,
+        "verified_by": "plan 7"
+      },
+      {
+        "item": "no Stage-25 statistic exists before plan digest and commit",
+        "pass": true,
+        "verified_by": "no ranking artifact exists anywhere in results/"
+      },
+      {
+        "item": "the reproduction tolerance is a NUMBER, with a stated stop rule",
+        "pass": true,
+        "verified_by": "plan 7.1"
+      },
+      {
+        "item": "the permutation compute budget is stated and has been accepted",
+        "pass": true,
+        "verified_by": "plan 0.2"
+      },
+      {
+        "item": "each permutation shard writes its own cache file and the merge asserts completeness",
+        "pass": true,
+        "verified_by": "plan 0.2, 8.7"
+      },
+      {
+        "item": "delta_TOP1 is labelled a directional-consistency check, not a significance test",
+        "pass": true,
+        "verified_by": "plan 8.10 criterion 5"
+      },
+      {
+        "item": "the bootstrap interval is declared conditional on the fitted models",
+        "pass": true,
+        "verified_by": "plan 8.6"
+      },
+      {
+        "item": "the 892-clone eligibility count is verified mechanically before scoring",
+        "pass": true,
+        "verified_by": "plan 8.4"
+      },
+      {
+        "item": "section 0 states the six criteria and the forbidden list",
+        "pass": true,
+        "verified_by": "plan 0.1"
+      },
+      {
+        "item": "the reproduction gate is ROW-LEVEL, with no pooled-metric route",
+        "pass": true,
+        "verified_by": "plan 7.1 R1-R4"
+      },
+      {
+        "item": "within-clone ordering preservation is an explicit reproduction requirement",
+        "pass": true,
+        "verified_by": "plan 7.1 R3"
+      },
+      {
+        "item": "the delta_TOP1 boundary change is logged as a limited relaxation, not a clarification",
+        "pass": true,
+        "verified_by": "plan 8.8"
+      },
+      {
+        "item": "EXTRA: stage numbering does not collide with the live roadmap",
+        "pass": true,
+        "verified_by": "roadmap V5 lines 535 and 543"
+      },
+      {
+        "item": "EXTRA: no historical verdict was altered",
+        "pass": true,
+        "verified_by": "plan 2"
+      }
+    ]
+  },
+  "stage_24": "STAGE_24_OPEN_ROLE_B_PRIMARY_GEN1"
+}

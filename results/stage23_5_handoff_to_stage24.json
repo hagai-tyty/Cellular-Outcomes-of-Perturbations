@@ -1,0 +1,40 @@
+{
+  "from_stage": "23.5",
+  "to_stage": "24",
+  "plan_canonical_lf_sha256": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48",
+  "primary_role": "Role B / WM989 (GSE279162)",
+  "role_a_status": "underpowered supporting evidence",
+  "stage_24_model": "frozen W5",
+  "stage_24_opening_status": "STAGE_24_OPEN_ROLE_B_PRIMARY_GEN1",
+  "ranking_metric_inspected": false,
+  "ranking_protocol_hash_frozen": true,
+  "new_datasets_authorized": false,
+  "stage_27_gen1_gate": false,
+  "allowed_generalization": "known conditions, within system",
+  "stage_24_substages": [
+    "24A consume handoff, freeze engineering plan",
+    "24B reproduce W1/W4/W5 and exact Stage-23 metrics",
+    "24C serialization, preprocessing, prediction API",
+    "24D one frozen OOF prediction per clone-condition row",
+    "24E deterministic scoring and leakage contracts",
+    "24F freeze W5 tool artifacts",
+    "24G hand frozen predictions/model to Stage 25"
+  ],
+  "stage_24_may_not": [
+    "inspect the Stage-25 ranking metric",
+    "replace W5 because another architecture scores better on the same folds",
+    "add a dataset",
+    "change any Stage-22 or Stage-23 frozen quantity"
+  ],
+  "reproduction_gate": {
+    "primary": "byte-identical regeneration of stage23_wm989_detection_oof.csv and stage23_wm989_interaction_oof.csv",
+    "fallback": "ROW-LEVEL only. There is no pooled-metric route.",
+    "R1_shape_and_key": "8406 rows each; identical ordered (clone_id, treatment, outer_fold, y) tuples",
+    "R2_every_score": "|regenerated - frozen| <= 1e-12 for every prediction cell of every model column; checked cell by cell, no aggregate substitute",
+    "R3_within_clone_ordering": "for all 1401 clones, and for W4 and W5 independently, sign(s_iu - s_iv) unchanged for every condition pair, including tie structure",
+    "R4_cause_named": "specific environment difference identified; 'floating point' alone is not a cause",
+    "failure": "INPUT-INTEGRITY STOP -- permits only a correctness repair to the frozen W5 implementation"
+  },
+  "compute_budget_accepted": true,
+  "evidence_base_commit": "c52c7ac9a73abcf121624112d52f4f463db06f7a"
+}
