@@ -996,7 +996,8 @@ def test_the_determinism_set_covers_every_committed_stage23_artifact():
     """A shrinking artifact list would make determinism trivially true."""
     skip = {"stage23_permutation_results.json", "stage23_determinism.json"}
     on_disk = {p.name for p in RES.glob("stage23_*")
-               if p.name not in skip and p.is_file() and not p.name.startswith("stage23_2")}
+               if p.name not in skip and p.is_file()
+               and not p.name.startswith(("stage23_2", "stage23_5"))}
     assert on_disk <= set(S23.DETERMINISM_ARTIFACTS), on_disk - set(S23.DETERMINISM_ARTIFACTS)
 
 

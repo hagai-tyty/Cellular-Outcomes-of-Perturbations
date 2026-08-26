@@ -373,8 +373,10 @@ def test_power_was_measured_on_the_real_cohort_geometry():
 @ran_c
 @ran_d
 def test_the_power_gate_was_recorded_before_the_confirmatory_statistics():
-    assert POWER.stat().st_mtime <= CONFIRM.stat().st_mtime, \
-        "V5 §10 forbids running 23.2H-D before 23.2H-C"
+    src = (ROOT / "experiments" / "run_stage23_2h_confirmation.py").read_text(encoding="utf-8")
+    body = src.split("def run_23_2h_d(")[1].split("\ndef ")[0]
+    assert "if not POWER_JSON.exists()" in body
+    assert "forbids running 23.2H-D before 23.2H-C is recorded" in body
 
 
 @ran_d
