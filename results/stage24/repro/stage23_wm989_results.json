@@ -1,0 +1,547 @@
+{
+  "stage": "23C",
+  "dataset": "GSE279162",
+  "role": "B",
+  "plan": {
+    "file": "STAGE_23_LEARNABILITY_INTERACTION_GATE_V2.md",
+    "version": "V2",
+    "canonical_lf_sha256": "bc783e6b7da8102de5b73dd50dbe02861c92d2ca907c0a80d2e2a1c37561df69"
+  },
+  "protocol_sha256": "04a7dab3fed5ebdd30a8ade118a638af0ae7eedf40e5a03843dfbdf8397fd9e2",
+  "models": {
+    "W0": "U",
+    "W1": "B + U",
+    "W2": "X",
+    "W3": "X + U",
+    "W4": "X + B + U"
+  },
+  "nuisance_block_B": [
+    "log1p(n_naive_cells)",
+    "log1p(n_naive1_cells)",
+    "log1p(n_naive2_cells)",
+    "log1p(n_naive3_cells)"
+  ],
+  "treatment_coding": {
+    "order": [
+      "Acid",
+      "Cisplatin",
+      "CoCl2",
+      "Dabrafenib",
+      "Doxorubicin",
+      "Trametinib"
+    ],
+    "reference": "Acid"
+  },
+  "primary_comparison": "W4 vs W1 on both endpoints",
+  "interaction_terms_present": false,
+  "endpoints": {
+    "C1": {
+      "rows": 8406,
+      "clones": 1401,
+      "selected_hyperparameters_per_outer_fold": {
+        "0": {
+          "W0": {
+            "K": null,
+            "hp": 10,
+            "mean_inner_score": 0.562068
+          },
+          "W1": {
+            "K": null,
+            "hp": 10,
+            "mean_inner_score": 0.480001
+          },
+          "W2": {
+            "K": 50,
+            "hp": 1,
+            "mean_inner_score": 0.553238
+          },
+          "W3": {
+            "K": 50,
+            "hp": 1,
+            "mean_inner_score": 0.530119
+          },
+          "W4": {
+            "K": 50,
+            "hp": 1,
+            "mean_inner_score": 0.471331
+          }
+        },
+        "1": {
+          "W0": {
+            "K": null,
+            "hp": 10,
+            "mean_inner_score": 0.563864
+          },
+          "W1": {
+            "K": null,
+            "hp": 1,
+            "mean_inner_score": 0.480801
+          },
+          "W2": {
+            "K": 50,
+            "hp": 1,
+            "mean_inner_score": 0.554316
+          },
+          "W3": {
+            "K": 50,
+            "hp": 1,
+            "mean_inner_score": 0.53034
+          },
+          "W4": {
+            "K": 50,
+            "hp": 1,
+            "mean_inner_score": 0.473081
+          }
+        },
+        "2": {
+          "W0": {
+            "K": null,
+            "hp": 10,
+            "mean_inner_score": 0.560386
+          },
+          "W1": {
+            "K": null,
+            "hp": 10,
+            "mean_inner_score": 0.476053
+          },
+          "W2": {
+            "K": 50,
+            "hp": 10,
+            "mean_inner_score": 0.549426
+          },
+          "W3": {
+            "K": 50,
+            "hp": 10,
+            "mean_inner_score": 0.526864
+          },
+          "W4": {
+            "K": 50,
+            "hp": 1,
+            "mean_inner_score": 0.469456
+          }
+        },
+        "3": {
+          "W0": {
+            "K": null,
+            "hp": 10,
+            "mean_inner_score": 0.55382
+          },
+          "W1": {
+            "K": null,
+            "hp": 1,
+            "mean_inner_score": 0.474213
+          },
+          "W2": {
+            "K": 50,
+            "hp": 10,
+            "mean_inner_score": 0.547255
+          },
+          "W3": {
+            "K": 50,
+            "hp": 1,
+            "mean_inner_score": 0.523288
+          },
+          "W4": {
+            "K": 50,
+            "hp": 1,
+            "mean_inner_score": 0.466019
+          }
+        },
+        "4": {
+          "W0": {
+            "K": null,
+            "hp": 10,
+            "mean_inner_score": 0.560179
+          },
+          "W1": {
+            "K": null,
+            "hp": 10,
+            "mean_inner_score": 0.479915
+          },
+          "W2": {
+            "K": 50,
+            "hp": 1,
+            "mean_inner_score": 0.552718
+          },
+          "W3": {
+            "K": 50,
+            "hp": 1,
+            "mean_inner_score": 0.528591
+          },
+          "W4": {
+            "K": 50,
+            "hp": 1,
+            "mean_inner_score": 0.47197
+          }
+        }
+      },
+      "per_outer_fold": {
+        "0": {
+          "train_clones": 1120,
+          "test_clones": 281,
+          "train_rows": 6720,
+          "test_rows": 1686,
+          "retained_genes": 18385,
+          "max_feasible_K": 50
+        },
+        "1": {
+          "train_clones": 1121,
+          "test_clones": 280,
+          "train_rows": 6726,
+          "test_rows": 1680,
+          "retained_genes": 18411,
+          "max_feasible_K": 50
+        },
+        "2": {
+          "train_clones": 1121,
+          "test_clones": 280,
+          "train_rows": 6726,
+          "test_rows": 1680,
+          "retained_genes": 18270,
+          "max_feasible_K": 50
+        },
+        "3": {
+          "train_clones": 1121,
+          "test_clones": 280,
+          "train_rows": 6726,
+          "test_rows": 1680,
+          "retained_genes": 18227,
+          "max_feasible_K": 50
+        },
+        "4": {
+          "train_clones": 1121,
+          "test_clones": 280,
+          "train_rows": 6726,
+          "test_rows": 1680,
+          "retained_genes": 18361,
+          "max_feasible_K": 50
+        }
+      },
+      "pooled_oof_metrics": {
+        "W0": {
+          "log_loss": 0.5599155252285883,
+          "AP": 0.3689542983627102,
+          "ROC_AUC": 0.6097268350343079,
+          "brier": 0.1871633579107353
+        },
+        "W1": {
+          "log_loss": 0.47832325762628236,
+          "AP": 0.6136473398651106,
+          "ROC_AUC": 0.7640995286282651,
+          "brier": 0.1535576183665581
+        },
+        "W2": {
+          "log_loss": 0.547718391142863,
+          "AP": 0.400720275485031,
+          "ROC_AUC": 0.6835797584039669,
+          "brier": 0.18290031146478247
+        },
+        "W3": {
+          "log_loss": 0.5240801880472633,
+          "AP": 0.4994371307403599,
+          "ROC_AUC": 0.7153115450037479,
+          "brier": 0.17225598062500375
+        },
+        "W4": {
+          "log_loss": 0.4689510245328575,
+          "AP": 0.6319008825146217,
+          "ROC_AUC": 0.7798315242460936,
+          "brier": 0.14997841743623813
+        }
+      },
+      "inference": {
+        "delta_state_W1_minus_W4": {
+          "metric": "log_loss",
+          "point": 0.009372233093424887,
+          "ci95": [
+            0.005834597575771176,
+            0.012589191129477179
+          ],
+          "ci975_two_sided": [
+            0.005164130541834332,
+            0.013149431476151543
+          ],
+          "fraction_delta_le_0": 0.0,
+          "bootstrap_mean": 0.009383474678249567,
+          "replicates": 2000,
+          "seed": 23223,
+          "bootstrap_unit": "clone",
+          "clones_resampled": 1401
+        }
+      }
+    },
+    "C2": {
+      "rows": 2256,
+      "clones": 929,
+      "selected_hyperparameters_per_outer_fold": {
+        "0": {
+          "W0": {
+            "K": null,
+            "hp": 0.1,
+            "mean_inner_score": 0.601911
+          },
+          "W1": {
+            "K": null,
+            "hp": 1,
+            "mean_inner_score": 0.532391
+          },
+          "W2": {
+            "K": 10,
+            "hp": 0.1,
+            "mean_inner_score": 0.621461
+          },
+          "W3": {
+            "K": 10,
+            "hp": 0.1,
+            "mean_inner_score": 0.603566
+          },
+          "W4": {
+            "K": 20,
+            "hp": 10,
+            "mean_inner_score": 0.527601
+          }
+        },
+        "1": {
+          "W0": {
+            "K": null,
+            "hp": 1,
+            "mean_inner_score": 0.58934
+          },
+          "W1": {
+            "K": null,
+            "hp": 10,
+            "mean_inner_score": 0.519841
+          },
+          "W2": {
+            "K": 10,
+            "hp": 100,
+            "mean_inner_score": 0.609913
+          },
+          "W3": {
+            "K": 10,
+            "hp": 0.1,
+            "mean_inner_score": 0.590326
+          },
+          "W4": {
+            "K": 50,
+            "hp": 10,
+            "mean_inner_score": 0.511248
+          }
+        },
+        "2": {
+          "W0": {
+            "K": null,
+            "hp": 0.1,
+            "mean_inner_score": 0.574955
+          },
+          "W1": {
+            "K": null,
+            "hp": 1,
+            "mean_inner_score": 0.507645
+          },
+          "W2": {
+            "K": 10,
+            "hp": 0.1,
+            "mean_inner_score": 0.595355
+          },
+          "W3": {
+            "K": 10,
+            "hp": 0.1,
+            "mean_inner_score": 0.574407
+          },
+          "W4": {
+            "K": 20,
+            "hp": 1,
+            "mean_inner_score": 0.503196
+          }
+        },
+        "3": {
+          "W0": {
+            "K": null,
+            "hp": 0.1,
+            "mean_inner_score": 0.571909
+          },
+          "W1": {
+            "K": null,
+            "hp": 10,
+            "mean_inner_score": 0.509071
+          },
+          "W2": {
+            "K": 10,
+            "hp": 0.1,
+            "mean_inner_score": 0.592761
+          },
+          "W3": {
+            "K": 10,
+            "hp": 0.1,
+            "mean_inner_score": 0.572406
+          },
+          "W4": {
+            "K": 20,
+            "hp": 10,
+            "mean_inner_score": 0.502372
+          }
+        },
+        "4": {
+          "W0": {
+            "K": null,
+            "hp": 0.1,
+            "mean_inner_score": 0.583173
+          },
+          "W1": {
+            "K": null,
+            "hp": 10,
+            "mean_inner_score": 0.515248
+          },
+          "W2": {
+            "K": 10,
+            "hp": 0.1,
+            "mean_inner_score": 0.605057
+          },
+          "W3": {
+            "K": 10,
+            "hp": 0.1,
+            "mean_inner_score": 0.582133
+          },
+          "W4": {
+            "K": 50,
+            "hp": 10,
+            "mean_inner_score": 0.510507
+          }
+        }
+      },
+      "per_outer_fold": {
+        "0": {
+          "train_clones": 740,
+          "test_clones": 189,
+          "train_rows": 1818,
+          "test_rows": 438,
+          "retained_genes": 19256,
+          "max_feasible_K": 50
+        },
+        "1": {
+          "train_clones": 740,
+          "test_clones": 189,
+          "train_rows": 1833,
+          "test_rows": 423,
+          "retained_genes": 19252,
+          "max_feasible_K": 50
+        },
+        "2": {
+          "train_clones": 747,
+          "test_clones": 182,
+          "train_rows": 1799,
+          "test_rows": 457,
+          "retained_genes": 19085,
+          "max_feasible_K": 50
+        },
+        "3": {
+          "train_clones": 745,
+          "test_clones": 184,
+          "train_rows": 1769,
+          "test_rows": 487,
+          "retained_genes": 19026,
+          "max_feasible_K": 50
+        },
+        "4": {
+          "train_clones": 744,
+          "test_clones": 185,
+          "train_rows": 1805,
+          "test_rows": 451,
+          "retained_genes": 19181,
+          "max_feasible_K": 50
+        }
+      },
+      "pooled_oof_metrics": {
+        "W0": {
+          "clone_balanced_MAE": 0.5842339470174307,
+          "clone_balanced_RMSE": 0.8287216165687781,
+          "per_treatment_spearman": {
+            "Acid": -0.0465,
+            "Cisplatin": -0.1172,
+            "CoCl2": -0.0829,
+            "Dabrafenib": -0.1013,
+            "Doxorubicin": -0.0917,
+            "Trametinib": -0.1717
+          },
+          "mean_treatment_spearman": -0.10188957598545223
+        },
+        "W1": {
+          "clone_balanced_MAE": 0.5144863827773782,
+          "clone_balanced_RMSE": 0.7630509978333492,
+          "per_treatment_spearman": {
+            "Acid": 0.6162,
+            "Cisplatin": 0.4658,
+            "CoCl2": 0.3491,
+            "Dabrafenib": 0.1902,
+            "Doxorubicin": 0.415,
+            "Trametinib": 0.1407
+          },
+          "mean_treatment_spearman": 0.36282920831027693
+        },
+        "W2": {
+          "clone_balanced_MAE": 0.5996339911053473,
+          "clone_balanced_RMSE": 0.8358238345843512,
+          "per_treatment_spearman": {
+            "Acid": 0.1868,
+            "Cisplatin": 0.1164,
+            "CoCl2": 0.1119,
+            "Dabrafenib": 0.1402,
+            "Doxorubicin": 0.0534,
+            "Trametinib": 0.1397
+          },
+          "mean_treatment_spearman": 0.12474761946098185
+        },
+        "W3": {
+          "clone_balanced_MAE": 0.580475302802671,
+          "clone_balanced_RMSE": 0.820463960207677,
+          "per_treatment_spearman": {
+            "Acid": 0.1848,
+            "Cisplatin": 0.119,
+            "CoCl2": 0.0993,
+            "Dabrafenib": 0.1261,
+            "Doxorubicin": 0.0332,
+            "Trametinib": 0.0885
+          },
+          "mean_treatment_spearman": 0.10849917904128857
+        },
+        "W4": {
+          "clone_balanced_MAE": 0.5100798502288132,
+          "clone_balanced_RMSE": 0.7513054315165801,
+          "per_treatment_spearman": {
+            "Acid": 0.5892,
+            "Cisplatin": 0.4761,
+            "CoCl2": 0.3469,
+            "Dabrafenib": 0.2901,
+            "Doxorubicin": 0.4235,
+            "Trametinib": 0.2734
+          },
+          "mean_treatment_spearman": 0.39986719618902217
+        }
+      },
+      "inference": {
+        "delta_state_W1_minus_W4": {
+          "metric": "clone_balanced_MAE",
+          "point": 0.004406532548565045,
+          "ci95": [
+            -0.0018401435882362926,
+            0.010484358900993706
+          ],
+          "ci975_two_sided": [
+            -0.0024698050051634064,
+            0.01111021876900248
+          ],
+          "fraction_delta_le_0": 0.083,
+          "bootstrap_mean": 0.004403301355009511,
+          "replicates": 2000,
+          "seed": 23224,
+          "bootstrap_unit": "clone",
+          "clones_resampled": 929
+        }
+      }
+    }
+  },
+  "convergence_warnings": [],
+  "verdict": "ROLE_B_ADDITIVE_PASS",
+  "verdict_is_provisional_until": "23E structural controls + ROLE_B_ADDITIVE_PERMUTATION_PASS"
+}

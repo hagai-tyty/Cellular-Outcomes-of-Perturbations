@@ -1,0 +1,293 @@
+{
+  "stage": "24B",
+  "plan_canonical_lf_sha256": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48",
+  "reproduction_root": "results\\stage24\\repro",
+  "frozen_artifacts_untouched": {
+    "C1_W0toW4": {
+      "sha256": "ba09c1933e3039f1b097b3a4dba6f2df967e4d31c1e3509b29e0a50fc31aa820",
+      "path": "results\\stage23_wm989_detection_oof.csv"
+    },
+    "C2_W0toW4": {
+      "sha256": "89f6c0db38c9dba2394ec7b28b8006f2b85990dfbb8f478b202c2c77f1bba887",
+      "path": "results\\stage23_wm989_abundance_oof.csv"
+    },
+    "C1_W5": {
+      "sha256": "e727c5782ac67ec6324219f4662dee72b00285dd0562435065941a9d831874aa",
+      "path": "results\\stage23_wm989_interaction_oof.csv"
+    },
+    "C2_W5": {
+      "sha256": "0ee593844f2ed3b70848466987de8eb7a445c43418eb66407af486c8217c750f",
+      "path": "results\\stage23_wm989_interaction_abundance_oof.csv"
+    },
+    "results_W0toW4": {
+      "sha256": "2b84cdb8cd186246704f7ff5bdc72eb034d42060bbd028ba9cbb13a26097d52f",
+      "path": "results\\stage23_wm989_results.json"
+    },
+    "results_W5": {
+      "sha256": "f1b9fbebb5fcf9e7b66dbb960bdc177d4a748a146559fbe477f19465ece75dc4",
+      "path": "results\\stage23_wm989_interaction_results.json"
+    }
+  },
+  "gates": {
+    "C1_W0toW4": {
+      "frozen": "stage23_wm989_detection_oof.csv",
+      "reproduced": "results\\stage24\\repro\\stage23_wm989_detection_oof.csv",
+      "byte_identical": true,
+      "R1_shape_and_key": {
+        "endpoint": "C1",
+        "rows_frozen": 8406,
+        "rows_repro": 8406,
+        "expected_rows_for_endpoint": 8406,
+        "repro_matches_frozen_row_count": true,
+        "frozen_matches_documented_count": true,
+        "key_columns_present": true,
+        "ordered_key_identical": true,
+        "pass": true
+      },
+      "R2_every_score": {
+        "tolerance": 1e-12,
+        "columns_checked": [
+          "pred_W0",
+          "pred_W1",
+          "pred_W2",
+          "pred_W3",
+          "pred_W4"
+        ],
+        "worst_abs_diff_any_column": 0.0,
+        "per_column": {
+          "pred_W0": {
+            "present_in_repro": true,
+            "max_abs_diff": 0.0,
+            "cells_over_tolerance": 0,
+            "cells": 8406,
+            "pass": true
+          },
+          "pred_W1": {
+            "present_in_repro": true,
+            "max_abs_diff": 0.0,
+            "cells_over_tolerance": 0,
+            "cells": 8406,
+            "pass": true
+          },
+          "pred_W2": {
+            "present_in_repro": true,
+            "max_abs_diff": 0.0,
+            "cells_over_tolerance": 0,
+            "cells": 8406,
+            "pass": true
+          },
+          "pred_W3": {
+            "present_in_repro": true,
+            "max_abs_diff": 0.0,
+            "cells_over_tolerance": 0,
+            "cells": 8406,
+            "pass": true
+          },
+          "pred_W4": {
+            "present_in_repro": true,
+            "max_abs_diff": 0.0,
+            "cells_over_tolerance": 0,
+            "cells": 8406,
+            "pass": true
+          }
+        },
+        "pass": true
+      },
+      "R3_within_clone_ordering": {
+        "models_checked": [
+          "pred_W4"
+        ],
+        "per_model": {
+          "pred_W4": {
+            "present_in_repro": true,
+            "clones_checked": 1401,
+            "clones_with_changed_ordering": 0,
+            "examples": [],
+            "pass": true
+          }
+        },
+        "pass": true
+      },
+      "gate_self_consistent": true,
+      "verdict": "BYTE_IDENTICAL"
+    },
+    "C2_W0toW4": {
+      "frozen": "stage23_wm989_abundance_oof.csv",
+      "reproduced": "results\\stage24\\repro\\stage23_wm989_abundance_oof.csv",
+      "byte_identical": true,
+      "R1_shape_and_key": {
+        "endpoint": "C2",
+        "rows_frozen": 2256,
+        "rows_repro": 2256,
+        "expected_rows_for_endpoint": 2256,
+        "repro_matches_frozen_row_count": true,
+        "frozen_matches_documented_count": true,
+        "key_columns_present": true,
+        "ordered_key_identical": true,
+        "pass": true
+      },
+      "R2_every_score": {
+        "tolerance": 1e-12,
+        "columns_checked": [
+          "pred_W0",
+          "pred_W1",
+          "pred_W2",
+          "pred_W3",
+          "pred_W4"
+        ],
+        "worst_abs_diff_any_column": 0.0,
+        "per_column": {
+          "pred_W0": {
+            "present_in_repro": true,
+            "max_abs_diff": 0.0,
+            "cells_over_tolerance": 0,
+            "cells": 2256,
+            "pass": true
+          },
+          "pred_W1": {
+            "present_in_repro": true,
+            "max_abs_diff": 0.0,
+            "cells_over_tolerance": 0,
+            "cells": 2256,
+            "pass": true
+          },
+          "pred_W2": {
+            "present_in_repro": true,
+            "max_abs_diff": 0.0,
+            "cells_over_tolerance": 0,
+            "cells": 2256,
+            "pass": true
+          },
+          "pred_W3": {
+            "present_in_repro": true,
+            "max_abs_diff": 0.0,
+            "cells_over_tolerance": 0,
+            "cells": 2256,
+            "pass": true
+          },
+          "pred_W4": {
+            "present_in_repro": true,
+            "max_abs_diff": 0.0,
+            "cells_over_tolerance": 0,
+            "cells": 2256,
+            "pass": true
+          }
+        },
+        "pass": true
+      },
+      "R3_within_clone_ordering": {
+        "models_checked": [],
+        "pass": true,
+        "note": "no ranking-relevant model"
+      },
+      "gate_self_consistent": true,
+      "verdict": "BYTE_IDENTICAL"
+    },
+    "C1_W5": {
+      "frozen": "stage23_wm989_interaction_oof.csv",
+      "reproduced": "results\\stage24\\repro\\stage23_wm989_interaction_oof.csv",
+      "byte_identical": true,
+      "R1_shape_and_key": {
+        "endpoint": "C1",
+        "rows_frozen": 8406,
+        "rows_repro": 8406,
+        "expected_rows_for_endpoint": 8406,
+        "repro_matches_frozen_row_count": true,
+        "frozen_matches_documented_count": true,
+        "key_columns_present": true,
+        "ordered_key_identical": true,
+        "pass": true
+      },
+      "R2_every_score": {
+        "tolerance": 1e-12,
+        "columns_checked": [
+          "pred_W0",
+          "pred_W1",
+          "pred_W2",
+          "pred_W3",
+          "pred_W4",
+          "pred_W5"
+        ],
+        "worst_abs_diff_any_column": 0.0,
+        "per_column": {
+          "pred_W0": {
+            "present_in_repro": true,
+            "max_abs_diff": 0.0,
+            "cells_over_tolerance": 0,
+            "cells": 8406,
+            "pass": true
+          },
+          "pred_W1": {
+            "present_in_repro": true,
+            "max_abs_diff": 0.0,
+            "cells_over_tolerance": 0,
+            "cells": 8406,
+            "pass": true
+          },
+          "pred_W2": {
+            "present_in_repro": true,
+            "max_abs_diff": 0.0,
+            "cells_over_tolerance": 0,
+            "cells": 8406,
+            "pass": true
+          },
+          "pred_W3": {
+            "present_in_repro": true,
+            "max_abs_diff": 0.0,
+            "cells_over_tolerance": 0,
+            "cells": 8406,
+            "pass": true
+          },
+          "pred_W4": {
+            "present_in_repro": true,
+            "max_abs_diff": 0.0,
+            "cells_over_tolerance": 0,
+            "cells": 8406,
+            "pass": true
+          },
+          "pred_W5": {
+            "present_in_repro": true,
+            "max_abs_diff": 0.0,
+            "cells_over_tolerance": 0,
+            "cells": 8406,
+            "pass": true
+          }
+        },
+        "pass": true
+      },
+      "R3_within_clone_ordering": {
+        "models_checked": [
+          "pred_W4",
+          "pred_W5"
+        ],
+        "per_model": {
+          "pred_W4": {
+            "present_in_repro": true,
+            "clones_checked": 1401,
+            "clones_with_changed_ordering": 0,
+            "examples": [],
+            "pass": true
+          },
+          "pred_W5": {
+            "present_in_repro": true,
+            "clones_checked": 1401,
+            "clones_with_changed_ordering": 0,
+            "examples": [],
+            "pass": true
+          }
+        },
+        "pass": true
+      },
+      "gate_self_consistent": true,
+      "verdict": "BYTE_IDENTICAL"
+    }
+  },
+  "all_byte_identical": true,
+  "reproduction_verdict": "BYTE_IDENTICAL",
+  "R4_cause_named": null,
+  "runtime_minutes": 2.334,
+  "substage_runtime_minutes": {
+    "23C": 1.29,
+    "23D": 1.004
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "stage": "24A",
+  "plan": {
+    "file": "STAGE_23_5_GEN1_ROLE_B_SHIP_PLAN_V1.md",
+    "canonical_lf_sha256": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48"
+  },
+  "checks": {
+    "plan_digest_matches_protocol": true,
+    "plan_digest_matches_handoff": true,
+    "plan_status_frozen": true,
+    "stage_24_open": true,
+    "ranking_metric_not_inspected": true,
+    "ranking_protocol_frozen": true,
+    "no_new_datasets": true,
+    "stage_27_not_a_gen1_gate": true,
+    "audit_fully_passed": true,
+    "compute_budget_accepted": true,
+    "no_source_artifact_drift": true,
+    "no_ranking_artifact_exists": true
+  },
+  "source_artifact_drift": {},
+  "ranking_artifacts_found": [],
+  "all_checks_pass": true,
+  "engineering_plan": {
+    "model": "W5 = X + B + U + X*U, the frozen Stage-23 implementation",
+    "substages": [
+      "24A consume handoff, freeze engineering plan",
+      "24B reproduce W1/W4/W5 and exact Stage-23 metrics",
+      "24C serialization, preprocessing, prediction API",
+      "24D one frozen OOF prediction per clone-condition row",
+      "24E deterministic scoring and leakage contracts",
+      "24F freeze W5 tool artifacts",
+      "24G hand frozen predictions/model to Stage 25"
+    ],
+    "may_not": [
+      "inspect the Stage-25 ranking metric",
+      "replace W5 because another architecture scores better on the same folds",
+      "add a dataset",
+      "change any Stage-22 or Stage-23 frozen quantity"
+    ],
+    "reproduction_gate": "plan \u00a77.1 R1-R4, implemented in run_24b()",
+    "output_root": "results/stage24/",
+    "frozen_artifacts_are_read_only": true,
+    "how_reproduction_avoids_overwriting": "run_stage23_learnability_gate writes WM989 outputs to module-level path constants. 24B rebinds those constants to results/stage24/repro/ for the duration of the call, so the frozen files are the comparison target and are never written to."
+  },
+  "runtime_minutes": 0.0014,
+  "source_provenance": {}
+}
