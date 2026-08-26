@@ -1,0 +1,106 @@
+{
+  "stage": "24C",
+  "plan_canonical_lf_sha256": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48",
+  "artifact": {
+    "npz": "stage24_w5_artifact.npz",
+    "meta": "stage24_w5_artifact.json",
+    "sha256": "858d7903c4c67ef2c65b5ffb8541788256a6ae0b78926c809e8ad1f7e44c06b7",
+    "size_bytes": 44400290
+  },
+  "fold_components": {
+    "0": {
+      "K": 50,
+      "C": 0.1,
+      "pca_k": 50,
+      "genes_kept": 18385,
+      "design_columns": 309,
+      "train_clones": 1120,
+      "test_rows": 1686
+    },
+    "1": {
+      "K": 50,
+      "C": 0.1,
+      "pca_k": 50,
+      "genes_kept": 18411,
+      "design_columns": 309,
+      "train_clones": 1121,
+      "test_rows": 1680
+    },
+    "2": {
+      "K": 50,
+      "C": 0.1,
+      "pca_k": 50,
+      "genes_kept": 18270,
+      "design_columns": 309,
+      "train_clones": 1121,
+      "test_rows": 1680
+    },
+    "3": {
+      "K": 50,
+      "C": 0.1,
+      "pca_k": 50,
+      "genes_kept": 18227,
+      "design_columns": 309,
+      "train_clones": 1121,
+      "test_rows": 1680
+    },
+    "4": {
+      "K": 50,
+      "C": 0.1,
+      "pca_k": 50,
+      "genes_kept": 18361,
+      "design_columns": 309,
+      "train_clones": 1121,
+      "test_rows": 1680
+    }
+  },
+  "deployment_component": {
+    "K": 50,
+    "C": 0.1,
+    "genes_kept": 18290,
+    "design_columns": 309,
+    "train_clones": 1401,
+    "mean_inner_score": 0.454858,
+    "selection_rule": "the frozen 23D inner GroupKFold rule, applied once to all clones",
+    "status": "PACKAGING, not a new model -- same features, same grid, same rule",
+    "validation": "NOT validated on held-out data. Its performance is ESTIMATED by the frozen out-of-fold result, which came from the fold components."
+  },
+  "oof_equivalence": {
+    "compared_against": "stage23_wm989_interaction_oof.csv",
+    "column": "pred_W5",
+    "rows": 8406,
+    "tolerance": 1e-12,
+    "max_abs_diff": 4.996003610813204e-16,
+    "rows_over_tolerance": 0,
+    "pass": true
+  },
+  "hyperparameters_match_frozen_selection": {
+    "0": {
+      "artifact": 50,
+      "frozen": 50,
+      "match": true
+    },
+    "1": {
+      "artifact": 50,
+      "frozen": 50,
+      "match": true
+    },
+    "2": {
+      "artifact": 50,
+      "frozen": 50,
+      "match": true
+    },
+    "3": {
+      "artifact": 50,
+      "frozen": 50,
+      "match": true
+    },
+    "4": {
+      "artifact": 50,
+      "frozen": 50,
+      "match": true
+    }
+  },
+  "verdict": "SERIALIZED_AND_EQUIVALENT",
+  "runtime_minutes": 0.515
+}

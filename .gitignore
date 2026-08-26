@@ -64,3 +64,10 @@ gene2vec_cache.txt
 # ~80 h of compute and ARE tracked.
 results/.cache/*.npz
 results/.cache/stage23_2h_clones.json
+
+# --- Stage 24 tool artifact ---
+# The serialized W5 model is 44 MB (five fold components + deployment, each carrying a PCA basis
+# over ~18k retained genes). It rebuilds in ~0.5 min from committed inputs via
+# `run_stage24_gen1_tool.py --stage 24c`, and its sha256 is recorded in the committed
+# stage24_w5_artifact.json. For the reproducibility package it ships as a release asset.
+results/stage24/stage24_w5_artifact.npz

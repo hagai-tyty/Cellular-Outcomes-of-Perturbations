@@ -336,17 +336,277 @@ def run_24b(wm989_root: Path) -> dict:
     return out
 
 
+
+# =============================================================================================== #
+# 24C — serialization, preprocessing and the prediction API.
+#
+# The frozen builder computes W5 but never hands back a fitted object: `expression_block` returns
+# transformed arrays and `_fit_logistic` returns predictions. A tool needs the learned state itself.
+#
+# So 24C rebuilds that state using the frozen builder's OWN helpers -- `training_fold_gene_filter`,
+# `_frozen_pipeline_cache`, `standardize_train_only`, `treatment_dummies`, `interaction_block` --
+# and then proves the rebuild is faithful the only way that means anything: the serialized artifact
+# must regenerate the frozen out-of-fold `pred_W5` column to 1e-12, clone by clone, row by row.
+# If it cannot, the artifact is wrong and 24C fails. Nothing is taken on the resemblance of the code.
+#
+# TWO MODELS ARE SHIPPED, and they answer different questions:
+#
+#   fold models   one per outer fold, each with its own gene filter, PCA, scalers, (K, C) and
+#                 coefficients. These reproduce the frozen OOF predictions and are what Stage 25
+#                 consumes. A benchmark clone is scored by the single fold model that did not
+#                 train on it.
+#   deployment    the same W5 specification and the same inner-CV selection rule applied once to
+#                 ALL clones, for scoring a NEW clone that belongs to no fold. This is a packaging
+#                 step, not a new model: same features, same grid, same rule. Its hyperparameters
+#                 may differ from every fold's, and its performance is ESTIMATED by the frozen OOF
+#                 result -- it is not itself validated on held-out data, and the model card says so.
+# =============================================================================================== #
+ARTIFACT_NPZ = OUT / "stage24_w5_artifact.npz"
+ARTIFACT_META = OUT / "stage24_w5_artifact.json"
+C_JSON = OUT / "stage24c_serialization.json"
+
+PREDICT_TOLERANCE = 1e-12
+REFERENCE_TREATMENT = "Acid"
+SUPPORT_FLAGS = ("SUPPORTED_KNOWN_CONDITION", "UNSUPPORTED_TREATMENT", "UNSUPPORTED_FEATURE_SCHEMA",
+                 "MISSING_REQUIRED_NUISANCE", "OUT_OF_CONTRACT_INPUT", "RANKING_NOT_VALIDATED")
+
+
+def _nuisance_matrix(ck: pd.DataFrame) -> np.ndarray:
+    """The exact frozen WM989 nuisance block, in the frozen column order."""
+    return np.column_stack([np.log1p(ck[c].to_numpy(dtype=float))
+                            for c in ("n_naive_cells", "n_naive1_cells",
+                                      "n_naive2_cells", "n_naive3_cells")])
+
+
+def _fit_w5_component(X, clone_pos, nuis_clone, ckey, dummies, yv, fit_clones, k, hp):
+    """Fit one W5 component and return every learned quantity, not just the predictions."""
+    from sklearn.linear_model import LogisticRegression
+
+    fit_idx = np.array([clone_pos[c] for c in fit_clones])
+    cache = S23._frozen_pipeline_cache(X, fit_idx, max(S23.K_CANDIDATES))
+    ztr = S23._apply_cached(X, fit_idx, cache)
+    nmu = nuis_clone[fit_idx].mean(axis=0)
+    nsd = nuis_clone[fit_idx].std(axis=0)
+    nsd[nsd == 0] = 1.0
+
+    pcs = {c: ztr[i] for i, c in enumerate(fit_clones)}
+    nui = {c: (nuis_clone[clone_pos[c]] - nmu) / nsd for c in fit_clones}
+    rows = np.array([i for i in range(len(ckey)) if ckey[i] in set(fit_clones)])
+    P = np.array([pcs[c] for c in ckey[rows]])[:, :k]
+    B = np.array([nui[c] for c in ckey[rows]])
+    U = dummies[rows]
+    A = np.hstack([P, B, U, S23.interaction_block(P, U)])
+
+    m = LogisticRegression(penalty="l2", solver="liblinear", C=hp, fit_intercept=True,
+                           class_weight=None, max_iter=5000, random_state=S23.SEED_PROTOCOL)
+    m.fit(A, yv[rows])
+    return {"keep": cache["keep"], "gene_mu": cache["mu"], "gene_sd": cache["sd"],
+            "pca_mean": cache["pca"].mean_, "pca_components": cache["pca"].components_,
+            "pc_mu": cache["zmu"], "pc_sd": cache["zsd"], "pca_k": cache["k"],
+            "nuis_mu": nmu, "nuis_sd": nsd, "K": int(k), "C": float(hp),
+            "coef": m.coef_.ravel(), "intercept": float(m.intercept_[0])}
+
+
+def _apply_w5_component(comp, X, clone_pos, nuis_clone, clone_ids, treatments):
+    """Score arbitrary (clone, treatment) pairs from a serialized component."""
+    idx = np.array([clone_pos[c] for c in clone_ids])
+    d = np.asarray(X[idx][:, comp["keep"]].todense())
+    z = (d - comp["gene_mu"]) / comp["gene_sd"]
+    pcs = ((z - comp["pca_mean"]) @ comp["pca_components"].T - comp["pc_mu"]) / comp["pc_sd"]
+    P = pcs[:, :comp["K"]]
+    B = (nuis_clone[idx] - comp["nuis_mu"]) / comp["nuis_sd"]
+    U = S23.treatment_dummies(np.asarray(treatments))
+    A = np.hstack([P, B, U, S23.interaction_block(P, U)])
+    logit = A @ comp["coef"] + comp["intercept"]
+    return 1.0 / (1.0 + np.exp(-logit))
+
+
+def _select_hyperparameters(X, clone_pos, nuis_clone, ckey, dummies, yv, fit_clones):
+    """The frozen inner-CV selection rule (23D), applied to whatever clone set it is given."""
+    from sklearn.metrics import log_loss
+    from sklearn.model_selection import GroupKFold
+
+    scores: dict = {}
+    g = np.array(sorted(fit_clones))
+    for itr_i, iva_i in GroupKFold(n_splits=S23.N_INNER).split(g, groups=g):
+        itr_c, iva_c = [g[i] for i in itr_i], [g[i] for i in iva_i]
+        fit_idx = np.array([clone_pos[c] for c in itr_c])
+        app_idx = np.array([clone_pos[c] for c in iva_c])
+        ztr, zap, _n, kmax = S23.expression_block(X, fit_idx, app_idx, max(S23.K_CANDIDATES))
+        btr, bap = S23.standardize_train_only(nuis_clone[fit_idx], nuis_clone[app_idx])
+        pcs = {c: ztr[i] for i, c in enumerate(itr_c)}
+        nui = {c: btr[i] for i, c in enumerate(itr_c)}
+        for i, c in enumerate(iva_c):
+            pcs[c] = zap[i]
+            nui[c] = bap[i]
+        si = np.array([i for i in range(len(ckey)) if ckey[i] in set(itr_c)])
+        sv = np.array([i for i in range(len(ckey)) if ckey[i] in set(iva_c)])
+
+        def design(rows, k, pp=pcs, nn=nui, cc=ckey, dd=dummies):
+            P = np.array([pp[c] for c in cc[rows]])[:, :k]
+            B = np.array([nn[c] for c in cc[rows]])
+            U = dd[rows]
+            return np.hstack([P, B, U, S23.interaction_block(P, U)])
+
+        for k in S23.K_CANDIDATES:
+            if k > kmax:
+                continue
+            Ai, Av = design(si, k), design(sv, k)
+            for hp in S23.LOGISTIC_C:
+                pred = S23._fit_logistic(Ai, yv[si], Av, hp, [])
+                sc = log_loss(yv[sv], np.clip(pred, 1e-15, 1 - 1e-15), labels=[0, 1])
+                scores.setdefault((k, hp), []).append(sc)
+    best = min(scores.items(), key=lambda kv: (round(float(np.mean(kv[1])), 12), kv[0][0], kv[0][1]))
+    return best[0][0], best[0][1], round(float(np.mean(best[1])), 6)
+
+
+def run_24c() -> dict:
+    """Serialize W5 and prove the artifact regenerates the frozen out-of-fold predictions."""
+    if not B_JSON.exists():
+        raise RuntimeError("24B must run before 24C")
+    b = json.loads(B_JSON.read_text(encoding="utf-8"))
+    if b["reproduction_verdict"] == "INPUT_INTEGRITY_STOP":
+        raise RuntimeError("24B did not reproduce; 24C may not run")
+
+    t0 = time.perf_counter()
+    X, clones = S23._load_wm989_x()
+    clone_pos = {c: i for i, c in enumerate(clones)}
+    ck = pd.read_csv(_RESULTS / "stage22_wm989_clones.csv").set_index("clone_id").loc[clones]
+    nuis_clone = _nuisance_matrix(ck)
+
+    frozen = pd.read_csv(FROZEN["C1_W5"])
+    ckey = frozen["clone_id"].to_numpy()
+    tkey = frozen["treatment"].to_numpy()
+    yv = frozen["y"].to_numpy()
+    rf = frozen["outer_fold"].to_numpy()
+    dummies = S23.treatment_dummies(tkey)
+    sel = json.loads(FROZEN["results_W5"].read_text(encoding="utf-8"))
+    frozen_sel = sel["endpoints"]["C1"]["selected_hyperparameters_per_outer_fold"]
+
+    store, meta_folds = {}, {}
+    oof = np.full(len(frozen), np.nan)
+    print("  24C: rebuilding the five fold components ...", flush=True)
+    for f in range(S23.N_OUTER):
+        tr_clones = sorted(set(ckey[rf != f]))
+        te_rows = np.flatnonzero(rf == f)
+        k = int(frozen_sel[str(f)]["K"])
+        hp = float(frozen_sel[str(f)]["hp"])
+        comp = _fit_w5_component(X, clone_pos, nuis_clone, ckey, dummies, yv, tr_clones, k, hp)
+        oof[te_rows] = _apply_w5_component(comp, X, clone_pos, nuis_clone,
+                                           ckey[te_rows], tkey[te_rows])
+        for key, val in comp.items():
+            store[f"fold{f}__{key}"] = np.asarray(val)
+        meta_folds[str(f)] = {"K": comp["K"], "C": comp["C"], "pca_k": int(comp["pca_k"]),
+                              "genes_kept": int(len(comp["keep"])),
+                              "design_columns": int(len(comp["coef"])),
+                              "train_clones": len(tr_clones), "test_rows": int(len(te_rows))}
+
+    # ---- the only check that matters: does the artifact regenerate the frozen column? -------- #
+    ref = frozen["pred_W5"].to_numpy(dtype=float)
+    diff = np.abs(oof - ref)
+    equivalence = {
+        "compared_against": FROZEN["C1_W5"].name, "column": "pred_W5",
+        "rows": int(len(ref)), "tolerance": PREDICT_TOLERANCE,
+        "max_abs_diff": float(diff.max()), "rows_over_tolerance": int((diff > PREDICT_TOLERANCE).sum()),
+        "pass": bool((diff <= PREDICT_TOLERANCE).all()),
+    }
+    print(f"  24C: artifact vs frozen pred_W5 -- max |diff| {diff.max():.3e}", flush=True)
+
+    # ---- deployment component: same spec, same rule, fitted once on every clone -------------- #
+    print("  24C: selecting deployment hyperparameters on all clones ...", flush=True)
+    all_clones = sorted(set(ckey))
+    dk, dhp, dscore = _select_hyperparameters(X, clone_pos, nuis_clone, ckey, dummies, yv,
+                                              all_clones)
+    dep = _fit_w5_component(X, clone_pos, nuis_clone, ckey, dummies, yv, all_clones, dk, dhp)
+    for key, val in dep.items():
+        store[f"deployment__{key}"] = np.asarray(val)
+
+    np.savez_compressed(ARTIFACT_NPZ, **store)
+    artifact_sha = sha256_file(ARTIFACT_NPZ)
+
+    feature_ids = _wm989_feature_ids()
+    meta = {
+        "artifact": ARTIFACT_NPZ.name, "sha256": artifact_sha,
+        "size_bytes": ARTIFACT_NPZ.stat().st_size,
+        "model": "W5 = X + B + U + X*U", "endpoint": "C1 post-treatment clone detection",
+        "model_version": "gen1-w5-c1-v1",
+        "feature_contract_version": "wm989-ge-36601-v1",
+        "n_expression_features_expected": S23.N_GENES,
+        "expression_feature_ids_sha256": hashlib.sha256(
+            "\n".join(feature_ids).encode()).hexdigest() if feature_ids else None,
+        "nuisance_columns": list(S23.WM989_NUISANCE),
+        "treatment_vocabulary": list(S23.TREATMENT_ORDER),
+        "reference_treatment": REFERENCE_TREATMENT,
+        "fold_components": meta_folds,
+        "deployment_component": {
+            "K": dep["K"], "C": dep["C"], "genes_kept": int(len(dep["keep"])),
+            "design_columns": int(len(dep["coef"])), "train_clones": len(all_clones),
+            "mean_inner_score": dscore,
+            "selection_rule": "the frozen 23D inner GroupKFold rule, applied once to all clones",
+            "status": "PACKAGING, not a new model -- same features, same grid, same rule",
+            "validation": "NOT validated on held-out data. Its performance is ESTIMATED by the "
+                          "frozen out-of-fold result, which came from the fold components.",
+        },
+        "support_flags": list(SUPPORT_FLAGS),
+        "known_limitations": [
+            "known conditions only; UNSUPPORTED_TREATMENT for anything outside the six",
+            "requires the complete frozen nuisance block B; it may not be imputed",
+            "trained on clone-level pseudobulk, so a single cell is not an equivalent input",
+            "captured pretreatment clone abundance remains ~3.45x the state contribution",
+            "no calibrated probability; the score is not a calibrated risk",
+            "no independent biological replication of the Role-B finding",
+            "ranking is NOT validated until Stage 25 records RANKING_SUPPORTED",
+        ],
+    }
+    write_json(ARTIFACT_META, meta)
+
+    out = {
+        "stage": "24C",
+        "plan_canonical_lf_sha256": b["plan_canonical_lf_sha256"],
+        "artifact": {"npz": ARTIFACT_NPZ.name, "meta": ARTIFACT_META.name,
+                     "sha256": artifact_sha, "size_bytes": ARTIFACT_NPZ.stat().st_size},
+        "fold_components": meta_folds,
+        "deployment_component": meta["deployment_component"],
+        "oof_equivalence": equivalence,
+        "hyperparameters_match_frozen_selection": {
+            str(f): {"artifact": meta_folds[str(f)]["K"], "frozen": int(frozen_sel[str(f)]["K"]),
+                     "match": meta_folds[str(f)]["K"] == int(frozen_sel[str(f)]["K"])}
+            for f in range(S23.N_OUTER)},
+        "verdict": "SERIALIZED_AND_EQUIVALENT" if equivalence["pass"] else "ARTIFACT_NOT_EQUIVALENT",
+        "runtime_minutes": round((time.perf_counter() - t0) / 60, 3),
+    }
+    write_json(C_JSON, out)
+    if not equivalence["pass"]:
+        raise RuntimeError(
+            f"24C: the serialized artifact does not regenerate the frozen pred_W5 column "
+            f"(max |diff| {diff.max():.3e} over {equivalence['rows_over_tolerance']} rows). "
+            f"The artifact is wrong; it may not be shipped.")
+    return out
+
+
+def _wm989_feature_ids() -> list[str]:
+    """The Gene-Expression feature IDs, in matrix row order, for the input schema contract."""
+    import gzip
+    root = Path("D:/GSE279162")
+    f = next((p for p in root.glob("*Naive1*features.tsv.gz")), None)
+    if f is None:
+        return []
+    with gzip.open(f, "rt") as fh:
+        ids = [line.split("\t")[0] for line in fh]
+    return ids[:S23.N_GENES]
+
+
 # =============================================================================================== #
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Stage 24 — Gen-1 Role-B predictor engineering")
-    ap.add_argument("--stage", required=True, choices=["24a", "24b"])
+    ap.add_argument("--stage", required=True, choices=["24a", "24b", "24c"])
     ap.add_argument("--wm989-root", type=Path, default=Path("D:/GSE279162"))
     a = ap.parse_args(argv)
 
     if a.stage == "24a":
         r = run_24a()
         print(json.dumps({k: r[k] for k in ("stage", "checks", "all_checks_pass")}, indent=2))
-    else:
+    elif a.stage == "24b":
         r = run_24b(a.wm989_root)
         print(json.dumps({k: r[k] for k in
                           ("stage", "all_byte_identical", "reproduction_verdict",
@@ -355,6 +615,11 @@ def main(argv=None) -> int:
             print(f"  {label:<12} {g['verdict']:<20} "
                   f"R1={g['R1_shape_and_key']['pass']} R2={g['R2_every_score']['pass']} "
                   f"R3={g['R3_within_clone_ordering']['pass']}")
+    else:
+        r = run_24c()
+        print(json.dumps({k: r[k] for k in
+                          ("stage", "verdict", "oof_equivalence", "deployment_component",
+                           "runtime_minutes")}, indent=2, default=str))
     return 0
 
 

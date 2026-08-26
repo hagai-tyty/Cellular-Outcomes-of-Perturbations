@@ -1,0 +1,101 @@
+{
+  "artifact": "stage24_w5_artifact.npz",
+  "sha256": "858d7903c4c67ef2c65b5ffb8541788256a6ae0b78926c809e8ad1f7e44c06b7",
+  "size_bytes": 44400290,
+  "model": "W5 = X + B + U + X*U",
+  "endpoint": "C1 post-treatment clone detection",
+  "model_version": "gen1-w5-c1-v1",
+  "feature_contract_version": "wm989-ge-36601-v1",
+  "n_expression_features_expected": 36601,
+  "expression_feature_ids_sha256": "3a5b3f31ab21773f83f8c2c52b9f543bc56dcbd1b9ff68db3afc99616b492193",
+  "nuisance_columns": [
+    "log1p(n_naive_cells)",
+    "log1p(n_naive1_cells)",
+    "log1p(n_naive2_cells)",
+    "log1p(n_naive3_cells)"
+  ],
+  "treatment_vocabulary": [
+    "Acid",
+    "Cisplatin",
+    "CoCl2",
+    "Dabrafenib",
+    "Doxorubicin",
+    "Trametinib"
+  ],
+  "reference_treatment": "Acid",
+  "fold_components": {
+    "0": {
+      "K": 50,
+      "C": 0.1,
+      "pca_k": 50,
+      "genes_kept": 18385,
+      "design_columns": 309,
+      "train_clones": 1120,
+      "test_rows": 1686
+    },
+    "1": {
+      "K": 50,
+      "C": 0.1,
+      "pca_k": 50,
+      "genes_kept": 18411,
+      "design_columns": 309,
+      "train_clones": 1121,
+      "test_rows": 1680
+    },
+    "2": {
+      "K": 50,
+      "C": 0.1,
+      "pca_k": 50,
+      "genes_kept": 18270,
+      "design_columns": 309,
+      "train_clones": 1121,
+      "test_rows": 1680
+    },
+    "3": {
+      "K": 50,
+      "C": 0.1,
+      "pca_k": 50,
+      "genes_kept": 18227,
+      "design_columns": 309,
+      "train_clones": 1121,
+      "test_rows": 1680
+    },
+    "4": {
+      "K": 50,
+      "C": 0.1,
+      "pca_k": 50,
+      "genes_kept": 18361,
+      "design_columns": 309,
+      "train_clones": 1121,
+      "test_rows": 1680
+    }
+  },
+  "deployment_component": {
+    "K": 50,
+    "C": 0.1,
+    "genes_kept": 18290,
+    "design_columns": 309,
+    "train_clones": 1401,
+    "mean_inner_score": 0.454858,
+    "selection_rule": "the frozen 23D inner GroupKFold rule, applied once to all clones",
+    "status": "PACKAGING, not a new model -- same features, same grid, same rule",
+    "validation": "NOT validated on held-out data. Its performance is ESTIMATED by the frozen out-of-fold result, which came from the fold components."
+  },
+  "support_flags": [
+    "SUPPORTED_KNOWN_CONDITION",
+    "UNSUPPORTED_TREATMENT",
+    "UNSUPPORTED_FEATURE_SCHEMA",
+    "MISSING_REQUIRED_NUISANCE",
+    "OUT_OF_CONTRACT_INPUT",
+    "RANKING_NOT_VALIDATED"
+  ],
+  "known_limitations": [
+    "known conditions only; UNSUPPORTED_TREATMENT for anything outside the six",
+    "requires the complete frozen nuisance block B; it may not be imputed",
+    "trained on clone-level pseudobulk, so a single cell is not an equivalent input",
+    "captured pretreatment clone abundance remains ~3.45x the state contribution",
+    "no calibrated probability; the score is not a calibrated risk",
+    "no independent biological replication of the Role-B finding",
+    "ranking is NOT validated until Stage 25 records RANKING_SUPPORTED"
+  ]
+}
