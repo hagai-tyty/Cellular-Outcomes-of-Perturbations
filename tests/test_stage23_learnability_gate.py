@@ -992,12 +992,27 @@ def test_determinism_compared_the_full_artifact_set_against_a_clean_tree():
     assert set(d["committed_digests"]) == set(S23.DETERMINISM_ARTIFACTS)
 
 
+def _is_substage_artifact(name: str) -> bool:
+    """`stage23_2*`, `stage23_5*`, ... belong to a later interstitial stage, not to Stage 23.
+
+    Real Stage-23 artifacts are `stage23_<word>` -- protocol, final_synthesis, rewind_*, wm989_*,
+    outer_fold_preprocessing. Every interstitial names itself `stage23_<digit>`. This replaced a
+    hardcoded `startswith("stage23_2")`, which silently stopped covering the moment Stage 23.5
+    produced its first artifact.
+    """
+    rest = name[len("stage23_"):]
+    return bool(rest) and rest[0].isdigit()
+
+
 def test_the_determinism_set_covers_every_committed_stage23_artifact():
     """A shrinking artifact list would make determinism trivially true."""
     skip = {"stage23_permutation_results.json", "stage23_determinism.json"}
     on_disk = {p.name for p in RES.glob("stage23_*")
-               if p.name not in skip and p.is_file() and not p.name.startswith("stage23_2")}
+               if p.name not in skip and p.is_file() and not _is_substage_artifact(p.name)}
     assert on_disk <= set(S23.DETERMINISM_ARTIFACTS), on_disk - set(S23.DETERMINISM_ARTIFACTS)
+    # the exclusion must not have quietly swallowed a real Stage-23 artifact
+    assert {"stage23_protocol.json", "stage23_final_synthesis.json",
+            "stage23_wm989_results.json", "stage23_rewind_results.json"} <= on_disk | skip
 
 
 def test_the_sentinel_sees_presence_flags_only():
