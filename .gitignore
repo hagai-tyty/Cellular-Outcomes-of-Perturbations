@@ -71,3 +71,4 @@ results/.cache/stage23_2h_clones.json
 # `run_stage24_gen1_tool.py --stage 24c`, and its sha256 is recorded in the committed
 # stage24_w5_artifact.json. For the reproducibility package it ships as a release asset.
 results/stage24/stage24_w5_artifact.npz
+results/.cache/stage25_null_shards/

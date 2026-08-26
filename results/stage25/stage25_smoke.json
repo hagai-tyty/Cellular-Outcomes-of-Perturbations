@@ -1,0 +1,56 @@
+{
+  "stage": "25-SMOKE",
+  "draws_used": 4,
+  "measured_seconds_per_draw": 66.0,
+  "note": "measured single-process and unloaded; parallel shards contend, and Stage 23.2H measured only a 1.44x effective speedup from 3 processes on this pipeline",
+  "eta": {
+    "n_perm=100": {
+      "one_process_h": 1.8,
+      "three_shards_h": 0.6
+    },
+    "n_perm=1000": {
+      "one_process_h": 18.3,
+      "three_shards_h": 6.1
+    }
+  },
+  "checks": [
+    {
+      "check": "within-clone AUC matches the plan formula",
+      "pass": true,
+      "detail": "perfect 1.0, inverted 0.0, tie 0.5"
+    },
+    {
+      "check": "eligible population is the frozen 892",
+      "pass": true,
+      "detail": "892 clones, all six rows each"
+    },
+    {
+      "check": "R(W) is the equal-clone mean of AUC_i",
+      "pass": true,
+      "detail": "R(W5) = 0.743781"
+    },
+    {
+      "check": "2 shards run OUT OF ORDER are bit-identical to sequential",
+      "pass": true,
+      "detail": "max abs diff 0.000e+00"
+    },
+    {
+      "check": "draw b is a function of b alone (repeatable)",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "check": "null draws differ from the observed statistic",
+      "pass": true,
+      "detail": "observed +0.051605, null draws [-0.0034, 0.003, 0.0006, 0.0038]"
+    },
+    {
+      "check": "each shard writes its OWN file",
+      "pass": true,
+      "detail": ""
+    }
+  ],
+  "all_passed": true,
+  "already_cached_for_the_real_run": 0,
+  "runtime_minutes": 10.111
+}

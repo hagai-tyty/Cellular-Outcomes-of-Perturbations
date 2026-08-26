@@ -1,0 +1,36 @@
+{
+  "eligible_clones": 892,
+  "R_W1": 0.692653836571998,
+  "R_W4": 0.692175822122571,
+  "R_W5": 0.7437811410064773,
+  "delta_RANK": 0.05160531888390629,
+  "delta_RANK_FULL": 0.051127304434479326,
+  "bootstrap": {
+    "replicates": 2000,
+    "seed": 23501,
+    "ci95": [
+      0.03719715371200797,
+      0.06557077572247133
+    ],
+    "lower_endpoint_gt_0": true,
+    "conditional_on_fitted_models": true
+  },
+  "LOW_PERSISTENCE_TOP1_W5": 0.82847533632287,
+  "LOW_PERSISTENCE_TOP1_W4": 0.7130044843049327,
+  "delta_TOP1": 0.11547085201793728,
+  "delta_TOP1_ci95": [
+    0.08295964125560538,
+    0.14573991031390135
+  ],
+  "delta_TOP1_ge_0": true,
+  "score_tie_rate": 0.0,
+  "stage": "25A",
+  "plan_canonical_lf_sha256": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48",
+  "oof_table": "results/stage24/stage24_oof_for_stage25.csv",
+  "oof_table_sha256": "abdc2999c0ee388fb2f2928318ff8a935921aaa72462d6d3c0ed64384e12e9a6",
+  "metric": "equal-clone-weighted within-clone AUROC, ties 0.5 (plan \u00a78.5)",
+  "primary_comparator": "W4",
+  "endpoint": "C1",
+  "null_not_yet_computed": true,
+  "runtime_minutes": 0.092
+}
