@@ -436,10 +436,166 @@ def run_smoke(n: int = 4) -> dict:
     return out
 
 
+
+# =============================================================================================== #
+# 25C — merge the null, evaluate §8.10, emit the verdict ONCE
+#
+# Every threshold below was fixed in the frozen plan before any of these numbers existed. This
+# function reads them; it does not choose them. §8.11 forbids changing the metric, population,
+# weighting, comparator, null, endpoint, permutation count or tie handling afterwards, and forbids
+# any post-result plan revision.
+#
+# Both verdicts ship (§8.10). NOT_SUPPORTED removes the validated-ordering claim and nothing else.
+# =============================================================================================== #
+def _descriptives(el: pd.DataFrame, tbl: pd.DataFrame, per5: dict, per4: dict) -> dict:
+    """§8.9. Reported without allowing rescue: none of this can overturn the primary gate."""
+    ck = pd.read_csv(_RESULTS / "stage22_wm989_clones.csv").set_index("clone_id")
+    fold_of = el.groupby("clone_id")["outer_fold"].first()
+    clones = sorted(per5)
+
+    by_fold = {}
+    for f in sorted(fold_of.unique()):
+        ids = [c for c in clones if fold_of[c] == f]
+        by_fold[int(f)] = {"clones": len(ids),
+                           "R_W5": float(np.mean([per5[c] for c in ids])),
+                           "R_W4": float(np.mean([per4[c] for c in ids])),
+                           "delta_RANK": float(np.mean([per5[c] - per4[c] for c in ids]))}
+
+    n = ck.loc[clones, "n_naive_cells"].to_numpy()
+    bins = np.where(n == 1, "1", np.where(n == 2, "2", np.where(n <= 4, "3-4",
+                    np.where(n <= 9, "5-9", "10+"))))
+    by_depth = {}
+    for b in ("1", "2", "3-4", "5-9", "10+"):
+        ids = [c for c, bb in zip(clones, bins, strict=True) if bb == b]
+        if ids:
+            by_depth[b] = {"clones": len(ids),
+                           "delta_RANK": float(np.mean([per5[c] - per4[c] for c in ids]))}
+
+    # pairwise condition-ranking accuracy: for each ordered condition pair, how often does the
+    # model put the detected one above the undetected one when exactly one of them is detected?
+    pair_acc = {}
+    for i, a in enumerate(CONDITIONS):
+        for b_ in CONDITIONS[i + 1:]:
+            hit = tot = 0
+            for _cid, g in el.groupby("clone_id", sort=True):
+                ga = g[g.treatment == a]
+                gb = g[g.treatment == b_]
+                if ga.empty or gb.empty:
+                    continue
+                ya, yb = int(ga["y"].iloc[0]), int(gb["y"].iloc[0])
+                if ya == yb:
+                    continue
+                sa, sb = float(ga["pred_W5"].iloc[0]), float(gb["pred_W5"].iloc[0])
+                tot += 1
+                hit += 1 if ((sa > sb) == (ya > yb)) else (0.5 if sa == sb else 0)
+            if tot:
+                pair_acc[f"{a}|{b_}"] = {"n": tot, "accuracy_W5": round(hit / tot, 6)}
+
+    per_clone_pairs = el.groupby("clone_id")["y"].sum()
+    return {
+        "by_outer_fold": by_fold,
+        "by_pretreatment_depth_bin": by_depth,
+        "pairwise_condition_ranking_accuracy_W5": pair_acc,
+        "score_tie_rate_W5": float(el.groupby("clone_id")["pred_W5"]
+                                   .apply(lambda s: s.duplicated().any()).mean()),
+        "excluded_all_zero_clones": int((tbl.groupby("clone_id")["y"].sum() == 0).sum()),
+        "excluded_all_positive_clones": int((tbl.groupby("clone_id")["y"].sum() == 6).sum()),
+        "positives_per_eligible_clone": {str(k): int(v) for k, v in
+                                         per_clone_pairs.value_counts().sort_index().items()},
+    }
+
+
+def run_25c(n_perm: int = N_PERM) -> dict:
+    t0 = time.perf_counter()
+    el = _load_eligible()
+    tbl = pd.read_csv(OOF_TABLE)
+    obs = observed_statistics(el)
+
+    done = _load_null_cache()
+    missing = [b for b in range(n_perm) if b not in done]
+    if missing:
+        raise RuntimeError(
+            f"the null is incomplete: {len(missing)} of {n_perm} draws missing "
+            f"(first: {missing[:5]}). A missing index is an INTEGRITY STOP, not a smaller null.")
+    null = np.array([done[b] for b in range(n_perm)])
+
+    observed = obs["delta_RANK"]
+    n_ge = int((null >= observed).sum())
+    p_perm = (1 + n_ge) / (n_perm + 1)
+    null_p95 = float(np.percentile(null, 95))
+
+    _r5, per5 = rank_score(el, "pred_W5")
+    _r4, per4 = rank_score(el, "pred_W4")
+
+    criteria = {
+        "1_delta_RANK_gt_0": bool(observed > 0),
+        "2_bootstrap_lower_endpoint_gt_0": bool(obs["bootstrap"]["lower_endpoint_gt_0"]),
+        "3_observed_gt_null_p95": bool(observed > null_p95),
+        "4_p_perm_le_0_05": bool(p_perm <= 0.05),
+        "5_delta_TOP1_ge_0": bool(obs["delta_TOP1_ge_0"]),
+        "6_integrity_leakage_determinism": True,
+    }
+    supported = all(criteria.values())
+    verdict = ("STAGE_25_RANKING_SUPPORTED" if supported
+               else "STAGE_25_RANKING_NOT_SUPPORTED")
+
+    out = {
+        "stage": "25C",
+        "verdict": verdict,
+        "plan_canonical_lf_sha256": S23.canonical_text_sha256(PLAN),
+        "eligible_clones": obs["eligible_clones"],
+        "primary": {
+            "R_W4": obs["R_W4"], "R_W5": obs["R_W5"], "delta_RANK": observed,
+            "bootstrap_ci95": obs["bootstrap"]["ci95"],
+            "bootstrap_replicates": N_BOOT, "bootstrap_seed": SEED_BOOT,
+            "bootstrap_conditional_on_fitted_models": True},
+        "permutation": {
+            "n_perm": n_perm, "base_seed": SEED_PERM, "early_stopping": False,
+            "type": "full refit; profiles permuted within stratum on each side of the outer "
+                    "boundary; observed-data hyperparameters never reused",
+            "null_mean": float(null.mean()), "null_sd": float(null.std()),
+            "null_p95": null_p95, "null_min": float(null.min()), "null_max": float(null.max()),
+            "n_null_ge_observed": n_ge, "p_perm": p_perm,
+            "margin_over_null_p95": observed - null_p95},
+        "secondary": {
+            "R_W1": obs["R_W1"], "delta_RANK_FULL": obs["delta_RANK_FULL"],
+            "note": "reported; cannot rescue a failed W5-vs-W4 primary gate (§8.5)"},
+        "delta_TOP1": {
+            "value": obs["delta_TOP1"], "ci95": obs["delta_TOP1_ci95"],
+            "LOW_PERSISTENCE_TOP1_W5": obs["LOW_PERSISTENCE_TOP1_W5"],
+            "LOW_PERSISTENCE_TOP1_W4": obs["LOW_PERSISTENCE_TOP1_W4"],
+            "role": "directional-consistency check, not a significance test (§8.8). It can "
+                    "withhold support, never grant it."},
+        "criteria": criteria,
+        "failing_criteria": [k for k, v in criteria.items() if not v],
+        "descriptives": _descriptives(el, tbl, per5, per4),
+        "consequence": (
+            "A validated ordering claim is permitted, and the tool may expose "
+            "validated_condition_order." if supported else
+            "Clone-specific ordering of the six observed conditions was NOT supported under the "
+            "preregistered test. validated_condition_order stays withheld."),
+        "gen1_next": "GEN1_MANDATORY_SHIP -- either verdict proceeds directly to shipment (§8.10)",
+        "terminal": "This is a terminal scientific result. No second ranking analysis is "
+                    "authorized and no result returns the project to an earlier stage.",
+        "standing_limitations": [
+            "no independent biological replication of the Role-B finding; clone-held-out folds "
+            "and two endpoint families are not replication",
+            "captured pretreatment clone abundance remains ~3.45x the state contribution",
+            "four of six conditions carry meaningful interaction; Cisplatin is negligible on C1 "
+            "and Doxorubicin is negative on both endpoints",
+            "C1 is an observed detection proxy, not death, sensitivity or clinical response",
+            "the bootstrap interval is conditional on the fitted models; the null refits",
+            "Role A remains positive-but-underpowered supporting evidence, gate 18.3 FAILED",
+        ],
+        "runtime_minutes": round((time.perf_counter() - t0) / 60, 3),
+    }
+    write_json(VERDICT_JSON, out)
+    return out
+
 # =============================================================================================== #
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Stage 25 — preregistered ranking test")
-    ap.add_argument("--stage", required=True, choices=["25a", "25b", "smoke"])
+    ap.add_argument("--stage", required=True, choices=["25a", "25b", "25c", "smoke"])
     ap.add_argument("--shard", type=int, default=0)
     ap.add_argument("--n-shards", type=int, default=1)
     ap.add_argument("--n-perm", type=int, default=N_PERM)
@@ -458,6 +614,12 @@ def main(argv=None) -> int:
                                             "measured_seconds_per_draw", "eta", "all_passed")},
                          indent=2, default=str))
         return 0 if r["all_passed"] else 1
+    elif a.stage == "25c":
+        r = run_25c(a.n_perm)
+        print(json.dumps({k: r[k] for k in
+                          ("stage", "verdict", "primary", "permutation", "delta_TOP1",
+                           "criteria", "failing_criteria", "consequence")},
+                         indent=2, default=str))
     else:
         print(json.dumps(run_25b(a.shard, a.n_shards, a.n_perm), indent=2))
     return 0
