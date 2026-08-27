@@ -1,0 +1,137 @@
+{
+  "stage": "GEN-1 CLAIM LOCK",
+  "verdict": "GEN1_CLAIMS_LOCKED",
+  "substages": {
+    "CL-A_evidence_verifies": true,
+    "CL-B_C_claims": true,
+    "CL-D_adversarial": true,
+    "CL-E_worked_abstract": true
+  },
+  "failing": [],
+  "evidence_lock_digest": "455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9",
+  "plan": "plans/(newer)practical plans/GEN1_CLAIM_LOCK_V1.md",
+  "plan_canonical_lf_sha256": "f75c53b07d2a57b99c853597739bbf4c48ffdb8864249be710b673fe3674483a",
+  "ship_plan_digest": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48",
+  "allowed": {
+    "primary": {
+      "text": "Within the existing multi-condition WM989 lineage system, pretreatment Gene Expression contains treatment-specific information about future clonal detection beyond treatment identity and captured pretreatment clone abundance under frozen clone-held-out evaluation.",
+      "source": "GEN1_CLAIM_LOCK_INPUT.json, verbatim (\u00a73.1 of the frozen ship plan)",
+      "evidence": [
+        "results/stage22_wm989_clones.csv",
+        "results/stage23_wm989_interaction_oof.csv",
+        "results/stage24/stage24_oof_for_stage25.csv"
+      ],
+      "numbers": "none at abstract level; the supporting figures are the frozen out-of-fold results",
+      "qualifiers": [
+        "system",
+        "vocabulary",
+        "outcome",
+        "evaluation",
+        "replication"
+      ]
+    },
+    "ranking": {
+      "text": "A frozen state x treatment model improves clone-specific ordering of the six observed experimental conditions over a non-interactive additive model.",
+      "source": "selected by STAGE_25_RANKING_SUPPORTED",
+      "evidence": [
+        "results/stage25/stage25_verdict.json",
+        "results/stage24/stage24_oof_for_stage25.csv"
+      ],
+      "numbers": {
+        "delta_RANK": 0.05160531888390629,
+        "ci95": [
+          0.03719715371200797,
+          0.06557077572247133
+        ],
+        "permutation": "0 of 1000 draws reached the observed value",
+        "p_perm": "p < 0.001 (0 of 1,000); never a point estimate",
+        "eligible_clones": 892
+      },
+      "qualifiers": [
+        "system",
+        "vocabulary",
+        "outcome",
+        "evaluation",
+        "replication"
+      ]
+    },
+    "supporting_role_A": {
+      "text": "A separately reconstructed reprogramming system showed positive but underpowered evidence that pretreatment transcriptional state carries prospective information about a later lineage outcome.",
+      "source": "GEN1_CLAIM_LOCK_INPUT.json, verbatim (\u00a73.3 of the frozen ship plan)",
+      "evidence": [
+        "results/stage23_2h/stage23_2h_verdict.json",
+        "results/stage23_2h/stage23_2h_power_audit.json"
+      ],
+      "numbers": "confirmation gate 18.3 FAILED at 0.64; audited to ~0.45",
+      "qualifiers": [
+        "replication"
+      ],
+      "must_travel_with": "the word SUPPORTING. Rewind does not confirm anything, and its own confirmation gate failed."
+    }
+  },
+  "forbidden": [
+    "unseen-treatment generalization",
+    "cross-cell-line or cross-patient generalization",
+    "clinical treatment recommendation",
+    "causal treatment-effect estimation",
+    "calibrated probability unless calibration is separately frozen and passed",
+    "independent biological replication of Role B",
+    "uniform benefit across all six conditions",
+    "confirmed Role-A prediction",
+    "single-cell input equivalence when the model was trained on clone pseudobulk"
+  ],
+  "qualifiers": {
+    "system": "one BRAF-V600E melanoma cell line, WM989 (GSE279162), 1,401 lineage-traced clones",
+    "vocabulary": "six observed experimental conditions: Acid, Cisplatin, CoCl2, Dabrafenib, Doxorubicin, Trametinib",
+    "outcome": "an observed post-treatment clone DETECTION proxy -- not death, sensitivity, resistance, clinical response or patient benefit",
+    "evaluation": "clone-held-out, five outer folds, frozen before any result existed",
+    "replication": "NONE. Independent biological replication is Generation 2 and was not performed."
+  },
+  "adversarial": {
+    "n": 15,
+    "caught": 15,
+    "missed": []
+  },
+  "worked_abstract": {
+    "stage": "CL-E",
+    "abstract": "In one BRAF-V600E melanoma cell line (WM989, 1,401 lineage-traced clones), pretreatment gene expression carries treatment-specific information about a later observed clonal detection outcome, beyond treatment identity and captured pretreatment clone abundance, under clone-held-out evaluation frozen before any result existed. Under a preregistered test, a frozen state-by-treatment interaction model improves clone-specific ordering of the six observed experimental conditions over a non-interactive additive model (delta +0.0516 in equal-clone-weighted within-clone AUROC, 95% CI [+0.0372, +0.0656]; no draw of 1,000 full-refit permutations reached the observed value, p < 0.001). The outcome is an observed post-treatment clone-detection proxy and is not death, sensitivity, resistance or clinical response. The six conditions are the entire supported vocabulary; the model makes no claim about unseen treatments, other cell lines, or patients, and emits no calibrated probability. Independent biological replication was not performed and remains future work.",
+    "unnegated_hits": [],
+    "qualifiers_present": {
+      "system": true,
+      "vocabulary": true,
+      "outcome": true,
+      "evaluation": true,
+      "replication": true
+    },
+    "status": "a demonstration of the ceiling, not a mandated abstract",
+    "checks": {
+      "the worked abstract passes the same scanner": true,
+      "every mandatory qualifier is present": true,
+      "it never says treatment where it means condition": true
+    },
+    "all_passed": true,
+    "runtime_seconds": 0.001
+  },
+  "evidence_verification": {
+    "stage": "CL-A",
+    "lock_digest": "455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9",
+    "live_verification": {
+      "clean": true,
+      "moved": [],
+      "missing": [],
+      "n_checked": 54
+    },
+    "checks": {
+      "the evidence lock verdict is GEN1_EVIDENCE_LOCKED": true,
+      "all 54 locked artifacts still verify": true,
+      "the lock digest is the one this plan was written against": true,
+      "the frozen ship-plan digest still holds": true
+    },
+    "all_passed": true,
+    "runtime_seconds": 0.148
+  },
+  "grants_nothing": "Locking a claim grants nothing. It fixes the ceiling of what may be said. The ceiling may be lowered later; it may not be raised.",
+  "next": "MANUSCRIPT + REPRODUCIBILITY PACKAGE",
+  "runtime_seconds": 0.174,
+  "module_sha256": "eedb050830d44602926f84d6a413ae78be050c8d2bb1fc1ff9d8b5a46cb7afe9"
+}

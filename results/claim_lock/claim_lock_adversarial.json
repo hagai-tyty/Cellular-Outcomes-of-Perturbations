@@ -1,0 +1,228 @@
+{
+  "stage": "CL-D",
+  "instrument": "the Stage-26 scope-lock scanner plus a prose extension; the Stage-26 module itself is a locked artifact and was not modified",
+  "n_sentences": 15,
+  "n_caught": 15,
+  "missed": [],
+  "missed_by_stage26_patterns_alone": [
+    {
+      "group": "cross_system",
+      "sentence": "We predict outcomes in cancer cells."
+    },
+    {
+      "group": "role_a",
+      "sentence": "The finding was confirmed in a second system."
+    },
+    {
+      "group": "single_cell",
+      "sentence": "The tool scores a single cell."
+    }
+  ],
+  "why_the_extension_exists": "Stage 26's patterns were calibrated on the tool's own surfaces -- code, a model card, a JSON schema. Fired at prose they let three of fifteen forbidden sentences through. The tool's documentation would never say 'cancer cells'; an abstract easily would.",
+  "prose_patterns_added": {
+    "2_cross_cell_line_or_patient": [
+      "\\bcancer\\b",
+      "\\btumou?r\\b",
+      "a second cell line",
+      "across cell lines",
+      "melanoma patients?"
+    ],
+    "8_confirmed_role_a": [
+      "confirmed in a second",
+      "confirmed in another",
+      "confirmed in an independent",
+      "a second system",
+      "independent confirmation",
+      "confirms the (?:result|finding)"
+    ],
+    "9_single_cell_equivalence": [
+      "scores? a single cell",
+      "scoring a single cell",
+      "single[- ]cell (?:input|scoring)",
+      "per[- ]cell (?:score|prediction)"
+    ]
+  },
+  "permitted_phrasings_that_failed_their_own_scan": [],
+  "resurvey_of_locked_surfaces": {},
+  "stage26_canary": {
+    "claims_probed": 9,
+    "caught": [
+      "1_unseen_treatment_generalization",
+      "2_cross_cell_line_or_patient",
+      "3_clinical_recommendation",
+      "4_causal_effect",
+      "5_calibrated_probability",
+      "6_independent_replication",
+      "7_uniform_benefit",
+      "8_confirmed_role_a",
+      "9_single_cell_equivalence"
+    ],
+    "missed": [],
+    "negated_twin_false_alarms": [],
+    "detects_every_forbidden_claim": true,
+    "does_not_fire_on_a_negation": true
+  },
+  "near_miss_table": [
+    {
+      "group": "generalisation",
+      "forbidden_sentence": "The model generalises to new treatments.",
+      "caught": true,
+      "triggered": [
+        "1_unseen_treatment_generalization"
+      ],
+      "caught_by_stage26_alone": true,
+      "nearest_permitted_phrasing": "The model is supported for the six observed experimental conditions; anything else returns UNSUPPORTED_TREATMENT."
+    },
+    {
+      "group": "generalisation",
+      "forbidden_sentence": "Our approach works for any drug.",
+      "caught": true,
+      "triggered": [
+        "1_unseen_treatment_generalization"
+      ],
+      "caught_by_stage26_alone": true,
+      "nearest_permitted_phrasing": "Our approach was evaluated on six observed experimental conditions in one cell line."
+    },
+    {
+      "group": "cross_system",
+      "forbidden_sentence": "We predict outcomes in cancer cells.",
+      "caught": true,
+      "triggered": [
+        "2_cross_cell_line_or_patient"
+      ],
+      "caught_by_stage26_alone": false,
+      "nearest_permitted_phrasing": "We predict a clone-detection outcome in one BRAF-V600E melanoma cell line, WM989."
+    },
+    {
+      "group": "cross_system",
+      "forbidden_sentence": "Validated on other cell lines.",
+      "caught": true,
+      "triggered": [
+        "2_cross_cell_line_or_patient"
+      ],
+      "caught_by_stage26_alone": true,
+      "nearest_permitted_phrasing": "Evaluated clone-held-out within WM989; no other cell line was tested."
+    },
+    {
+      "group": "cross_system",
+      "forbidden_sentence": "The model predicts patient response.",
+      "caught": true,
+      "triggered": [
+        "2_cross_cell_line_or_patient"
+      ],
+      "caught_by_stage26_alone": true,
+      "nearest_permitted_phrasing": "The model predicts an observed post-treatment clone-detection proxy, not clinical response."
+    },
+    {
+      "group": "clinical",
+      "forbidden_sentence": "The tool identifies the best treatment for each clone.",
+      "caught": true,
+      "triggered": [
+        "3_clinical_recommendation"
+      ],
+      "caught_by_stage26_alone": true,
+      "nearest_permitted_phrasing": "The tool orders six observed experimental conditions for each clone; this is experimental-condition selection, not treatment recommendation."
+    },
+    {
+      "group": "clinical",
+      "forbidden_sentence": "This supports clinical decision-making.",
+      "caught": true,
+      "triggered": [
+        "3_clinical_recommendation"
+      ],
+      "caught_by_stage26_alone": true,
+      "nearest_permitted_phrasing": "This is a research tool for the WM989 experiment and is not a clinical tool."
+    },
+    {
+      "group": "clinical",
+      "forbidden_sentence": "A therapeutic recommendation tool for melanoma.",
+      "caught": true,
+      "triggered": [
+        "3_clinical_recommendation"
+      ],
+      "caught_by_stage26_alone": true,
+      "nearest_permitted_phrasing": "A research predictor for six observed conditions in one melanoma cell line."
+    },
+    {
+      "group": "causal",
+      "forbidden_sentence": "We estimate the causal effect of each treatment.",
+      "caught": true,
+      "triggered": [
+        "4_causal_effect"
+      ],
+      "caught_by_stage26_alone": true,
+      "nearest_permitted_phrasing": "We estimate a predictive association between pretreatment state and a later observed outcome, under clone-held-out evaluation."
+    },
+    {
+      "group": "calibration",
+      "forbidden_sentence": "The model outputs a calibrated probability of death.",
+      "caught": true,
+      "triggered": [
+        "5_calibrated_probability"
+      ],
+      "caught_by_stage26_alone": true,
+      "nearest_permitted_phrasing": "The model outputs an uncalibrated future_detection_score; no calibration was frozen or passed."
+    },
+    {
+      "group": "replication",
+      "forbidden_sentence": "Independently replicated in an external cohort.",
+      "caught": true,
+      "triggered": [
+        "6_independent_replication"
+      ],
+      "caught_by_stage26_alone": true,
+      "nearest_permitted_phrasing": "No independent biological replication was performed; clone-held-out folds and two endpoint families are not replication."
+    },
+    {
+      "group": "uniformity",
+      "forbidden_sentence": "The interaction helps uniformly across all six conditions.",
+      "caught": true,
+      "triggered": [
+        "7_uniform_benefit"
+      ],
+      "caught_by_stage26_alone": true,
+      "nearest_permitted_phrasing": "Four of six conditions carry meaningful interaction; Cisplatin is negligible on C1 and Doxorubicin is negative on both endpoints."
+    },
+    {
+      "group": "role_a",
+      "forbidden_sentence": "The finding was confirmed in a second system.",
+      "caught": true,
+      "triggered": [
+        "8_confirmed_role_a"
+      ],
+      "caught_by_stage26_alone": false,
+      "nearest_permitted_phrasing": "A separately reconstructed reprogramming system gave positive but underpowered supporting evidence; its confirmation gate FAILED."
+    },
+    {
+      "group": "role_a",
+      "forbidden_sentence": "Rewind confirms the result.",
+      "caught": true,
+      "triggered": [
+        "8_confirmed_role_a"
+      ],
+      "caught_by_stage26_alone": true,
+      "nearest_permitted_phrasing": "Rewind supports the result without confirming it; gate 18.3 FAILED at 0.64, audited ~0.45."
+    },
+    {
+      "group": "single_cell",
+      "forbidden_sentence": "The tool scores a single cell.",
+      "caught": true,
+      "triggered": [
+        "9_single_cell_equivalence"
+      ],
+      "caught_by_stage26_alone": false,
+      "nearest_permitted_phrasing": "The tool scores a clone-level pseudobulk profile; a single cell is not an equivalent input."
+    }
+  ],
+  "checks": {
+    "the scanner detects all nine claims stated plainly (Stage-26 canary)": true,
+    "the scanner does not fire on a negation (Stage-26 canary)": true,
+    "the prose extension still does not fire on a negation": true,
+    "every adversarial abstract sentence is caught": true,
+    "every nearest-permitted phrasing comes back clean": true,
+    "the extended patterns find nothing on the already-locked shipped surfaces": true
+  },
+  "all_passed": true,
+  "runtime_seconds": 0.022,
+  "module_sha256": "eedb050830d44602926f84d6a413ae78be050c8d2bb1fc1ff9d8b5a46cb7afe9"
+}
