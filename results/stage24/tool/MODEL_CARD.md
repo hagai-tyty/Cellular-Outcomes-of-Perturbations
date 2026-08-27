@@ -48,3 +48,51 @@ Generation-2 modelling change, not packaging.
 
 Supported for the six observed experimental conditions. **Not** a clinical tool, **not** a treatment recommendation, **not** a calibrated
 probability, and **not** applicable to unseen treatments, other cell lines, or patients.
+
+
+<!-- STAGE-26 SCOPE LOCK -- appended, nothing above this line altered -->
+
+## Stage 26 — scope lock (STAGE_25_RANKING_SUPPORTED)
+
+Stage 25 has since run. Its preregistered ranking test recorded **`STAGE_25_RANKING_SUPPORTED`**:
+`delta_RANK = +0.051605`, CI95
+[+0.037197, +0.065571],
+0 of 1000 full-refit
+permutation draws reached the observed value. So `validated_condition_order` **is** exposed --
+but only when the Stage-25 verdict file is supplied to `Gen1Predictor.load`, and the six scores
+are identical whether or not it is. The verdict unlocks a claim, not a computation.
+
+The **Ranking** section above was written before that run and speaks in the future tense. It is
+left byte-for-byte as it was frozen; this section is the current state.
+
+### The vocabulary is closed, and it was attacked
+
+Stage 26 fired adversarial condition strings at this tool -- case variants, whitespace, dose
+formats, unicode confusables, controls, and real oncology drugs including `Vemurafenib`, the drug
+for this exact BRAF-V600E mutation, and `Carboplatin`, one substitution from a supported
+condition. Every one was refused with `UNSUPPORTED_TREATMENT` and no score.
+
+This matters more than it looks. `Acid` is the reference level and is encoded as five zero
+dummies, so the dummy encoder on its own maps **any** unknown string to the Acid row and would
+return the Acid score under another name. Stage 26 confirmed that hazard is real and confirmed the
+vocabulary filter in `predict()` blocks it.
+
+### Scope
+
+Authoritative scope document: `results/stage26/GEN1_SCOPE_LIMIT.md`. Nine claims are forbidden in
+Generation 1, each written as its own prohibition so that no line can be quoted out of context and
+read as a claim:
+
+```text
+  NEVER  unseen-treatment generalization
+  NEVER  cross-cell-line or cross-patient generalization
+  NEVER  clinical treatment recommendation
+  NEVER  causal treatment-effect estimation
+  NEVER  calibrated probability
+  NEVER  independent biological replication of Role B
+  NEVER  uniform benefit across all six conditions
+  NEVER  confirmed Role-A prediction
+  NEVER  single-cell input equivalence
+```
+
+Every shipped surface was scanned for all nine. Not one appears except inside a negation.

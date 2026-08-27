@@ -1,0 +1,142 @@
+{
+  "stage": "26C",
+  "shipped_known_limitations": [
+    "NOT APPLICABLE TO ANOTHER EXPERIMENT. The nuisance block counts a clone's cells in WM989's three specific naive libraries (Naive1/2/3). Those libraries are the structure of one experiment, not a property of melanoma, so data from another lab, cell line or library design cannot produce a valid B and cannot be scored.",
+    "known conditions only; UNSUPPORTED_TREATMENT for anything outside the six",
+    "requires the complete frozen nuisance block B; it may not be imputed",
+    "trained on clone-level pseudobulk, so a single cell is not an equivalent input",
+    "captured pretreatment clone abundance remains ~3.45x the state contribution",
+    "no calibrated probability; the score is not a calibrated risk",
+    "no independent biological replication of the Role-B finding",
+    "ranking is NOT validated until Stage 25 records RANKING_SUPPORTED"
+  ],
+  "paths": {
+    "supported": {
+      "expected_status": "SUPPORTED_KNOWN_CONDITION",
+      "statuses": [
+        "SUPPORTED_KNOWN_CONDITION"
+      ],
+      "all_carry_known_limitations": true,
+      "all_carry_model_version": true,
+      "all_carry_ranking_status": true,
+      "no_calibrated_probability_key": true,
+      "status_matches": true
+    },
+    "unsupported_treatment": {
+      "expected_status": "UNSUPPORTED_TREATMENT",
+      "statuses": [
+        "UNSUPPORTED_TREATMENT"
+      ],
+      "all_carry_known_limitations": true,
+      "all_carry_model_version": true,
+      "all_carry_ranking_status": true,
+      "no_calibrated_probability_key": true,
+      "status_matches": true
+    },
+    "missing_nuisance": {
+      "expected_status": "MISSING_REQUIRED_NUISANCE",
+      "statuses": [
+        "MISSING_REQUIRED_NUISANCE"
+      ],
+      "all_carry_known_limitations": true,
+      "all_carry_model_version": true,
+      "all_carry_ranking_status": true,
+      "no_calibrated_probability_key": true,
+      "status_matches": true
+    },
+    "bad_nuisance_length": {
+      "expected_status": "MISSING_REQUIRED_NUISANCE",
+      "statuses": [
+        "MISSING_REQUIRED_NUISANCE"
+      ],
+      "all_carry_known_limitations": true,
+      "all_carry_model_version": true,
+      "all_carry_ranking_status": true,
+      "no_calibrated_probability_key": true,
+      "status_matches": true
+    },
+    "non_finite_nuisance": {
+      "expected_status": "MISSING_REQUIRED_NUISANCE",
+      "statuses": [
+        "MISSING_REQUIRED_NUISANCE"
+      ],
+      "all_carry_known_limitations": true,
+      "all_carry_model_version": true,
+      "all_carry_ranking_status": true,
+      "no_calibrated_probability_key": true,
+      "status_matches": true
+    },
+    "bad_feature_schema": {
+      "expected_status": "UNSUPPORTED_FEATURE_SCHEMA",
+      "statuses": [
+        "UNSUPPORTED_FEATURE_SCHEMA"
+      ],
+      "all_carry_known_limitations": true,
+      "all_carry_model_version": true,
+      "all_carry_ranking_status": true,
+      "no_calibrated_probability_key": true,
+      "status_matches": true
+    }
+  },
+  "ranking": {
+    "with_verdict_status": "SUPPORTED",
+    "with_verdict_exposes_order": true,
+    "without_verdict_status": "NOT_SUPPORTED",
+    "without_verdict_withholds_order": true,
+    "scores_identical_either_way": true,
+    "all_carry_known_limitations": true,
+    "refused_rank_has_support_status": true,
+    "order": [
+      "Trametinib",
+      "Dabrafenib",
+      "CoCl2",
+      "Cisplatin",
+      "Doxorubicin",
+      "Acid"
+    ]
+  },
+  "cli": {
+    "all_known": {
+      "exit_code": 0,
+      "rows": 6,
+      "statuses": [
+        "SUPPORTED_KNOWN_CONDITION"
+      ]
+    },
+    "one_unknown": {
+      "exit_code": 2,
+      "statuses": [
+        "SUPPORTED_KNOWN_CONDITION",
+        "UNSUPPORTED_TREATMENT"
+      ],
+      "scores": [
+        null,
+        0.24660765713003718
+      ]
+    },
+    "no_nuisance": {
+      "exit_code": 2,
+      "statuses": [
+        "MISSING_REQUIRED_NUISANCE"
+      ]
+    },
+    "unreadable": {
+      "exit_code": 3,
+      "stderr_has_status": true
+    }
+  },
+  "checks": {
+    "every predict() path carries known_limitations": true,
+    "every predict() path returns the expected support_status": true,
+    "no path emits a calibrated_probability key": true,
+    "the known-treatment-only limitation is in the shipped list": true,
+    "rank_conditions carries limitations with and without a verdict": true,
+    "the verdict unlocks the ORDER and changes no score": true,
+    "CLI exits 0 only when every condition scored": true,
+    "CLI exits 2 when any condition is refused": true,
+    "CLI exits 3 when the input cannot be read": true,
+    "a refused CLI condition prints no score": true
+  },
+  "all_passed": true,
+  "runtime_seconds": 5.234
+}

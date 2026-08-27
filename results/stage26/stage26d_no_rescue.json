@@ -1,0 +1,48 @@
+{
+  "stage": "26D",
+  "fitting_tokens_found": [],
+  "hash_recheck": {
+    "MODEL_CARD.md": {
+      "recorded_24F": "8902d4999ad98b9d",
+      "now": "489f826266b8edd7",
+      "unchanged": false
+    },
+    "io_schema.json": {
+      "recorded_24F": "ceb798affe8d1a7e",
+      "now": "ceb798affe8d1a7e",
+      "unchanged": true
+    },
+    "example_clones.csv": {
+      "recorded_24F": "330cc7c8a68d77c0",
+      "now": "330cc7c8a68d77c0",
+      "unchanged": true
+    },
+    "stage24_oof_for_stage25.csv": {
+      "recorded_24F": "abdc2999c0ee388f",
+      "now": "abdc2999c0ee388f",
+      "unchanged": true
+    },
+    "stage24_w5_artifact.json": {
+      "recorded_24F": "bda2c2de80187d0f",
+      "now": "bda2c2de80187d0f",
+      "unchanged": true
+    }
+  },
+  "artifact_npz_unchanged": true,
+  "model_card_still_byte_identical_to_24F": false,
+  "model_card_note": "Reported, not gating. The model card is the one file Stage 26 is allowed to append to (\u00a76.2), so this reads True before 26E runs and False after. 26E proves its own change is append-only against the 24F hash.",
+  "stage25_verdict": "STAGE_25_RANKING_SUPPORTED",
+  "stage25_delta_rank": 0.05160531888390629,
+  "ship_plan_digest_holds": true,
+  "checks": {
+    "Stage 26 fits nothing": true,
+    "the frozen model artifact is untouched": true,
+    "the out-of-fold table Stage 25 consumed is untouched": true,
+    "the frozen vocabularies are untouched": true,
+    "the io schema and example dataset are untouched": true,
+    "the Stage-25 verdict still reads STAGE_25_RANKING_SUPPORTED": true,
+    "the frozen ship plan digest still holds": true
+  },
+  "all_passed": true,
+  "runtime_seconds": 0.129
+}

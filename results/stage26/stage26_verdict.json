@@ -1,0 +1,60 @@
+{
+  "stage": "26E",
+  "verdict": "KNOWN_TREATMENT_ONLY_SCOPED_LIMIT",
+  "substages": {
+    "26A": true,
+    "26B": true,
+    "26C": true,
+    "26D": true,
+    "26E_model_card_append_only": true
+  },
+  "failing": [],
+  "plan": "plans/(newer)practical plans/STAGE_26_KNOWN_TREATMENT_SCOPE_LOCK_V1.md",
+  "plan_canonical_lf_sha256": "1d5caa3296be553c628f117ee60d1ce823e8833cbcf3c57907a2bdd403f12cf8",
+  "parent_plan_digest": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48",
+  "parent_plan_digest_holds": true,
+  "scope_document": {
+    "path": "results/stage26/GEN1_SCOPE_LIMIT.md",
+    "sha256": "b025f5beb9d498e7fcf6d147c7a89a524c3460ba6b3ab16457aba63ec0499c1a"
+  },
+  "model_card_update": {
+    "frozen_24F_sha256": "8902d4999ad98b9dce9394bb840320cea6dee089c20fb1883566868170dd9c59",
+    "base_sha256": "8902d4999ad98b9dce9394bb840320cea6dee089c20fb1883566868170dd9c59",
+    "base_is_byte_identical_to_the_24F_card": true,
+    "before_sha256": "489f826266b8edd7cee17edec41998d0acb07d8c733ffe8e94fcb69bfc066464",
+    "after_sha256": "489f826266b8edd7cee17edec41998d0acb07d8c733ffe8e94fcb69bfc066464",
+    "bytes_frozen_24F": 2940,
+    "bytes_before": 5158,
+    "bytes_after": 5158,
+    "append_only_proof": true,
+    "was_a_rerun": true,
+    "rerun_is_byte_idempotent": true,
+    "delimiter": "<!-- STAGE-26 SCOPE LOCK -- appended, nothing above this line altered -->",
+    "note": "Stage 26 only ever appends. Everything above the delimiter is the card 24F froze, verified against the recorded hash rather than against whatever the file happened to contain."
+  },
+  "adversarial": {
+    "strings": 56,
+    "refused": 56,
+    "groups": [
+      "case",
+      "whitespace",
+      "pharmacology",
+      "format",
+      "control",
+      "confusable",
+      "structural"
+    ]
+  },
+  "claim_surface": {
+    "surfaces": 8,
+    "gating_claims": 9,
+    "violations": 0
+  },
+  "stage25": {
+    "verdict": "STAGE_25_RANKING_SUPPORTED",
+    "delta_RANK": 0.05160531888390629
+  },
+  "grants_no_claim": "Stage 26 records that the existing claim is enforced in code. It grants no new claim and reopens no earlier stage.",
+  "next": "GEN-1 EVIDENCE LOCK",
+  "runtime_seconds": 0.058
+}

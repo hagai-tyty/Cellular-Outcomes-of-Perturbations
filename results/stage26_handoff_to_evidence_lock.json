@@ -1,0 +1,40 @@
+{
+  "from_stage": "26",
+  "to_stage": "GEN-1 EVIDENCE LOCK",
+  "verdict": "KNOWN_TREATMENT_ONLY_SCOPED_LIMIT",
+  "scope_document": "results/stage26/GEN1_SCOPE_LIMIT.md",
+  "scope_document_sha256": "b025f5beb9d498e7fcf6d147c7a89a524c3460ba6b3ab16457aba63ec0499c1a",
+  "forbidden_claims": [
+    "1_unseen_treatment_generalization",
+    "2_cross_cell_line_or_patient",
+    "3_clinical_recommendation",
+    "4_causal_effect",
+    "5_calibrated_probability",
+    "6_independent_replication",
+    "7_uniform_benefit",
+    "8_confirmed_role_a",
+    "9_single_cell_equivalence"
+  ],
+  "closed_vocabulary": [
+    "Acid",
+    "Cisplatin",
+    "CoCl2",
+    "Dabrafenib",
+    "Doxorubicin",
+    "Trametinib"
+  ],
+  "reference_condition": "Acid",
+  "evidence_to_lock": {
+    "benchmark": "results/stage22_wm989_clones.csv",
+    "out_of_fold_predictions": "results/stage24/stage24_oof_for_stage25.csv",
+    "tool": "results/stage24/stage24_w5_artifact.npz + .json",
+    "ranking_verdict": "results/stage25/stage25_verdict.json",
+    "limitations": "results/stage26/GEN1_SCOPE_LIMIT.md"
+  },
+  "evidence_lock_must": [
+    "hash every artifact above and refuse to proceed if one has moved",
+    "carry the nine forbidden claims into the claim lock unchanged",
+    "record that independent biological replication is Generation 2, not a Gen-1 gate"
+  ],
+  "no_stage_26_outcome_reopens_an_earlier_stage": true
+}

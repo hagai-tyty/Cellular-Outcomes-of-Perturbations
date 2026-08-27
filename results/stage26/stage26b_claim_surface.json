@@ -1,0 +1,220 @@
+{
+  "stage": "26B",
+  "surfaces_scanned": [
+    "src/cellfate/gen1_predictor.py",
+    "src/cellfate/gen1_cli.py",
+    "results/stage24/tool/MODEL_CARD.md",
+    "results/stage24/tool/io_schema.json",
+    "results/stage24/tool/example_clone_README.md",
+    "results/stage24/stage24_w5_artifact.json",
+    "results/stage25/stage25_verdict.json",
+    "results/stage26/GEN1_SCOPE_LIMIT.md"
+  ],
+  "excluded_from_scan": [
+    "experiments/run_stage26_scope_lock.py",
+    "tests/test_stage26_scope_lock.py",
+    "plans/(newer)practical plans/STAGE_26_KNOWN_TREATMENT_SCOPE_LOCK_V1.md",
+    "plans/(newer)practical plans/RECORDs/stage_26_RECORD.md"
+  ],
+  "exclusion_reason": "a scanner that trips on its own description of what it hunts produces a false failure and teaches nothing",
+  "canary": {
+    "claims_probed": 9,
+    "caught": [
+      "1_unseen_treatment_generalization",
+      "2_cross_cell_line_or_patient",
+      "3_clinical_recommendation",
+      "4_causal_effect",
+      "5_calibrated_probability",
+      "6_independent_replication",
+      "7_uniform_benefit",
+      "8_confirmed_role_a",
+      "9_single_cell_equivalence"
+    ],
+    "missed": [],
+    "negated_twin_false_alarms": [],
+    "detects_every_forbidden_claim": true,
+    "does_not_fire_on_a_negation": true
+  },
+  "gating_claims": [
+    "1_unseen_treatment_generalization",
+    "2_cross_cell_line_or_patient",
+    "3_clinical_recommendation",
+    "4_causal_effect",
+    "5_calibrated_probability",
+    "6_independent_replication",
+    "7_uniform_benefit",
+    "8_confirmed_role_a",
+    "9_single_cell_equivalence"
+  ],
+  "review_only_terms_are_not_gating": [
+    "\\bcancer\\b",
+    "\\bdeath\\b",
+    "\\bresistan",
+    "\\bsensitiv",
+    "\\bresponse\\b",
+    "\\bcures?\\b",
+    "\\befficacy\\b"
+  ],
+  "per_file": {
+    "src/cellfate/gen1_predictor.py": {
+      "present": true,
+      "bytes": 13437,
+      "claims_touched": {
+        "3_clinical_recommendation": {
+          "hits": 6,
+          "unnegated": []
+        },
+        "5_calibrated_probability": {
+          "hits": 1,
+          "unnegated": []
+        }
+      }
+    },
+    "src/cellfate/gen1_cli.py": {
+      "present": true,
+      "bytes": 3680,
+      "claims_touched": {}
+    },
+    "results/stage24/tool/MODEL_CARD.md": {
+      "present": true,
+      "bytes": 5108,
+      "claims_touched": {
+        "1_unseen_treatment_generalization": {
+          "hits": 1,
+          "unnegated": []
+        },
+        "2_cross_cell_line_or_patient": {
+          "hits": 5,
+          "unnegated": []
+        },
+        "3_clinical_recommendation": {
+          "hits": 6,
+          "unnegated": []
+        },
+        "4_causal_effect": {
+          "hits": 1,
+          "unnegated": []
+        },
+        "5_calibrated_probability": {
+          "hits": 4,
+          "unnegated": []
+        },
+        "6_independent_replication": {
+          "hits": 2,
+          "unnegated": []
+        },
+        "7_uniform_benefit": {
+          "hits": 2,
+          "unnegated": []
+        },
+        "8_confirmed_role_a": {
+          "hits": 1,
+          "unnegated": []
+        }
+      }
+    },
+    "results/stage24/tool/io_schema.json": {
+      "present": true,
+      "bytes": 1926,
+      "claims_touched": {
+        "5_calibrated_probability": {
+          "hits": 1,
+          "unnegated": []
+        }
+      }
+    },
+    "results/stage24/tool/example_clone_README.md": {
+      "present": true,
+      "bytes": 953,
+      "claims_touched": {}
+    },
+    "results/stage24/stage24_w5_artifact.json": {
+      "present": true,
+      "bytes": 3279,
+      "claims_touched": {
+        "5_calibrated_probability": {
+          "hits": 2,
+          "unnegated": []
+        },
+        "6_independent_replication": {
+          "hits": 1,
+          "unnegated": []
+        }
+      }
+    },
+    "results/stage25/stage25_verdict.json": {
+      "present": true,
+      "bytes": 5814,
+      "claims_touched": {
+        "3_clinical_recommendation": {
+          "hits": 1,
+          "unnegated": []
+        },
+        "6_independent_replication": {
+          "hits": 1,
+          "unnegated": []
+        }
+      }
+    },
+    "results/stage26/GEN1_SCOPE_LIMIT.md": {
+      "present": true,
+      "bytes": 5358,
+      "claims_touched": {
+        "2_cross_cell_line_or_patient": {
+          "hits": 4,
+          "unnegated": []
+        },
+        "3_clinical_recommendation": {
+          "hits": 6,
+          "unnegated": []
+        },
+        "4_causal_effect": {
+          "hits": 1,
+          "unnegated": []
+        },
+        "5_calibrated_probability": {
+          "hits": 3,
+          "unnegated": []
+        },
+        "6_independent_replication": {
+          "hits": 2,
+          "unnegated": []
+        },
+        "7_uniform_benefit": {
+          "hits": 2,
+          "unnegated": []
+        },
+        "8_confirmed_role_a": {
+          "hits": 1,
+          "unnegated": []
+        }
+      }
+    }
+  },
+  "violations": [],
+  "review_queue": [
+    {
+      "file": "src/cellfate/gen1_predictor.py",
+      "hits": 3,
+      "unnegated": 0
+    },
+    {
+      "file": "results/stage25/stage25_verdict.json",
+      "hits": 3,
+      "unnegated": 0
+    },
+    {
+      "file": "results/stage26/GEN1_SCOPE_LIMIT.md",
+      "hits": 5,
+      "unnegated": 0
+    }
+  ],
+  "checks": {
+    "the scanner detects every one of the nine claims stated plainly (canary)": true,
+    "the scanner does not fire on a negated twin (canary)": true,
+    "no forbidden claim appears unnegated on any shipped surface": true,
+    "every scanned surface exists": true
+  },
+  "all_passed": true,
+  "runtime_seconds": 0.024
+}

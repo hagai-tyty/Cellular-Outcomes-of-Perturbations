@@ -1,0 +1,425 @@
+{
+  "stage": "26A",
+  "n_adversarial_strings": 56,
+  "n_refused": 56,
+  "leaked": [],
+  "refusals_by_group": {
+    "case": [
+      {
+        "input": "acid",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "ACID",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "cisplatin",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "CisPlatin",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "cocl2",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "COCL2",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "dabrafenib",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "trametinib",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "DOXORUBICIN",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      }
+    ],
+    "whitespace": [
+      {
+        "input": " Acid",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Acid ",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Acid\t",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Cis platin",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Co Cl2",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "\nAcid",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      }
+    ],
+    "pharmacology": [
+      {
+        "input": "Vemurafenib",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "PLX4720",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Cobimetinib",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Selumetinib",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Encorafenib",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Binimetinib",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Carboplatin",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Oxaliplatin",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Paclitaxel",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Docetaxel",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Etoposide",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Nilotinib",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Pembrolizumab",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Nivolumab",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Temozolomide",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "5-FU",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      }
+    ],
+    "format": [
+      {
+        "input": "Cisplatin_1uM",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Cisplatin (1 uM)",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Cisplatin-high",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Acid+Cisplatin",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Cisplatin:1uM",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      }
+    ],
+    "control": [
+      {
+        "input": "DMSO",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Vehicle",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Control",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Untreated",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "None",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "NA",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "null",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "0",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      }
+    ],
+    "confusable": [
+      {
+        "input": "\u0410cid",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Ac\u0456d",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "CoCl\u2082",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "CoCI2",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Trametinib\u200b",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      }
+    ],
+    "structural": [
+      {
+        "input": "",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": " ",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "*",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "all",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Acid,Cisplatin",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "[Acid]",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      },
+      {
+        "input": "Acid|Cisplatin",
+        "support_status": "UNSUPPORTED_TREATMENT",
+        "score": null,
+        "refused": true
+      }
+    ]
+  },
+  "reference_leak_test": {
+    "acid_score": 0.673109077807343,
+    "unknown_via_raw_encoder": 0.673109077807343,
+    "raw_encoder_dummy_sum": 0.0,
+    "hazard_is_real": true,
+    "note": "The encoder is NOT safe on its own -- an unknown string produces the reference row and would return the Acid score under another name. The vocabulary filter inside predict() is the thing that makes it safe, which is why it is tested rather than assumed.",
+    "guard_holds": true
+  },
+  "mixed_request": {
+    "requested": [
+      "Vemurafenib",
+      "Cisplatin",
+      "DMSO",
+      "Trametinib",
+      "acid",
+      "Acid"
+    ],
+    "returned_conditions": [
+      "Vemurafenib",
+      "Cisplatin",
+      "DMSO",
+      "Trametinib",
+      "acid",
+      "Acid"
+    ],
+    "scored_conditions": [
+      "Cisplatin",
+      "Trametinib",
+      "Acid"
+    ],
+    "routing_correct": true,
+    "max_batch_vs_solo_difference": 1.1102230246251565e-16,
+    "frozen_tolerance_23_5_7_1_R2": 1e-12,
+    "within_frozen_tolerance": true,
+    "named_cause_23_5_7_1_R4": "BLAS GEMM kernel selection varies with design-matrix row count (1, 3 or 6 rows depending on how many known conditions were requested). Not exact bit-identity across batch sizes; 4 orders of magnitude inside the frozen 1e-12 cell bound.",
+    "within_clone_ordering_identical_across_batch_sizes": true
+  },
+  "structural_closure": {
+    "vocabulary": [
+      "Acid",
+      "Cisplatin",
+      "CoCl2",
+      "Dabrafenib",
+      "Doxorubicin",
+      "Trametinib"
+    ],
+    "reference": "Acid",
+    "K": 50,
+    "nuisance": 4,
+    "dummies": 5,
+    "interaction": 250,
+    "design_columns": 309,
+    "expected": 309
+  },
+  "checks": {
+    "every adversarial string is refused": true,
+    "the reference-leak hazard is real (unknown -> all-zero dummies -> the Acid row)": true,
+    "predict() blocks it: no score is returned for an unknown condition": true,
+    "a mixed request routes each condition to its own row, in order": true,
+    "batched and solo scores agree inside the frozen 1e-12 cell bound": true,
+    "within-clone ordering is identical across batch sizes (7.1 R3)": true,
+    "vocabulary is exactly the six frozen conditions": true,
+    "reference condition is Acid": true,
+    "design geometry closes the vocabulary at 309 columns": true
+  },
+  "all_passed": true,
+  "runtime_seconds": 0.313
+}
