@@ -1,0 +1,41 @@
+{
+  "stage": "EL-C",
+  "controls": {
+    "INTACT reports clean": true,
+    "MOVED is detected and names the file": true,
+    "MISSING is detected and names the file": true
+  },
+  "detail": {
+    "intact": {
+      "clean": true,
+      "moved": [],
+      "missing": [],
+      "n_checked": 54
+    },
+    "one_bit_flipped": {
+      "clean": false,
+      "moved": [
+        "results/stage24/stage24_oof_for_stage25.csv"
+      ],
+      "missing": [],
+      "n_checked": 54
+    },
+    "one_file_deleted": {
+      "clean": false,
+      "moved": [],
+      "missing": [
+        "results/stage25/stage25_verdict.json"
+      ],
+      "n_checked": 54
+    }
+  },
+  "note": "A verifier that has never failed is an assumption. These run on copies in a scratch directory; no locked artifact is ever touched.",
+  "checks": {
+    "INTACT reports clean": true,
+    "MOVED is detected and names the file": true,
+    "MISSING is detected and names the file": true
+  },
+  "all_passed": true,
+  "runtime_seconds": 0.949,
+  "module_sha256": "f81dc9714d01db01c98ef51a7f6b351b7e4f261a083d1947c732abc103181542"
+}

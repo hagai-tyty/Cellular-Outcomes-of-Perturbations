@@ -1,0 +1,39 @@
+{
+  "stage": "EL-D",
+  "headline": {
+    "eligible_clones": 892,
+    "R_W1": 0.692653836571998,
+    "R_W4": 0.692175822122571,
+    "R_W5": 0.7437811410064773,
+    "delta_RANK": 0.05160531888390629,
+    "bootstrap_ci95": [
+      0.03719715371200797,
+      0.06557077572247133
+    ],
+    "null_p95": 0.00867214748380684,
+    "n_perm": 1000,
+    "n_null_ge_observed": 0,
+    "p_perm": 0.000999000999000999,
+    "delta_TOP1": 0.11547085201793728,
+    "adversarial_strings_refused": 56,
+    "adversarial_strings_total": 56,
+    "design_columns": 309,
+    "ranking_verdict": "STAGE_25_RANKING_SUPPORTED",
+    "scope_verdict": "KNOWN_TREATMENT_ONLY_SCOPED_LIMIT"
+  },
+  "records_checked": [
+    "stage_25_RECORD.md",
+    "stage_26_RECORD.md"
+  ],
+  "substrings_checked": 13,
+  "disagreements": [],
+  "checks": {
+    "every headline number in the records matches its JSON source": true,
+    "p_perm equals the finite-sample formula exactly": true,
+    "p_perm is reported as a floor, not a point estimate": true,
+    "the ranking verdict is one of the two frozen values": true
+  },
+  "all_passed": true,
+  "runtime_seconds": 0.001,
+  "module_sha256": "f81dc9714d01db01c98ef51a7f6b351b7e4f261a083d1947c732abc103181542"
+}

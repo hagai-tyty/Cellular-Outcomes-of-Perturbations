@@ -1,0 +1,36 @@
+{
+  "stage": "EL-F",
+  "allowed": {
+    "primary": "Within the existing multi-condition WM989 lineage system, pretreatment Gene Expression contains treatment-specific information about future clonal detection beyond treatment identity and captured pretreatment clone abundance under frozen clone-held-out evaluation.",
+    "ranking": "A frozen state x treatment model improves clone-specific ordering of the six observed experimental conditions over a non-interactive additive model.",
+    "ranking_selected_by": "STAGE_25_RANKING_SUPPORTED",
+    "supporting_role_A": "A separately reconstructed reprogramming system showed positive but underpowered evidence that pretreatment transcriptional state carries prospective information about a later lineage outcome."
+  },
+  "forbidden": [
+    "unseen-treatment generalization",
+    "cross-cell-line or cross-patient generalization",
+    "clinical treatment recommendation",
+    "causal treatment-effect estimation",
+    "calibrated probability unless calibration is separately frozen and passed",
+    "independent biological replication of Role B",
+    "uniform benefit across all six conditions",
+    "confirmed Role-A prediction",
+    "single-cell input equivalence when the model was trained on clone pseudobulk"
+  ],
+  "forbidden_source": "\u00a73.5 of the frozen ship plan, verbatim",
+  "replication": {
+    "status": "GENERATION 2",
+    "statement": "Independent new-system biological replication has NOT been performed. It is Generation-2 work and is not a Generation-1 publication gate. Clone-held-out folds and two endpoint families are not replication."
+  },
+  "the_claim_lock_may": "narrow these",
+  "the_claim_lock_may_not": "widen these",
+  "checks": {
+    "all nine forbidden claims are carried through verbatim": true,
+    "the primary claim is the frozen \u00a73.1 wording": true,
+    "the ranking claim selected matches the Stage-25 verdict": true,
+    "replication is recorded as Generation 2": true
+  },
+  "all_passed": true,
+  "runtime_seconds": 0.001,
+  "module_sha256": "f81dc9714d01db01c98ef51a7f6b351b7e4f261a083d1947c732abc103181542"
+}

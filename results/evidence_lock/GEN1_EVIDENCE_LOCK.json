@@ -1,0 +1,119 @@
+{
+  "stage": "GEN-1 EVIDENCE LOCK",
+  "verdict": "GEN1_EVIDENCE_LOCKED",
+  "lock_digest": "99c35793162aaa0e02f681cfaf4d9488492bb712a567e29a061d4886287489e0",
+  "substages": {
+    "EL-A_inventory": true,
+    "EL-B_chain_of_custody": true,
+    "EL-C_verifier_can_refuse": true,
+    "EL-D_numbers": true,
+    "EL-F_claim_lock_input": true,
+    "EL_live_verification_clean": true
+  },
+  "failing": [],
+  "plan": "plans/(newer)practical plans/GEN1_EVIDENCE_LOCK_V1.md",
+  "plan_canonical_lf_sha256": "357c873a9ce04ab089f22c3e29ebcf9b67163a3b149745f8153f5ae362de9396",
+  "ship_plan_digest": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48",
+  "ship_plan_digest_holds": true,
+  "n_artifacts": 54,
+  "by_class": {
+    "benchmark": 3,
+    "predictions": 1,
+    "tool": 10,
+    "verdicts": 6,
+    "limitations": 1,
+    "supporting_role_A": 5,
+    "protocol": 7,
+    "records": 8,
+    "code": 13
+  },
+  "chain_of_custody": {
+    "stage": "EL-B",
+    "chains": {
+      "out_of_fold_table": {
+        "on disk now": "abdc2999c0ee388fb2f2928318ff8a935921aaa72462d6d3c0ed64384e12e9a6",
+        "24F freeze": "abdc2999c0ee388fb2f2928318ff8a935921aaa72462d6d3c0ed64384e12e9a6",
+        "24->25 handoff": "abdc2999c0ee388fb2f2928318ff8a935921aaa72462d6d3c0ed64384e12e9a6",
+        "25A observed": "abdc2999c0ee388fb2f2928318ff8a935921aaa72462d6d3c0ed64384e12e9a6"
+      },
+      "model_artifact": {
+        "on disk now": "954cef7cff296d994d10bae3741ced1c8c9c5c7f97b13877a2916cf26b713315",
+        "24F freeze": "954cef7cff296d994d10bae3741ced1c8c9c5c7f97b13877a2916cf26b713315",
+        "24->25 handoff": "954cef7cff296d994d10bae3741ced1c8c9c5c7f97b13877a2916cf26b713315",
+        "artifact metadata": "954cef7cff296d994d10bae3741ced1c8c9c5c7f97b13877a2916cf26b713315"
+      },
+      "ship_plan_digest": {
+        "on disk now": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48",
+        "frozen value": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48",
+        "23.5 protocol": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48",
+        "24->25 handoff": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48",
+        "25C verdict": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48",
+        "26E verdict": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48"
+      }
+    },
+    "agreement": {
+      "out_of_fold_table": true,
+      "model_artifact": true,
+      "ship_plan_digest": true
+    },
+    "checks": {
+      "the out-of-fold table is the same file in all four records": true,
+      "the model artifact is the same file in all four records": true,
+      "every stage asserted the same ship-plan digest": true,
+      "Stage 26 handed this lock a KNOWN_TREATMENT_ONLY_SCOPED_LIMIT": true
+    },
+    "all_passed": true,
+    "runtime_seconds": 0.117
+  },
+  "negative_controls": {
+    "INTACT reports clean": true,
+    "MOVED is detected and names the file": true,
+    "MISSING is detected and names the file": true
+  },
+  "live_verification": {
+    "clean": true,
+    "moved": [],
+    "missing": [],
+    "n_checked": 54
+  },
+  "headline_numbers": {
+    "eligible_clones": 892,
+    "R_W1": 0.692653836571998,
+    "R_W4": 0.692175822122571,
+    "R_W5": 0.7437811410064773,
+    "delta_RANK": 0.05160531888390629,
+    "bootstrap_ci95": [
+      0.03719715371200797,
+      0.06557077572247133
+    ],
+    "null_p95": 0.00867214748380684,
+    "n_perm": 1000,
+    "n_null_ge_observed": 0,
+    "p_perm": 0.000999000999000999,
+    "delta_TOP1": 0.11547085201793728,
+    "adversarial_strings_refused": 56,
+    "adversarial_strings_total": 56,
+    "design_columns": 309,
+    "ranking_verdict": "STAGE_25_RANKING_SUPPORTED",
+    "scope_verdict": "KNOWN_TREATMENT_ONLY_SCOPED_LIMIT"
+  },
+  "not_in_the_lock": {
+    "results/stage24/stage24_w5_artifact.npz": {
+      "reason": "44 MB, gitignored. A fresh clone of the repository does NOT contain it.",
+      "hash_is_locked": true,
+      "rebuild": "python experiments/run_stage24_gen1_tool.py --stage 24c   (~0.5 min)",
+      "consequence": "anyone verifying this lock from a clone must rebuild it first"
+    },
+    "raw sequencing data": {
+      "reason": "not vendored; accessions are locked, bytes are not",
+      "accessions": {
+        "role_B_primary": "GSE279162 (WM989)",
+        "role_A_supporting": "GSE227151 (Rewind)"
+      }
+    }
+  },
+  "grants_no_claim": "Locking fixes what the existing claims are made of. It grants no new claim and reopens no earlier stage.",
+  "next": "GEN-1 CLAIM LOCK",
+  "runtime_seconds": 6.048,
+  "module_sha256": "f81dc9714d01db01c98ef51a7f6b351b7e4f261a083d1947c732abc103181542"
+}

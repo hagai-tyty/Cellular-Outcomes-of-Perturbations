@@ -1,0 +1,17 @@
+{
+  "from_stage": "GEN-1 EVIDENCE LOCK",
+  "to_stage": "GEN-1 CLAIM LOCK",
+  "verdict": "GEN1_EVIDENCE_LOCKED",
+  "lock_digest": "99c35793162aaa0e02f681cfaf4d9488492bb712a567e29a061d4886287489e0",
+  "manifest": "results/evidence_lock/GEN1_EVIDENCE_MANIFEST.json",
+  "claim_lock_input": "results/evidence_lock/GEN1_CLAIM_LOCK_INPUT.json",
+  "lock_document": "results/evidence_lock/GEN1_EVIDENCE_LOCK.md",
+  "verify_command": "python experiments/run_gen1_evidence_lock.py --verify",
+  "claim_lock_must": [
+    "consume GEN1_CLAIM_LOCK_INPUT.json unchanged; it may narrow, never widen",
+    "re-verify the lock digest before writing an abstract-level claim",
+    "state that independent biological replication is Generation 2, not a Gen-1 gate"
+  ],
+  "no_lock_outcome_reopens_an_earlier_stage": true,
+  "module_sha256": "f81dc9714d01db01c98ef51a7f6b351b7e4f261a083d1947c732abc103181542"
+}
