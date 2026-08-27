@@ -175,7 +175,60 @@ def test_the_live_verification_is_clean():
 def test_the_headline_numbers_match_their_json_sources():
     n = _json(NUMBERS)
     assert n["disagreements"] == []
-    assert n["substrings_checked"] >= 13
+    assert n["patterns_checked"] >= 14
+
+
+@ran
+def test_each_number_is_pinned_to_its_meaning_not_to_a_bare_substring():
+    """A bare "56" is satisfied by SHA-256. The pattern must reject a perturbed value, and the
+    pair -- matches the right one, rejects the wrong one -- is what makes it a live check."""
+    n = _json(NUMBERS)
+    assert n["canary_patterns_that_matched_a_wrong_value"] == []
+    assert n["disagreements"] == [], "patterns must also MATCH; a dead pattern rejects everything"
+
+
+def test_a_perturbed_number_is_actually_rejected(mod):
+    """Directly, not by reading a JSON that says so."""
+    import re
+    text = "delta_RANK                +0.051605\n"
+    tmpl = r"delta_RANK\s+@@"
+    assert re.search(tmpl.replace("@@", re.escape("+0.051605")), text)
+    assert not re.search(tmpl.replace("@@", re.escape("+0.051608")), text)
+
+
+# ============================================================================================== #
+# Portability — the audience for a lock is someone who did not build it
+# ============================================================================================== #
+@ran
+def test_the_lock_is_verifiable_from_a_fresh_clone():
+    """A lock built on raw text bytes is a property of one working tree on one platform."""
+    m = _json(MANIFEST)
+    assert m["checks"]["every committed artifact hashes the same from a fresh clone"] is True
+    assert m["clone_portability"]["drifted"] == []
+
+
+@ran
+def test_text_is_hashed_canonically_and_binary_is_not():
+    m = _json(MANIFEST)
+    rule = m["hashing_rule"]
+    assert set(rule["binary"]) == {".npz", ".npy"}
+    assert "canonical-LF" in rule["text_hashed"]
+    raw = {p for p, v in m["artifacts"].items() if v["hashed"] == "raw"}
+    assert raw == {"results/stage24/stage24_w5_artifact.npz",
+                   "results/stage24/tool/example_clone_expression.npy"}
+    # every other artifact must be canonical-LF, or a CRLF checkout breaks the lock
+    assert all(v["hashed"] == "canonical-lf"
+               for p, v in m["artifacts"].items() if p not in raw)
+
+
+def test_canonical_hashing_actually_absorbs_a_line_ending_change(mod, tmp_path):
+    """The property the whole fix rests on, tested rather than assumed."""
+    lf = tmp_path / "a.md"
+    crlf = tmp_path / "b.md"
+    lf.write_bytes(b"one\ntwo\n")
+    crlf.write_bytes(b"one\r\ntwo\r\n")
+    assert mod.sha256_file(lf) != mod.sha256_file(crlf)
+    assert mod.canonical_lf_sha256(lf) == mod.canonical_lf_sha256(crlf)
 
 
 @ran

@@ -25,15 +25,18 @@
     "stage_25_RECORD.md",
     "stage_26_RECORD.md"
   ],
-  "substrings_checked": 13,
+  "substrings_checked": 14,
+  "patterns_checked": 14,
   "disagreements": [],
+  "canary_patterns_that_matched_a_wrong_value": [],
   "checks": {
     "every headline number in the records matches its JSON source": true,
+    "each number is pinned to its meaning, not to a bare substring": true,
     "p_perm equals the finite-sample formula exactly": true,
     "p_perm is reported as a floor, not a point estimate": true,
     "the ranking verdict is one of the two frozen values": true
   },
   "all_passed": true,
-  "runtime_seconds": 0.001,
-  "module_sha256": "f81dc9714d01db01c98ef51a7f6b351b7e4f261a083d1947c732abc103181542"
+  "runtime_seconds": 0.003,
+  "module_sha256": "23256d44e6144aedc08c5b286710769e1d560abb41a742861bfabc820ed8adcb"
 }

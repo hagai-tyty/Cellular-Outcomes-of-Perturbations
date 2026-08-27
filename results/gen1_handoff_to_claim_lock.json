@@ -2,7 +2,7 @@
   "from_stage": "GEN-1 EVIDENCE LOCK",
   "to_stage": "GEN-1 CLAIM LOCK",
   "verdict": "GEN1_EVIDENCE_LOCKED",
-  "lock_digest": "99c35793162aaa0e02f681cfaf4d9488492bb712a567e29a061d4886287489e0",
+  "lock_digest": "455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9",
   "manifest": "results/evidence_lock/GEN1_EVIDENCE_MANIFEST.json",
   "claim_lock_input": "results/evidence_lock/GEN1_CLAIM_LOCK_INPUT.json",
   "lock_document": "results/evidence_lock/GEN1_EVIDENCE_LOCK.md",
@@ -13,5 +13,5 @@
     "state that independent biological replication is Generation 2, not a Gen-1 gate"
   ],
   "no_lock_outcome_reopens_an_earlier_stage": true,
-  "module_sha256": "f81dc9714d01db01c98ef51a7f6b351b7e4f261a083d1947c732abc103181542"
+  "module_sha256": "23256d44e6144aedc08c5b286710769e1d560abb41a742861bfabc820ed8adcb"
 }

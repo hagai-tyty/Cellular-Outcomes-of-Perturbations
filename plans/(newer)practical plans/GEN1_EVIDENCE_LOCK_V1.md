@@ -56,33 +56,69 @@ Seconds. Hashing a 44 MB file and some text.
 
 # 1. EL-A — the inventory
 
-Seven classes. Every artifact carries `path`, `sha256`, `bytes`, and whether git tracks it.
+Nine classes. Every artifact carries `path`, `sha256`, how it was hashed, `bytes`, and whether git
+tracks or ignores it.
 
 ```text
-BENCHMARK      the Stage-22 clone table
-               the two frozen Stage-23 out-of-fold files
+BENCHMARK          the Stage-22 clone table
+                   the two frozen Stage-23 out-of-fold files
 
-PREDICTIONS    the Stage-24 out-of-fold table Stage 25 actually consumed
+PREDICTIONS        the Stage-24 out-of-fold table Stage 25 actually consumed
 
-TOOL           the prediction API and the CLI
-               the serialized model artifact and its metadata
-               the model card, the io schema, the example clone
+TOOL               the prediction API and the CLI
+                   the serialized model artifact and its metadata
+                   the model card, the io schema, the example clone
 
-VERDICTS       the Stage-25 ranking verdict
-               the Stage-26 scope-lock verdict
-               every inter-stage handoff
+VERDICTS           the Stage-25 ranking verdict
+                   the Stage-26 scope-lock verdict
+                   every inter-stage handoff
 
-LIMITATIONS    GEN1_SCOPE_LIMIT.md, the authoritative scope document
+LIMITATIONS        GEN1_SCOPE_LIMIT.md, the authoritative scope document
 
-PROTOCOL       the frozen ship plan and the Stage-26 plan
-               the Stage-23.5 protocol JSON
+SUPPORTING_ROLE_A  the Rewind verdict, confirmation, power, and the power AUDIT
 
-CODE           every executor that produced a locked artifact
-               every test file that constrains one
+PROTOCOL           the frozen plans and the Stage-23.5 protocol JSON
+
+RECORDS            the stage records the manuscript will be written from
+
+CODE               every executor that produced a locked artifact
+                   every test file that constrains one
 ```
 
 `CODE` is in the lock because a result without the code that made it is not reproducible evidence,
-and because a silent edit to an executor is exactly as damaging as a silent edit to a result.
+and because a silent edit to an executor is exactly as damaging as a silent edit to a result. The
+lock's own executor is included: the manifest is written after hashing, so a later edit makes
+`--verify` report the verifier itself moved.
+
+`SUPPORTING_ROLE_A` is in the lock because §3.3 of the frozen plan permits one supporting sentence
+about Rewind, and the standing limitation *"gate 18.3 FAILED at 0.64 (audited ~0.45)"* is quoted in
+the scope document. A claim the manuscript makes is a claim whose evidence must be locked —
+including, and especially, the audit that lowered that number.
+
+`RECORDS` is in the lock because EL-D checks headline numbers against the records. A record free to
+change afterwards makes that check meaningless.
+
+Deliberately **not** locked, being outputs of this run: the manifest, the lock document, the lock
+verdict, and the evidence-lock record.
+
+## 1.1 How an artifact is hashed
+
+```text
+BINARY  .npz .npy        raw bytes
+TEXT    everything else  canonical-LF: CRLF normalised to LF before hashing
+```
+
+Raw bytes are the wrong unit for text here and this is not a stylistic choice. The repository runs
+`core.autocrlf=true`, so a text file's bytes in the working tree are not its bytes in the
+repository — measured: 28 of 53 tracked artifacts differ between the two. A lock built on raw text
+bytes is a property of one working tree on one platform, and would refuse for **everyone who cloned
+the repository**, which is precisely the audience a lock exists to serve.
+
+Canonical-LF is the same rule this project already uses to give a frozen protocol one identity on
+every platform. Binary stays raw: normalising a float array would mangle any `0D 0A` byte pair that
+happens to fall inside the data.
+
+The lock must record which rule it applied to each artifact, so nobody has to guess later.
 
 ## 1.1 The lock digest
 
@@ -134,11 +170,23 @@ headline number in them is therefore checked against the machine-readable source
 
 ```text
 delta_RANK, its CI, R(W1), R(W4), R(W5), the null p95, the permutation count,
-p_perm, delta_TOP1, the eligible-clone count, the adversarial-refusal count
+p_perm, delta_TOP1, the eligible-clone count, the adversarial-refusal count,
+the design-column count, and both verdict strings
 ```
 
 Each must appear in the record **formatted exactly as the JSON holds it**. A transcription slip is
 a `NUMBERS_DISAGREE` refusal.
+
+## 4.1 Pinned to meaning, not to a substring
+
+A bare substring check is satisfied by an accident. `"56"` occurs inside `SHA-256` and inside
+`frozen_24F_sha256`, so a record that never states the refusal count would still pass. Every number
+is therefore matched by a pattern that carries the words around it — `eligible clones 892`,
+`56 / 56 adversarial`, `design columns 309 =`.
+
+And the patterns are themselves controlled: each value is perturbed by one digit and the pattern
+must then find **nothing**. A pattern keyed to the surrounding words alone would keep matching and
+would prove nothing about the number.
 
 ---
 

@@ -60,6 +60,30 @@ def canonical_lf_sha256(p: Path) -> str:
     return hashlib.sha256(Path(p).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
+# Binary artifacts are hashed raw. Normalising a float array would mangle any 0x0D0A byte pair
+# that happens to fall inside the data.
+BINARY_SUFFIXES = {".npz", ".npy"}
+
+
+def artifact_sha256(rel: str) -> tuple[str, str]:
+    """Hash an artifact the way the LOCK must hash it, and say which way that was.
+
+    Raw bytes are the wrong unit here and the first version of this lock got it wrong. The repo
+    runs `core.autocrlf=true`, so a text file's bytes in the working tree are not its bytes in the
+    repository: 28 of the 53 tracked artifacts differed between the two. A lock built on raw text
+    bytes is a property of one working tree on one platform -- it would refuse for everyone who
+    cloned the repository, which is precisely the audience a lock exists to serve.
+
+    Text is therefore hashed canonical-LF, the same rule this project already uses to give a frozen
+    protocol one identity on every platform. Verified: under this rule the working tree and the
+    committed blob agree for all 53, against 25 under raw hashing.
+    """
+    p = ROOT / rel
+    if p.suffix in BINARY_SUFFIXES:
+        return sha256_file(p), "raw"
+    return canonical_lf_sha256(p), "canonical-lf"
+
+
 def module_sha256() -> str:
     return hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 
@@ -201,6 +225,32 @@ def _git_ignored(rel: str) -> bool:
     return r.returncode == 0
 
 
+def _clone_portability(entries: dict) -> tuple[bool, list[dict]]:
+    """Compare each committed artifact's locked hash against the bytes git actually stores.
+
+    Artifacts with uncommitted edits are skipped and reported: `git show HEAD:` returns the older
+    version for those, so a mismatch there says nothing about portability. Everything else must
+    agree, or a clone cannot verify this lock.
+    """
+    import subprocess
+    modified = set(subprocess.run(["git", "diff", "--name-only", "HEAD"], cwd=str(ROOT),
+                                  capture_output=True, text=True).stdout.split("\n"))
+    drifted, skipped = [], []
+    for rel, e in entries.items():
+        if e["git_ignored"] or not e["git_tracked"]:
+            continue
+        if rel in modified:
+            skipped.append(rel)
+            continue
+        blob = subprocess.run(["git", "show", f"HEAD:{rel}"], cwd=str(ROOT),
+                              capture_output=True).stdout
+        raw = Path(rel).suffix in BINARY_SUFFIXES
+        digest = hashlib.sha256(blob if raw else blob.replace(b"\r\n", b"\n")).hexdigest()
+        if digest != e["sha256"]:
+            drifted.append({"path": rel, "locked": e["sha256"][:16], "in_git": digest[:16]})
+    return not drifted, {"drifted": drifted, "skipped_uncommitted_edits": sorted(skipped)}
+
+
 def build_manifest() -> dict:
     t0 = time.perf_counter()
     entries, missing = {}, []
@@ -210,7 +260,8 @@ def build_manifest() -> dict:
             if not p.exists():
                 missing.append(rel)
                 continue
-            entries[rel] = {"class": cls, "sha256": sha256_file(p),
+            digest, how = artifact_sha256(rel)
+            entries[rel] = {"class": cls, "sha256": digest, "hashed": how,
                             "bytes": p.stat().st_size, "git_tracked": _git_tracked(rel),
                             "git_ignored": _git_ignored(rel)}
 
@@ -219,10 +270,18 @@ def build_manifest() -> dict:
 
     ignored = sorted(k for k, v in entries.items() if v["git_ignored"])
     pending = sorted(k for k, v in entries.items() if not v["git_tracked"] and not v["git_ignored"])
+
+    # ---- can anyone else verify this lock? --------------------------------------------------- #
+    #
+    # The audience for a lock is someone who did not build it, on a machine that is not this one.
+    # So the locked hash of every committed artifact must equal the hash of what git actually
+    # stores -- otherwise the lock is a property of one working tree and refuses for every clone.
+    portable, drifted = _clone_portability(entries)
     checks = {
         "every inventoried artifact exists": not missing,
         "the only artifact git will never carry is the one §5 names":
             ignored == ["results/stage24/stage24_w5_artifact.npz"],
+        "every committed artifact hashes the same from a fresh clone": portable,
     }
     return write_json(MANIFEST_JSON, {
         "stage": "EL-A",
@@ -233,6 +292,12 @@ def build_manifest() -> dict:
         "artifacts": entries,
         "missing": missing,
         "git_ignored": ignored,
+        "clone_portability": drifted,
+        "hashing_rule": {"binary": sorted(BINARY_SUFFIXES), "binary_hashed": "raw bytes",
+                         "text_hashed": "canonical-LF (CRLF normalised to LF)",
+                         "why": "core.autocrlf=true means a text file's working-tree bytes are "
+                                "not its repository bytes; a raw-byte lock would refuse for "
+                                "everyone who cloned the repo"},
         "pending_first_commit": pending,
         "pending_note": "Reported, not gating. These are new files awaiting their first commit -- "
                         "the lock digest covers content, not commit state. They are committed in "
@@ -298,13 +363,21 @@ def chain_of_custody() -> dict:
 # EL-C — the verifier must be able to refuse (plan §3)
 # =============================================================================================== #
 def verify_against(manifest: dict, root: Path) -> dict:
-    """Re-hash every manifest entry under `root`. This is the thing that refuses."""
+    """Re-hash every manifest entry under `root`. This is the thing that refuses.
+
+    Hashes by the same rule the manifest recorded -- raw for binary, canonical-LF for text -- so a
+    checkout with different line endings verifies clean instead of reporting 28 false moves.
+    """
     moved, missing = [], []
     for rel, e in manifest["artifacts"].items():
         p = root / rel
         if not p.exists():
             missing.append(rel)
-        elif sha256_file(p) != e["sha256"]:
+            continue
+        raw = p.read_bytes()
+        digest = hashlib.sha256(raw if p.suffix in BINARY_SUFFIXES
+                                else raw.replace(b"\r\n", b"\n")).hexdigest()
+        if digest != e["sha256"]:
             moved.append(rel)
     return {"clean": not moved and not missing, "moved": sorted(moved),
             "missing": sorted(missing), "n_checked": len(manifest["artifacts"])}
@@ -324,7 +397,12 @@ def negative_controls(manifest: dict) -> dict:
 
         victim = "results/stage24/stage24_oof_for_stage25.csv"
         raw = bytearray((tmp / victim).read_bytes())
-        raw[len(raw) // 2] ^= 0x01              # one bit, in one byte, in the middle
+        # one bit, in one byte, on a byte that is not part of a line ending -- so the mutation
+        # survives the canonical-LF normalisation the verifier applies to text
+        i = len(raw) // 2
+        while raw[i] in (0x0D, 0x0A):
+            i += 1
+        raw[i] ^= 0x01
         (tmp / victim).write_bytes(bytes(raw))
         moved = verify_against(manifest, tmp)
 
@@ -382,26 +460,54 @@ def lock_numbers() -> dict:
         "scope_verdict": v26["verdict"],
     }
 
-    # each entry: (record file, the exact string that must appear in it)
+    # Each entry pins a number to the WORDS AROUND IT, not to a bare substring. A bare "56" is
+    # satisfied by `SHA-256` and by `frozen_24F_sha256`; the first version of this check used bare
+    # substrings and would have passed a record that never stated the refusal count at all. Every
+    # pattern below carries `{n}` exactly once, which is what the canary substitutes.
     r25 = (RECORDS / "stage_25_RECORD.md").read_text(encoding="utf-8")
     r26 = (RECORDS / "stage_26_RECORD.md").read_text(encoding="utf-8")
     expected = [
-        ("stage_25_RECORD.md", r25, f"{headline['delta_RANK']:+.6f}"),
-        ("stage_25_RECORD.md", r25, f"{headline['bootstrap_ci95'][0]:+.6f}"),
-        ("stage_25_RECORD.md", r25, f"{headline['bootstrap_ci95'][1]:+.6f}"),
-        ("stage_25_RECORD.md", r25, f"{headline['R_W1']:.6f}"),
-        ("stage_25_RECORD.md", r25, f"{headline['R_W4']:.6f}"),
-        ("stage_25_RECORD.md", r25, f"{headline['R_W5']:.6f}"),
-        ("stage_25_RECORD.md", r25, f"{headline['null_p95']:.6f}"),
-        ("stage_25_RECORD.md", r25, f"{headline['delta_TOP1']:+.6f}"),
-        ("stage_25_RECORD.md", r25, str(headline["eligible_clones"])),
-        ("stage_25_RECORD.md", r25, headline["ranking_verdict"]),
-        ("stage_26_RECORD.md", r26, str(headline["adversarial_strings_refused"])),
-        ("stage_26_RECORD.md", r26, str(headline["design_columns"])),
-        ("stage_26_RECORD.md", r26, headline["scope_verdict"]),
+        ("stage_25_RECORD.md", r25, "delta_RANK",
+         r"delta_RANK\s+@@", f"{headline['delta_RANK']:+.6f}"),
+        ("stage_25_RECORD.md", r25, "bootstrap CI95 lower",
+         r"CI95\s+\[@@,", f"{headline['bootstrap_ci95'][0]:+.6f}"),
+        ("stage_25_RECORD.md", r25, "bootstrap CI95 upper",
+         r"CI95\s+\[[^\]]+,\s*@@\]", f"{headline['bootstrap_ci95'][1]:+.6f}"),
+        ("stage_25_RECORD.md", r25, "R(W1)", r"R\(W1\)\s+@@", f"{headline['R_W1']:.6f}"),
+        ("stage_25_RECORD.md", r25, "R(W4)", r"R\(W4\)\s+@@", f"{headline['R_W4']:.6f}"),
+        ("stage_25_RECORD.md", r25, "R(W5)", r"R\(W5\)\s+@@", f"{headline['R_W5']:.6f}"),
+        ("stage_25_RECORD.md", r25, "null p95",
+         r"null p95\s+@@", f"{headline['null_p95']:.6f}"),
+        ("stage_25_RECORD.md", r25, "delta_TOP1",
+         r"delta_TOP1\s+@@", f"{headline['delta_TOP1']:+.6f}"),
+        ("stage_25_RECORD.md", r25, "eligible clones",
+         r"eligible clones\s+@@\b", str(headline["eligible_clones"])),
+        ("stage_25_RECORD.md", r25, "permutation draws",
+         r"@@\s*/\s*1000", str(headline["n_null_ge_observed"])),
+        ("stage_25_RECORD.md", r25, "ranking verdict",
+         r"@@", headline["ranking_verdict"]),
+        ("stage_26_RECORD.md", r26, "adversarial refusals",
+         r"@@\s*/\s*@@ adversarial", str(headline["adversarial_strings_refused"])),
+        ("stage_26_RECORD.md", r26, "design columns",
+         r"design columns\s+@@\s*=", str(headline["design_columns"])),
+        ("stage_26_RECORD.md", r26, "scope verdict", r"@@", headline["scope_verdict"]),
     ]
-    disagreements = [{"record": f, "expected_substring": s}
-                     for f, text, s in expected if s not in text]
+
+    def _hit(text: str, tmpl: str, value: str) -> bool:
+        return re.search(tmpl.replace("@@", re.escape(value)), text) is not None
+
+    disagreements = [{"record": f, "label": label, "expected": val, "pattern": tmpl}
+                     for f, text, label, tmpl, val in expected if not _hit(text, tmpl, val)]
+
+    # Canary: perturb each value and confirm the pattern then finds nothing. A check keyed to the
+    # surrounding words alone would keep matching and would prove nothing about the number.
+    def _perturb(v: str) -> str:
+        if v and v[-1].isdigit():
+            return v[:-1] + ("8" if v[-1] != "8" else "7")
+        return v + "_X"
+
+    canary_failed = [label for f, text, label, tmpl, val in expected
+                     if _hit(text, tmpl, _perturb(val))]
 
     # p_perm is the floor of a 1,000-draw test and must never be reported as a point estimate
     floor_ok = (abs(headline["p_perm"] - (1 + headline["n_null_ge_observed"])
@@ -410,6 +516,7 @@ def lock_numbers() -> dict:
 
     checks = {
         "every headline number in the records matches its JSON source": not disagreements,
+        "each number is pinned to its meaning, not to a bare substring": not canary_failed,
         "p_perm equals the finite-sample formula exactly": floor_ok,
         "p_perm is reported as a floor, not a point estimate": reported_as_floor,
         "the ranking verdict is one of the two frozen values":
@@ -420,7 +527,9 @@ def lock_numbers() -> dict:
         "stage": "EL-D", "headline": headline,
         "records_checked": ["stage_25_RECORD.md", "stage_26_RECORD.md"],
         "substrings_checked": len(expected),
+        "patterns_checked": len(expected),
         "disagreements": disagreements,
+        "canary_patterns_that_matched_a_wrong_value": canary_failed,
         "checks": checks, "all_passed": all(checks.values()),
         "runtime_seconds": round(time.perf_counter() - t0, 3),
     })

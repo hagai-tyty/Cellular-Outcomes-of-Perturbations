@@ -35,17 +35,21 @@ covers. Live verification after the run: 54 checked, 0 moved, 0 missing.
 ```text
   GEN1_EVIDENCE_LOCKED
 
-  lock digest   99c35793162aaa0e02f681cfaf4d9488492bb712a567e29a061d4886287489e0
+  lock digest   455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9
   artifacts     54
-  runtime       6.0 s
+  runtime       11.8 s
 
-  EL-A  inventory              54 artifacts across 9 classes
+  EL-A  inventory              54 artifacts across 9 classes, portable to a clone
   EL-B  chain of custody       3 chains, closed
   EL-C  verifier can refuse    3 negative controls, all fire
-  EL-D  numbers                13 substrings, 0 disagreements
+  EL-D  numbers                14 patterns, 0 disagreements, canary live
   EL-F  claim lock input       9 forbidden claims carried verbatim from the frozen plan
   --    live verification      54 checked, clean
 ```
+
+The first lock issued was `99c35793...`, then `6c8420b5...` and `6ef9d81c...` as completeness gaps
+and the self-audit below closed. Each is a real lock over a different set of bytes; the last one is
+the one that ships. Earlier digests are recorded rather than erased.
 
 ### What is locked
 
@@ -170,8 +174,52 @@ raw bytes — what a file manifest must do. The frozen protocol identity `8da16f
 every platform. The plan is `59f22e9a...` as a file and `8da16fca...` as a protocol; both are
 checked, and the lock document now says so rather than leaving a reader to reconcile them.
 
+---
+
+## Self-audit before the claim lock — four more findings
+
+**A. The lock was verifiable only on this machine.** This is the serious one, and it is the exact
+failure the lock exists to prevent, inverted.
+
+```text
+  the repo runs core.autocrlf=true
+  -> a text file's bytes in the working tree are NOT its bytes in the repository
+  -> measured: 28 of 53 tracked artifacts differed between the two
+  -> a clone on Linux, or on Windows with different settings, computes a different
+     digest and the lock REFUSES -- for everyone except me
+```
+
+The lock's whole audience is someone who did not build it, on a machine that is not this one, and
+for that audience the lock cried wolf universally. Fixed by hashing text **canonical-LF** and
+binary raw — the same rule this project already uses to give a frozen protocol one identity on
+every platform, and the rule `.gitattributes` had already written down for `results/**` for exactly
+this reason. Measured after the fix: **28 disagreements → 0**.
+
+This is now a **gate**, not something I check by hand. EL-A compares every committed artifact's
+locked hash against the bytes git actually stores, skipping and reporting files with uncommitted
+edits. Only two artifacts were skipped at lock time — this executor and its plan, both being edited
+in this pass.
+
+**B. A number could be satisfied by an accident.** EL-D used bare substrings, and `"56"` occurs
+nine times in the Stage-26 record — inside `SHA-256`, inside `frozen_24F_sha256`. A record that
+never stated the refusal count would have passed. Every number is now pinned to the words around it
+(`eligible clones 892`, `56 / 56 adversarial`, `design columns 309 =`), and each pattern is
+controlled by perturbing its value by one digit and requiring the pattern to then find **nothing**.
+Matching the right value and rejecting a wrong one, together, is what makes it a live check.
+
+**C. The canary placeholder was regex-escaped, so it never fired.** The templates were written as
+`\{n\}` — an escaped brace — while the substitution looked for `{n}`. Nothing was ever replaced, so
+all fourteen checks failed at once, including ones that trivially hold. Caught on the first run
+precisely because the failure was total; a placeholder that half-worked would have been far worse.
+The placeholder is now `@@`, which has no regex meaning of its own.
+
+**D. The plan said seven classes; the code had nine.** `supporting_role_A` and `records` were added
+to the module during the completeness pass below without going back to §1. Same class of drift as
+Stage 26's finding A. The plan now lists all nine, states which artifacts are deliberately excluded,
+and carries the hashing rule as §1.1 and the number-pinning rule as §4.1.
+
 ## Tests
-- 22 evidence-lock contracts, 0 skipped
+- 27 evidence-lock contracts, 0 skipped (22 before the audit; 5 added for findings A-C)
 - Stage-25, Stage-26 and the path-convention suites re-run green
 
 ---
@@ -190,6 +238,8 @@ to catch a one-bit change, a deleted file, and an edit to itself.
   whether they support the claim — that was Stage 25's job, under its own preregistration.
 - **that the package is self-contained.** It is not: the 44 MB model artifact and the raw
   sequencing data are both outside the repository, and both are named above.
+- **that a clone reproduces the analysis.** The lock proves a clone can reproduce the *hashes*.
+  Re-running Stage 25's 1,000-draw null on another machine is a separate claim this does not make.
 - **that the records are correct.** EL-D checks that the numbers in them match their JSON sources.
   It does not check that the prose around those numbers is right.
 
