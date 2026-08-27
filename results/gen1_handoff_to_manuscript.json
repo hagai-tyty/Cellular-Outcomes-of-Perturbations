@@ -1,4 +1,5 @@
 {
+  "claim_digest": "23ea00b808d1ae6a5f3b19e186a9fd0b327ba4b500c5c2a65d4c254142b431ab",
   "from_stage": "GEN-1 CLAIM LOCK",
   "to_stage": "MANUSCRIPT + REPRODUCIBILITY PACKAGE",
   "verdict": "GEN1_CLAIMS_LOCKED",
@@ -9,9 +10,10 @@
     "carry each allowed claim with its mandatory qualifiers; a claim quoted without them is a claim this lock did not grant",
     "report p_perm as p < 0.001 (0 of 1,000), never as a point estimate",
     "state that independent biological replication is Generation 2, not a Gen-1 gate",
-    "scan any new abstract-level sentence against the same nine forbidden claims"
+    "scan any new abstract-level sentence against the same nine forbidden claims",
+    "bind to BOTH digests: the evidence digest for what the claims are made of, and the claim digest for what may be said about it"
   ],
   "the_ceiling_may_be_lowered_not_raised": true,
   "no_claim_lock_outcome_reopens_an_earlier_stage": true,
-  "module_sha256": "eedb050830d44602926f84d6a413ae78be050c8d2bb1fc1ff9d8b5a46cb7afe9"
+  "module_sha256": "ad15b870841b916eedffda5df12a842fc7e20d80418a62774e4a0b6e2011755e"
 }

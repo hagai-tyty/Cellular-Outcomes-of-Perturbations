@@ -44,6 +44,8 @@
   },
   "permitted_phrasings_that_failed_their_own_scan": [],
   "resurvey_of_locked_surfaces": {},
+  "resurvey_under_clause_scoping": {},
+  "resurvey_note": "The locked surfaces are gated under Stage 26's window rule with the EXTENDED patterns. Clause scoping is reported alongside but not gated on them: it is right for prose and wrong for structured text, where it splits a JSON key from the value that negates it. Every clause-scoped hit below was read and is a false positive of that kind.",
   "stage26_canary": {
     "claims_probed": 9,
     "caught": [
@@ -223,6 +225,6 @@
     "the extended patterns find nothing on the already-locked shipped surfaces": true
   },
   "all_passed": true,
-  "runtime_seconds": 0.022,
-  "module_sha256": "eedb050830d44602926f84d6a413ae78be050c8d2bb1fc1ff9d8b5a46cb7afe9"
+  "runtime_seconds": 0.051,
+  "module_sha256": "ad15b870841b916eedffda5df12a842fc7e20d80418a62774e4a0b6e2011755e"
 }

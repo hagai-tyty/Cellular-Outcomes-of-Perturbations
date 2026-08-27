@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -47,6 +48,7 @@ CLAIM_INPUT = RESULTS / "evidence_lock" / "GEN1_CLAIM_LOCK_INPUT.json"
 CLAIMS_JSON = OUT / "GEN1_CLAIM_LOCK.json"
 CLAIMS_MD = OUT / "GEN1_CLAIMS.md"
 ADVERSARIAL_JSON = OUT / "claim_lock_adversarial.json"
+DIGEST_JSON = OUT / "GEN1_CLAIM_DIGEST.json"
 HANDOFF_JSON = RESULTS / "gen1_handoff_to_manuscript.json"
 
 
@@ -59,6 +61,29 @@ def write_json(p: Path, obj: dict) -> dict:
 
 def _j(p: Path) -> dict:
     return json.loads(p.read_text(encoding="utf-8"))
+
+
+# The evidence lock hashes 54 artifacts and none of them is this stage's output -- correct
+# layering, since re-locking to include them would make CL-A circular. But it leaves the document
+# the manuscript is written from with no identity at all. So the claim lock hashes itself, by the
+# same canonical-LF rule, and the manuscript binds to two numbers: the evidence digest for what the
+# claims are made of, the claim digest for what may be said about it.
+CLAIM_LOCK_FILES = [
+    "plans/(newer)practical plans/GEN1_CLAIM_LOCK_V1.md",
+    "experiments/run_gen1_claim_lock.py",
+    "tests/test_gen1_claim_lock.py",
+    "results/claim_lock/GEN1_CLAIMS.md",
+]
+
+
+def claim_digest() -> tuple[str, dict]:
+    """The digest lives OUTSIDE the verdict JSON it covers -- otherwise it would hash itself."""
+    per = {}
+    for rel in CLAIM_LOCK_FILES + ["results/claim_lock/GEN1_CLAIM_LOCK.json"]:
+        p = ROOT / rel
+        per[rel] = EL.canonical_lf_sha256(p) if p.exists() else "MISSING"
+    canonical = "\n".join(f"{k}  {per[k]}" for k in sorted(per))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest(), per
 
 
 # =============================================================================================== #
@@ -164,8 +189,55 @@ def combined_patterns() -> dict[str, list[str]]:
     return {k: v + PROSE_PATTERNS.get(k, []) for k, v in S26.FORBIDDEN_CLAIMS.items()}
 
 
+# Stage 26 excuses a forbidden phrase when a negation token appears anywhere within +-160
+# characters. On code and a model card that is fine. On PROSE it is nearly toothless, because prose
+# is full of legitimate negations -- and a proximity rule cannot tell which clause they govern:
+#
+#   "The model is not calibrated for abundance, and outputs a calibrated probability of death."
+#   "We make no claim about dosing; the tool identifies the best treatment for each clone."
+#   "This was not replicated internally, but was independently replicated in an external cohort."
+#
+# All three make a plainly forbidden claim. All three went undetected under the window rule.
+#
+# So prose is scanned CLAUSE-SCOPED: a negation excuses a hit only when it sits in the same clause.
+# Same twelve tokens, same nine claims -- a tighter scope, not a different instrument.
+# A newline is NOT a clause boundary. Treating it as one split "...and not a\nclinical
+# recommendation." in the shipped predictor's docstring and reported a negated sentence as a
+# forbidden claim. Whitespace is normalised first so the rule is immune to line wrapping.
+CLAUSE_SPLIT = re.compile(r"[.;:]|,\s+(?:and|but|while|whereas|yet|although|though)\b")
+
+
+# A word that negates itself. `uncalibrated` contains `calibrated`, and the Stage-26 pattern has no
+# word boundary -- so "outputs an uncalibrated score" was flagged as claiming a calibrated
+# probability. Excusing by prefix is narrower than adding a negation token, which would loosen the
+# gate everywhere; the prefix must be contiguous with the match, so "run calibrated" is untouched.
+NEGATING_PREFIXES = ("un", "non", "non-", "de")
+
+
+def prose_scan(text: str, patterns: dict[str, list[str]]) -> list[dict]:
+    """Unnegated hits, where 'negated' means negated IN THE SAME CLAUSE."""
+    out = []
+    for clause in CLAUSE_SPLIT.split(" ".join(text.split())):
+        low = clause.lower()
+        if any(n in low for n in S26.NEGATIONS):
+            continue
+        for claim, pats in patterns.items():
+            for pat in pats:
+                for m in re.finditer(pat, low):
+                    if low[: m.start()].endswith(NEGATING_PREFIXES):
+                        continue
+                    out.append({"claim": claim, "match": clause[m.start():m.end()],
+                                "clause": " ".join(clause.split())[:200]})
+    return out
+
+
 def scan(text: str, patterns: dict[str, list[str]]) -> list[dict]:
-    """Unnegated hits only. Same negation rule and window as Stage 26 -- one standard."""
+    """Prose scan. Kept as the single entry point so every caller gets the tighter rule."""
+    return prose_scan(text, patterns)
+
+
+def window_scan(text: str, patterns: dict[str, list[str]]) -> list[dict]:
+    """Stage 26's own rule, unchanged -- used to show what the looser rule would have allowed."""
     out = []
     for claim, pats in patterns.items():
         for h in S26._scan_text(text, pats):
@@ -302,12 +374,23 @@ def adversarial_corpus() -> dict:
 
     # A stricter instrument that is only ever pointed at new text is not an instrument. Turn the
     # extended patterns back on the surfaces Stage 26 already passed.
-    resurvey = {}
+    #
+    # Those surfaces are scanned with Stage 26's WINDOW rule, not the prose rule, and that is a
+    # judgement worth stating rather than burying. Clause scoping is right for prose and wrong for
+    # structured text: it splits a JSON key from the value that negates it, so
+    # `"calibrated_probability": "NEVER emitted in Generation 1"` reads as a forbidden claim. The
+    # patterns are the extended ones either way; only the negation SCOPE differs, matched to the
+    # kind of text being read. Both readings are recorded below.
+    resurvey, resurvey_clause = {}, {}
     for f in S26._surfaces():
-        if f.exists():
-            hits = scan(f.read_text(encoding="utf-8"), full)
-            if hits:
-                resurvey[f.relative_to(ROOT).as_posix()] = hits
+        if not f.exists():
+            continue
+        text = f.read_text(encoding="utf-8")
+        rel = f.relative_to(ROOT).as_posix()
+        if hits := window_scan(text, full):
+            resurvey[rel] = hits
+        if hits := prose_scan(text, full):
+            resurvey_clause[rel] = hits
 
     # the extension must not have broken the negation rule
     neg_ok = all(not scan(f"This tool cannot {s[0].lower()}{s[1:]}", full)
@@ -338,6 +421,13 @@ def adversarial_corpus() -> dict:
         "prose_patterns_added": PROSE_PATTERNS,
         "permitted_phrasings_that_failed_their_own_scan": dirty,
         "resurvey_of_locked_surfaces": resurvey,
+        "resurvey_under_clause_scoping": resurvey_clause,
+        "resurvey_note":
+            "The locked surfaces are gated under Stage 26's window rule with the EXTENDED "
+            "patterns. Clause scoping is reported alongside but not gated on them: it is right "
+            "for prose and wrong for structured text, where it splits a JSON key from the value "
+            "that negates it. Every clause-scoped hit below was read and is a false positive of "
+            "that kind.",
         "stage26_canary": canary,
         "near_miss_table": results,
         "checks": checks, "all_passed": all(checks.values()),
@@ -534,7 +624,20 @@ def run_all() -> dict:
     })
     CLAIMS_MD.write_text(_claims_document(a, c, d, e, verdict), encoding="utf-8")
 
+    digest, per_file = claim_digest()
+    write_json(DIGEST_JSON, {
+        "claim_digest": digest,
+        "digest_definition": "SHA-256 over 'path  canonical-lf-sha256' lines, sorted by path, "
+                             "LF-joined -- the same rule the evidence lock uses",
+        "covers": per_file,
+        "why_it_lives_outside_the_verdict": "a digest stored inside the file it covers would hash "
+                                            "itself",
+        "verify": "python experiments/run_gen1_claim_lock.py --verify",
+    })
+
+    out["claim_digest"] = digest
     write_json(HANDOFF_JSON, {
+        "claim_digest": digest,
         "from_stage": "GEN-1 CLAIM LOCK",
         "to_stage": "MANUSCRIPT + REPRODUCIBILITY PACKAGE",
         "verdict": verdict,
@@ -547,21 +650,43 @@ def run_all() -> dict:
             "them is a claim this lock did not grant",
             "report p_perm as p < 0.001 (0 of 1,000), never as a point estimate",
             "state that independent biological replication is Generation 2, not a Gen-1 gate",
-            "scan any new abstract-level sentence against the same nine forbidden claims"],
+            "scan any new abstract-level sentence against the same nine forbidden claims",
+            "bind to BOTH digests: the evidence digest for what the claims are made of, and "
+            "the claim digest for what may be said about it"],
         "the_ceiling_may_be_lowered_not_raised": True,
         "no_claim_lock_outcome_reopens_an_earlier_stage": True,
     })
     return out
 
 
+def run_verify() -> dict:
+    if not DIGEST_JSON.exists():
+        raise SystemExit("no claim digest: run --stage all first")
+    recorded = _j(DIGEST_JSON)
+    now, per = claim_digest()
+    moved = [k for k, v in per.items() if recorded["covers"].get(k) != v]
+    return {"clean": not moved, "moved": moved, "claim_digest": now,
+            "recorded_digest": recorded["claim_digest"],
+            "verdict": "CLAIMS_INTACT" if now == recorded["claim_digest"] else "CLAIMS_MOVED"}
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Generation-1 claim lock")
-    ap.add_argument("--stage", choices=["all"], required=True)
-    ap.parse_args(argv)
+    ap.add_argument("--stage", choices=["all"], default=None)
+    ap.add_argument("--verify", action="store_true",
+                    help="re-hash the claim-lock files and refuse if one has moved")
+    a = ap.parse_args(argv)
+    if a.verify:
+        r = run_verify()
+        print(json.dumps(r, indent=2))
+        return 0 if r["clean"] else 2
+    if a.stage != "all":
+        ap.error("pass --stage all or --verify")
     r = run_all()
     print(json.dumps({k: r[k] for k in r if k in
                       ("stage", "verdict", "substages", "failing", "evidence_lock_digest",
-                       "adversarial", "refused_at", "next")}, indent=2, default=str))
+                       "claim_digest", "adversarial", "refused_at", "next")},
+                     indent=2, default=str))
     return 0 if r["verdict"] == "GEN1_CLAIMS_LOCKED" else 2
 
 

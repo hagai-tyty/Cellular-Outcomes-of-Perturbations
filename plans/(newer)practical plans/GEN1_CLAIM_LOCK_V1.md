@@ -119,22 +119,25 @@ Every one must be caught by the same scanner Stage 26 used on the shipped tool �
 claim patterns, the same twelve negation tokens, the same canary. Reusing the instrument is
 deliberate: the claim text and the tool are held to one standard, not two.
 
+**Fifteen sentences, verbatim.** Not paraphrases: the executor asserts that every sentence it runs
+appears in this list exactly, so the corpus cannot drift from the plan that declared it.
+
 ```text
-GENERALISATION   "the model generalises to new treatments"
-                 "our approach works for any drug"
-CROSS-SYSTEM     "we predict outcomes in cancer cells"
-                 "validated on other cell lines"
-                 "predicts patient response"
-CLINICAL         "identifies the best treatment for each clone"
-                 "supports clinical decision-making"
-                 "a therapeutic recommendation tool"
-CAUSAL           "we estimate the causal effect of each treatment"
-CALIBRATION      "outputs a calibrated probability of death"
-REPLICATION      "independently replicated in an external cohort"
-UNIFORMITY       "the interaction helps uniformly across all six conditions"
-ROLE A           "confirmed in a second system"
-                 "Rewind confirms the result"
-SINGLE CELL      "scores a single cell"
+GENERALISATION   "The model generalises to new treatments."
+GENERALISATION   "Our approach works for any drug."
+CROSS_SYSTEM     "We predict outcomes in cancer cells."
+CROSS_SYSTEM     "Validated on other cell lines."
+CROSS_SYSTEM     "The model predicts patient response."
+CLINICAL         "The tool identifies the best treatment for each clone."
+CLINICAL         "This supports clinical decision-making."
+CLINICAL         "A therapeutic recommendation tool for melanoma."
+CAUSAL           "We estimate the causal effect of each treatment."
+CALIBRATION      "The model outputs a calibrated probability of death."
+REPLICATION      "Independently replicated in an external cohort."
+UNIFORMITY       "The interaction helps uniformly across all six conditions."
+ROLE_A           "The finding was confirmed in a second system."
+ROLE_A           "Rewind confirms the result."
+SINGLE_CELL      "The tool scores a single cell."
 ```
 
 Each is declared here before it is run, so the corpus cannot be trimmed after seeing which entries
@@ -182,6 +185,43 @@ TURNED BACK ON THE OLD TEXT  the extended set is re-run over every surface Stage
 The extension must also still refuse to fire on a negation — checked against every sentence in the
 corpus, negated.
 
+## 4.3 Negation is scoped to the clause, not to a window
+
+Stage 26 excuses a forbidden phrase when a negation token appears anywhere within ±160 characters.
+On code and a model card that is fine. On prose it is close to toothless, because prose is full of
+legitimate negations and proximity cannot tell which clause they govern:
+
+```text
+  "The model is not calibrated for abundance, and outputs a calibrated probability of death."
+  "We make no claim about dosing; the tool identifies the best treatment for each clone."
+  "This was not replicated internally, but was independently replicated in an external cohort."
+```
+
+Each makes a plainly forbidden claim. **All three pass the window rule.**
+
+Prose is therefore scanned clause-scoped: a negation excuses a hit only in the same clause, split
+on `. ; :` and on a comma before a coordinating conjunction. Same twelve tokens, same nine claims —
+a tighter scope, not a different instrument.
+
+```text
+WHITESPACE IS NORMALISED FIRST
+  a newline is not a clause boundary. Treating it as one split "...and not a /
+  clinical recommendation." in the shipped predictor's docstring and reported a
+  negated sentence as a forbidden claim.
+
+A WORD MAY NEGATE ITSELF
+  `uncalibrated` contains `calibrated`, and the Stage-26 pattern has no word
+  boundary. A match immediately preceded by un-/non-/de- is excused. The prefix
+  must be contiguous, so "run calibrated" is untouched.
+
+STRUCTURED TEXT KEEPS THE WINDOW RULE
+  clause scoping is right for prose and wrong for JSON, where it splits a key from
+  the value that negates it: `"calibrated_probability": "NEVER emitted"`. The locked
+  surfaces are gated with the extended patterns under Stage 26's window rule, and the
+  clause-scoped reading is reported beside it. Only the negation SCOPE differs, matched
+  to the kind of text being read.
+```
+
 ---
 
 # 5. CL-E — the abstract-level statement
@@ -192,6 +232,27 @@ clean.
 
 This is a demonstration, not a mandate. The manuscript may write its own abstract; it may not write
 one this instrument would refuse.
+
+---
+
+# 5.1 The claims must have an identity of their own
+
+The evidence lock hashes 54 artifacts, and **none of them is this stage's output**. That is the
+correct layering — the claim lock is downstream, and re-locking to include it would make CL-A
+circular, since CL-A pins the evidence digest. But it leaves the document the manuscript is
+actually written from with no identity at all: it could change and nothing would notice, which is
+the exact failure the layer below exists to prevent.
+
+So this stage computes its own digest, by the same canonical-LF rule, over the five files that
+constitute it:
+
+```text
+  the plan, the executor, the contracts, the claims document, the verdict JSON
+  -> claim_digest, carried in the verdict and in the handoff to the manuscript
+```
+
+`--verify` re-checks it. The manuscript binds to two numbers: the evidence digest for what the
+claims are made of, and the claim digest for what may be said about it.
 
 ---
 

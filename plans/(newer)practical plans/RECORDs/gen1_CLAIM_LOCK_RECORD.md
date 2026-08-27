@@ -36,11 +36,15 @@ verifies clean over all 54 artifacts, before and after.
   GEN1_CLAIMS_LOCKED
 
   evidence lock digest   455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9
+  claim digest           23ea00b808d1ae6a5f3b19e186a9fd0b327ba4b500c5c2a65d4c254142b431ab
   allowed claims          3    each bound to its evidence and its mandatory qualifiers
   forbidden claims        9    verbatim from §3.5, parsed from the plan not from a copy
   adversarial sentences  15 of 15 caught
   worked abstract         passes the same instrument, all qualifiers present
 ```
+
+The manuscript binds to **two** numbers: the evidence digest for what the claims are made of, and
+the claim digest for what may be said about it. Both have a `--verify`.
 
 ### The three allowed claims
 
@@ -129,9 +133,73 @@ would teach one refused sentence to be swapped for another.
               audited ~0.45.
 ```
 
+---
+
+## Self-audit — three more findings, one of them the sharpest in the stage
+
+**A. The negation rule was proximity, not scope — and on prose it was close to toothless.**
+
+Stage 26 excuses a forbidden phrase when a negation token appears anywhere within ±160 characters.
+That is fine on code and a model card. Prose is full of legitimate negations, and proximity cannot
+tell which clause they govern. Three sentences, each making a plainly forbidden claim, each
+containing an unrelated negation:
+
+```text
+  "The model is not calibrated for abundance, and outputs a calibrated probability of death."
+  "We make no claim about dosing; the tool identifies the best treatment for each clone."
+  "This was not replicated internally, but was independently replicated in an external cohort."
+
+  all three PASS the window rule
+```
+
+This mattered directly: the worked abstract is full of disclaimers, so almost anything in it would
+have been excused. Prose is now scanned **clause-scoped** — a negation excuses a hit only in the
+same clause, split on `. ; :` and on a comma before a coordinating conjunction. Same twelve tokens,
+same nine claims; a tighter scope, not a different instrument.
+
+**The abstract was re-checked under the strict rule and came back with zero hits** — it was
+genuinely clean, not merely excused. The six forbidden phrases it contains ("unseen treatments",
+"other cell lines", "patients", "clinical", "calibrated", "Independent biological replication")
+each sit in a clause that negates them.
+
+Two refinements were needed, and both came from real false positives:
+
+```text
+  WHITESPACE IS NORMALISED FIRST
+    a newline is not a clause boundary. Treating it as one split "...and not a /
+    clinical recommendation." across a line wrap in the shipped predictor's docstring
+    and reported a correctly-negated sentence as a forbidden claim.
+
+  A WORD MAY NEGATE ITSELF
+    `uncalibrated` contains `calibrated` and the Stage-26 pattern has no word boundary,
+    so "outputs an uncalibrated score" read as claiming a calibrated probability. A
+    match immediately preceded by un-/non-/de- is excused. The prefix must be
+    contiguous, so "run calibrated" is still caught.
+
+  STRUCTURED TEXT KEEPS THE WINDOW RULE
+    clause scoping splits a JSON key from the value that negates it:
+    `"calibrated_probability": "NEVER emitted in Generation 1"` reads as a claim. The
+    locked surfaces are gated with the EXTENDED patterns under Stage 26's window rule,
+    and the clause-scoped reading is reported beside it. Only the negation scope
+    differs, matched to the kind of text being read. Both readings are now empty.
+```
+
+**B. The claims document had no identity at all.** The evidence lock hashes 54 artifacts and none
+of them is this stage's output — correct layering, since re-locking to include them would make CL-A
+circular. But it left the document the manuscript is actually written from free to change with
+nothing noticing: the exact failure the layer below exists to prevent, one level up. The claim lock
+now computes its own digest over its plan, executor, contracts, claims document and verdict, by the
+same canonical-LF rule, stored **outside** the verdict it covers so it does not hash itself.
+`--verify` re-checks it.
+
+**C. Plan/code drift, for the third time in this sequence.** The plan listed the adversarial corpus
+as abbreviated fragments; seven of the fifteen sentences did not appear verbatim. The old test
+spot-checked three and passed. The plan now carries all fifteen verbatim with their groups, and the
+test asserts every sentence appears in the plan exactly — counts and text, not samples.
+
 ## Tests
-- 21 claim-lock contracts, 0 skipped
-- the evidence lock re-verifies clean, 54 artifacts, before and after
+- 28 claim-lock contracts, 0 skipped (21 before the audit; 7 added for findings A-C)
+- the evidence lock re-verifies clean, 54 artifacts, before and after — digest unchanged
 
 ---
 
@@ -147,6 +215,10 @@ including three the previous stage's scanner missed.
 - **that the manuscript will be honest.** A scanner catches phrasings it has patterns for. A claim
   nobody thought to forbid is not covered by a corpus of the ones that were, and an abstract can
   mislead through emphasis, omission or figure choice without tripping a single pattern.
+- **that clause scoping is the right granularity.** It is tighter than a ±160-character window and
+  it caught three sentences the window let through, but it is still a lexical rule with no
+  understanding of scope. A forbidden claim spread across two clauses, or carried by implication
+  rather than by phrase, would pass.
 - **that the allowed claims are true.** That was Stage 25's job, under its own preregistration.
   This stage checks only that nothing was widened past it.
 - **that three claims are the right three.** They are the three the frozen plan permits. Whether

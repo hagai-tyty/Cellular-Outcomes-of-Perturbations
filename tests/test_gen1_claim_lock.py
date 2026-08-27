@@ -49,18 +49,26 @@ def mod():
 # The corpus is the point
 # ============================================================================================== #
 def test_the_adversarial_corpus_is_the_plan_s(mod):
-    """Declared before it was run, so it cannot be trimmed after seeing what the scanner misses."""
+    """Declared before it was run, so it cannot be trimmed after seeing what the scanner misses.
+
+    Every sentence, verbatim -- not three sampled fragments. An earlier version of this test
+    checked three and passed while seven of the fifteen appeared in the plan only as paraphrases.
+    """
     plan = PLAN.read_text(encoding="utf-8")
     groups = {g for g, _s, _p in mod.ADVERSARIAL_CLAIMS}
     assert groups == {"generalisation", "cross_system", "clinical", "causal", "calibration",
                       "replication", "uniformity", "role_a", "single_cell"}
-    assert len(mod.ADVERSARIAL_CLAIMS) >= 15
-    # the three that exposed the gap must be present in both the plan and the module
-    for fragment in ("cancer cells", "confirmed in a second system", "single cell"):
-        assert any(fragment in s for _g, s, _p in mod.ADVERSARIAL_CLAIMS), fragment
-        assert fragment in plan, fragment
+    assert len(mod.ADVERSARIAL_CLAIMS) == 15
+
+    for group, sentence, _p in mod.ADVERSARIAL_CLAIMS:
+        assert f'"{sentence}"' in plan, f"{sentence!r} is run but not declared verbatim"
+        assert group.upper() in plan, group
+
     sentences = [s for _g, s, _p in mod.ADVERSARIAL_CLAIMS]
     assert len(sentences) == len(set(sentences))
+    # the three that exposed the Stage-26 gap must still be in the corpus
+    for fragment in ("cancer cells", "confirmed in a second system", "scores a single cell"):
+        assert any(fragment in s for s in sentences), fragment
 
 
 @ran
@@ -137,6 +145,87 @@ def test_the_extension_still_refuses_to_fire_on_a_negation():
     a = _json(ADVERSARIAL)
     assert a["checks"]["the prose extension still does not fire on a negation"] is True
     assert a["stage26_canary"]["does_not_fire_on_a_negation"] is True
+
+
+# ============================================================================================== #
+# Negation is scoped to the clause, not to a window
+# ============================================================================================== #
+def test_a_negation_in_another_clause_does_not_excuse_a_forbidden_claim(mod):
+    """The window rule passes all three of these. Prose is full of legitimate negations, and
+    proximity cannot tell which clause they govern."""
+    full = mod.combined_patterns()
+    for sentence in (
+        "The model is not calibrated for abundance, and outputs a calibrated probability of death.",
+        "We make no claim about dosing; the tool identifies the best treatment for each clone.",
+        "This was not replicated internally, but was independently replicated in an external "
+        "cohort.",
+    ):
+        assert mod.window_scan(sentence, full) == [], "these are the cases the window rule misses"
+        assert mod.scan(sentence, full), f"clause scoping must catch: {sentence}"
+
+
+def test_a_negation_in_the_same_clause_still_excuses(mod):
+    full = mod.combined_patterns()
+    for sentence in ("This is not a clinical tool.",
+                     "The model makes no claim about unseen treatments or other cell lines.",
+                     "No independent biological replication was performed."):
+        assert mod.scan(sentence, full) == [], sentence
+
+
+def test_a_line_wrap_is_not_a_clause_boundary(mod):
+    """Treating \\n as a boundary orphaned "not a / clinical recommendation" in the shipped
+    predictor's docstring and reported a negated sentence as a forbidden claim."""
+    full = mod.combined_patterns()
+    wrapped = "The score is not a calibrated probability, not a measure of death, and not a\n" \
+              "clinical recommendation."
+    assert mod.scan(wrapped, full) == []
+
+
+def test_a_word_may_negate_itself(mod):
+    """`uncalibrated` contains `calibrated`, and the Stage-26 pattern has no word boundary."""
+    full = mod.combined_patterns()
+    assert mod.scan("The model outputs an uncalibrated score", full) == []
+    # but the prefix must be contiguous -- this must still be caught
+    assert mod.scan("We run calibrated probability estimates for each clone", full)
+
+
+# ============================================================================================== #
+# The claims must have an identity of their own
+# ============================================================================================== #
+@ran
+def test_the_claim_lock_has_its_own_digest():
+    """The evidence lock hashes 54 artifacts and none of them is this stage's output."""
+    d = _json(OUT / "GEN1_CLAIM_DIGEST.json")
+    assert len(d["claim_digest"]) == 64
+    assert set(d["covers"]) == {
+        "plans/(newer)practical plans/GEN1_CLAIM_LOCK_V1.md",
+        "experiments/run_gen1_claim_lock.py",
+        "tests/test_gen1_claim_lock.py",
+        "results/claim_lock/GEN1_CLAIMS.md",
+        "results/claim_lock/GEN1_CLAIM_LOCK.json"}
+    assert "MISSING" not in d["covers"].values()
+    assert _json(HANDOFF)["claim_digest"] == d["claim_digest"]
+
+
+@ran
+def test_the_claim_digest_is_reproducible_and_lives_outside_what_it_covers(mod):
+    import hashlib
+    d = _json(OUT / "GEN1_CLAIM_DIGEST.json")
+    canonical = "\n".join(f"{k}  {d['covers'][k]}" for k in sorted(d["covers"]))
+    assert hashlib.sha256(canonical.encode("utf-8")).hexdigest() == d["claim_digest"]
+    # the verdict JSON must NOT contain the digest that covers it
+    assert "claim_digest" not in CLAIMS_JSON_TEXT(), "a digest inside its own file hashes itself"
+
+
+def CLAIMS_JSON_TEXT() -> str:
+    return CLAIMS.read_text(encoding="utf-8")
+
+
+@ran
+def test_the_manuscript_binds_to_both_digests():
+    h = _json(HANDOFF)
+    assert h["evidence_lock_digest"] and h["claim_digest"]
+    assert "bind to BOTH digests" in " ".join(h["manuscript_must"])
 
 
 # ============================================================================================== #
