@@ -2,6 +2,24 @@
   "stage": "26A",
   "n_adversarial_strings": 56,
   "n_refused": 56,
+  "group_sizes": {
+    "case": 9,
+    "whitespace": 6,
+    "pharmacology": 16,
+    "format": 5,
+    "control": 8,
+    "confusable": 5,
+    "structural": 7
+  },
+  "group_sizes_declared_in_plan": {
+    "case": 9,
+    "whitespace": 6,
+    "pharmacology": 16,
+    "format": 5,
+    "control": 8,
+    "confusable": 5,
+    "structural": 7
+  },
   "leaked": [],
   "refusals_by_group": {
     "case": [
@@ -410,6 +428,8 @@
     "expected": 309
   },
   "checks": {
+    "the corpus is the size plan \u00a72.1 declared, group by group": true,
+    "no duplicate inflates the refusal count": true,
     "every adversarial string is refused": true,
     "the reference-leak hazard is real (unknown -> all-zero dummies -> the Acid row)": true,
     "predict() blocks it: no score is returned for an unknown condition": true,
@@ -421,5 +441,6 @@
     "design geometry closes the vocabulary at 309 columns": true
   },
   "all_passed": true,
-  "runtime_seconds": 0.313
+  "runtime_seconds": 0.342,
+  "module_sha256": "952fb4493b00a620a276bfb98a66140451e4fe76af1e1c56ec0af270b667fd8e"
 }

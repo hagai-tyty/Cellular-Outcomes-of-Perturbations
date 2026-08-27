@@ -69,15 +69,42 @@ def test_the_module_may_not_fit_anything(mod):
 
 
 def test_the_adversarial_corpus_is_the_plan_s(mod):
-    """The corpus was declared in the plan before it was run, so it cannot be trimmed after."""
+    """The corpus was declared in the plan before it was run, so it cannot be trimmed after.
+
+    An earlier version of this test checked four sentinel strings and passed while the plan
+    declared 50 entries and the module ran 56. Spot checks do not detect drift; counts do.
+    """
+    import re
     plan = PLAN.read_text(encoding="utf-8")
+    declared = {m.group(1).lower(): int(m.group(2))
+                for m in re.finditer(r"^([A-Z]+) \((\d+)\)", plan, re.M)}
+    sizes = {k: len(v) for k, v in mod.ADVERSARIAL.items()}
+
+    assert declared, "plan §2.1 must declare a count per group"
+    assert declared == sizes == mod.EXPECTED_GROUP_SIZES
+    assert sum(sizes.values()) == mod.EXPECTED_ADVERSARIAL_TOTAL == 56
+
     flat = [s for group in mod.ADVERSARIAL.values() for s in group]
     assert len(flat) == len(set(flat)), "a duplicate would inflate the refusal count"
-    # the entries that carry the argument must be present in both places
-    for s in ("Vemurafenib", "Carboplatin", "DMSO", "Untreated"):
-        assert s in flat and s in plan
-    assert set(mod.ADVERSARIAL) == {"case", "whitespace", "pharmacology", "format", "control",
-                                    "confusable", "structural"}
+    # every printable ASCII entry must appear verbatim in the plan; the unicode confusables and
+    # the empty/whitespace entries are described there in words, since they cannot be shown
+    for s in flat:
+        if s.strip() and s.isascii() and "\t" not in s and "\n" not in s:
+            assert s in plan, f"{s!r} is run but not declared in the plan"
+
+
+def test_the_negation_list_is_exactly_the_twelve_the_plan_declares(mod):
+    """A negation list longer than the declared one is a looser gate than the one written down."""
+    import re
+    plan = PLAN.read_text(encoding="utf-8")
+    block = plan.split("tokens must occur within 160 characters")[1].split("```")[1]
+    block = block.split("\n", 1)[1]          # drop the ```text fence tag
+    # quoted tokens keep their inner spaces ("no "); bare tokens are whitespace separated
+    declared = {q or w for q, w in re.findall(r'"([^"]*)"|(\S+)', block)}
+    assert declared == set(mod.NEGATIONS)
+    assert len(mod.NEGATIONS) == 12
+    assert "no " in mod.NEGATIONS, "bare 'no' matches inside not/none/know/cannot"
+    assert "no" not in mod.NEGATIONS
 
 
 def test_the_vocabulary_is_six_and_the_reference_is_acid(mod):
@@ -215,6 +242,9 @@ def test_the_cli_never_reports_success_when_it_refused():
     assert cli["unreadable"]["exit_code"] == 3
     assert cli["unreadable"]["stderr_has_status"] is True
     assert "UNSUPPORTED_TREATMENT" in cli["one_unknown"]["statuses"]
+    # the CLI is the surface a user actually touches; a refusal without limitations tells them
+    # less than a score does
+    assert all(cli["every_printed_row_carries_known_limitations"].values())
 
 
 @ran
@@ -275,6 +305,38 @@ def test_the_scope_document_states_the_boundary_it_is_supposed_to_state():
     assert "cannot produce a valid `B`" in md
     # every one of the nine prohibitions is written as its own negation
     assert md.count("NEVER") >= 9
+
+
+@ran
+def test_the_frozen_hashes_are_verified_after_the_run_not_only_before():
+    """§5. Checking only at the start proves nothing about what the run then did."""
+    post = _json(VERDICT)["frozen_hashes_after_the_run"]
+    assert set(post) >= {"io_schema.json", "example_clones.csv", "stage24_oof_for_stage25.csv",
+                         "stage24_w5_artifact.json", "stage24_w5_artifact.npz",
+                         "stage25_verdict.json"}
+    assert all(post.values()), [k for k, v in post.items() if not v]
+
+
+@ran
+def test_every_substage_came_from_the_same_module():
+    """§5.1. A verdict merged from substages of different module versions means nothing."""
+    s = _json(VERDICT)["substage_module_stamps"]
+    assert s["all_equal"] is True
+    running = s["running_module"]
+    for k in ("26A", "26B", "26C", "26D"):
+        assert s[k] == running, f"{k} was produced by a different version of the executor"
+
+
+@ran
+def test_every_evidence_lock_input_is_a_real_path():
+    """The evidence lock hashes these. A prose string like 'artifact.npz + .json' is a bug."""
+    v = _json(VERDICT)
+    assert v["evidence_missing"] == []
+    assert v["evidence_paths_verified_present"] is True
+    for group, paths in _json(HANDOFF)["evidence_to_lock"].items():
+        assert isinstance(paths, list), f"{group} must be a list of paths, not a sentence"
+        for p in paths:
+            assert (ROOT / p).exists(), f"{group}: {p}"
 
 
 @ran

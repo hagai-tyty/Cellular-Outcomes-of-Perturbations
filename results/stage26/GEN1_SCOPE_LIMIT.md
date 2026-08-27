@@ -21,16 +21,20 @@ written against it. Where any other document disagrees with this one, this one g
   Acid   Cisplatin   CoCl2   Dabrafenib   Doxorubicin   Trametinib
 ```
 
-Anything else returns `UNSUPPORTED_TREATMENT` and no score. 56 adversarial
-strings were tried against the shipped tool -- case variants, whitespace, dose formats, unicode
-confusables, controls, and sixteen real oncology drugs including `Vemurafenib`, the drug for this
-exact mutation. 56 of 56 were refused.
+Anything else returns `UNSUPPORTED_TREATMENT` and no score. 56 adversarial strings were tried against the
+shipped tool -- case variants, whitespace, dose formats, unicode confusables, controls, and sixteen
+real oncology drugs including `Vemurafenib`, the drug for this exact mutation, and `Carboplatin`, a
+platinum agent one substitution from a condition that IS supported.
+**56 of 56 were refused.**
 
-The vocabulary is closed by geometry, not only by a list: the frozen design has
-309 columns
-= 50 PCs + 4 nuisance
-+ 5 dummies + 250
-interaction terms. A seventh condition cannot be added without refitting.
+The vocabulary is closed by geometry, not only by a list:
+
+```text
+  309 design columns = 50 PCs + 4 nuisance + 5 dummies + 250 interaction terms
+```
+
+A seventh condition cannot be added without changing that number, which cannot happen without
+refitting.
 
 ## What Generation 1 MAY claim
 
@@ -42,9 +46,12 @@ And, because Stage 25 recorded `STAGE_25_RANKING_SUPPORTED`:
 
 > A frozen state x treatment model improves clone-specific ordering of the six observed
 > experimental conditions over a non-interactive additive model.
-> delta_RANK = +0.051605, CI95
-> [+0.037197, +0.065571],
-> 0 of 1,000 full-refit permutation draws reached the observed value.
+
+```text
+  delta_RANK   +0.051605
+  CI95         [+0.037197, +0.065571]
+  null         0 of 1000 full-refit permutation draws reached the observed value
+```
 
 Rewind (GSE227151) may support only:
 

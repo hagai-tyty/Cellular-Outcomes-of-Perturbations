@@ -76,8 +76,21 @@ def canonical_lf_sha256(p: Path) -> str:
     return hashlib.sha256(Path(p).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
 
 
-def write_json(p: Path, obj: dict) -> None:
-    p.write_text(json.dumps(obj, indent=2) + "\n", encoding="utf-8")
+def module_sha256() -> str:
+    """§5.1. Stamped into every substage so 26E can refuse a verdict built from mixed versions."""
+    return hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+
+
+def write_json(p: Path, obj: dict) -> dict:
+    """Write, and return exactly what was written.
+
+    Returning `obj` instead of the stamped dict is how 26E ended up merging a 26B result with no
+    module stamp while 26A/26C/26D had one -- the §5.1 check caught it on its first run. What a
+    caller gets back is now byte-for-byte what landed on disk.
+    """
+    stamped = {**obj, "module_sha256": module_sha256()}
+    p.write_text(json.dumps(stamped, indent=2) + "\n", encoding="utf-8")
+    return stamped
 
 
 def _rel(p: Path) -> str:
@@ -104,6 +117,12 @@ ADVERSARIAL: dict[str, list[str]] = {
     "confusable": ["Аcid", "Acіd", "CoCl₂", "CoCI2", "Trametinib​"],
     "structural": ["", " ", "*", "all", "Acid,Cisplatin", "[Acid]", "Acid|Cisplatin"],
 }
+
+# Plan §2.1 declares these exact counts. A group that shrinks fails the stage rather than passing
+# with fewer attackers, which is the whole point of declaring the corpus before running it.
+EXPECTED_GROUP_SIZES = {"case": 9, "whitespace": 6, "pharmacology": 16, "format": 5,
+                        "control": 8, "confusable": 5, "structural": 7}
+EXPECTED_ADVERSARIAL_TOTAL = 56
 
 
 def _load_clone() -> tuple[np.ndarray, np.ndarray]:
@@ -205,7 +224,13 @@ def run_26a() -> dict:
     expected_cols = n_pc + n_nuis + n_dum + n_pc * n_dum
     geom_ok = (comp.coef.shape[0] == expected_cols == 309)
 
+    sizes = {k: len(v) for k, v in ADVERSARIAL.items()}
+    flat = [s for v in ADVERSARIAL.values() for s in v]
+
     checks = {
+        "the corpus is the size plan §2.1 declared, group by group":
+            sizes == EXPECTED_GROUP_SIZES and n_total == EXPECTED_ADVERSARIAL_TOTAL,
+        "no duplicate inflates the refusal count": len(flat) == len(set(flat)),
         "every adversarial string is refused": n_refused == n_total,
         "the reference-leak hazard is real (unknown -> all-zero dummies -> the Acid row)":
             hazard_is_real,
@@ -222,6 +247,8 @@ def run_26a() -> dict:
         "stage": "26A",
         "n_adversarial_strings": n_total,
         "n_refused": n_refused,
+        "group_sizes": sizes,
+        "group_sizes_declared_in_plan": EXPECTED_GROUP_SIZES,
         "leaked": leaked,
         "refusals_by_group": refusals,
         "reference_leak_test": {
@@ -258,8 +285,7 @@ def run_26a() -> dict:
         "all_passed": all(checks.values()),
         "runtime_seconds": round(time.perf_counter() - t0, 3),
     }
-    write_json(A_JSON, out)
-    return out
+    return write_json(A_JSON, out)
 
 
 # =============================================================================================== #
@@ -309,10 +335,13 @@ FORBIDDEN_CLAIMS: dict[str, list[str]] = {
 REVIEW_ONLY = [r"\bcancer\b", r"\bdeath\b", r"\bresistan", r"\bsensitiv", r"\bresponse\b",
                r"\bcures?\b", r"\befficacy\b"]
 
-NEGATIONS = ["not", "never", "no ", "cannot", "can not", "without", "forbidden", "refus",
-             "unsupported", "withheld", "limit", "outside", "only", "n't", "unless",
-             "rather than", "is not", "does not", "neither", "nor ", "must not", "may not",
-             "excluded", "prohibit", "bounded", "narrow"]
+# Exactly the twelve tokens plan §3.1 declares, and no more. An earlier version carried twenty-six;
+# the extra fourteen never rescued a single hit on any shipped surface (verified: every hit that
+# depended on one token depended on `not` or `never`), but a negation list longer than the declared
+# one is a looser gate than the one that was written down, and a gate that quietly loosens is not a
+# gate. `"no "` keeps its trailing space: bare `no` matches inside not, none, know and cannot.
+NEGATIONS = ["not", "never", "no ", "cannot", "without", "forbidden",
+             "refus", "unsupported", "withheld", "limit", "outside", "only"]
 
 WINDOW = 160
 
@@ -428,8 +457,7 @@ def run_26b() -> dict:
         "all_passed": all(checks.values()),
         "runtime_seconds": round(time.perf_counter() - t0, 3),
     }
-    write_json(B_JSON, out)
-    return out
+    return write_json(B_JSON, out)
 
 
 # =============================================================================================== #
@@ -503,6 +531,11 @@ def run_26c() -> dict:
     def rows_of(res: dict) -> list[dict]:
         return [json.loads(ln) for ln in res["stdout"].splitlines() if ln.strip()]
 
+    printed = {"all_known": rows_of(c_ok), "one_unknown": rows_of(c_unknown),
+               "no_nuisance": rows_of(c_nonuis)}
+    cli_rows_carry_limits = {k: all(bool(r.get("known_limitations")) for r in v)
+                             for k, v in printed.items()}
+
     cli_report = {
         "all_known": {"exit_code": c_ok["exit_code"], "rows": len(rows_of(c_ok)),
                       "statuses": sorted({r["support_status"] for r in rows_of(c_ok)})},
@@ -513,6 +546,7 @@ def run_26c() -> dict:
                         "statuses": sorted({r["support_status"] for r in rows_of(c_nonuis)})},
         "unreadable": {"exit_code": c_unread["exit_code"],
                        "stderr_has_status": "support_status" in c_unread["stderr"]},
+        "every_printed_row_carries_known_limitations": cli_rows_carry_limits,
     }
 
     checks = {
@@ -534,6 +568,8 @@ def run_26c() -> dict:
         "CLI exits 2 when any condition is refused":
             c_unknown["exit_code"] == 2 and c_nonuis["exit_code"] == 2,
         "CLI exits 3 when the input cannot be read": c_unread["exit_code"] == 3,
+        "every CLI row carries known_limitations, refusals included":
+            all(cli_rows_carry_limits.values()),
         "a refused CLI condition prints no score":
             all(r["future_detection_score"] is None for r in rows_of(c_unknown)
                 if r["support_status"] != "SUPPORTED_KNOWN_CONDITION"),
@@ -543,8 +579,7 @@ def run_26c() -> dict:
            "ranking": ranking, "cli": cli_report, "checks": checks,
            "all_passed": all(checks.values()),
            "runtime_seconds": round(time.perf_counter() - t0, 3)}
-    write_json(C_JSON, out)
-    return out
+    return write_json(C_JSON, out)
 
 
 # =============================================================================================== #
@@ -610,12 +645,12 @@ def run_26d() -> dict:
                               "and False after. 26E proves its own change is append-only against "
                               "the 24F hash.",
            "stage25_verdict": v25["verdict"],
+           "stage25_verdict_sha256": sha256_file(STAGE25_VERDICT),
            "stage25_delta_rank": v25["primary"]["delta_RANK"],
            "ship_plan_digest_holds": ship_ok,
            "checks": checks, "all_passed": all(checks.values()),
            "runtime_seconds": round(time.perf_counter() - t0, 3)}
-    write_json(D_JSON, out)
-    return out
+    return write_json(D_JSON, out)
 
 
 # =============================================================================================== #
@@ -646,16 +681,20 @@ written against it. Where any other document disagrees with this one, this one g
   Acid   Cisplatin   CoCl2   Dabrafenib   Doxorubicin   Trametinib
 ```
 
-Anything else returns `UNSUPPORTED_TREATMENT` and no score. {a['n_adversarial_strings']} adversarial
-strings were tried against the shipped tool -- case variants, whitespace, dose formats, unicode
-confusables, controls, and sixteen real oncology drugs including `Vemurafenib`, the drug for this
-exact mutation. {a['n_refused']} of {a['n_adversarial_strings']} were refused.
+Anything else returns `UNSUPPORTED_TREATMENT` and no score. {a['n_adversarial_strings']} adversarial strings were tried against the
+shipped tool -- case variants, whitespace, dose formats, unicode confusables, controls, and sixteen
+real oncology drugs including `Vemurafenib`, the drug for this exact mutation, and `Carboplatin`, a
+platinum agent one substitution from a condition that IS supported.
+**{a['n_refused']} of {a['n_adversarial_strings']} were refused.**
 
-The vocabulary is closed by geometry, not only by a list: the frozen design has
-{a['structural_closure']['design_columns']} columns
-= {a['structural_closure']['K']} PCs + {a['structural_closure']['nuisance']} nuisance
-+ {a['structural_closure']['dummies']} dummies + {a['structural_closure']['interaction']}
-interaction terms. A seventh condition cannot be added without refitting.
+The vocabulary is closed by geometry, not only by a list:
+
+```text
+  {a['structural_closure']['design_columns']} design columns = {a['structural_closure']['K']} PCs + {a['structural_closure']['nuisance']} nuisance + {a['structural_closure']['dummies']} dummies + {a['structural_closure']['interaction']} interaction terms
+```
+
+A seventh condition cannot be added without changing that number, which cannot happen without
+refitting.
 
 ## What Generation 1 MAY claim
 
@@ -667,9 +706,12 @@ And, because Stage 25 recorded `{v25['verdict']}`:
 
 > A frozen state x treatment model improves clone-specific ordering of the six observed
 > experimental conditions over a non-interactive additive model.
-> delta_RANK = {v25['primary']['delta_RANK']:+.6f}, CI95
-> [{v25['primary']['bootstrap_ci95'][0]:+.6f}, {v25['primary']['bootstrap_ci95'][1]:+.6f}],
-> 0 of 1,000 full-refit permutation draws reached the observed value.
+
+```text
+  delta_RANK   {v25['primary']['delta_RANK']:+.6f}
+  CI95         [{v25['primary']['bootstrap_ci95'][0]:+.6f}, {v25['primary']['bootstrap_ci95'][1]:+.6f}]
+  null         {v25['permutation']['n_null_ge_observed']} of {v25['permutation']['n_perm']} full-refit permutation draws reached the observed value
+```
 
 Rewind (GSE227151) may support only:
 
@@ -841,11 +883,46 @@ def run_26e() -> dict:
     card = _append_model_card(v25)
     b = run_26b()   # re-run the scan now that the scope doc and the card section exist
 
+    # ---- §5: the hashes are re-verified AFTER the run, not only before ------------------------ #
+    #
+    # Checking only at the start proves nothing about what the run then did. The model card is the
+    # one file §6.2 permits appending to, so it is excluded here and proved separately, above.
+    rec = json.loads(FREEZE_24F.read_text(encoding="utf-8"))
+    after_run = {
+        "io_schema.json": sha256_file(TOOL / "io_schema.json"),
+        "example_clones.csv": sha256_file(TOOL / "example_clones.csv"),
+        "stage24_oof_for_stage25.csv": sha256_file(RESULTS / "stage24"
+                                                   / "stage24_oof_for_stage25.csv"),
+        "stage24_w5_artifact.json": sha256_file(ARTIFACT_META),
+    }
+    post = {k: (v == rec["hashes"][k]) for k, v in after_run.items()}
+    post["stage24_w5_artifact.npz"] = sha256_file(ARTIFACT_NPZ) == rec["artifact_sha256"]
+    post["stage25_verdict.json"] = sha256_file(STAGE25_VERDICT) == d["stage25_verdict_sha256"]
+
+    # ---- §5.1: every substage came from THIS module ------------------------------------------- #
+    stamps = {"26A": a.get("module_sha256"), "26B": b.get("module_sha256"),
+              "26C": c.get("module_sha256"), "26D": d.get("module_sha256")}
+    same_module = all(v == module_sha256() for v in stamps.values())
+
+    # ---- everything the evidence lock is told to hash must actually exist --------------------- #
+    evidence = ["results/stage22_wm989_clones.csv",
+                "results/stage24/stage24_oof_for_stage25.csv",
+                "results/stage24/stage24_w5_artifact.npz",
+                "results/stage24/stage24_w5_artifact.json",
+                "src/cellfate/gen1_predictor.py", "src/cellfate/gen1_cli.py",
+                "results/stage24/tool/MODEL_CARD.md", "results/stage24/tool/io_schema.json",
+                "results/stage25/stage25_verdict.json", _rel(SCOPE_MD)]
+    missing = [p for p in evidence if not (ROOT / p).exists()]
+    evidence_present = not missing
+
     sub = {"26A": a["all_passed"], "26B": b["all_passed"],
            "26C": c["all_passed"], "26D": d["all_passed"],
            "26E_model_card_append_only": bool(card["append_only_proof"]
                                               and card["base_is_byte_identical_to_the_24F_card"]
-                                              and card["rerun_is_byte_idempotent"])}
+                                              and card["rerun_is_byte_idempotent"]),
+           "26E_frozen_hashes_hold_after_the_run": all(post.values()),
+           "26E_all_substages_came_from_this_module": bool(same_module),
+           "26E_every_evidence_lock_input_exists": evidence_present}
     verdict = ("KNOWN_TREATMENT_ONLY_SCOPED_LIMIT" if all(sub.values())
                else "STAGE_26_SCOPE_HOLE_FOUND")
 
@@ -860,6 +937,9 @@ def run_26e() -> dict:
         "parent_plan_digest_holds": canonical_lf_sha256(SHIP_PLAN) == SHIP_PLAN_DIGEST,
         "scope_document": {"path": _rel(SCOPE_MD), "sha256": sha256_file(SCOPE_MD)},
         "model_card_update": card,
+        "frozen_hashes_after_the_run": post,
+        "substage_module_stamps": {**stamps, "running_module": module_sha256(),
+                                   "all_equal": bool(same_module)},
         "adversarial": {"strings": a["n_adversarial_strings"], "refused": a["n_refused"],
                         "groups": list(ADVERSARIAL)},
         "claim_surface": {"surfaces": len(b["surfaces_scanned"]),
@@ -871,6 +951,8 @@ def run_26e() -> dict:
         "next": "GEN-1 EVIDENCE LOCK",
         "runtime_seconds": round(time.perf_counter() - t0, 3),
     }
+    out["evidence_paths_verified_present"] = evidence_present
+    out["evidence_missing"] = missing
     write_json(VERDICT_JSON, out)
 
     write_json(HANDOFF_JSON, {
@@ -882,12 +964,22 @@ def run_26e() -> dict:
         "forbidden_claims": list(FORBIDDEN_CLAIMS),
         "closed_vocabulary": list(CONDITIONS),
         "reference_condition": REFERENCE,
+        # Every value is a LIST OF REAL PATHS. The evidence lock hashes these, so a human-readable
+        # string like "artifact.npz + .json" is not a description, it is a bug in the next stage's
+        # input. Each one is checked to exist before this handoff is written.
         "evidence_to_lock": {
-            "benchmark": "results/stage22_wm989_clones.csv",
-            "out_of_fold_predictions": "results/stage24/stage24_oof_for_stage25.csv",
-            "tool": "results/stage24/stage24_w5_artifact.npz + .json",
-            "ranking_verdict": "results/stage25/stage25_verdict.json",
-            "limitations": _rel(SCOPE_MD)},
+            "benchmark": ["results/stage22_wm989_clones.csv"],
+            "out_of_fold_predictions": ["results/stage24/stage24_oof_for_stage25.csv"],
+            "tool": ["results/stage24/stage24_w5_artifact.npz",
+                     "results/stage24/stage24_w5_artifact.json",
+                     "src/cellfate/gen1_predictor.py",
+                     "src/cellfate/gen1_cli.py",
+                     "results/stage24/tool/MODEL_CARD.md",
+                     "results/stage24/tool/io_schema.json"],
+            "ranking_verdict": ["results/stage25/stage25_verdict.json"],
+            "limitations": [_rel(SCOPE_MD)]},
+        "evidence_paths_verified_present": evidence_present,
+        "evidence_missing": missing,
         "evidence_lock_must": [
             "hash every artifact above and refuse to proceed if one has moved",
             "carry the nine forbidden claims into the claim lock unchanged",

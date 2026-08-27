@@ -74,18 +74,31 @@ Acid  Cisplatin  CoCl2  Dabrafenib  Doxorubicin  Trametinib      reference = Aci
 
 Every string below must return `support_status = UNSUPPORTED_TREATMENT` and
 `future_detection_score = null`. The corpus is declared in this plan so it cannot be trimmed after
-seeing which entries fail.
+seeing which entries fail. **56 strings in seven groups**, and the executor asserts these exact
+counts — a group that shrinks fails the stage rather than passing with fewer attackers.
 
 ```text
-CASE            acid  ACID  cisplatin  CisPlatin  cocl2  COCL2  dabrafenib  trametinib
-WHITESPACE      " Acid"  "Acid "  "Acid\t"  "Cis platin"  "Co Cl2"
-PHARMACOLOGY    Vemurafenib  PLX4720  Cobimetinib  Selumetinib  Encorafenib  Binimetinib
-                Carboplatin  Oxaliplatin  Paclitaxel  Docetaxel  Etoposide  Nilotinib
-                Pembrolizumab  Nivolumab  Temozolomide  5-FU
-FORMAT          Cisplatin_1uM  "Cisplatin (1 uM)"  Cisplatin-high  Acid+Cisplatin
-CONTROL         DMSO  Vehicle  Control  Untreated  None  NA  null
-CONFUSABLE      Cyrillic-A Acid   Cyrillic-i Acid   CoCl-subscript-2   CoCI2 (capital i)
-STRUCTURAL      ""  " "  "*"  "all"  "Acid,Cisplatin"  "[Acid]"
+CASE (9)          acid  ACID  cisplatin  CisPlatin  cocl2  COCL2  dabrafenib
+                  trametinib  DOXORUBICIN
+
+WHITESPACE (6)    " Acid"  "Acid "  "Acid<TAB>"  "Cis platin"  "Co Cl2"  "<LF>Acid"
+
+PHARMACOLOGY (16) Vemurafenib  PLX4720  Cobimetinib  Selumetinib  Encorafenib  Binimetinib
+                  Carboplatin  Oxaliplatin  Paclitaxel  Docetaxel  Etoposide  Nilotinib
+                  Pembrolizumab  Nivolumab  Temozolomide  5-FU
+
+FORMAT (5)        Cisplatin_1uM  "Cisplatin (1 uM)"  Cisplatin-high  Acid+Cisplatin
+                  Cisplatin:1uM
+
+CONTROL (8)       DMSO  Vehicle  Control  Untreated  None  NA  null  0
+
+CONFUSABLE (5)    Acid with U+0410 CYRILLIC CAPITAL A replacing the Latin A
+                  Acid with U+0456 CYRILLIC SMALL I replacing the Latin i
+                  CoCl2 with U+2082 SUBSCRIPT TWO replacing the digit 2
+                  CoCI2 with a capital Latin I replacing the lowercase l
+                  Trametinib followed by U+200B ZERO WIDTH SPACE
+
+STRUCTURAL (7)    ""  " "  "*"  "all"  "Acid,Cisplatin"  "[Acid]"  "Acid|Cisplatin"
 ```
 
 The pharmacology block is the one that matters. `Vemurafenib` is *the* drug for a BRAF-V600E
@@ -135,12 +148,17 @@ results/stage26/GEN1_SCOPE_LIMIT.md
 
 ## 3.1 The rule
 
-A forbidden-claim phrase may appear **only inside a negation**. For each hit, a negating token must
-occur within 160 characters:
+A forbidden-claim phrase may appear **only inside a negation**. For each hit, one of these twelve
+tokens must occur within 160 characters. The list is exhaustive and the executor asserts it matches
+exactly — a longer list is a looser gate, and a gate that quietly loosens is not a gate.
 
 ```text
-not  never  no  cannot  without  forbidden  refus  unsupported  withheld  limit  outside  only
+not   never   "no "   cannot   without   forbidden
+refus   unsupported   withheld   limit   outside   only
 ```
+
+`"no "` carries its trailing space deliberately: a bare `no` matches inside *not*, *none*, *know*
+and *cannot*, and would wave through nearly anything.
 
 A hit with no nearby negation is a `CLAIM_SURFACE_VIOLATION` and fails the stage.
 
@@ -164,7 +182,11 @@ predict()          MISSING_REQUIRED_NUISANCE      known_limitations present
 predict()          UNSUPPORTED_FEATURE_SCHEMA     known_limitations present
 rank_conditions()  with and without verdict       known_limitations present
 CLI                exit 0 / 2 / 3                 support_status present on stdout or stderr
+CLI                every printed row               known_limitations present
 ```
+
+The CLI row check is separate because the CLI is the surface a user actually touches, and a JSON
+line carrying a refusal without the limitations tells that user less than one carrying a score.
 
 Additional invariants:
 
@@ -180,13 +202,28 @@ CLI exit code is 2 whenever any requested condition was refused, never 0
 
 ```text
 the Stage-26 module contains no model fitting
-every Stage-24 deliverable hash is re-verified, before and after Stage 26 runs
+every Stage-24 deliverable hash is verified in 26D, BEFORE the run
+every one of them is verified AGAIN at the end of 26E, AFTER the run
 the Stage-25 verdict file is byte-identical to the one Stage 25 wrote
 no file under results/stage22, stage23*, stage24 or stage25 is modified
 ```
 
+Both ends are required and both gate. Checking only at the start proves nothing about what the run
+then did; checking only at the end cannot tell a Stage-26 change from something that was already
+wrong.
+
 The model card is the one deliberate exception, handled in §6.2, under a byte-level proof that only
 an appended section changed.
+
+## 5.1 Every substage must come from the same module
+
+`26E` merges the JSONs `26A`, `26C` and `26D` left on disk. If the module changed between those
+runs, the verdict is a mixture of versions and means nothing. Each substage therefore stamps the
+SHA-256 of the executor that produced it, and `26E` refuses to issue a verdict unless all four
+stamps are equal to each other and to the running module.
+
+This is not hypothetical: the substages of this stage were, in fact, run against a module that was
+being repaired between them.
 
 ---
 

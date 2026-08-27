@@ -123,6 +123,11 @@
     "unreadable": {
       "exit_code": 3,
       "stderr_has_status": true
+    },
+    "every_printed_row_carries_known_limitations": {
+      "all_known": true,
+      "one_unknown": true,
+      "no_nuisance": true
     }
   },
   "checks": {
@@ -135,8 +140,10 @@
     "CLI exits 0 only when every condition scored": true,
     "CLI exits 2 when any condition is refused": true,
     "CLI exits 3 when the input cannot be read": true,
+    "every CLI row carries known_limitations, refusals included": true,
     "a refused CLI condition prints no score": true
   },
   "all_passed": true,
-  "runtime_seconds": 5.234
+  "runtime_seconds": 4.74,
+  "module_sha256": "952fb4493b00a620a276bfb98a66140451e4fe76af1e1c56ec0af270b667fd8e"
 }

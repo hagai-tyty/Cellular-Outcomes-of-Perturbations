@@ -6,16 +6,19 @@
     "26B": true,
     "26C": true,
     "26D": true,
-    "26E_model_card_append_only": true
+    "26E_model_card_append_only": true,
+    "26E_frozen_hashes_hold_after_the_run": true,
+    "26E_all_substages_came_from_this_module": true,
+    "26E_every_evidence_lock_input_exists": true
   },
   "failing": [],
   "plan": "plans/(newer)practical plans/STAGE_26_KNOWN_TREATMENT_SCOPE_LOCK_V1.md",
-  "plan_canonical_lf_sha256": "1d5caa3296be553c628f117ee60d1ce823e8833cbcf3c57907a2bdd403f12cf8",
+  "plan_canonical_lf_sha256": "f34a85055071e59be0d169cace92ba38892b49b5d9f22e4b19248b9b3535e58d",
   "parent_plan_digest": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48",
   "parent_plan_digest_holds": true,
   "scope_document": {
     "path": "results/stage26/GEN1_SCOPE_LIMIT.md",
-    "sha256": "b025f5beb9d498e7fcf6d147c7a89a524c3460ba6b3ab16457aba63ec0499c1a"
+    "sha256": "90563ada20d3c9aec52f8c3425b3f3ed1181eaa0d27b39aed558248bcd31d4e3"
   },
   "model_card_update": {
     "frozen_24F_sha256": "8902d4999ad98b9dce9394bb840320cea6dee089c20fb1883566868170dd9c59",
@@ -31,6 +34,22 @@
     "rerun_is_byte_idempotent": true,
     "delimiter": "<!-- STAGE-26 SCOPE LOCK -- appended, nothing above this line altered -->",
     "note": "Stage 26 only ever appends. Everything above the delimiter is the card 24F froze, verified against the recorded hash rather than against whatever the file happened to contain."
+  },
+  "frozen_hashes_after_the_run": {
+    "io_schema.json": true,
+    "example_clones.csv": true,
+    "stage24_oof_for_stage25.csv": true,
+    "stage24_w5_artifact.json": true,
+    "stage24_w5_artifact.npz": true,
+    "stage25_verdict.json": true
+  },
+  "substage_module_stamps": {
+    "26A": "952fb4493b00a620a276bfb98a66140451e4fe76af1e1c56ec0af270b667fd8e",
+    "26B": "952fb4493b00a620a276bfb98a66140451e4fe76af1e1c56ec0af270b667fd8e",
+    "26C": "952fb4493b00a620a276bfb98a66140451e4fe76af1e1c56ec0af270b667fd8e",
+    "26D": "952fb4493b00a620a276bfb98a66140451e4fe76af1e1c56ec0af270b667fd8e",
+    "running_module": "952fb4493b00a620a276bfb98a66140451e4fe76af1e1c56ec0af270b667fd8e",
+    "all_equal": true
   },
   "adversarial": {
     "strings": 56,
@@ -56,5 +75,8 @@
   },
   "grants_no_claim": "Stage 26 records that the existing claim is enforced in code. It grants no new claim and reopens no earlier stage.",
   "next": "GEN-1 EVIDENCE LOCK",
-  "runtime_seconds": 0.058
+  "runtime_seconds": 0.174,
+  "evidence_paths_verified_present": true,
+  "evidence_missing": [],
+  "module_sha256": "952fb4493b00a620a276bfb98a66140451e4fe76af1e1c56ec0af270b667fd8e"
 }

@@ -158,7 +158,7 @@
     },
     "results/stage26/GEN1_SCOPE_LIMIT.md": {
       "present": true,
-      "bytes": 5358,
+      "bytes": 5531,
       "claims_touched": {
         "2_cross_cell_line_or_patient": {
           "hits": 4,
@@ -216,5 +216,6 @@
     "every scanned surface exists": true
   },
   "all_passed": true,
-  "runtime_seconds": 0.024
+  "runtime_seconds": 0.025,
+  "module_sha256": "952fb4493b00a620a276bfb98a66140451e4fe76af1e1c56ec0af270b667fd8e"
 }

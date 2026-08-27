@@ -22,7 +22,8 @@ the shipped tool will happily score `Vemurafenib`.
 
 ## Files added
 - `plans/(newer)practical plans/STAGE_26_KNOWN_TREATMENT_SCOPE_LOCK_V1.md`
-  (canonical-LF `1d5caa3296be553c628f117ee60d1ce823e8833cbcf3c57907a2bdd403f12cf8`)
+  (canonical-LF `f34a85055071e59be0d169cace92ba38892b49b5d9f22e4b19248b9b3535e58d` after the
+  self-audit below; it was `1d5caa32...f12cf8` on the first pass)
 - `experiments/run_stage26_scope_lock.py`
 - `tests/test_stage26_scope_lock.py`
 - `results/stage26/` — 26A-26E JSONs, `GEN1_SCOPE_LIMIT.md`, `stage26_verdict.json`
@@ -42,15 +43,18 @@ the shipped tool will happily score `Vemurafenib`.
 ## Result
 
 ```text
-  KNOWN_TREATMENT_ONLY_SCOPED_LIMIT        all five substages pass
+  KNOWN_TREATMENT_ONLY_SCOPED_LIMIT        all eight gates pass
 
-  26A  vocabulary closure      56 / 56 adversarial strings refused
-  26B  claim surface           8 surfaces, 9 gating claims, 0 violations
-  26C  propagation             10 / 10 checks, Python API and CLI
-  26D  no rescue               fits nothing, every frozen hash holds
-  26E  model-card append       byte-identical base, byte-idempotent re-run
+  26A  vocabulary closure      11 checks   56 / 56 adversarial strings refused
+  26B  claim surface            4 checks   8 surfaces, 9 gating claims, 0 violations
+  26C  propagation             11 checks   Python API and CLI
+  26D  no rescue                7 checks   fits nothing, every frozen hash holds
+  26E  model card                          append-only against the 24F hash
+  26E  hashes after the run                all six re-verified at the end, not only the start
+  26E  module stamps                       all four substages from one executor
+  26E  evidence-lock inputs                all ten paths exist
 
-  total runtime                5.5 s
+  total runtime                5.4 s
 ```
 
 ### 26A — the vocabulary was attacked, not asserted
@@ -131,6 +135,7 @@ gating** — 11 hits, 0 unnegated. A gate tuned on broad words is a gate tuned u
   CLI  one unknown of two        exit 2, the unknown row prints null, the known row prints 0.2466
   CLI  no nuisance               exit 2
   CLI  unreadable input          exit 3, support_status on stderr
+  CLI  every printed row         known_limitations present, refusals included
 ```
 
 A caller who gets a refusal and no limitations has been told *less* than a caller who got a score,
@@ -190,8 +195,82 @@ re-run is byte-identical.
 None of the three was a scope hole. All three were checks that would have passed for the wrong
 reason, which is exactly what an instrument stage exists to catch in itself.
 
+## A note on editing the plan after running against it
+
+Stage 23.2 established that a frozen protocol must not be edited while a run against it executes.
+That rule protects a **preregistered inference test**, where a mid-run edit can move a threshold
+toward a result the analyst has already glimpsed.
+
+Stage 26 is not that. It computes no statistic, has no null, and has no degree of freedom that could
+be tuned toward a preferred answer — every check is a deterministic pass/fail on frozen bytes. The
+plan was therefore edited during the self-audit, under three rules held throughout:
+
+```text
+  every change makes the gate STRICTER or fixes a plan/code disagreement, never looser
+  the effect of each change on the verdict is measured and reported (finding B)
+  the whole stage is re-run from the top and the digest re-recorded
+```
+
+The plan digest moved from `1d5caa32...` to `f34a8505...` and the verdict was re-derived, not
+carried over. Stage 25's frozen plan, digest `8da16fca...bced48`, was not touched and is asserted
+on every run.
+
+---
+
+## Self-audit before the evidence lock — five more findings
+
+The stage was re-read end to end before handing anything to the evidence lock. Five inconsistencies
+between the plan and the module, none of which changed the verdict, all of which are now gated.
+
+**A. The plan declared 50 adversarial strings; the module ran 56.** A superset, so nothing was
+cherry-picked away — but the plan's whole purpose in §2.1 is that the corpus is fixed in writing,
+and a module that disagrees with it defeats that. The existing test spot-checked four sentinel
+strings and sailed past a six-string gap. Fixed: §2.1 now lists all 56 with a per-group count and
+spells out the five unicode confusables by codepoint; the module carries `EXPECTED_GROUP_SIZES` and
+fails if a group shrinks; the test compares counts parsed from the plan against the module rather
+than checking sentinels.
+
+**B. The negation list in code was 26 tokens; the plan declared 12.** This is the one that mattered,
+because a longer negation list is a **looser** gate than the one written down. Measured before
+changing anything:
+
+```text
+  violations under the 26-token code list     0
+  violations under the 12-token plan list     0
+  hits rescued by exactly one token           25, every one of them by `not` or `never`
+```
+
+None of the fourteen undeclared tokens ever rescued a hit. The verdict was unaffected — but the code
+was tightened to the plan's twelve anyway, because a gate that quietly loosens is not a gate. The
+plan now also spells out that `"no "` carries a trailing space, since bare `no` matches inside
+*not*, *none*, *know* and *cannot*.
+
+**C. The handoff told the evidence lock to hash `"...artifact.npz + .json"`.** A human-readable
+string in a machine-readable field. The evidence lock would have tried to hash a path that does not
+exist. `evidence_to_lock` is now a list of real paths per group — ten of them, including the API,
+the CLI, the model card and the schema, which the first version omitted entirely — and every one is
+checked to exist before the handoff is written.
+
+**D. §5 said hashes are re-verified "before and after"; the code only verified before.** Checking
+only at the start proves nothing about what the run then did. 26E now re-verifies all six at the
+end and gates on it.
+
+**E. Nothing tied the substage JSONs to the executor that produced them.** 26E merges the 26A/26C/26D
+files left on disk. During this very stage the module was repaired between substage runs, so a
+verdict assembled from a mixture of versions was not hypothetical — it was the actual situation for
+part of the session. Every substage now stamps the SHA-256 of the executor and 26E refuses a verdict
+unless all four stamps match the running module.
+
+**Finding E caught a sixth bug on its first execution.** `write_json` stamped the file but returned
+the unstamped `obj`, and 26E used the *returned* 26B dict while reading 26A/26C/26D from disk — so
+26B had no stamp and the check failed immediately. `write_json` now returns exactly what it wrote.
+
+Two things audited and found clean: `_scan_text` indexes a lowercased copy with offsets from that
+same copy, which would break on any character whose `lower()` changes length — zero such characters
+exist in any scanned surface; and every other path the handoff names resolves.
+
 ## Tests
-- 23 Stage-26 contracts, 0 skipped
+- 27 Stage-26 contracts, 0 skipped (23 before the audit; 4 added for findings A-E)
 - `tests/test_results_paths.py` green (335 checks) — the convention suite that has broken CI before
 
 ---

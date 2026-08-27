@@ -32,6 +32,7 @@
   "model_card_still_byte_identical_to_24F": false,
   "model_card_note": "Reported, not gating. The model card is the one file Stage 26 is allowed to append to (\u00a76.2), so this reads True before 26E runs and False after. 26E proves its own change is append-only against the 24F hash.",
   "stage25_verdict": "STAGE_25_RANKING_SUPPORTED",
+  "stage25_verdict_sha256": "c8c40f762203fb92f0375474647ddf5569c79a565fb8a1541bc1bc034b76b943",
   "stage25_delta_rank": 0.05160531888390629,
   "ship_plan_digest_holds": true,
   "checks": {
@@ -44,5 +45,6 @@
     "the frozen ship plan digest still holds": true
   },
   "all_passed": true,
-  "runtime_seconds": 0.129
+  "runtime_seconds": 0.122,
+  "module_sha256": "952fb4493b00a620a276bfb98a66140451e4fe76af1e1c56ec0af270b667fd8e"
 }
