@@ -221,3 +221,52 @@ def test_the_cli_documents_its_exit_codes():
     assert "0 every requested condition was scored" in flat
     assert "2 at least one condition was refused" in flat
     assert "a missing score is never silently a zero" in flat
+
+
+# ============================================================================================== #
+# §6.2 form A — the PREFERRED input. The tool counts the cells so the caller does not have to.
+# ============================================================================================== #
+def test_form_a_builds_the_nuisance_block_from_raw_cells():
+    from cellfate.gen1_predictor import NAIVE_SAMPLES, clone_input_from_cells
+    counts = np.array([[1.0, 0.0, 3.0], [2.0, 2.0, 2.0], [0.0, 1.0, 1.0],
+                       [1.0, 1.0, 1.0], [4.0, 0.0, 0.0]])
+    samples = ["Naive1", "Naive2", "Naive3", "Naive3", "Naive3"]
+    x, b = clone_input_from_cells(counts, samples)
+    # B = log1p of [total, n_Naive1, n_Naive2, n_Naive3]
+    assert np.allclose(b, np.log1p([5.0, 1.0, 1.0, 3.0]))
+    # X is the pseudobulk, normalised exactly once
+    assert np.allclose(x, np.log1p(counts.sum(axis=0) * (10_000.0 / counts.sum())))
+    assert NAIVE_SAMPLES == ("Naive1", "Naive2", "Naive3")
+
+
+def test_form_a_refuses_labels_it_cannot_count_over():
+    """A library the frozen block is not defined over cannot be silently folded in."""
+    from cellfate.gen1_predictor import PredictionError, clone_input_from_cells
+    counts = np.array([[1.0, 2.0], [3.0, 4.0]])
+    with pytest.raises(PredictionError, match="unknown naive librar"):
+        clone_input_from_cells(counts, ["Naive1", "Naive7"])
+    with pytest.raises(PredictionError, match="every cell needs one"):
+        clone_input_from_cells(counts, ["Naive1"])
+
+
+def test_form_a_documents_that_it_does_not_make_the_model_transferable():
+    """The chore is removed; the scope is not widened. That distinction must be written down."""
+    doc = " ".join(SRC.read_text(encoding="utf-8").split())
+    assert "removes a chore for someone working with WM989-structured data" in doc
+    assert "it does not make the model transferable" in doc
+    assert "a score the benchmark never evaluated" in doc
+
+
+@has_artifact
+def test_form_a_and_form_b_are_the_same_input(predictor, one_clone):
+    """Verified end to end against raw GEO matrices in 24C's record; pinned cheaply here."""
+    # reconstruct the clone's form-A inputs from its known per-library cell counts
+    import pandas as pd
+
+    from cellfate.gen1_predictor import clone_input_from_cells
+    ck = pd.read_csv(ROOT / "results" / "stage22_wm989_clones.csv").set_index("clone_id")
+    row = ck.loc[one_clone["clone_id"]]
+    samples = (["Naive1"] * int(row["n_naive1_cells"]) + ["Naive2"] * int(row["n_naive2_cells"])
+               + ["Naive3"] * int(row["n_naive3_cells"]))
+    _x, b = clone_input_from_cells(np.ones((len(samples), 3)), samples)
+    assert np.allclose(b, one_clone["b"]), "form A must rebuild the benchmark's own nuisance block"

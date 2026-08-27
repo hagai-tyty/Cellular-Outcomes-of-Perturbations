@@ -3,7 +3,10 @@
     "form_A_raw": {
       "expression_counts": "cells x 36601 raw pretreatment GE counts",
       "clone_id": "string, for aggregation",
-      "naive_sample_identity": "required to reconstruct B"
+      "naive_sample_identity": "one of Naive1/Naive2/Naive3 per cell",
+      "implemented_by": "cellfate.gen1_predictor.clone_input_from_cells",
+      "returns": "(X, B) -- the tool counts the cells so the caller need not",
+      "does_not_widen_scope": "B is defined over WM989's three naive libraries; labels from another experiment produce a B the model never saw"
     },
     "form_B_aggregated": {
       "expression": "float[36601], clone-level CP10K/log1p",

@@ -564,6 +564,10 @@ def run_24c() -> dict:
         },
         "support_flags": list(SUPPORT_FLAGS),
         "known_limitations": [
+            "NOT APPLICABLE TO ANOTHER EXPERIMENT. The nuisance block counts a clone's cells in "
+            "WM989's three specific naive libraries (Naive1/2/3). Those libraries are the "
+            "structure of one experiment, not a property of melanoma, so data from another lab, "
+            "cell line or library design cannot produce a valid B and cannot be scored.",
             "known conditions only; UNSUPPORTED_TREATMENT for anything outside the six",
             "requires the complete frozen nuisance block B; it may not be imputed",
             "trained on clone-level pseudobulk, so a single cell is not an equivalent input",
@@ -825,7 +829,12 @@ def run_24f() -> dict:
         "input": {
             "form_A_raw": {"expression_counts": "cells x 36601 raw pretreatment GE counts",
                            "clone_id": "string, for aggregation",
-                           "naive_sample_identity": "required to reconstruct B"},
+                           "naive_sample_identity": "one of Naive1/Naive2/Naive3 per cell",
+                           "implemented_by": "cellfate.gen1_predictor.clone_input_from_cells",
+                           "returns": "(X, B) -- the tool counts the cells so the caller need not",
+                           "does_not_widen_scope": "B is defined over WM989's three naive "
+                                                   "libraries; labels from another experiment "
+                                                   "produce a B the model never saw"},
             "form_B_aggregated": {
                 "expression": f"float[{meta['n_expression_features_expected']}], "
                               "clone-level CP10K/log1p",
@@ -878,8 +887,13 @@ pre-registered test. Until then the six scores are returned but their **order is
 condition ranking** and `validated_condition_order` is withheld.
 
 ## Intended use
-Research use on WM989-like lineage-traced pretreatment data, for the six observed experimental
-conditions. **Not** a clinical tool, **not** a treatment recommendation, **not** a calibrated
+Research use on **the WM989 experiment itself** -- reproducing its frozen out-of-fold predictions,
+or scoring a clone from that experiment. The nuisance block counts cells per WM989 naive library
+(Naive1/2/3), so **data from another experiment cannot produce a valid B and cannot be scored**.
+Making the model transferable would require a dataset-independent nuisance definition, which is a
+Generation-2 modelling change, not packaging.
+
+Supported for the six observed experimental conditions. **Not** a clinical tool, **not** a treatment recommendation, **not** a calibrated
 probability, and **not** applicable to unseen treatments, other cell lines, or patients.
 """
     MODEL_CARD.write_text(card, encoding="utf-8")

@@ -29,7 +29,13 @@ from pathlib import Path
 
 import numpy as np
 
-__all__ = ["Gen1Predictor", "PredictionError", "clone_pseudobulk_from_counts"]
+__all__ = ["Gen1Predictor", "PredictionError", "clone_pseudobulk_from_counts",
+           "clone_input_from_cells", "NAIVE_SAMPLES"]
+
+# The three WM989 pretreatment libraries the frozen nuisance block counts over.
+# These are a property of THIS experiment, not of the biology -- see the note in
+# clone_input_from_cells about what that means for other datasets.
+NAIVE_SAMPLES = ("Naive1", "Naive2", "Naive3")
 
 CP10K = 10_000.0
 
@@ -53,6 +59,41 @@ def clone_pseudobulk_from_counts(counts: np.ndarray) -> np.ndarray:
         raise PredictionError("clone has zero total counts; the frozen pipeline treats this as a "
                               "blocking condition rather than an imputation case")
     return np.log1p(counts.sum(axis=0) * (CP10K / total))
+
+
+def clone_input_from_cells(counts: np.ndarray, samples: list[str]) -> tuple[np.ndarray,
+                                                                                  np.ndarray]:
+    """§6.2 form A -- the PREFERRED input. Build both `X` and `B` from raw pretreatment cells.
+
+    `counts`   (n_cells, 36601) raw pretreatment Gene-Expression counts for ONE clone
+    `samples`  the naive library each of those cells came from, e.g. ["Naive1", "Naive3", ...]
+
+    Returns `(X, B)` ready for `Gen1Predictor.predict`. This is why the caller does not have to
+    hand-compute the nuisance block: `B` is just cell counts, and the tool can count.
+
+    IMPORTANT, and not solved by this function. `B` counts cells per WM989 naive library. Those
+    three libraries are the structure of one experiment, not a property of melanoma. Supplying
+    sample labels that merely LOOK like Naive1/2/3 -- from a different lab, a different depth, a
+    different number of libraries -- produces a `B` the model never saw and a score the benchmark
+    never evaluated. This function removes a chore for someone working with WM989-structured data;
+    it does not make the model transferable.
+    """
+    counts = np.asarray(counts, dtype=np.float64)
+    if counts.ndim == 1:
+        counts = counts[None, :]
+    if len(samples) != counts.shape[0]:
+        raise PredictionError(
+            f"{counts.shape[0]} cells but {len(samples)} sample labels; every cell needs one")
+    unknown = sorted(set(samples) - set(NAIVE_SAMPLES))
+    if unknown:
+        raise PredictionError(
+            f"unknown naive libraries {unknown}; the frozen nuisance block is defined over "
+            f"{list(NAIVE_SAMPLES)} and cannot be computed for anything else")
+
+    x = clone_pseudobulk_from_counts(counts)
+    per = [float(sum(1 for s in samples if s == lib)) for lib in NAIVE_SAMPLES]
+    b = np.log1p(np.array([float(len(samples)), *per]))
+    return x, b
 
 
 @dataclass

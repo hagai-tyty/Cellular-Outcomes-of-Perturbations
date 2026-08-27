@@ -90,6 +90,7 @@
     "RANKING_NOT_VALIDATED"
   ],
   "known_limitations": [
+    "NOT APPLICABLE TO ANOTHER EXPERIMENT. The nuisance block counts a clone's cells in WM989's three specific naive libraries (Naive1/2/3). Those libraries are the structure of one experiment, not a property of melanoma, so data from another lab, cell line or library design cannot produce a valid B and cannot be scored.",
     "known conditions only; UNSUPPORTED_TREATMENT for anything outside the six",
     "requires the complete frozen nuisance block B; it may not be imputed",
     "trained on clone-level pseudobulk, so a single cell is not an equivalent input",

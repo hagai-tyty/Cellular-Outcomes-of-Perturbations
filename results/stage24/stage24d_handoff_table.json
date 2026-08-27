@@ -35,5 +35,5 @@
   "all_checks_pass": true,
   "ranking_statistic_computed": false,
   "note": "Stage 24 may not inspect the ranking metric. No AUC, delta_RANK or top-1 quantity is computed here. The 892 count is an input-integrity check that plan 8.4 requires performed before scoring.",
-  "runtime_minutes": 0.002
+  "runtime_minutes": 0.003
 }
