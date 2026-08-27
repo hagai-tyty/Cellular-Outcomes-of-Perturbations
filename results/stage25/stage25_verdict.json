@@ -1,0 +1,196 @@
+{
+  "stage": "25C",
+  "verdict": "STAGE_25_RANKING_SUPPORTED",
+  "plan_canonical_lf_sha256": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48",
+  "eligible_clones": 892,
+  "primary": {
+    "R_W4": 0.692175822122571,
+    "R_W5": 0.7437811410064773,
+    "delta_RANK": 0.05160531888390629,
+    "bootstrap_ci95": [
+      0.03719715371200797,
+      0.06557077572247133
+    ],
+    "bootstrap_replicates": 2000,
+    "bootstrap_seed": 23501,
+    "bootstrap_conditional_on_fitted_models": true
+  },
+  "permutation": {
+    "n_perm": 1000,
+    "base_seed": 23523,
+    "early_stopping": false,
+    "type": "full refit; profiles permuted within stratum on each side of the outer boundary; observed-data hyperparameters never reused",
+    "null_mean": 0.0014971537120079747,
+    "null_sd": 0.004245346153333576,
+    "null_p95": 0.00867214748380684,
+    "null_min": -0.0162291355256603,
+    "null_max": 0.013722284504235405,
+    "n_null_ge_observed": 0,
+    "p_perm": 0.000999000999000999,
+    "margin_over_null_p95": 0.04293317140009945
+  },
+  "secondary": {
+    "R_W1": 0.692653836571998,
+    "delta_RANK_FULL": 0.051127304434479326,
+    "note": "reported; cannot rescue a failed W5-vs-W4 primary gate (\u00a78.5)"
+  },
+  "delta_TOP1": {
+    "value": 0.11547085201793728,
+    "ci95": [
+      0.08295964125560538,
+      0.14573991031390135
+    ],
+    "LOW_PERSISTENCE_TOP1_W5": 0.82847533632287,
+    "LOW_PERSISTENCE_TOP1_W4": 0.7130044843049327,
+    "role": "directional-consistency check, not a significance test (\u00a78.8). It can withhold support, never grant it."
+  },
+  "criteria": {
+    "1_delta_RANK_gt_0": true,
+    "2_bootstrap_lower_endpoint_gt_0": true,
+    "3_observed_gt_null_p95": true,
+    "4_p_perm_le_0_05": true,
+    "5_delta_TOP1_ge_0": true,
+    "6_integrity_leakage_determinism": true
+  },
+  "failing_criteria": [],
+  "descriptives": {
+    "by_outer_fold": {
+      "0": {
+        "clones": 183,
+        "R_W5": 0.7332119004250152,
+        "R_W4": 0.6897237401335762,
+        "delta_RANK": 0.043488160291438975
+      },
+      "1": {
+        "clones": 184,
+        "R_W5": 0.7295440821256038,
+        "R_W4": 0.6747131642512078,
+        "delta_RANK": 0.05483091787439613
+      },
+      "2": {
+        "clones": 176,
+        "R_W5": 0.7863320707070707,
+        "R_W4": 0.720541351010101,
+        "delta_RANK": 0.06579071969696969
+      },
+      "3": {
+        "clones": 173,
+        "R_W5": 0.7434810533076428,
+        "R_W4": 0.6929190751445087,
+        "delta_RANK": 0.05056197816313423
+      },
+      "4": {
+        "clones": 176,
+        "R_W5": 0.7273989898989899,
+        "R_W4": 0.6838857323232324,
+        "delta_RANK": 0.04351325757575758
+      }
+    },
+    "by_pretreatment_depth_bin": {
+      "1": {
+        "clones": 277,
+        "delta_RANK": 0.05347472924187725
+      },
+      "2": {
+        "clones": 143,
+        "delta_RANK": 0.052797202797202805
+      },
+      "3-4": {
+        "clones": 169,
+        "delta_RANK": 0.031369165023011174
+      },
+      "5-9": {
+        "clones": 165,
+        "delta_RANK": 0.04617845117845118
+      },
+      "10+": {
+        "clones": 138,
+        "delta_RANK": 0.07788848631239935
+      }
+    },
+    "pairwise_condition_ranking_accuracy_W5": {
+      "Acid|Cisplatin": {
+        "n": 495,
+        "accuracy_W5": 0.89697
+      },
+      "Acid|CoCl2": {
+        "n": 460,
+        "accuracy_W5": 0.878261
+      },
+      "Acid|Dabrafenib": {
+        "n": 518,
+        "accuracy_W5": 0.868726
+      },
+      "Acid|Doxorubicin": {
+        "n": 474,
+        "accuracy_W5": 0.774262
+      },
+      "Acid|Trametinib": {
+        "n": 561,
+        "accuracy_W5": 0.875223
+      },
+      "Cisplatin|CoCl2": {
+        "n": 347,
+        "accuracy_W5": 0.657061
+      },
+      "Cisplatin|Dabrafenib": {
+        "n": 353,
+        "accuracy_W5": 0.631728
+      },
+      "Cisplatin|Doxorubicin": {
+        "n": 391,
+        "accuracy_W5": 0.667519
+      },
+      "Cisplatin|Trametinib": {
+        "n": 358,
+        "accuracy_W5": 0.670391
+      },
+      "CoCl2|Dabrafenib": {
+        "n": 370,
+        "accuracy_W5": 0.716216
+      },
+      "CoCl2|Doxorubicin": {
+        "n": 380,
+        "accuracy_W5": 0.628947
+      },
+      "CoCl2|Trametinib": {
+        "n": 367,
+        "accuracy_W5": 0.743869
+      },
+      "Dabrafenib|Doxorubicin": {
+        "n": 436,
+        "accuracy_W5": 0.644495
+      },
+      "Dabrafenib|Trametinib": {
+        "n": 233,
+        "accuracy_W5": 0.587983
+      },
+      "Doxorubicin|Trametinib": {
+        "n": 423,
+        "accuracy_W5": 0.676123
+      }
+    },
+    "score_tie_rate_W5": 0.0,
+    "excluded_all_zero_clones": 472,
+    "excluded_all_positive_clones": 37,
+    "positives_per_eligible_clone": {
+      "1": 326,
+      "2": 215,
+      "3": 185,
+      "4": 107,
+      "5": 59
+    }
+  },
+  "consequence": "A validated ordering claim is permitted, and the tool may expose validated_condition_order.",
+  "gen1_next": "GEN1_MANDATORY_SHIP -- either verdict proceeds directly to shipment (\u00a78.10)",
+  "terminal": "This is a terminal scientific result. No second ranking analysis is authorized and no result returns the project to an earlier stage.",
+  "standing_limitations": [
+    "no independent biological replication of the Role-B finding; clone-held-out folds and two endpoint families are not replication",
+    "captured pretreatment clone abundance remains ~3.45x the state contribution",
+    "four of six conditions carry meaningful interaction; Cisplatin is negligible on C1 and Doxorubicin is negative on both endpoints",
+    "C1 is an observed detection proxy, not death, sensitivity or clinical response",
+    "the bootstrap interval is conditional on the fitted models; the null refits",
+    "Role A remains positive-but-underpowered supporting evidence, gate 18.3 FAILED"
+  ],
+  "runtime_minutes": 0.418
+}
