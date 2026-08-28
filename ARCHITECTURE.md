@@ -663,7 +663,7 @@ established. It is deliberately blunt; `CHANGES.md` carries the full evidence fo
 | **Fate classification, within a timepoint** | stratified AUC **0.917** over **12 (safe, unsafe) pairs** from the same timepoint, permutation **p = 0.0091** (`diag_stage18_fate_beyond_day`). Real signal, very thin base |
 | **The fate safety gate, after Stage 16** | sensitivity **0.275 → 0.670** with specificity **unchanged at 0.929** and false approvals unchanged at 2; `fate_ece` 0.276 → 0.182 (ACCEPT, 5/0 unanimous) |
 | **Within-donor ΔAge RANKING** | `rank_model_dage` **0.942**, `rank_ridge_dage` 0.981 — stable across every change in this arc |
-| **`top100` clock variant vs methylation** | MAE **7.15** against an instrument floor of **7.30**, CI spanning zero — statistically indistinguishable from the disagreement between the two gold-standard methylation clocks **on these samples**. The 7.30 yr figure is our measurement here, not a published constant; the two clocks report ~3.6 and ~3.9 yr MAE against chronological age in their own source cohorts |
+| **`top100` clock variant vs methylation** | MAE **7.15** against an instrument floor of **7.30**, CI spanning zero — statistically indistinguishable from the disagreement between the two methylation clocks **on these 44 samples**, and better than the predict-zero control (MAE 9.89 vs skin & blood, 11.71 vs pan-tissue). **The 7.30 yr figure is our measurement, and calling it a floor overstates it.** The two clocks are not equally suited to this tissue: Horvath's 2018 skin & blood clock reports MAE **2.6 yr** and r 0.91 in fibroblasts and outperforms the 2013 pan-tissue clock there, so a large share of the 7.30 is the pan-tissue clock being off-tissue rather than an irreducible limit on measuring ΔAge |
 | **The instrument itself** | determinism is bit-exact; C-7 gate reproduces exactly; the scorecard's two inverted decision rules are fixed and its verdicts are re-derivable from committed snapshots |
 
 ### 11.2 What we GAVE UP ON — scrapped, with the reason
@@ -672,8 +672,8 @@ established. It is deliberately blunt; `CHANGES.md` carries the full evidence fo
 |---|---|---|
 | **Same-timepoint ΔAge *prediction* as a headline** | **circular.** 1,956 of the 2,000 panel genes carry clock weights; the clock's own weights reconstruct the label at ρ **0.96–0.97**, ridge reproduces it at ρ 0.96–0.99. Predicting ΔAge from expression is reading back a linear functional of the input. Per arm: under **C-7 all five arms verdict CIRCULAR** (ridge-vs-label ρ 0.965–0.995). In the earlier **pre-C-7** set the split is N2 and Y2 CIRCULAR, O1/O2/Y1 LABEL-RECOVERABLE, and N3 NOT CIRCULAR — 5 of 6 recover the label. The single dissenting arm, N3, is itself CIRCULAR under C-7, so the headline word "circular" is supported rather than compressed | `diag_clock_circularity` |
 | **"early ΔAge → late ΔAge"** | partial correlation **−0.064** after controlling for donor chronological age. Donor age does all the work, is known at t=0, and needs no model | `diag_early_late_forward` |
-| **The 10 % ΔAge accuracy target** | unverifiable, not merely hard. 10 % of a truth with SD 12.66 yr is MAE ≤ 1.36 yr; the two reference clocks disagree with each other by **7.30 yr** | `diag_instrument_floor` |
-| **Removing the pluripotency signature from ΔAge** | recommendation **WITHDRAWN**: pluripotency is **mediation, not contamination** (3/3 tests). Removing it deletes signal (ρ 0.770 → 0.354) | Stage 10 |
+| **The 10 % ΔAge accuracy target** | unverifiable, not merely hard. 10 % of a truth with SD 12.66 yr (pan-tissue) is MAE ≤ **1.27** yr; the 1.36 yr figure quoted earlier is 10 % of the skin & blood SD of 13.55 yr — the two clocks' SDs were mixed in one sentence, and both bounds are far below anything achievable here; the two reference clocks disagree with each other by **7.30 yr** | `diag_instrument_floor` |
+| **Removing the pluripotency signature from ΔAge** | recommendation **WITHDRAWN**: in this dataset pluripotency behaves as **mediation, not contamination** (3/3 tests) — removing it deletes signal (ρ 0.770 → 0.354). **Scope this carefully.** It is a statement about a full OSKM timecourse and about our measurement path, NOT a claim that pluripotency is necessary for rejuvenation. The partial-reprogramming literature shows the opposite is achievable: Ocampo 2016 and Gill 2022 (eLife, ~30 yr rejuvenation retaining cell identity) report substantial age reversal without stable pluripotency, so the rejuvenation and pluripotency programs are separable in general even though they co-vary here | Stage 10 |
 | **A learned replacement clock** | **NOT LEARNABLE** — split on all three model families | Stage 1.5.4 |
 | **The sparse clock as a shipped default** | validated leave-one-donor-out on Gill; **does not transfer to HFF**, and interacts adversarially with harmonization | Stage 1.5.6 |
 | **`p_unsafe` regression on GSE165177** | structurally impossible: `p_unsafe` is a fraction of *cells*, a bulk sample is already a population average, so a per-sample hard label collapses it to 0/1. `unsafe_sd_by_donor` = 0.10 / 0.00 / 0.00 | Stage 3a, `P0_void` |
@@ -701,6 +701,29 @@ established. It is deliberately blunt; `CHANGES.md` carries the full evidence fo
 | **`STAGE_6_NEW_DATA.md`** | superseded by `STAGE_6_NEW_DATA_REV.md` |
 | **`res_approvals` as a quality metric** | approvals are 0 everywhere; the meaningful quantity was always approvals *relative to oracle* |
 | **Marginal `fate_prauc` as a headline** | inflated by an input the model was handed. Use the stratified number |
+
+### 11.4b Checked against the published record — 2026-08-28
+
+Every §11 claim that could be checked against the literature rather than against our own artifacts
+was checked. Four held, three needed scoping, one was verified as exactly right.
+
+| claim | verdict |
+|---|---|
+| **Same-timepoint ΔAge is circular** | **HOLDS, and needs no literature support.** The clock is an elastic-net linear model on log1p-CP10K expression and 1,956 of the 2,000 panel genes carry weights, so predicting ΔAge from that expression recovers a linear functional of the input. That is arithmetic. Per-arm: all five C-7 arms verdict CIRCULAR |
+| **Two Platts compose exactly into one** | **VERIFIED.** Our Platt is `sigmoid(a·logit(P)+b)`, and composition on the logit is exactly a single Platt — reproduced numerically to 8e-17. It would NOT hold for a Platt applied to a raw probability |
+| **Donor age does the work; partial −0.064** | **HOLDS.** Chronological age dominating a clock-derived measure is the expected behaviour, not an anomaly |
+| **`p_unsafe` regression structurally impossible on bulk** | **HOLDS as stated** — the point is that a per-sample *hard label* collapses a cell fraction to 0/1, which is a property of our label construction |
+| **The 7.30 yr "instrument floor"** | **OVERSTATED, now scoped.** It is our measurement on 44 samples, and the two clocks are not equally suited to fibroblasts — the skin & blood clock reports 2.6 yr MAE and beats the pan-tissue clock in that tissue |
+| **Pluripotency is mediation, not contamination** | **TRUE HERE, but must not be read as general.** Partial-reprogramming work (Ocampo 2016; Gill 2022) shows substantial rejuvenation without stable pluripotency, so the two programs are separable even though they co-vary in a full OSKM timecourse |
+| **"10 % target = MAE ≤ 1.36 yr"** | **ARITHMETIC MIXED.** 1.36 is 10 % of the skin & blood SD (13.55), not of the quoted pan-tissue SD (12.66, which gives 1.27). The conclusion is unaffected |
+
+**One unstated weakness, now stated.** The clock underneath all ΔAge work is our own
+reimplementation from GSE113957, and it is materially weaker than the published one: our CV MAE is
+**12.27 yr** (Pearson 0.837) against Fleischer 2018's ensemble at **7.7 yr mean / 4.0 yr median**
+error and r² 0.81 on the same 133 samples. They used an LDA ensemble; we used a single elastic net.
+Nothing above depends on the clock being *good* — the circularity result depends only on its being
+*linear* — but any claim of the form "our estimate sits on the measurement floor" is easier to
+satisfy with a noisy instrument, and should be read with that in mind.
 
 ### 11.5 The one-sentence version
 

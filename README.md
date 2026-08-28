@@ -78,7 +78,7 @@ rather than being edited out.
 | ✅ **Fate, within a timepoint** | stratified AUC **0.917**, permutation p = 0.0091 — on **12 pairs**. Real, thin |
 | ✅ **Safety gate** | sensitivity **0.670**, specificity 0.929 (Stage 16) |
 | ✅ **Within-donor ΔAge ranking** | Spearman **0.942** |
-| ✅ **`top100` clock vs methylation** | MAE **7.15** against **7.30 yr** — the disagreement between the two reference methylation clocks *measured on these samples*, not a published constant — CI spans zero |
+| ⚠️ **`top100` clock vs methylation** | MAE **7.15** against **7.30 yr**, the disagreement between the pan-tissue and skin & blood methylation clocks *on these 44 samples* — CI spans zero, and it beats the predict-zero control (9.9–11.7). **Not an irreducible floor:** the skin & blood clock reports MAE 2.6 yr in fibroblasts and outperforms the pan-tissue clock there, so much of the 7.30 is the pan-tissue clock being poorly suited to this tissue |
 | ❌ **Same-timepoint ΔAge prediction** | **circular.** The clock is linear in expression, so ΔAge is a linear functional of the input; ridge reads it back at ρ 0.96–0.99. All 5 C-7 arms verdict CIRCULAR; in the pre-C-7 set 5 of 6 recover the label |
 | ❌ **Predicting future ΔAge** | partial **−0.064** after donor age. Donor age is free |
 | ❌ **RES** (the headline output) | **identically zero** — σ_age is 2–4.5× \|µ_age\|, so no cell earns confident-rejuvenation credit |
