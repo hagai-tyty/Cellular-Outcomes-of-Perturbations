@@ -1,18 +1,77 @@
 # CellFate-Rx
 
-Predicting the cellular outcome of OSKM reprogramming from single-cell and bulk transcriptomes:
-a **fate** call (identity preserved / lost / apoptotic) and a **ΔAge** estimate, with calibrated
-uncertainty and an explicit safety gate.
+Two lines of work live in this repository, and they are kept separate on purpose.
 
-> **Status: a research instrument, not a validated predictor.**
-> The pipeline is heavily tested (1583 tests) and its measurements are reproducible bit-for-bit.
-> Most of the project's original claims did **not** survive being measured properly.
-> **[`ARCHITECTURE.md` §11](ARCHITECTURE.md#11-where-the-project-actually-stands--2026-08-18) is
-> the honest status; read it before trusting any number here.**
+**Generation 1 — shipped.** Clone-level prospective prediction in a lineage-traced melanoma line:
+does a clone's pretreatment transcriptional state say anything about *which* of six observed
+experimental conditions it survives? Complete, locked, and summarised immediately below.
+
+**The earlier reprogramming line.** OSKM fate and ΔAge, with a safety gate. Most of its original
+claims did **not** survive being measured properly; its honest status is kept in full further down
+and in [`ARCHITECTURE.md` §11](ARCHITECTURE.md#11-where-the-project-actually-stands--2026-08-18).
+Nothing there was deleted when Generation 1 shipped.
+
+The whole repository is heavily tested (2,259 tests) and its measurements are reproducible
+bit-for-bit.
 
 ---
 
-## What actually holds, as of 2026-08-18
+## Generation 1 — shipped
+
+```text
+  GEN1_MANUSCRIPT_READY
+
+  evidence lock   455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9
+  claim lock      23ea00b808d1ae6a5f3b19e186a9fd0b327ba4b500c5c2a65d4c254142b431ab
+  package         68a1fca2e260fb8e834aaca5949fec4fb05668d823cb0792564b10df1e99bf76
+```
+
+**What was measured.** In WM989 (GSE279162), 1,401 barcoded clones were split across six observed
+experimental conditions — Acid, Cisplatin, CoCl2, Dabrafenib, Doxorubicin, Trametinib. Under a test
+preregistered in full, a frozen state-by-condition interaction model improves clone-specific
+ordering of those conditions over a non-interactive additive model:
+
+```text
+  delta_RANK   +0.051605   CI95 [+0.037197, +0.065571]
+  null         0 of 1000 full-refit permutation draws reached the observed value, p < 0.001
+  population   892 of 1,401 clones, clone-held-out, frozen before any result existed
+```
+
+**What it is not.** The outcome is an observed post-treatment clone-detection proxy and is **not
+death**, sensitivity, resistance or clinical response. The six conditions are the entire supported
+vocabulary; there is no claim about unseen conditions, other cell lines, or patients, and the model
+emits no calibrated probability. Captured pretreatment clone abundance remains roughly 3.45× the
+whole state contribution — state adds something specific on top of abundance, it does not dominate
+it. Independent biological replication has not been performed and is Generation 2 work.
+
+**Read it.**
+
+| | |
+|---|---|
+| [`results/manuscript/MANUSCRIPT.md`](results/manuscript/MANUSCRIPT.md) | the write-up |
+| [`results/manuscript/REPRODUCIBILITY.md`](results/manuscript/REPRODUCIBILITY.md) | how to re-run it |
+| [`results/claim_lock/GEN1_CLAIMS.md`](results/claim_lock/GEN1_CLAIMS.md) | what may and may not be said |
+| [`results/evidence_lock/GEN1_EVIDENCE_LOCK.md`](results/evidence_lock/GEN1_EVIDENCE_LOCK.md) | the 54 locked artifacts |
+| `plans/(newer)practical plans/RECORDs/stage_25_RECORD.md` | the result itself |
+
+**Verify before trusting any of it.** Each command re-hashes its layer and refuses if anything
+moved; each was shown to catch a one-bit change before it was issued.
+
+```bash
+python experiments/run_stage24_gen1_tool.py --stage 24c   # rebuild the gitignored model artifact
+python experiments/run_gen1_evidence_lock.py --verify
+python experiments/run_gen1_claim_lock.py --verify
+python experiments/run_gen1_manuscript.py --verify
+```
+
+---
+
+## The earlier reprogramming line — status as of 2026-08-18
+
+Kept as recorded. Where a claim turned out to be wrong it stays here with the correction beside it,
+rather than being edited out.
+
+### What actually holds
 
 | | |
 |---|---|
@@ -78,8 +137,8 @@ pytest -q
 |---|---|
 | `src/cellfate/` | the package — `data/` `models/` `training/` `evaluation/` `inference/` |
 | `local_runners/` | the drivers actually used day to day |
-| `experiments/` | 86 read-only diagnostics, one per scientific question |
-| `plans/` | the decision record, one file per stage |
+| `experiments/` | 99 read-only diagnostics and stage executors, one per scientific question |
+| `plans/` | the decision record, one file per stage; `RECORDs/` is what each stage found |
 | `results/`, `scorecard/` | every measurement ever taken |
 | `CHANGES.md` | append-only log; wrong claims stay, with corrections beside them |
 | **`ARCHITECTURE.md`** | **the real documentation** |
