@@ -1,5 +1,5 @@
 {
-  "claim_digest": "23ea00b808d1ae6a5f3b19e186a9fd0b327ba4b500c5c2a65d4c254142b431ab",
+  "claim_digest": "0b3c7f038a41c3b58b4c47cc5769d1e5e7be27e4a01d6c5f790a8e7da296ae5f",
   "from_stage": "GEN-1 CLAIM LOCK",
   "to_stage": "MANUSCRIPT + REPRODUCIBILITY PACKAGE",
   "verdict": "GEN1_CLAIMS_LOCKED",

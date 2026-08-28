@@ -36,7 +36,7 @@ verifies clean over all 54 artifacts, before and after.
   GEN1_CLAIMS_LOCKED
 
   evidence lock digest   455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9
-  claim digest           23ea00b808d1ae6a5f3b19e186a9fd0b327ba4b500c5c2a65d4c254142b431ab
+  claim digest           0b3c7f038a41c3b58b4c47cc5769d1e5e7be27e4a01d6c5f790a8e7da296ae5f
   allowed claims          3    each bound to its evidence and its mandatory qualifiers
   forbidden claims        9    verbatim from §3.5, parsed from the plan not from a copy
   adversarial sentences  15 of 15 caught
@@ -45,6 +45,12 @@ verifies clean over all 54 artifacts, before and after.
 
 The manuscript binds to **two** numbers: the evidence digest for what the claims are made of, and
 the claim digest for what may be said about it. Both have a `--verify`.
+
+The claim digest was `23ea00b8...` when this stage closed. It moved to `0b3c7f03...` in the
+final close-out pass, when a ruff `N802` on a helper in `tests/test_gen1_claim_lock.py` was
+fixed -- the contracts are one of the five files the digest covers. No claim, qualifier or
+forbidden entry changed; the verdict was re-derived and is unchanged. The earlier value is
+recorded rather than erased.
 
 ### The three allowed claims
 

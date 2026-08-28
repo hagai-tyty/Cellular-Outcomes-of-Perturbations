@@ -128,10 +128,10 @@
       "the frozen ship-plan digest still holds": true
     },
     "all_passed": true,
-    "runtime_seconds": 0.128
+    "runtime_seconds": 0.152
   },
   "grants_nothing": "Locking a claim grants nothing. It fixes the ceiling of what may be said. The ceiling may be lowered later; it may not be raised.",
   "next": "MANUSCRIPT + REPRODUCIBILITY PACKAGE",
-  "runtime_seconds": 0.182,
+  "runtime_seconds": 0.24,
   "module_sha256": "ad15b870841b916eedffda5df12a842fc7e20d80418a62774e4a0b6e2011755e"
 }

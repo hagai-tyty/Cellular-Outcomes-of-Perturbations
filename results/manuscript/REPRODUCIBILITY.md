@@ -15,7 +15,7 @@ Before reproducing anything, confirm the artifacts are the ones the manuscript w
 
 ```text
   evidence lock digest   455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9
-  claim lock digest      23ea00b808d1ae6a5f3b19e186a9fd0b327ba4b500c5c2a65d4c254142b431ab
+  claim lock digest      0b3c7f038a41c3b58b4c47cc5769d1e5e7be27e4a01d6c5f790a8e7da296ae5f
 ```
 
 `EVIDENCE_INTACT` and `CLAIMS_INTACT` mean every hashed file is byte-for-byte what was locked.
@@ -99,6 +99,17 @@ Every stage ships contracts, and the sharpest of them are negative: that an inco
 refused rather than silently shrinking, that a scope hole is not resolved by widening the scope,
 that a lock refuses a one-bit change, and that the manuscript checker refuses a manuscript with a
 forbidden claim planted in it.
+
+**The suite must leave the working tree unchanged.** Run it and confirm:
+
+```text
+  python -m pytest -q
+  git status --porcelain          # must print nothing
+```
+
+A test that writes a committed artifact is a side effect, not a check — one of them did, and the
+close-out pass caught it. CI now snapshots the tree before the suite and fails the build if the
+suite moved anything.
 
 ---
 

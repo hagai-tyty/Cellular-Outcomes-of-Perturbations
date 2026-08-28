@@ -43,5 +43,26 @@ jobs:
         # bringing it in is its own change with its own diff, not a side effect of a tidy-up.
         run: ruff check src/ tests/ scripts/ plan_tests/
 
+      # Snapshotted BEFORE the suite rather than compared against a clean tree, so a line-ending
+      # or checkout quirk cannot fail this step. Only changes the suite itself made will differ.
+      - name: Snapshot the working tree
+        run: git status --porcelain --untracked-files=all > "$RUNNER_TEMP/tree-before.txt"
+
       - name: Test (pytest)
         run: pytest -q
+
+      # Added 2026-08-28 after a close-out pass found a manuscript contract that proved its point
+      # by running the negative controls -- which wrote results/manuscript/manuscript_controls.json
+      # with a fresh runtime_seconds, so `pytest` left the tree dirty on every run. Nothing was
+      # wrong with the checks, but a test that modifies a committed artifact is a side effect, not
+      # a check, and the same thing must not come back quietly.
+      - name: The suite must not modify the working tree
+        run: |
+          git status --porcelain --untracked-files=all > "$RUNNER_TEMP/tree-after.txt"
+          if ! diff -u "$RUNNER_TEMP/tree-before.txt" "$RUNNER_TEMP/tree-after.txt"; then
+            echo "::error::pytest changed the working tree. A test that writes a committed artifact is a side effect, not a check. The status diff is above; the content diff follows."
+            git --no-pager diff --stat
+            git --no-pager diff
+            exit 1
+          fi
+          echo "the suite left the working tree unchanged"

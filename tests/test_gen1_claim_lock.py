@@ -214,11 +214,8 @@ def test_the_claim_digest_is_reproducible_and_lives_outside_what_it_covers(mod):
     canonical = "\n".join(f"{k}  {d['covers'][k]}" for k in sorted(d["covers"]))
     assert hashlib.sha256(canonical.encode("utf-8")).hexdigest() == d["claim_digest"]
     # the verdict JSON must NOT contain the digest that covers it
-    assert "claim_digest" not in CLAIMS_JSON_TEXT(), "a digest inside its own file hashes itself"
-
-
-def CLAIMS_JSON_TEXT() -> str:
-    return CLAIMS.read_text(encoding="utf-8")
+    assert "claim_digest" not in CLAIMS.read_text(encoding="utf-8"), \
+        "a digest stored inside the file it covers would hash itself"
 
 
 @ran

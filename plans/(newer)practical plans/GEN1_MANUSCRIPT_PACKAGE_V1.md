@@ -7,7 +7,7 @@
 
 ```text
   evidence digest  455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9
-  claim digest     23ea00b808d1ae6a5f3b19e186a9fd0b327ba4b500c5c2a65d4c254142b431ab
+  claim digest     0b3c7f038a41c3b58b4c47cc5769d1e5e7be27e4a01d6c5f790a8e7da296ae5f
 ```
 
 **Mandate** §9 of the frozen ship plan: `MANUSCRIPT + REPRODUCIBILITY PACKAGE -> PREPRINT /
@@ -59,7 +59,7 @@ Before a sentence is written or checked:
 
 ```text
 the evidence lock verifies over all 54 artifacts, digest 455892ff...
-the claim lock verifies, digest 23ea00b8...
+the claim lock verifies, digest 0b3c7f03...
 both digests equal the values in the handoff
 the frozen ship-plan digest still holds
 ```

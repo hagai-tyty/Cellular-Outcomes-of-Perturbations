@@ -4,7 +4,7 @@
 
 ```text
   evidence lock   455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9
-  claim lock      23ea00b808d1ae6a5f3b19e186a9fd0b327ba4b500c5c2a65d4c254142b431ab
+  claim lock      0b3c7f038a41c3b58b4c47cc5769d1e5e7be27e4a01d6c5f790a8e7da296ae5f
 ```
 
 Both digests are verifiable from the repository. See **Availability**.
@@ -288,7 +288,7 @@ for the claim set. Both were shown to refuse a one-bit change before either was 
 
 ```text
   evidence lock digest   455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9
-  claim lock digest      23ea00b808d1ae6a5f3b19e186a9fd0b327ba4b500c5c2a65d4c254142b431ab
+  claim lock digest      0b3c7f038a41c3b58b4c47cc5769d1e5e7be27e4a01d6c5f790a8e7da296ae5f
 ```
 
 ### What is in the repository

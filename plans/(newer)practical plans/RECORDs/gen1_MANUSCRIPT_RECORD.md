@@ -15,7 +15,7 @@ mechanically and has been shown to do so.
 ## Inputs
 - `results/gen1_handoff_to_manuscript.json` — `GEN1_CLAIMS_LOCKED`
 - evidence digest `455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9`
-- claim digest `23ea00b808d1ae6a5f3b19e186a9fd0b327ba4b500c5c2a65d4c254142b431ab`
+- claim digest `0b3c7f038a41c3b58b4c47cc5769d1e5e7be27e4a01d6c5f790a8e7da296ae5f` (was `23ea00b8...` when this stage first ran)
 
 ## Files added
 - `plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md`
@@ -36,9 +36,9 @@ checked, and again after.
 ```text
   GEN1_MANUSCRIPT_READY
 
-  package digest   68a1fca2e260fb8e834aaca5949fec4fb05668d823cb0792564b10df1e99bf76
+  package digest   7a467e7f02ea4cb6a669a1300d048369e39778371efe6d2bb3d9fafdde6b66c6
   evidence digest  455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9
-  claim digest     23ea00b808d1ae6a5f3b19e186a9fd0b327ba4b500c5c2a65d4c254142b431ab
+  claim digest     0b3c7f038a41c3b58b4c47cc5769d1e5e7be27e4a01d6c5f790a8e7da296ae5f
 
   MS-A  both locks verify              6 checks
   MS-C  compliance                     10 checks, 0 forbidden hits
@@ -123,7 +123,31 @@ want the result, and the contract additionally asserts that **the controls JSON 
 after the test runs**, so the same thing cannot return quietly.
 
 Fixing it changed the executor and the contracts, both of which the package digest covers, so the
-digest moved from `e4df73af...` to `68a1fca2...`. The earlier value is recorded rather than erased.
+digest moved `e4df73af... -> 68a1fca2...`, then to `3a593709...` when the package document gained
+the note below, then to `7a467e7f...` when a ruff `N802` fix in the claim-lock contracts moved
+the claim digest this manuscript quotes. Earlier values are recorded rather than erased.
+
+**A ruff error was also found in the close-out pass, and only one of three was fixed.** Five
+lint findings sat in Gen-1 modules: `N802` on a helper in `tests/test_gen1_claim_lock.py`, and
+four unused names across three executors. CI lints `src/ tests/ scripts/ plan_tests/`, so only
+the first would have failed a build, and it is fixed. Three unused imports in
+`run_gen1_manuscript.py` are fixed too, that file being covered by the package digest which
+was moving anyway.
+
+The remaining two -- an unused `sys` import in `run_gen1_evidence_lock.py` and a dead
+`mixed_ok` variable in `run_stage26_scope_lock.py` -- are **left as they are, deliberately**.
+Both files are locked evidence artifacts. Rewriting them would move the evidence digest that
+the README, the manuscript, the claim-lock plan and four records all quote, and would
+invalidate a lock for two cosmetic findings with no behavioural effect. `experiments/` is not
+in CI's lint scope, by a decision recorded in the workflow itself. The findings are recorded
+here instead: that is what a lock is for.
+
+**And it is now enforced rather than merely fixed.** CI snapshots
+`git status --porcelain --untracked-files=all` *before* the suite and diffs it after, failing the
+build on any change and printing what moved. Snapshotting before, rather than asserting a clean
+tree, means a line-ending or checkout quirk cannot fail the step — only something the suite itself
+did. Verified in both directions locally: a real run leaves the snapshot identical, and appending
+one byte to a committed artifact makes the comparison fire and name the file.
 
 ## Tests
 - 21 manuscript contracts, 0 skipped
