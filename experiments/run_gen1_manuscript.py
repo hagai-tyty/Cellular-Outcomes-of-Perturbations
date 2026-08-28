@@ -254,7 +254,14 @@ def package_check() -> dict:
 # =============================================================================================== #
 # MS-F — the checker must refuse (plan §6)
 # =============================================================================================== #
-def negative_controls() -> dict:
+def negative_controls(write: bool = True) -> dict:
+    """`write=False` for callers that only want the result.
+
+    The contract that proves these controls never touch the manuscript has to run them, and running
+    them used to rewrite this stage's controls JSON with a fresh runtime -- so `pytest` left the
+    working tree dirty. A test that modifies a committed results artifact is a side effect, not a
+    check.
+    """
     t0 = time.perf_counter()
     original = MANUSCRIPT.read_text(encoding="utf-8")
     full = CL.combined_patterns()
@@ -282,12 +289,13 @@ def negative_controls() -> dict:
         and "p < 0.001" in original and "0.000999" not in original
         and f"{h['delta_RANK']:+.6f}" in original)
 
-    return write_json(CONTROLS_JSON, {
+    payload = {
         "stage": "MS-F",
         "note": "Run on in-memory copies; the manuscript on disk is never modified. A checker "
                 "that has never refused its own document is decoration.",
         "controls": results, "checks": results, "all_passed": all(results.values()),
-        "runtime_seconds": round(time.perf_counter() - t0, 3)})
+        "runtime_seconds": round(time.perf_counter() - t0, 3)}
+    return write_json(CONTROLS_JSON, payload) if write else payload
 
 
 # =============================================================================================== #

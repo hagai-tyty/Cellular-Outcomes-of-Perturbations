@@ -74,13 +74,22 @@ def test_a_planted_forbidden_claim_is_caught_end_to_end(mod):
 
 
 def test_the_controls_never_modify_the_manuscript(mod):
+    """Running the controls must leave BOTH the manuscript and this stage's own outputs alone.
+
+    `write=False` matters: an earlier version called the writer, so `pytest` rewrote
+    manuscript_controls.json with a fresh runtime and left the working tree dirty. A test that
+    modifies a committed results artifact is a side effect, not a check.
+    """
     src = SRC.read_text(encoding="utf-8")
     assert "in-memory copies" in src
     assert "never modified" in src
-    # the file on disk must be untouched by a control run
+
     before = MANUSCRIPT.read_bytes()
-    mod.negative_controls()
+    controls_before = CONTROLS.read_bytes()
+    r = mod.negative_controls(write=False)
+    assert r["all_passed"] is True
     assert MANUSCRIPT.read_bytes() == before
+    assert CONTROLS.read_bytes() == controls_before, "the suite must not dirty the working tree"
 
 
 # ============================================================================================== #

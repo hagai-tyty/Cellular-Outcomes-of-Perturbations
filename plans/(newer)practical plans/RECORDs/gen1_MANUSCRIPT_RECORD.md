@@ -36,7 +36,7 @@ checked, and again after.
 ```text
   GEN1_MANUSCRIPT_READY
 
-  package digest   e4df73af407437d850d57959aa15a40d47c4afb1fd391f6890faa09b1018ae8b
+  package digest   68a1fca2e260fb8e834aaca5949fec4fb05668d823cb0792564b10df1e99bf76
   evidence digest  455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9
   claim digest     23ea00b808d1ae6a5f3b19e186a9fd0b327ba4b500c5c2a65d4c254142b431ab
 
@@ -109,9 +109,27 @@ were also too tight — a 20-space column gap against a 12-character allowance, 
 could not cross `1,000`, and `audited` where the text says `audit`. All four were pattern defects,
 not manuscript defects; no number was wrong.
 
+## A second bug, found in the final close-out pass
+
+**The test suite dirtied the working tree.** `test_the_controls_never_modify_the_manuscript` proved
+its point by actually running the negative controls — and `negative_controls()` wrote
+`manuscript_controls.json`, whose `runtime_seconds` differs on every run. So `pytest` left
+`git status` non-clean, every time.
+
+Nothing was wrong with the manuscript or the checks. But a test that modifies a committed results
+artifact is a side effect, not a check, and in any setting that asserts a clean tree after tests it
+would fail for no real reason. `negative_controls(write=False)` now exists for callers that only
+want the result, and the contract additionally asserts that **the controls JSON is byte-identical
+after the test runs**, so the same thing cannot return quietly.
+
+Fixing it changed the executor and the contracts, both of which the package digest covers, so the
+digest moved from `e4df73af...` to `68a1fca2...`. The earlier value is recorded rather than erased.
+
 ## Tests
 - 21 manuscript contracts, 0 skipped
 - both locks re-verify clean, before and after
+- a full-suite run leaves the working tree clean, verified by hashing every file under `results/`
+  before and after
 
 ---
 
