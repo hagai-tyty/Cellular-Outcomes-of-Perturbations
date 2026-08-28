@@ -41,20 +41,29 @@ not a gate on this result.
 The question is easy to state and hard to evaluate honestly: before a perturbation is applied, does
 a cell's transcriptional state say anything about which perturbation it will survive?
 
-Most evidence for state-dependent outcomes is retrospective. Outcome and state are read from the
-same cells, or state is inferred from cells that already experienced the perturbation, and the
-apparent predictive signal can be a consequence of the outcome rather than a cause. Barcoded
-lineage tracing offers a way around this: a clone is split, part of it is profiled before anything
-is done to it, and the remaining parts are exposed to different conditions. The pretreatment
-profile is then genuinely prior to the outcome.
+Barcoded lineage tracing solves the hardest part of asking it. A clone is split, part of it is
+profiled before anything is done to it, and the remaining parts are exposed to different
+conditions, so the pretreatment profile is genuinely prior to the outcome rather than a consequence
+of it.
 
-Two things make this hard to evaluate rather than merely to observe. The first is that clone
-abundance dominates. A clone that was large before treatment is more likely to be detected after
-it, for reasons that have nothing to do with state, so any comparison that does not hold abundance
-fixed will find a signal that is really a headcount. The second is that the interesting claim is
-not "state predicts outcome" but "state predicts *which condition* this clone survives" — a
-clone-specific ordering claim, which a model can only satisfy through an explicit interaction
-between state and condition.
+**That design, and the data used here, are not ours.** Schaff et al. built exactly such a system
+across six conditions in parallel and showed that pre-existing state predicts which clones go on to
+resist, identifying high CD44 expression in treatment-naive cells as a marker of resistance across
+multiple conditions [1]. This work is a reanalysis of their data and takes no credit for the
+experiment.
+
+What that establishes is a **general propensity**: some clones are more likely to survive many
+things. It leaves a different question open — whether pretreatment state says *which* condition a
+given clone survives, rather than how resistant that clone is overall. The two are separable, and
+separating them is what this work does.
+
+Two things make the ordering question hard to evaluate rather than merely to observe. The first is
+that clone abundance dominates: a clone that was large before treatment is more likely to be
+detected after it for reasons that have nothing to do with state, so any comparison that does not
+hold abundance fixed will find a signal that is really a headcount. The second is that
+clone-specific ordering is not something a model can produce by being generally right about a
+clone — it requires an explicit interaction between state and condition, because any effect that
+acts on a clone as a whole shifts all six of its scores together and leaves their order untouched.
 
 This work evaluates exactly that, once, under a protocol frozen in advance.
 
@@ -70,12 +79,30 @@ ROLE A, supporting    GSE227151 (Rewind)     historical supporting evidence only
 Role B is one BRAF-V600E melanoma cell line with 1,401 lineage-traced clones split across six
 observed experimental conditions. It carries the whole primary claim.
 
-Role A is a separately reconstructed reprogramming system. It contributes one supporting sentence
-and nothing else; its own confirmation gate failed. It is not a replication of Role B, and it does
-not provide the same multi-condition task or the same outcome.
+**Role B is a reanalysis. We generated no new data.** The experiment was performed by Schaff et
+al. [1], who introduced a barcode library into WM989 A6-G3, isolated 350,000 uniquely barcoded
+cells, expanded them for roughly six doublings, and divided the population across the six
+conditions reanalysed here: dabrafenib, trametinib, CoCl2 and acidic media for four weeks, and
+cisplatin and doxorubicin for two weeks followed by a two-week holiday.
+
+Role A is a separately reconstructed reprogramming system [2]. It contributes one supporting
+sentence and nothing else; its own confirmation gate failed. It is not a replication of Role B, and
+it does not provide the same multi-condition task or the same outcome.
 
 No additional dataset was searched, downloaded, qualified or used. Raw sequencing data is not
 vendored; accessions are given above.
+
+### References
+
+```text
+[1] Schaff DL, White PE, Cote CJ, Watterson GE, Lin KZ, Fasse AJ, Zhang NR, Shaffer SM.
+    Pre-existing cell states predict resistance to multiple treatments.
+    Cell Genomics 6(6):101191, 2026.  doi:10.1016/j.xgen.2026.101191   PMID 41916275
+    Data: GEO GSE279162
+
+[2] GEO GSE227151 -- Retrospective identification of cell-intrinsic factors that mark
+    pluripotency potential in rare somatic cells (scRNA-seq), human hiF-T fibroblasts.
+```
 
 ---
 
@@ -157,6 +184,14 @@ fitted models.
 `R(W4)` sits *below* `R(W1)` by 0.0005. The additive expression term contributes nothing to
 ordering, which is precisely why W4 was preregistered as the comparator. The entire ordering gain is
 the interaction.
+
+**This also settles what the result is not.** A general resistance-propensity axis — a clone
+disposed to survive many conditions, the kind of signal CD44 marks in this system [1] — enters a
+model as an additive state term. That term is in W4, and here it adds nothing. The metric is
+stricter still: within-clone AUROC compares the six scores of a single clone, so any quantity
+acting on that clone as a whole shifts all six equally and cannot change their order. A purely
+clone-level propensity signal contributes **exactly zero** to this measurement, by construction.
+What is measured is the part that is specific to the condition.
 
 ### The separation, not the p-value, is the result
 

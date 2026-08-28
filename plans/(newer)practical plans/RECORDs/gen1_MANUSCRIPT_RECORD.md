@@ -36,7 +36,7 @@ checked, and again after.
 ```text
   GEN1_MANUSCRIPT_READY
 
-  package digest   7a467e7f02ea4cb6a669a1300d048369e39778371efe6d2bb3d9fafdde6b66c6
+  package digest   6211abc565db49638eb8b3fbc906afc102f777573ebef6277b56ef1d41d55108
   evidence digest  455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9
   claim digest     0b3c7f038a41c3b58b4c47cc5769d1e5e7be27e4a01d6c5f790a8e7da296ae5f
 
@@ -148,6 +148,64 @@ build on any change and printing what moved. Snapshotting before, rather than as
 tree, means a line-ending or checkout quirk cannot fail the step — only something the suite itself
 did. Verified in both directions locally: a real run leaves the snapshot identical, and appending
 one byte to a committed artifact makes the comparison fire and name the file.
+
+## A literature check, and the citation it forced
+
+Before anything shipped, the claims were checked against the published record rather than against
+our own artifacts alone. It found the most consequential omission in the manuscript.
+
+**The manuscript cited nothing at all — including the paper that generated its primary dataset.**
+GSE279162 is the data of Schaff DL, White PE, Cote CJ, Watterson GE, Lin KZ, Fasse AJ, Zhang NR and
+Shaffer SM, *Pre-existing cell states predict resistance to multiple treatments*, Cell Genomics
+6(6):101191, 2026, doi:10.1016/j.xgen.2026.101191 (PMID 41916275). Their design — a barcode library
+into WM989 A6-G3, 350,000 uniquely barcoded cells, split across dabrafenib, trametinib, CoCl2,
+acidic media, cisplatin and doxorubicin — is exactly the six conditions reanalysed here. Reanalysing
+someone's dataset without citing them is not a stylistic lapse. Both accessions are now cited and
+the Data section states plainly that we generated no new data.
+
+**The novelty framing was also wrong, and is corrected.** The Introduction read as though prospective
+clone-level evaluation were the gap this work fills. It is not: Schaff et al. built the prospective
+system and already showed that pre-existing state predicts which clones resist, identifying CD44 in
+treatment-naive cells as a marker of resistance across multiple conditions.
+
+**What the check did NOT do is weaken the result — it sharpened it.** Their finding is a general
+propensity: some clones survive many things. That is a state *main effect*, and it is exactly what
+W4 contains. Two facts already in the frozen design separate our claim from theirs:
+
+```text
+  R(W4) 0.692176 sits BELOW R(W1) 0.692654 -- the additive/general state term adds
+  nothing to ordering, so the entire gain is the interaction
+
+  within-clone AUROC compares the six scores of ONE clone, so any quantity acting on
+  that clone as a whole shifts all six equally and cannot change their order. A purely
+  clone-level propensity signal contributes exactly zero, by construction
+```
+
+Both are now stated in Results rather than left implicit. The result is complementary to theirs,
+not a rediscovery of it: they establish that state predicts *how resistant*, this establishes that
+state also carries information about *which condition* — the part a general axis cannot supply.
+
+## A correction I nearly introduced myself
+
+Checking the older ΔAge claims, the `diag_clock_circularity` artifact appeared to show the blanket
+word "circular" overstating a mixed result — one arm reading `NOT CIRCULAR`. I began softening the
+README and ARCHITECTURE on that basis.
+
+**That reading was wrong: I had seen only the first of two arm sets.** Under **C-7 all five arms
+verdict CIRCULAR** (ridge-vs-label ρ 0.965–0.995). The dissenting arm, N3, belongs to the earlier
+`pre-C-7` set and is itself CIRCULAR under C-7. The original claim was better supported than my
+correction to it, and the softening was reverted before it shipped. Both documents now carry the
+per-arm detail so the question cannot be re-litigated from memory.
+
+The claim itself needs no literature support: the clock is an elastic-net linear model on
+log1p-CP10K expression, 1,956 of the 2,000 panel genes carry clock weights, so predicting ΔAge from
+that same expression recovers a linear functional of the input. That is arithmetic.
+
+One wording was genuinely too strong and is fixed: the **7.30 yr** figure is the disagreement
+between the two reference methylation clocks *on our samples*, not a published constant. The
+published clocks report ~3.6 yr (Horvath) and ~3.9 yr (Hannum) MAE against chronological age in
+their own cohorts. Calling 7.30 an "instrument floor" without that qualifier invited a reader to
+take it as a field constant.
 
 ## Tests
 - 21 manuscript contracts, 0 skipped

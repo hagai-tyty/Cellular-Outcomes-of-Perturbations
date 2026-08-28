@@ -23,7 +23,7 @@ bit-for-bit.
 
   evidence lock   455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9
   claim lock      0b3c7f038a41c3b58b4c47cc5769d1e5e7be27e4a01d6c5f790a8e7da296ae5f
-  package         7a467e7f02ea4cb6a669a1300d048369e39778371efe6d2bb3d9fafdde6b66c6
+  package         6211abc565db49638eb8b3fbc906afc102f777573ebef6277b56ef1d41d55108
 ```
 
 **What was measured.** In WM989 (GSE279162), 1,401 barcoded clones were split across six observed
@@ -78,8 +78,8 @@ rather than being edited out.
 | ✅ **Fate, within a timepoint** | stratified AUC **0.917**, permutation p = 0.0091 — on **12 pairs**. Real, thin |
 | ✅ **Safety gate** | sensitivity **0.670**, specificity 0.929 (Stage 16) |
 | ✅ **Within-donor ΔAge ranking** | Spearman **0.942** |
-| ✅ **`top100` clock vs methylation** | MAE **7.15** against a **7.30** instrument floor — CI spans zero |
-| ❌ **Same-timepoint ΔAge prediction** | **circular** (ρ 0.96–0.99): the label is a linear functional of the input |
+| ✅ **`top100` clock vs methylation** | MAE **7.15** against **7.30 yr** — the disagreement between the two reference methylation clocks *measured on these samples*, not a published constant — CI spans zero |
+| ❌ **Same-timepoint ΔAge prediction** | **circular.** The clock is linear in expression, so ΔAge is a linear functional of the input; ridge reads it back at ρ 0.96–0.99. All 5 C-7 arms verdict CIRCULAR; in the pre-C-7 set 5 of 6 recover the label |
 | ❌ **Predicting future ΔAge** | partial **−0.064** after donor age. Donor age is free |
 | ❌ **RES** (the headline output) | **identically zero** — σ_age is 2–4.5× \|µ_age\|, so no cell earns confident-rejuvenation credit |
 

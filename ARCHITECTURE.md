@@ -663,14 +663,14 @@ established. It is deliberately blunt; `CHANGES.md` carries the full evidence fo
 | **Fate classification, within a timepoint** | stratified AUC **0.917** over **12 (safe, unsafe) pairs** from the same timepoint, permutation **p = 0.0091** (`diag_stage18_fate_beyond_day`). Real signal, very thin base |
 | **The fate safety gate, after Stage 16** | sensitivity **0.275 → 0.670** with specificity **unchanged at 0.929** and false approvals unchanged at 2; `fate_ece` 0.276 → 0.182 (ACCEPT, 5/0 unanimous) |
 | **Within-donor ΔAge RANKING** | `rank_model_dage` **0.942**, `rank_ridge_dage` 0.981 — stable across every change in this arc |
-| **`top100` clock variant vs methylation** | MAE **7.15** against an instrument floor of **7.30**, CI spanning zero — statistically indistinguishable from the disagreement between the two gold-standard methylation clocks |
+| **`top100` clock variant vs methylation** | MAE **7.15** against an instrument floor of **7.30**, CI spanning zero — statistically indistinguishable from the disagreement between the two gold-standard methylation clocks **on these samples**. The 7.30 yr figure is our measurement here, not a published constant; the two clocks report ~3.6 and ~3.9 yr MAE against chronological age in their own source cohorts |
 | **The instrument itself** | determinism is bit-exact; C-7 gate reproduces exactly; the scorecard's two inverted decision rules are fixed and its verdicts are re-derivable from committed snapshots |
 
 ### 11.2 What we GAVE UP ON — scrapped, with the reason
 
 | scrapped | why | where |
 |---|---|---|
-| **Same-timepoint ΔAge *prediction* as a headline** | **circular.** 1,956 of the 2,000 panel genes carry clock weights; the clock's own weights reconstruct the label at ρ **0.96–0.97**, ridge reproduces it at ρ 0.96–0.99. Predicting ΔAge from expression is reading back a linear functional of the input | `diag_clock_circularity` |
+| **Same-timepoint ΔAge *prediction* as a headline** | **circular.** 1,956 of the 2,000 panel genes carry clock weights; the clock's own weights reconstruct the label at ρ **0.96–0.97**, ridge reproduces it at ρ 0.96–0.99. Predicting ΔAge from expression is reading back a linear functional of the input. Per arm: under **C-7 all five arms verdict CIRCULAR** (ridge-vs-label ρ 0.965–0.995). In the earlier **pre-C-7** set the split is N2 and Y2 CIRCULAR, O1/O2/Y1 LABEL-RECOVERABLE, and N3 NOT CIRCULAR — 5 of 6 recover the label. The single dissenting arm, N3, is itself CIRCULAR under C-7, so the headline word "circular" is supported rather than compressed | `diag_clock_circularity` |
 | **"early ΔAge → late ΔAge"** | partial correlation **−0.064** after controlling for donor chronological age. Donor age does all the work, is known at t=0, and needs no model | `diag_early_late_forward` |
 | **The 10 % ΔAge accuracy target** | unverifiable, not merely hard. 10 % of a truth with SD 12.66 yr is MAE ≤ 1.36 yr; the two reference clocks disagree with each other by **7.30 yr** | `diag_instrument_floor` |
 | **Removing the pluripotency signature from ΔAge** | recommendation **WITHDRAWN**: pluripotency is **mediation, not contamination** (3/3 tests). Removing it deletes signal (ρ 0.770 → 0.354) | Stage 10 |
