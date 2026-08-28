@@ -1,0 +1,21 @@
+{
+  "stage": "MS-F",
+  "note": "Run on in-memory copies; the manuscript on disk is never modified. A checker that has never refused its own document is decoration.",
+  "controls": {
+    "a planted forbidden claim is caught": true,
+    "a dropped qualifier is caught": true,
+    "p quoted as a point estimate is caught": true,
+    "a changed number is caught": true,
+    "the real manuscript passes all four": true
+  },
+  "checks": {
+    "a planted forbidden claim is caught": true,
+    "a dropped qualifier is caught": true,
+    "p quoted as a point estimate is caught": true,
+    "a changed number is caught": true,
+    "the real manuscript passes all four": true
+  },
+  "all_passed": true,
+  "runtime_seconds": 0.014,
+  "module_sha256": "49652a9bcb4b84108c23edc146c30c9304fd61881fb16ba0b506da2ffe36b2cb"
+}

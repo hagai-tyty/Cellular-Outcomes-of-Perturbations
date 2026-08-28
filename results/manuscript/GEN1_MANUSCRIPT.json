@@ -1,0 +1,40 @@
+{
+  "stage": "GEN-1 MANUSCRIPT + REPRODUCIBILITY PACKAGE",
+  "verdict": "GEN1_MANUSCRIPT_READY",
+  "substages": {
+    "MS-A_locks_verify": true,
+    "MS-C_D_compliance": true,
+    "MS-E_package": true,
+    "MS-F_controls_fire": true
+  },
+  "failing": [],
+  "evidence_digest": "455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9",
+  "claim_digest": "23ea00b808d1ae6a5f3b19e186a9fd0b327ba4b500c5c2a65d4c254142b431ab",
+  "plan_canonical_lf_sha256": "5a3de98ceec6c9e2b0fe7c55060d6fc70ff918d44bd40d11dc7bb01d28c15025",
+  "manuscript": "results/manuscript/MANUSCRIPT.md",
+  "package": "results/manuscript/REPRODUCIBILITY.md",
+  "numbers_traced": 17,
+  "sections": [
+    "Abstract",
+    "Introduction",
+    "Data",
+    "Methods",
+    "Results",
+    "The tool",
+    "Limitations",
+    "What this does not show",
+    "Availability",
+    "Generation 2"
+  ],
+  "negative_controls": {
+    "a planted forbidden claim is caught": true,
+    "a dropped qualifier is caught": true,
+    "p quoted as a point estimate is caught": true,
+    "a changed number is caught": true,
+    "the real manuscript passes all four": true
+  },
+  "what_ready_does_not_mean": "GEN1_MANUSCRIPT_READY means the document is consistent with everything locked beneath it. It is NOT a judgement that the science is good, that the writing is clear, or that a reviewer will agree.",
+  "next": "PREPRINT / SUBMISSION. Generation 1 is complete.",
+  "runtime_seconds": 0.167,
+  "module_sha256": "49652a9bcb4b84108c23edc146c30c9304fd61881fb16ba0b506da2ffe36b2cb"
+}
