@@ -3,7 +3,7 @@
 ```text
   GEN1_EVIDENCE_LOCKED
 
-  lock digest   455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9
+  lock digest   2edc73c529e25b9b6faa38680a8649d073c8f96aac0f5cb2e59691e7e56d7085
   artifacts     54
   ship plan     8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48
 ```
@@ -73,7 +73,7 @@ has one identity on every platform. The ship plan therefore carries `59f22e9a...
   code          0a934d35060005b32150492f1e7c004cc83b885cee6cba561905c77701959080  tests/test_stage23_2h_confirmation.py
   code          0b71060fab5cc6ea04d935bfb72ce3cf3197f34e947439ed52fd7f405759c7c1  tests/test_stage24_gen1_tool.py
   code          a880c0163b00ad60e5848c848e05501e10a6fc776207eab3890afefdca6f0d4d  tests/test_stage25_ranking.py
-  code          66ea8bed1c42d611dfe42b1777004e3effc75e7c150f3c757142767cd7a98d16  tests/test_stage26_scope_lock.py
+  code          1f9951ae3def121b3c76465166e3678097fa0eb69829034bc80191b0c2ffe514  tests/test_stage26_scope_lock.py
 ```
 
 ## Chain of custody

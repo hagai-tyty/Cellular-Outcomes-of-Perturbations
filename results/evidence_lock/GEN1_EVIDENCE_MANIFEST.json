@@ -1,6 +1,6 @@
 {
   "stage": "EL-A",
-  "lock_digest": "455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9",
+  "lock_digest": "2edc73c529e25b9b6faa38680a8649d073c8f96aac0f5cb2e59691e7e56d7085",
   "digest_definition": "SHA-256 over 'path  sha256' lines, sorted by path, LF-joined",
   "n_artifacts": 54,
   "by_class": {
@@ -433,9 +433,9 @@
     },
     "tests/test_stage26_scope_lock.py": {
       "class": "code",
-      "sha256": "66ea8bed1c42d611dfe42b1777004e3effc75e7c150f3c757142767cd7a98d16",
+      "sha256": "1f9951ae3def121b3c76465166e3678097fa0eb69829034bc80191b0c2ffe514",
       "hashed": "canonical-lf",
-      "bytes": 15684,
+      "bytes": 16530,
       "git_tracked": true,
       "git_ignored": false
     },
@@ -455,9 +455,7 @@
   "clone_portability": {
     "drifted": [],
     "skipped_uncommitted_edits": [
-      "experiments/run_gen1_evidence_lock.py",
-      "plans/(newer)practical plans/GEN1_EVIDENCE_LOCK_V1.md",
-      "tests/test_gen1_evidence_lock.py"
+      "tests/test_stage26_scope_lock.py"
     ]
   },
   "hashing_rule": {
@@ -492,6 +490,6 @@
     "every committed artifact hashes the same from a fresh clone": true
   },
   "all_passed": true,
-  "runtime_seconds": 10.733,
+  "runtime_seconds": 9.678,
   "module_sha256": "23256d44e6144aedc08c5b286710769e1d560abb41a742861bfabc820ed8adcb"
 }

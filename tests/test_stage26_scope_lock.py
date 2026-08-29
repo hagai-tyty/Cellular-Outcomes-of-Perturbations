@@ -329,14 +329,29 @@ def test_every_substage_came_from_the_same_module():
 
 @ran
 def test_every_evidence_lock_input_is_a_real_path():
-    """The evidence lock hashes these. A prose string like 'artifact.npz + .json' is a bug."""
+    """The evidence lock hashes these. A prose string like 'artifact.npz + .json' is a bug.
+
+    One path is legitimately absent from a fresh clone: the 44 MB model artifact is gitignored and
+    rebuilt by `--stage 24c` before anything else runs. This test used to assert every path exists,
+    which passed on a machine that had already built it and failed in CI on every commit. The
+    exemption is DERIVED from the evidence manifest's own `git_ignored` list rather than hardcoded,
+    and the manifest separately gates that list down to exactly that one file -- so a second
+    unbuildable path still fails here.
+    """
     v = _json(VERDICT)
     assert v["evidence_missing"] == []
     assert v["evidence_paths_verified_present"] is True
+
+    manifest = _json(RESULTS / "evidence_lock" / "GEN1_EVIDENCE_MANIFEST.json")
+    rebuildable = set(manifest["git_ignored"])
+    assert rebuildable == {"results/stage24/stage24_w5_artifact.npz"}
+
+    absent = []
     for group, paths in _json(HANDOFF)["evidence_to_lock"].items():
         assert isinstance(paths, list), f"{group} must be a list of paths, not a sentence"
-        for p in paths:
-            assert (ROOT / p).exists(), f"{group}: {p}"
+        absent += [p for p in paths if not (ROOT / p).exists()]
+    assert set(absent) <= rebuildable, \
+        f"absent and not rebuildable: {sorted(set(absent) - rebuildable)}"
 
 
 @ran

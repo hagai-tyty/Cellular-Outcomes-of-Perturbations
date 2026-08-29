@@ -13,7 +13,7 @@ becomes "response".
 
 ## Inputs
 - `results/gen1_handoff_to_claim_lock.json` — `GEN1_EVIDENCE_LOCKED`
-- evidence lock digest `455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9`
+- evidence lock digest `2edc73c529e25b9b6faa38680a8649d073c8f96aac0f5cb2e59691e7e56d7085`
 - `results/evidence_lock/GEN1_CLAIM_LOCK_INPUT.json`
 - `experiments/run_stage26_scope_lock.py` — imported for its scanner, **not modified**
 
@@ -35,8 +35,8 @@ verifies clean over all 54 artifacts, before and after.
 ```text
   GEN1_CLAIMS_LOCKED
 
-  evidence lock digest   455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9
-  claim digest           0b3c7f038a41c3b58b4c47cc5769d1e5e7be27e4a01d6c5f790a8e7da296ae5f
+  evidence lock digest   2edc73c529e25b9b6faa38680a8649d073c8f96aac0f5cb2e59691e7e56d7085
+  claim digest           0453a1af6ead8f6d242f5b631a1f66e5f1ccce57a4d8851c2cd1e2a53695e98b
   allowed claims          3    each bound to its evidence and its mandatory qualifiers
   forbidden claims        9    verbatim from §3.5, parsed from the plan not from a copy
   adversarial sentences  15 of 15 caught

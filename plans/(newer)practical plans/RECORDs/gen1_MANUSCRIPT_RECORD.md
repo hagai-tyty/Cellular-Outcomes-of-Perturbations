@@ -14,8 +14,8 @@ mechanically and has been shown to do so.
 
 ## Inputs
 - `results/gen1_handoff_to_manuscript.json` — `GEN1_CLAIMS_LOCKED`
-- evidence digest `455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9`
-- claim digest `0b3c7f038a41c3b58b4c47cc5769d1e5e7be27e4a01d6c5f790a8e7da296ae5f` (was `23ea00b8...` when this stage first ran)
+- evidence digest `2edc73c529e25b9b6faa38680a8649d073c8f96aac0f5cb2e59691e7e56d7085`
+- claim digest `0453a1af6ead8f6d242f5b631a1f66e5f1ccce57a4d8851c2cd1e2a53695e98b` (was `23ea00b8...` when this stage first ran)
 
 ## Files added
 - `plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md`
@@ -36,9 +36,9 @@ checked, and again after.
 ```text
   GEN1_MANUSCRIPT_READY
 
-  package digest   6211abc565db49638eb8b3fbc906afc102f777573ebef6277b56ef1d41d55108
-  evidence digest  455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9
-  claim digest     0b3c7f038a41c3b58b4c47cc5769d1e5e7be27e4a01d6c5f790a8e7da296ae5f
+  package digest   ba2c9989427f03d5d8f7358872c07b9d134b6968d6fc9980d8cb637e123d96ea
+  evidence digest  2edc73c529e25b9b6faa38680a8649d073c8f96aac0f5cb2e59691e7e56d7085
+  claim digest     0453a1af6ead8f6d242f5b631a1f66e5f1ccce57a4d8851c2cd1e2a53695e98b
 
   MS-A  both locks verify              6 checks
   MS-C  compliance                     10 checks, 0 forbidden hits
@@ -206,6 +206,43 @@ between the two reference methylation clocks *on our samples*, not a published c
 published clocks report ~3.6 yr (Horvath) and ~3.9 yr (Hannum) MAE against chronological age in
 their own cohorts. Calling 7.30 an "instrument floor" without that qualifier invited a reader to
 take it as a field constant.
+
+## Why CI was red on every commit
+
+Every workflow run since the manuscript stage opened had failed, and the cause was **one test of
+mine that could only ever pass on the machine that wrote it**.
+
+`test_every_evidence_lock_input_is_a_real_path` asserted that every path the handoff names exists on
+disk. One of them is `stage24_w5_artifact.npz` — 44 MB, gitignored, **deliberately absent from a
+fresh clone**, rebuilt by `--stage 24c`. That gap is recorded in the plan, in the evidence lock, in
+the manuscript and in the reproducibility package. The test contradicted all four.
+
+It passed locally because the artifact was sitting in my working tree. Reproduced by hiding the
+file and re-running: exactly one failure across the whole suite, and it was this.
+
+The exemption is now **derived from the evidence manifest's own `git_ignored` list** rather than
+hardcoded, and the manifest separately gates that list down to exactly one entry — so a second
+unbuildable path still fails. Verified in both directions: the suite is green with the artifact
+present and with it absent, and the tree-check step passes in both.
+
+**Lesson, and it is not a new one here.** A check that has only ever run in one environment has
+only ever been tested in one environment. The locks are verified from a fresh clone by design;
+their own contracts were not.
+
+### The cascade this forced
+
+The fixed file is `tests/test_stage26_scope_lock.py`, which the evidence lock covers under `code` —
+so the lock refused, correctly, and the whole chain moved:
+
+```text
+  evidence  455892ff -> 2edc73c5     the fixed contract file
+  claim     0b3c7f03 -> 0453a1af     the claim plan quotes the evidence digest
+  package   6211abc5 -> ba2c9989     the manuscript quotes both
+```
+
+Nothing scientific changed: no number, no claim, no qualifier, no forbidden entry. Every earlier
+digest is recorded above rather than erased, and a sweep confirms no document quotes a superseded
+one.
 
 ## Tests
 - 21 manuscript contracts, 0 skipped

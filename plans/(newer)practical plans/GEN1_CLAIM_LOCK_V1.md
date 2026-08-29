@@ -4,7 +4,7 @@
 **Parent** `STAGE_23_5_GEN1_ROLE_B_SHIP_PLAN_V1.md`, canonical-LF SHA-256
 `8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48`, FROZEN.
 **Entry** `results/gen1_handoff_to_claim_lock.json`, verdict `GEN1_EVIDENCE_LOCKED`,
-lock digest `455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9`.
+lock digest `2edc73c529e25b9b6faa38680a8649d073c8f96aac0f5cb2e59691e7e56d7085`.
 
 **Mandate** §9 of the frozen ship plan, verbatim:
 
@@ -64,7 +64,7 @@ The very first thing, before a single sentence is written:
 
 ```text
 re-run the evidence-lock verifier over all 54 artifacts
-the lock digest must equal 455892ff50de483fe6e82097f0ab7b96476781d6037e56d93106643045a8b1a9
+the lock digest must equal 2edc73c529e25b9b6faa38680a8649d073c8f96aac0f5cb2e59691e7e56d7085
 ```
 
 A moved artifact is `GEN1_CLAIM_LOCK_REFUSED`. Writing claims against evidence that has shifted is
