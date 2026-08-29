@@ -1,12 +1,12 @@
 {
-  "claim_digest": "1ea0bbe5ab6e1c5504596b261ee7269935b0c5a7dae76ff1bc92ff18861a9b90",
+  "claim_digest": "7db3c35948267d32552ad80aab374160ecb620f170faff870a7ee9e4066ca0fa",
   "digest_definition": "SHA-256 over 'path  canonical-lf-sha256' lines, sorted by path, LF-joined -- the same rule the evidence lock uses",
   "covers": {
-    "plans/(newer)practical plans/GEN1_CLAIM_LOCK_V1.md": "7e87881b3ddf42be59e79c4b2c6abfa66246762a6586ab680cad41215d59a54c",
+    "plans/(newer)practical plans/GEN1_CLAIM_LOCK_V1.md": "ca081cd08716b19f3b9b529ba506e4883e71e5ea5ca29c9c097052785477fc9a",
     "experiments/run_gen1_claim_lock.py": "a92c3483102330c249844b3cab5a73a53f40612c5ebcc2ed0acbce2947d71a6f",
     "tests/test_gen1_claim_lock.py": "deb4a4c024348d3a821ae2ec1932027a2a517b260d715161426bbc7674dad7b6",
-    "results/claim_lock/GEN1_CLAIMS.md": "e613e292bff5acb9b65811310fb071f6eb8a2c907770e87e825a936df6a9a39f",
-    "results/claim_lock/GEN1_CLAIM_LOCK.json": "1718bb15e0555bcf462e74185f5c912311d2bcaed297d359e93f03317cff0570"
+    "results/claim_lock/GEN1_CLAIMS.md": "65ba4434dc3f4da68ee21861d32e5ab09bd899473de8f9e7af2c5ce540aef907",
+    "results/claim_lock/GEN1_CLAIM_LOCK.json": "dbb412b166383324ee423aef018e3152e1cb4a817c66cf0aec1c1f9a4f2f622e"
   },
   "why_it_lives_outside_the_verdict": "a digest stored inside the file it covers would hash itself",
   "verify": "python experiments/run_gen1_claim_lock.py --verify",

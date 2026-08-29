@@ -8,9 +8,9 @@
     "CL-E_worked_abstract": true
   },
   "failing": [],
-  "evidence_lock_digest": "c814f359559c5dbe448886bdcdf6c12df5baf9b7f23e0441803f1bf0485f752c",
+  "evidence_lock_digest": "2b29d8c198e56ccb4823d0eed7cd15d5dd67c51694108fb9920a16c2b3e11cae",
   "plan": "plans/(newer)practical plans/GEN1_CLAIM_LOCK_V1.md",
-  "plan_canonical_lf_sha256": "7e87881b3ddf42be59e79c4b2c6abfa66246762a6586ab680cad41215d59a54c",
+  "plan_canonical_lf_sha256": "ca081cd08716b19f3b9b529ba506e4883e71e5ea5ca29c9c097052785477fc9a",
   "ship_plan_digest": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48",
   "allowed": {
     "primary": {
@@ -114,7 +114,7 @@
   },
   "evidence_verification": {
     "stage": "CL-A",
-    "lock_digest": "c814f359559c5dbe448886bdcdf6c12df5baf9b7f23e0441803f1bf0485f752c",
+    "lock_digest": "2b29d8c198e56ccb4823d0eed7cd15d5dd67c51694108fb9920a16c2b3e11cae",
     "live_verification": {
       "clean": true,
       "moved": [],
@@ -128,10 +128,10 @@
       "the frozen ship-plan digest still holds": true
     },
     "all_passed": true,
-    "runtime_seconds": 0.15
+    "runtime_seconds": 0.156
   },
   "grants_nothing": "Locking a claim grants nothing. It fixes the ceiling of what may be said. The ceiling may be lowered later; it may not be raised.",
   "next": "MANUSCRIPT + REPRODUCIBILITY PACKAGE",
-  "runtime_seconds": 0.22,
+  "runtime_seconds": 0.236,
   "module_sha256": "ad15b870841b916eedffda5df12a842fc7e20d80418a62774e4a0b6e2011755e"
 }

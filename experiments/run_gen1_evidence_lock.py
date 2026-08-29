@@ -758,12 +758,28 @@ def run_all() -> dict:
 
 
 def run_verify() -> dict:
+    """Re-hash every locked artifact and refuse if one has moved.
+
+    An artifact the manifest itself records as gitignored is *expected* to be absent from a fresh
+    clone — that is the documented §5 gap, and the rebuild is one command. It is reported
+    separately rather than counted as a failure, so this can run in CI, which is the only place
+    that ever checks out this repository clean. Nothing about MOVED detection is relaxed: a content
+    change to any artifact, and any absence that is not the documented one, is still a refusal.
+    """
     if not MANIFEST_JSON.exists():
         raise SystemExit("no manifest: run --stage all first")
     m = json.loads(MANIFEST_JSON.read_text(encoding="utf-8"))
     r = verify_against(m, ROOT)
+
+    ignored = set(m.get("git_ignored", []))
+    r["absent_but_gitignored"] = sorted(p for p in r["missing"] if p in ignored)
+    r["missing"] = sorted(p for p in r["missing"] if p not in ignored)
+    r["clean"] = not r["moved"] and not r["missing"]
+
     r["lock_digest"] = m["lock_digest"]
     r["verdict"] = "EVIDENCE_INTACT" if r["clean"] else "EVIDENCE_MOVED"
+    r["note"] = ("A gitignored artifact absent from a fresh clone is expected and reported "
+                 "separately. Any content change, or any other absence, is a refusal.")
     return r
 
 

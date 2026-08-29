@@ -3,7 +3,7 @@
 ```text
   GEN1_CLAIMS_LOCKED
 
-  evidence lock digest   c814f359559c5dbe448886bdcdf6c12df5baf9b7f23e0441803f1bf0485f752c
+  evidence lock digest   2b29d8c198e56ccb4823d0eed7cd15d5dd67c51694108fb9920a16c2b3e11cae
   allowed claims         3
   forbidden claims       9
   adversarial sentences  15 of 15 caught

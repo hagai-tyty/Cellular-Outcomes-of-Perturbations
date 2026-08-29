@@ -1,6 +1,6 @@
 {
   "stage": "EL-A",
-  "lock_digest": "c814f359559c5dbe448886bdcdf6c12df5baf9b7f23e0441803f1bf0485f752c",
+  "lock_digest": "2b29d8c198e56ccb4823d0eed7cd15d5dd67c51694108fb9920a16c2b3e11cae",
   "digest_definition": "SHA-256 over 'path  sha256' lines, sorted by path, LF-joined",
   "n_artifacts": 54,
   "by_class": {
@@ -297,9 +297,9 @@
     },
     "plans/(newer)practical plans/RECORDs/stage_23_2H_RECORD.md": {
       "class": "records",
-      "sha256": "5f30b143f7ea1cc3652b0a9d9af35ef4682ed72d4f1adc3a6e2aed0a56990df7",
+      "sha256": "bff1365349db9dba981f75e385cac54f4e446acfe9339527701425c2e8f057df",
       "hashed": "canonical-lf",
-      "bytes": 31592,
+      "bytes": 33815,
       "git_tracked": true,
       "git_ignored": false
     },
@@ -393,9 +393,9 @@
     },
     "experiments/run_gen1_evidence_lock.py": {
       "class": "code",
-      "sha256": "6324ed0f8a34e47f042e08f971be7c197774719178fc1034adf03421663f80db",
+      "sha256": "74bc64ed20fa06ae1c80bae427f5485ca4d26023510706bedd881cbae998ca5e",
       "hashed": "canonical-lf",
-      "bytes": 37972,
+      "bytes": 38978,
       "git_tracked": true,
       "git_ignored": false
     },
@@ -455,7 +455,7 @@
   "clone_portability": {
     "drifted": [],
     "skipped_uncommitted_edits": [
-      "tests/test_stage23_2h_confirmation.py"
+      "experiments/run_gen1_evidence_lock.py"
     ]
   },
   "hashing_rule": {
@@ -490,6 +490,6 @@
     "every committed artifact hashes the same from a fresh clone": true
   },
   "all_passed": true,
-  "runtime_seconds": 6.364,
-  "module_sha256": "23256d44e6144aedc08c5b286710769e1d560abb41a742861bfabc820ed8adcb"
+  "runtime_seconds": 6.953,
+  "module_sha256": "88abad19600722ce13fb43795f545f4e59a18e11a1942e6fa8f55c7c08971603"
 }

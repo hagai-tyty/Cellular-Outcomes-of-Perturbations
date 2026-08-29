@@ -43,6 +43,17 @@ jobs:
         # bringing it in is its own change with its own diff, not a side effect of a tidy-up.
         run: ruff check src/ tests/ scripts/ plan_tests/
 
+      # Added 2026-08-28. The three Generation-1 locks are the project's central claim, and until
+      # now nothing checked them on a clean checkout -- so a locked file edited after its lock was
+      # computed shipped green. That happened: a record was amended after the evidence lock ran,
+      # and only a manual --verify caught it. The gitignored 44 MB artifact is absent here by
+      # design and is reported, not counted as a failure; a content change to anything still fails.
+      - name: Verify the Generation-1 locks
+        run: |
+          python experiments/run_gen1_evidence_lock.py --verify
+          python experiments/run_gen1_claim_lock.py --verify
+          python experiments/run_gen1_manuscript.py --verify
+
       # Snapshotted BEFORE the suite rather than compared against a clean tree, so a line-ending
       # or checkout quirk cannot fail this step. Only changes the suite itself made will differ.
       - name: Snapshot the working tree
