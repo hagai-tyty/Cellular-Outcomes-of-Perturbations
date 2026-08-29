@@ -3,7 +3,7 @@
 ```text
   GEN1_EVIDENCE_LOCKED
 
-  lock digest   2edc73c529e25b9b6faa38680a8649d073c8f96aac0f5cb2e59691e7e56d7085
+  lock digest   c814f359559c5dbe448886bdcdf6c12df5baf9b7f23e0441803f1bf0485f752c
   artifacts     54
   ship plan     8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48
 ```
@@ -70,7 +70,7 @@ has one identity on every platform. The ship plan therefore carries `59f22e9a...
   tool          6f7c84a2ab8beb14d64728f0241dcaee1bc39ba0abb1f879e52aca2410cf2944  src/cellfate/gen1_predictor.py
   code          004a48be15d1766a5e4bbb182c3ea3093e2ef069f614660d2a960c082c3d032b  tests/test_gen1_evidence_lock.py
   code          7b9a70e8b979e066b391548ffa59560d1e805e6866874c0f6e95114d8076e43c  tests/test_gen1_predictor.py
-  code          0a934d35060005b32150492f1e7c004cc83b885cee6cba561905c77701959080  tests/test_stage23_2h_confirmation.py
+  code          7209b237c011ef8fa1498a5f046d204fbfa2600d63ce2cfefe326b5acf871223  tests/test_stage23_2h_confirmation.py
   code          0b71060fab5cc6ea04d935bfb72ce3cf3197f34e947439ed52fd7f405759c7c1  tests/test_stage24_gen1_tool.py
   code          a880c0163b00ad60e5848c848e05501e10a6fc776207eab3890afefdca6f0d4d  tests/test_stage25_ranking.py
   code          1f9951ae3def121b3c76465166e3678097fa0eb69829034bc80191b0c2ffe514  tests/test_stage26_scope_lock.py

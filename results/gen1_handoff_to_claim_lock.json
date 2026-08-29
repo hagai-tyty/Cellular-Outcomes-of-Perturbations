@@ -2,7 +2,7 @@
   "from_stage": "GEN-1 EVIDENCE LOCK",
   "to_stage": "GEN-1 CLAIM LOCK",
   "verdict": "GEN1_EVIDENCE_LOCKED",
-  "lock_digest": "2edc73c529e25b9b6faa38680a8649d073c8f96aac0f5cb2e59691e7e56d7085",
+  "lock_digest": "c814f359559c5dbe448886bdcdf6c12df5baf9b7f23e0441803f1bf0485f752c",
   "manifest": "results/evidence_lock/GEN1_EVIDENCE_MANIFEST.json",
   "claim_lock_input": "results/evidence_lock/GEN1_CLAIM_LOCK_INPUT.json",
   "lock_document": "results/evidence_lock/GEN1_EVIDENCE_LOCK.md",

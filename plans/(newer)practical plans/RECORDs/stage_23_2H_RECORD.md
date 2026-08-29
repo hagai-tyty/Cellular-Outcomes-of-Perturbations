@@ -636,3 +636,36 @@ recomputed, and verified. The 2000-draw permutation cache was independently veri
 The design should give each shard its own file rather than relying on append atomicity across
 processes. Not changed here, because doing so would invalidate the existing caches; recorded as a
 known defect for any future sharded run.
+
+---
+
+## Addendum 2026-08-28 — the run-order check could never survive a clone
+
+`test_the_power_gate_was_recorded_before_the_confirmatory_statistics` asserted V5 §10's ordering
+rule from **file modification times**:
+
+```python
+assert POWER.stat().st_mtime <= CONFIRM.stat().st_mtime
+```
+
+**Git does not preserve mtime.** On any fresh checkout both files carry the checkout instant in
+arbitrary order, so the assertion was a coin flip on the filesystem it happened to run on. It
+passed on the long-lived working tree that wrote the files and failed on every CI run — it was the
+reason CI had been red continuously, across commits that had nothing to do with Stage 23.2.
+
+**Run order is not recoverable from the committed artifacts.** Neither JSON carries a timestamp,
+and only the confirmation records a git commit. Rather than assert something the repository cannot
+support, the contract now checks what the ordering rule was there to protect:
+
+```text
+  the power gate is recorded, verdict DESIGN_UNDERPOWERED
+  gate_18_3_measured_power is False, power 0.64 < threshold 0.80
+      -> a gate that FAILED cannot have been tuned to pass
+  the confirmatory run is pinned to the frozen V5 protocol, so it did not run
+      against a revision
+```
+
+The run order itself remains documented in this record — 23.2H-C above 23.2H-D — and that is a
+**record of the claim, not proof of it.** Nothing in the Stage-23.2 result changes; only an
+untestable assertion was replaced with testable ones, and the limitation is now stated rather than
+papered over.

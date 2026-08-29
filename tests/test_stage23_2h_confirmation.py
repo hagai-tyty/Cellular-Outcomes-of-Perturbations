@@ -372,9 +372,29 @@ def test_power_was_measured_on_the_real_cohort_geometry():
 
 @ran_c
 @ran_d
-def test_the_power_gate_was_recorded_before_the_confirmatory_statistics():
-    assert POWER.stat().st_mtime <= CONFIRM.stat().st_mtime, \
-        "V5 §10 forbids running 23.2H-D before 23.2H-C"
+def test_the_power_gate_was_recorded_and_was_not_tuned_to_pass():
+    """V5 §10 forbids running 23.2H-D before 23.2H-C, so the power gate cannot be adjusted after
+    the confirmatory statistic is known.
+
+    This was previously asserted from file modification times. **Git does not preserve mtime.** On
+    any fresh checkout both files carry the checkout instant in arbitrary order, so the assertion
+    was a coin flip that tested the filesystem it happened to run on rather than the evidence — and
+    it failed CI on every single commit for exactly that reason.
+
+    Run order is **not recoverable** from the committed artifacts: neither JSON carries a timestamp,
+    and only the confirmation records a git commit. Rather than assert something the repository
+    cannot support, this checks what the ordering rule was there to protect — that the power gate is
+    recorded, and that it **FAILED**, so it demonstrably was not moved to make the design look
+    adequate. The run order itself is documented in `stage_23_2H_RECORD.md`; that is a record of the
+    claim, not proof of it, and it is not pretended otherwise here.
+    """
+    p = _json(POWER)
+    assert p["verdict"] == "DESIGN_UNDERPOWERED"
+    assert p["gate_18_3_measured_power"] is False
+    assert p["power"] < p["threshold"], "a gate that failed cannot have been tuned to pass"
+    # and the confirmatory run is pinned to the frozen protocol, so it did not run against a revision
+    assert _json(CONFIRM)["protocol"]["file"] == "STAGE_23_2_ROLE_A_CONFIRMATION_V5.md"
+    assert len(_json(CONFIRM)["protocol"]["canonical_lf_sha256"]) == 64
 
 
 @ran_d
