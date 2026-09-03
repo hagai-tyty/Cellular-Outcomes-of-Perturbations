@@ -35,7 +35,7 @@ covers. Live verification after the run: 54 checked, 0 moved, 0 missing.
 ```text
   GEN1_EVIDENCE_LOCKED
 
-  lock digest   901812bfb19a176d2b2c5976925bd7bb1bd7478ea98d3d5d030857a374b4796f
+  lock digest   a4f81d40d56760346b5c291a3a0fa0a84ca46a56843ca09d754bffea46e78e90
   artifacts     54
   runtime       11.8 s
 

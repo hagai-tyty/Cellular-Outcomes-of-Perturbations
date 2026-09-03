@@ -14,8 +14,8 @@ mechanically and has been shown to do so.
 
 ## Inputs
 - `results/gen1_handoff_to_manuscript.json` — `GEN1_CLAIMS_LOCKED`
-- evidence digest `901812bfb19a176d2b2c5976925bd7bb1bd7478ea98d3d5d030857a374b4796f`
-- claim digest `3eddfa136d8aa631d5681e39e9ac8d854f19be5a8481ad46ae39851042b412f6` (was `23ea00b8...` when this stage first ran)
+- evidence digest `a4f81d40d56760346b5c291a3a0fa0a84ca46a56843ca09d754bffea46e78e90`
+- claim digest `f69bd7f682ab3738ce73171ddb148af7e786f5813f717554f4932e1137cc9817` (was `23ea00b8...` when this stage first ran)
 
 ## Files added
 - `plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md`
@@ -36,9 +36,9 @@ checked, and again after.
 ```text
   GEN1_MANUSCRIPT_READY
 
-  package digest   0ae9e46a74da6ab0d057408f5b63442ddaf4ae891cfff46b883217e4ef36e1b9
-  evidence digest  901812bfb19a176d2b2c5976925bd7bb1bd7478ea98d3d5d030857a374b4796f
-  claim digest     3eddfa136d8aa631d5681e39e9ac8d854f19be5a8481ad46ae39851042b412f6
+  package digest   0e69c3f9a16fae2b53ad8f570b3f63e3204be6dfd8d7d83cf74ffa229f87ca6b
+  evidence digest  a4f81d40d56760346b5c291a3a0fa0a84ca46a56843ca09d754bffea46e78e90
+  claim digest     f69bd7f682ab3738ce73171ddb148af7e786f5813f717554f4932e1137cc9817
 
   MS-A  both locks verify              6 checks
   MS-C  compliance                     10 checks, 0 forbidden hits
@@ -302,3 +302,73 @@ Verify the whole chain at any time:
   python experiments/run_gen1_claim_lock.py --verify
   python experiments/run_gen1_manuscript.py --verify
 ```
+
+---
+
+## Ground-up verification — 2026-08-28
+
+A full audit before submission, against the published reporting standards rather than against my
+own checklist. The strongest check is the first one, because it does not trust this project's code
+at all.
+
+### The headline result was re-derived independently
+
+A separate implementation, importing **no project module**, reading only the locked out-of-fold
+table, recomputing eligibility, within-clone AUROC and the mean from first principles:
+
+```text
+  clones 1401   eligible 892   never detected 472   always detected 37    -- all match
+
+  R(W1)       mine 0.692653836572   recorded 0.692653836572   |diff| 3.3e-16
+  R(W4)       mine 0.692175822123   recorded 0.692175822123   |diff| 1.1e-16
+  R(W5)       mine 0.743781141006   recorded 0.743781141006   |diff| 1.1e-16
+  delta_RANK  mine 0.051605318884   recorded 0.051605318884   |diff| 2.2e-16
+
+  p_perm from the exported draws: 0 of 1000 at-or-above -> 0.000999001, matches
+  bootstrap CI from my own per-clone values: EXACT, 0.00e+00 on both endpoints
+```
+
+### The shipped artifact regenerates every frozen prediction
+
+All **8,406** prediction cells over all 1,401 clones, each scored by the fold component that did not
+train on it, against the frozen `pred_W5` column: max |diff| **6.66e-16**. Stage 24C recorded
+4.996e-16 over the same table computed through its own path; mine is marginally larger because it
+goes through the public API, whose design matrix has a different row count. Both are four orders
+inside the frozen 1e-12 bound, and the difference between them is not a discrepancy in substance.
+
+### Two misstatements found in the manuscript, both about someone else's experiment
+
+**1. The clone count misdescribed the source experiment.** The abstract said *"1,401 barcoded clones
+were split and exposed to six conditions"*. That is not what happened: 350,000 barcoded cells were
+isolated and the experiment recovered many thousands of clones. **1,401 is our analysable subset** —
+the clones carrying a pretreatment observation, which is what a prospective question requires.
+Stating our subset as the experiment's size misrepresents work that is not ours. Corrected in the
+abstract and in Data.
+
+**2. The treatment schedule was asserted more precisely than the sources support.** We wrote that
+cisplatin and doxorubicin ran *"two weeks followed by a two-week holiday"*. The GEO summary says
+2 + 2 for both; the paper's methods give doxorubicin as 2.5 + 1.5. Two sources disagree and the
+detail is not load-bearing here, so the manuscript no longer asserts a split: four weeks per arm,
+treat-then-recover for the two chemotherapies, exact schedules cited to [1]. Figure 1 carried the
+same error and was regenerated.
+
+Neither error touched a number in the result. Both were in prose describing the source experiment,
+which is exactly where a reanalysis has the least excuse to be sloppy.
+
+### Everything else checked
+
+```text
+  figures            9 locked values present; every 6-dp number drawn traces to the verdict
+  tool refusals      Vemurafenib / acid / Carboplatin / "" -> UNSUPPORTED_TREATMENT, no score
+                     missing nuisance -> MISSING_REQUIRED_NUISANCE
+                     ranking_status without the verdict file -> NOT_SUPPORTED
+  digests            no stale 64-hex value in any live document
+  bundle             384 files, BUNDLE_INTACT
+  locks              evidence a4f81d40d56760346b5c291a3a0fa0a84ca46a56843ca09d754bffea46e78e90
+                     claim    f69bd7f682ab3738ce73171ddb148af7e786f5813f717554f4932e1137cc9817
+                     package  0e69c3f9a16fae2b53ad8f570b3f63e3204be6dfd8d7d83cf74ffa229f87ca6b
+```
+
+The evidence lock refused mid-audit when Figure 1's generator was corrected — a locked artifact
+changed and the chain would not proceed until it was re-locked. That is the machinery working, not
+a fault.

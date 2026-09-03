@@ -6,8 +6,8 @@
 **Entry** `results/gen1_handoff_to_manuscript.json`, verdict `GEN1_CLAIMS_LOCKED`.
 
 ```text
-  evidence digest  901812bfb19a176d2b2c5976925bd7bb1bd7478ea98d3d5d030857a374b4796f
-  claim digest     3eddfa136d8aa631d5681e39e9ac8d854f19be5a8481ad46ae39851042b412f6
+  evidence digest  a4f81d40d56760346b5c291a3a0fa0a84ca46a56843ca09d754bffea46e78e90
+  claim digest     f69bd7f682ab3738ce73171ddb148af7e786f5813f717554f4932e1137cc9817
 ```
 
 **Mandate** §9 of the frozen ship plan: `MANUSCRIPT + REPRODUCIBILITY PACKAGE -> PREPRINT /

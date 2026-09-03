@@ -3,8 +3,8 @@
 **CellFate-Rx, Generation 1.**
 
 ```text
-  evidence lock   901812bfb19a176d2b2c5976925bd7bb1bd7478ea98d3d5d030857a374b4796f
-  claim lock      3eddfa136d8aa631d5681e39e9ac8d854f19be5a8481ad46ae39851042b412f6
+  evidence lock   a4f81d40d56760346b5c291a3a0fa0a84ca46a56843ca09d754bffea46e78e90
+  claim lock      f69bd7f682ab3738ce73171ddb148af7e786f5813f717554f4932e1137cc9817
 ```
 
 Both digests are verifiable from the repository. See **Availability**.
@@ -15,9 +15,10 @@ Both digests are verifiable from the repository. See **Availability**.
 
 Whether a cell's molecular state before a perturbation predicts what happens to it afterwards is
 usually asked retrospectively, after outcome and state have been measured in the same cells. We ask
-it prospectively at clone level, in one BRAF-V600E melanoma cell line (WM989, GSE279162) in which
-1,401 barcoded clones were split and exposed to six observed experimental conditions: Acid,
-Cisplatin, CoCl2, Dabrafenib, Doxorubicin and Trametinib.
+it prospectively at clone level, in one BRAF-V600E melanoma cell line (WM989, GSE279162), in which
+a barcoded population was split across six observed experimental conditions: Acid, Cisplatin, CoCl2,
+Dabrafenib, Doxorubicin and Trametinib. Of the clones that experiment recovered, 1,401 carry a
+pretreatment profile and are therefore analysable prospectively; those are the clones used here.
 
 Within this system, pretreatment gene expression contains condition-specific information about
 future clonal detection beyond condition identity and captured pretreatment clone abundance, under
@@ -103,14 +104,18 @@ ROLE B, primary       GSE279162 (WM989)      benchmark, model, tool and ranking 
 ROLE A, supporting    GSE227151 (Rewind)     historical supporting evidence only
 ```
 
-Role B is one BRAF-V600E melanoma cell line with 1,401 lineage-traced clones split across six
-observed experimental conditions. It carries the whole primary claim.
+Role B is one BRAF-V600E melanoma cell line. The source experiment recovered many thousands of
+barcoded clones; **1,401 of them carry a pretreatment observation**, which is what a prospective
+clone-level question requires, and those 1,401 are the analysis population here. It carries the
+whole primary claim.
 
 **Role B is a reanalysis. We generated no new data.** The experiment was performed by Schaff et
 al. [1], who introduced a barcode library into WM989 A6-G3, isolated 350,000 uniquely barcoded
-cells, expanded them for roughly six doublings, and divided the population across the six
-conditions reanalysed here: dabrafenib, trametinib, CoCl2 and acidic media for four weeks, and
-cisplatin and doxorubicin for two weeks followed by a two-week holiday.
+cells, expanded them for approximately six doublings, and divided the population across twelve
+treatment arms — two replicates of each of the six conditions reanalysed here. Dabrafenib,
+trametinib, CoCl2 and acidic media were applied continuously; cisplatin and doxorubicin were applied
+for a treatment period followed by a recovery period, each arm spanning four weeks in total. Exact
+concentrations and schedules are in [1].
 
 Role A is a separately reconstructed reprogramming system [2]. It contributes one supporting
 sentence and nothing else; its own confirmation gate failed. It is not a replication of Role B, and
@@ -371,8 +376,8 @@ The first re-hashes every locked artifact and refuses if one has moved. The seco
 for the claim set. Both were shown to refuse a one-bit change before either was issued.
 
 ```text
-  evidence lock digest   901812bfb19a176d2b2c5976925bd7bb1bd7478ea98d3d5d030857a374b4796f
-  claim lock digest      3eddfa136d8aa631d5681e39e9ac8d854f19be5a8481ad46ae39851042b412f6
+  evidence lock digest   a4f81d40d56760346b5c291a3a0fa0a84ca46a56843ca09d754bffea46e78e90
+  claim lock digest      f69bd7f682ab3738ce73171ddb148af7e786f5813f717554f4932e1137cc9817
 ```
 
 ### What is in the repository

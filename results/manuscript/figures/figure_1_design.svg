@@ -11,22 +11,22 @@
 <polygon points="214,116 208,113 208,119" fill="#6b6b6b"/>
 <rect x="224.0" y="86.0" width="84.0" height="54.0" fill="#ffffff" stroke="#c9c9c9" rx="3"/>
 <text x="266.0" y="110.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9.5" fill="#1a1a1a" text-anchor="middle" font-weight="normal" font-style="normal">Acid</text>
-<text x="266.0" y="126.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">4 wk</text>
+<text x="266.0" y="126.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="7.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">4 wk</text>
 <rect x="312.0" y="86.0" width="84.0" height="54.0" fill="#ffffff" stroke="#c9c9c9" rx="3"/>
 <text x="354.0" y="110.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9.5" fill="#1a1a1a" text-anchor="middle" font-weight="normal" font-style="normal">Cisplatin</text>
-<text x="354.0" y="126.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">2 wk + 2</text>
+<text x="354.0" y="126.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="7.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">4 wk, treat+recover</text>
 <rect x="400.0" y="86.0" width="84.0" height="54.0" fill="#ffffff" stroke="#c9c9c9" rx="3"/>
 <text x="442.0" y="110.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9.5" fill="#1a1a1a" text-anchor="middle" font-weight="normal" font-style="normal">CoCl2</text>
-<text x="442.0" y="126.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">4 wk</text>
+<text x="442.0" y="126.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="7.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">4 wk</text>
 <rect x="488.0" y="86.0" width="84.0" height="54.0" fill="#ffffff" stroke="#c9c9c9" rx="3"/>
 <text x="530.0" y="110.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9.5" fill="#1a1a1a" text-anchor="middle" font-weight="normal" font-style="normal">Dabrafenib</text>
-<text x="530.0" y="126.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">4 wk</text>
+<text x="530.0" y="126.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="7.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">4 wk</text>
 <rect x="576.0" y="86.0" width="84.0" height="54.0" fill="#ffffff" stroke="#c9c9c9" rx="3"/>
 <text x="618.0" y="110.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9.5" fill="#1a1a1a" text-anchor="middle" font-weight="normal" font-style="normal">Doxorubicin</text>
-<text x="618.0" y="126.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">2 wk + 2</text>
+<text x="618.0" y="126.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="7.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">4 wk, treat+recover</text>
 <rect x="664.0" y="86.0" width="84.0" height="54.0" fill="#ffffff" stroke="#c9c9c9" rx="3"/>
 <text x="706.0" y="110.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9.5" fill="#1a1a1a" text-anchor="middle" font-weight="normal" font-style="normal">Trametinib</text>
-<text x="706.0" y="126.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">4 wk</text>
+<text x="706.0" y="126.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="7.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">4 wk</text>
 <text x="24.0" y="168.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10.5" fill="#1a1a1a" text-anchor="start" font-weight="normal" font-style="normal">Outcome C1  post-treatment clone DETECTION — an observed zero means no assigned cell was seen.</text>
 <text x="24.0" y="184.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10.5" fill="#a33b20" text-anchor="start" font-weight="normal" font-style="italic">Not death, not sensitivity, not clinical response.</text>
 <text x="24.0" y="224.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1a1a1a" text-anchor="start" font-weight="bold" font-style="normal">Evaluable population</text>

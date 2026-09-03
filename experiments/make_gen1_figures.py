@@ -95,9 +95,12 @@ def figure_1(v25: dict, a26: dict) -> str:
         x = cx + i * (cw + 4)
         b.append(rect(x, y, cw, 54, "#ffffff", LINE, rx=3))
         b.append(txt(x + cw / 2, y + 24, c, 9.5, "middle"))
+        # 4 weeks per arm throughout; the two chemotherapies as treat-then-recover. The exact
+        # split is in the source paper and is deliberately not asserted here -- the GEO summary
+        # and the paper's methods disagree on the doxorubicin schedule.
         b.append(txt(x + cw / 2, y + 40, "4 wk" if c in ("Acid", "CoCl2", "Dabrafenib",
-                                                         "Trametinib") else "2 wk + 2", 8.5,
-                     "middle", fill=MID))
+                                                         "Trametinib") else "4 wk, treat+recover",
+                     7.5, "middle", fill=MID))
 
     b.append(txt(24, y + 82, "Outcome C1  post-treatment clone DETECTION — an observed zero means "
                              "no assigned cell was seen.", 10.5))

@@ -21,9 +21,9 @@ bit-for-bit.
 ```text
   GEN1_MANUSCRIPT_READY
 
-  evidence lock   901812bfb19a176d2b2c5976925bd7bb1bd7478ea98d3d5d030857a374b4796f
-  claim lock      3eddfa136d8aa631d5681e39e9ac8d854f19be5a8481ad46ae39851042b412f6
-  package         8276f859f761b66c98be2a9db5adfacaa80ee8842a6e9754a05cff39d2d4db3b
+  evidence lock   a4f81d40d56760346b5c291a3a0fa0a84ca46a56843ca09d754bffea46e78e90
+  claim lock      f69bd7f682ab3738ce73171ddb148af7e786f5813f717554f4932e1137cc9817
+  package         0e69c3f9a16fae2b53ad8f570b3f63e3204be6dfd8d7d83cf74ffa229f87ca6b
 ```
 
 **What was measured.** In WM989 (GSE279162), 1,401 barcoded clones were split across six observed
