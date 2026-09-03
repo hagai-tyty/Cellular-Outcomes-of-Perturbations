@@ -1,0 +1,53 @@
+# Environment lock for CellFate-Rx Generation 1.
+#
+# Captured from the interpreter that produced the locked results. This supersedes
+# requirements.txt for Generation 1: that file claimed scikit-learn 1.8.0 while the
+# models were fitted under 1.9.0, and a pinned file that disagrees with the machine
+# that produced the numbers is worse than no pinned file at all.
+#
+# HONEST CAVEAT. This is the environment as it stands now. The project ran over a long
+# period and nothing recorded the interpreter state at the moment each stage executed,
+# so this is the best available record, not a retroactive one. Bit-identical
+# reproduction of the Stage-25 null on a different stack is NOT claimed.
+#
+# python   3.11.0
+# platform Windows-10-10.0.19045-SP0
+# machine  AMD64
+#
+annotated-types==0.7.0
+antlr4-python3-runtime==4.9.3
+-e git+https://github.com/hagai-tyty/Cellular-Outcomes-of-Perturbations.git@8c2809010ac790c8b0133ab6b64f884a66f9523f#egg=cellfate_rx
+colorama==0.4.6
+filelock==3.29.0
+fsspec==2026.4.0
+h5py==3.16.0
+hydra-core==1.3.4
+iniconfig==2.3.0
+Jinja2==3.1.3
+joblib==1.5.3
+MarkupSafe==3.0.3
+mpmath==1.3.0
+narwhals==2.23.0
+networkx==3.6.1
+numpy==2.4.6
+omegaconf==2.3.1
+packaging==26.2
+pandas==3.0.3
+pluggy==1.6.0
+pyarrow==24.0.0
+pydantic==2.13.4
+pydantic_core==2.46.4
+Pygments==2.20.0
+pytest==9.1.1
+python-dateutil==2.9.0.post0
+PyYAML==6.0.3
+ruff==0.16.0
+scikit-learn==1.9.0
+scipy==1.17.1
+six==1.17.0
+sympy==1.13.1
+threadpoolctl==3.6.0
+torch==2.5.1+cu121
+typing-inspection==0.4.2
+typing_extensions==4.16.0
+tzdata==2026.2

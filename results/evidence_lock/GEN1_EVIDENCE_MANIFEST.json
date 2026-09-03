@@ -1,18 +1,18 @@
 {
   "stage": "EL-A",
-  "lock_digest": "06250a75fcb80b07e129714518765cf34e142cc51693357d1df606120d64c076",
+  "lock_digest": "901812bfb19a176d2b2c5976925bd7bb1bd7478ea98d3d5d030857a374b4796f",
   "digest_definition": "SHA-256 over 'path  sha256' lines, sorted by path, LF-joined",
-  "n_artifacts": 58,
+  "n_artifacts": 62,
   "by_class": {
     "benchmark": 3,
-    "predictions": 1,
+    "predictions": 3,
     "tool": 10,
     "verdicts": 6,
     "limitations": 1,
     "supporting_role_A": 5,
-    "protocol": 8,
+    "protocol": 9,
     "records": 8,
-    "code": 16
+    "code": 17
   },
   "artifacts": {
     "results/stage22_wm989_clones.csv": {
@@ -45,6 +45,22 @@
       "hashed": "canonical-lf",
       "bytes": 744349,
       "git_tracked": true,
+      "git_ignored": false
+    },
+    "results/stage25/stage25_null_draws.csv": {
+      "class": "predictions",
+      "sha256": "b0b4745727afb8a1ec9d3ab9f438592b3d514f08f7954958b18f51bbeee5dd5d",
+      "hashed": "canonical-lf",
+      "bytes": 25738,
+      "git_tracked": false,
+      "git_ignored": false
+    },
+    "results/stage25/stage25_bootstrap_replicates.csv": {
+      "class": "predictions",
+      "sha256": "49ee6fb3bbe3a551d8164e622c1dab527813e3e0bf9ba51dff36ae8067ab2128",
+      "hashed": "canonical-lf",
+      "bytes": 49381,
+      "git_tracked": false,
       "git_ignored": false
     },
     "src/cellfate/gen1_predictor.py": {
@@ -287,6 +303,14 @@
       "git_tracked": true,
       "git_ignored": false
     },
+    "environment_lock.txt": {
+      "class": "protocol",
+      "sha256": "4483e95ff8ced1fcba6cade9af87c9036ad40d116982cb15777544f2cd8b89d9",
+      "hashed": "canonical-lf",
+      "bytes": 1580,
+      "git_tracked": false,
+      "git_ignored": false
+    },
     "plans/(newer)practical plans/RECORDs/stage_22_RECORD.md": {
       "class": "records",
       "sha256": "e42cd1a4c132a3ae94e77a32bf67edfc3a0f69199ad0d7d776b10c1951f6c2dc",
@@ -401,9 +425,9 @@
     },
     "experiments/run_gen1_evidence_lock.py": {
       "class": "code",
-      "sha256": "18cf1ba27a7351907289038379f75aada2d0d4c19f7132b3561d5944bfc11411",
+      "sha256": "cdbcfcbae793f4ed3de4083ddbdadf8c45e5100bf5e90438f73d315f5aa77dd4",
       "hashed": "canonical-lf",
-      "bytes": 39136,
+      "bytes": 39519,
       "git_tracked": true,
       "git_ignored": false
     },
@@ -417,10 +441,18 @@
     },
     "experiments/make_release_bundle.py": {
       "class": "code",
-      "sha256": "2bc649211211841a802fed93d1763d65445d27e0fe389130b89dbeb1c1f09b21",
+      "sha256": "d007d0064a3394fdefa86c8379e0f7fde115a44383b2c0095801d58e98aaf895",
       "hashed": "canonical-lf",
-      "bytes": 7869,
+      "bytes": 8927,
       "git_tracked": true,
+      "git_ignored": false
+    },
+    "experiments/export_gen1_source_data.py": {
+      "class": "code",
+      "sha256": "ff0bded1828ca59e06cdbad88dada45fa32b40cdeb8bcc583e4e1b275fb753fe",
+      "hashed": "canonical-lf",
+      "bytes": 9138,
+      "git_tracked": false,
       "git_ignored": false
     },
     "tests/test_gen1_predictor.py": {
@@ -486,7 +518,10 @@
   ],
   "clone_portability": {
     "drifted": [],
-    "skipped_uncommitted_edits": []
+    "skipped_uncommitted_edits": [
+      "experiments/make_release_bundle.py",
+      "experiments/run_gen1_evidence_lock.py"
+    ]
   },
   "hashing_rule": {
     "binary": [
@@ -497,7 +532,12 @@
     "text_hashed": "canonical-LF (CRLF normalised to LF)",
     "why": "core.autocrlf=true means a text file's working-tree bytes are not its repository bytes; a raw-byte lock would refuse for everyone who cloned the repo"
   },
-  "pending_first_commit": [],
+  "pending_first_commit": [
+    "environment_lock.txt",
+    "experiments/export_gen1_source_data.py",
+    "results/stage25/stage25_bootstrap_replicates.csv",
+    "results/stage25/stage25_null_draws.csv"
+  ],
   "pending_note": "Reported, not gating. These are new files awaiting their first commit -- the lock digest covers content, not commit state. They are committed in the same commit as this lock.",
   "not_in_the_lock": {
     "results/stage24/stage24_w5_artifact.npz": {
@@ -520,6 +560,6 @@
     "every committed artifact hashes the same from a fresh clone": true
   },
   "all_passed": true,
-  "runtime_seconds": 7.078,
-  "module_sha256": "c4e9278ad51a05de0ca03384a5462b48e186c4eb33da9ba23f4da2f529b553bc"
+  "runtime_seconds": 7.565,
+  "module_sha256": "d368e966fc42cc15f563718e1a378d4457d30643fb492d729ca1bbd321412144"
 }

@@ -1,17 +1,18 @@
 {
-  "package_digest": "bc60b542b33cfbc46c44dcf60124541033241eb19be91d9198b6e042b91fa39e",
+  "package_digest": "8276f859f761b66c98be2a9db5adfacaa80ee8842a6e9754a05cff39d2d4db3b",
   "digest_definition": "SHA-256 over 'path  canonical-lf-sha256' lines, sorted by path",
   "covers": {
-    "plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md": "40967f2d9f55355c04c6373bdb0ed1dcf8ec1cc7ddff9b2fc37ead33d8fea2ec",
-    "experiments/run_gen1_manuscript.py": "7b906b785c815f8e323b813e585218c91926b33e5b071850a25f415672885bf2",
+    "plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md": "2592010b8260af86f28b6fdfbcc9ee3156472506061102f01652dff6716825d3",
+    "experiments/run_gen1_manuscript.py": "3c135061fd8e2f289a799283c259f112ffe9aeefc66c0a35ea97ce5b00e18810",
     "tests/test_gen1_manuscript.py": "d29517af7df3bcf43b47e1a96834c405fb3f90d18b5ddd963a23d9a7e1d537f3",
-    "results/manuscript/MANUSCRIPT.md": "daef77dcaa990458b37ce7ef6ac7fcd8aedbfda4a1d7903ad457f4938421cb0f",
-    "results/manuscript/REPRODUCIBILITY.md": "002b87d951bf564839f76b814f2fb1767d2f09e372cec79879d6bc15231abf31",
+    "results/manuscript/MANUSCRIPT.md": "0d7096d89b390dc3a0f4522cecbaa4ad0e1414929c3b00cac9ff8d96f873bbed",
+    "results/manuscript/REPRODUCIBILITY.md": "168cd121764b436807852c80033e53380f00af0664adccd126baef861cd96716",
     "results/manuscript/SUBMISSION.md": "906dd20576cdd9d1a3ee550c4d60ef9e13a1c941b45c1a8195e04f6142aff433",
     "results/manuscript/figures/figure_1_design.svg": "edfd5b87d6a5630672252c94aec25f8370bc0ccf5cc48254311b458c16c35d7e",
     "results/manuscript/figures/figure_2_primary.svg": "e2a13d883068725ab86e411bbf868647adde21b9b8e5d82a78e0f3dacc938d44",
-    "results/manuscript/figures/figure_3_robustness.svg": "5d9914a4d43e00d67a2e0b319e2fb1e7fbc22626379724cabaee853518fbe01e"
+    "results/manuscript/figures/figure_3_robustness.svg": "5d9914a4d43e00d67a2e0b319e2fb1e7fbc22626379724cabaee853518fbe01e",
+    "results/manuscript/figures/figure_source_data.json": "3664698efec05f36c461b53220c3aadf4d5ae027079821e36930fc7a42da273a"
   },
   "verify": "python experiments/run_gen1_manuscript.py --verify",
-  "module_sha256": "f667832b9a7809137a288a5bc90850167fb4cbdc01925ffa66b64feb150c1767"
+  "module_sha256": "e90ee3e4eaaa6ab6555582d9d51913ecf5a3613e79835decbf26fad0fdbded3c"
 }

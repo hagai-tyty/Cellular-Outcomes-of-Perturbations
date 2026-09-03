@@ -378,6 +378,7 @@ PACKAGE_FILES = [
     "results/manuscript/figures/figure_1_design.svg",
     "results/manuscript/figures/figure_2_primary.svg",
     "results/manuscript/figures/figure_3_robustness.svg",
+    "results/manuscript/figures/figure_source_data.json",
 ]
 
 

@@ -112,6 +112,10 @@ INVENTORY: dict[str, list[str]] = {
     ],
     "predictions": [
         "results/stage24/stage24_oof_for_stage25.csv",
+        # The per-draw distributions behind the headline statistic. These lived only in a
+        # gitignored shard cache: 10.7 h of compute on one machine, summarised to six numbers.
+        "results/stage25/stage25_null_draws.csv",
+        "results/stage25/stage25_bootstrap_replicates.csv",
     ],
     "tool": [
         "src/cellfate/gen1_predictor.py",
@@ -156,6 +160,7 @@ INVENTORY: dict[str, list[str]] = {
         "results/stage23_5_protocol.json",
         "results/stage23_5_handoff_to_stage24.json",
         "CITATION.cff",
+        "environment_lock.txt",
     ],
     # The records are the prose the manuscript will be written from, and EL-D checks numbers
     # against them. A record that can change after the lock makes that check meaningless.
@@ -179,6 +184,7 @@ INVENTORY: dict[str, list[str]] = {
         "experiments/run_gen1_evidence_lock.py",
         "experiments/make_gen1_figures.py",
         "experiments/make_release_bundle.py",
+        "experiments/export_gen1_source_data.py",
         "tests/test_gen1_predictor.py",
         "tests/test_stage23_2h_confirmation.py",
         "tests/test_stage24_gen1_tool.py",

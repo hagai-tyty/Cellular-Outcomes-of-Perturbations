@@ -3,8 +3,8 @@
 ```text
   GEN1_EVIDENCE_LOCKED
 
-  lock digest   06250a75fcb80b07e129714518765cf34e142cc51693357d1df606120d64c076
-  artifacts     58
+  lock digest   901812bfb19a176d2b2c5976925bd7bb1bd7478ea98d3d5d030857a374b4796f
+  artifacts     62
   ship plan     8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48
 ```
 
@@ -21,10 +21,12 @@ has one identity on every platform. The ship plan therefore carries `59f22e9a...
 
 ```text
   protocol      1af392067f1d8283fbeb7211bbdfffe7dccda62fac811b31695ca18b8b30191e  CITATION.cff
+  protocol      4483e95ff8ced1fcba6cade9af87c9036ad40d116982cb15777544f2cd8b89d9  environment_lock.txt
   code          dfd047eff9fb82d0303c24743416d5a3ddc524076976074adceb435cb5d704a7  experiments/build_stage22_prospective_benchmarks.py
+  code          ff0bded1828ca59e06cdbad88dada45fa32b40cdeb8bcc583e4e1b275fb753fe  experiments/export_gen1_source_data.py
   code          ca1a1b7ea2dd13a8f8a8de3c287839a009bceb0ad5241ca3c702f64fa581bfb9  experiments/make_gen1_figures.py
-  code          2bc649211211841a802fed93d1763d65445d27e0fe389130b89dbeb1c1f09b21  experiments/make_release_bundle.py
-  code          18cf1ba27a7351907289038379f75aada2d0d4c19f7132b3561d5944bfc11411  experiments/run_gen1_evidence_lock.py
+  code          d007d0064a3394fdefa86c8379e0f7fde115a44383b2c0095801d58e98aaf895  experiments/make_release_bundle.py
+  code          cdbcfcbae793f4ed3de4083ddbdadf8c45e5100bf5e90438f73d315f5aa77dd4  experiments/run_gen1_evidence_lock.py
   code          a0801d4d2a91259b53e67c4705da0ccde7c822b73b9670cec9be1919614a0085  experiments/run_stage23_2h_confirmation.py
   code          ce43d831b0c7585a226a61c340c95660fa14e67ab2ea0fa3714d822c64e8b7f7  experiments/run_stage23_learnability_gate.py
   code          f04743532ef66cca47eb461cc4fdf304b53e0fbf113567ae3e7218f13b7b4ecc  experiments/run_stage24_gen1_tool.py
@@ -64,6 +66,8 @@ has one identity on every platform. The ship plan therefore carries `59f22e9a...
   tool          330cc7c8a68d77c0eabfef5da015f48c8969f0ce7cd1a4281a73af4028621c2e  results/stage24/tool/example_clones.csv
   tool          4e158b19f3e450628f661508992ef7d1ba7d83098b62dd60af3b9175e9edf021  results/stage24/tool/io_schema.json
   verdicts      e9910bd4c840dd2bed6247cc947781793cf9bed8a2179f0102d5675205355b13  results/stage24_handoff_to_stage25.json
+  predictions   49ee6fb3bbe3a551d8164e622c1dab527813e3e0bf9ba51dff36ae8067ab2128  results/stage25/stage25_bootstrap_replicates.csv
+  predictions   b0b4745727afb8a1ec9d3ab9f438592b3d514f08f7954958b18f51bbeee5dd5d  results/stage25/stage25_null_draws.csv
   verdicts      9355be0f3e94e82292f82f678b86bf624dd8fb11e9b6baecd37347c78f9e248d  results/stage25/stage25_verdict.json
   verdicts      00af0c8a33a061d609d808c0d02e4d710ccfa7baebe18f7c2edcb2d2757151f3  results/stage25/stage25a_observed.json
   limitations   e24081a49b13bc87e35ae95649d30d1717dc79e250c0b3c5110170ddc71ab6ea  results/stage26/GEN1_SCOPE_LIMIT.md

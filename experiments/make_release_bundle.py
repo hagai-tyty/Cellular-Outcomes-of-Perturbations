@@ -32,6 +32,14 @@ CONTENTS = DIST / "BUNDLE_CONTENTS.json"
 # bundle exists at all rather than pointing people at the GitHub tarball.
 GITIGNORED_BUT_REQUIRED = ["results/stage24/stage24_w5_artifact.npz"]
 
+# Gitignored, large, and derived from public GEO data. Not required to VERIFY the bundle -- the
+# model artifact above covers that -- but required to RE-RUN the Stage-25 null from scratch, which
+# is the one thing an independent checker would most want to do. Included when present.
+#
+# The Rewind cache is deliberately left out: Role A contributes one supporting sentence, and the
+# verdict, power and audit JSONs that sentence rests on are already in the bundle.
+GITIGNORED_IF_PRESENT = ["_cc_cache/stage23/GSE279162_pseudobulk.npz"]
+
 # Directories taken whole. Everything under them is evidence, a record, or the tooling that checks
 # both; nothing here is scratch.
 TREES = [
@@ -87,7 +95,7 @@ def sha256(p: Path) -> str:
 
 def _members() -> list[str]:
     seen: dict[str, None] = {}
-    for rel in FILES + GITIGNORED_BUT_REQUIRED:
+    for rel in FILES + GITIGNORED_BUT_REQUIRED + GITIGNORED_IF_PRESENT:
         if (ROOT / rel).is_file():
             seen[rel] = None
     for tree in TREES:
@@ -141,7 +149,14 @@ def build() -> int:
         "uncompressed_bytes": total,
         "compressed_bytes": BUNDLE.stat().st_size,
         "lock_digests": locks,
-        "includes_gitignored": GITIGNORED_BUT_REQUIRED,
+        "includes_gitignored": [r for r in GITIGNORED_BUT_REQUIRED + GITIGNORED_IF_PRESENT
+                               if (ROOT / r).is_file()],
+        "external_data": {
+            "GSE279162": "Role B primary. Raw data not redistributed; the derived clone "
+                         "pseudobulk cache is included so the null can be re-run.",
+            "GSE227151": "Role A supporting. Neither raw data nor cache redistributed; the "
+                         "verdict, power and audit JSONs it supports are included.",
+        },
         "verify": [
             "python experiments/run_gen1_evidence_lock.py --verify",
             "python experiments/run_gen1_claim_lock.py --verify",

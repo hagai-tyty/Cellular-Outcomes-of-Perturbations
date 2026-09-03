@@ -14,8 +14,8 @@ Before reproducing anything, confirm the artifacts are the ones the manuscript w
 ```
 
 ```text
-  evidence lock digest   06250a75fcb80b07e129714518765cf34e142cc51693357d1df606120d64c076
-  claim lock digest      539a05abc27bfdb9f5ceb44eb7c3daac13f81c1354e519b918f36eaf56747f64
+  evidence lock digest   901812bfb19a176d2b2c5976925bd7bb1bd7478ea98d3d5d030857a374b4796f
+  claim lock digest      3eddfa136d8aa631d5681e39e9ac8d854f19be5a8481ad46ae39851042b412f6
 ```
 
 `EVIDENCE_INTACT` and `CLAIMS_INTACT` mean every hashed file is byte-for-byte what was locked.
@@ -35,13 +35,18 @@ verifying:
 
 ## 2. Environment
 
+`environment_lock.txt` at the repository root is the authoritative record — a full freeze of the
+interpreter that produced the locked results.
+
 ```text
-  Python        3.11 (developed on 3.11, Windows 10)
-  numpy         2.x
-  pandas        2.x
-  scikit-learn  1.x
-  pytest        8.x
+  Python 3.11.0    numpy 2.4.6    pandas 3.0.3    scipy 1.17.1    scikit-learn 1.9.0
 ```
+
+**It supersedes `requirements.txt` for Generation 1.** That file claimed scikit-learn 1.8.0 while
+the models were fitted under 1.9.0; a pinned file disagreeing with the machine that produced the
+numbers is worse than none. **Honest caveat:** the lock captures the environment as it stands, not
+retroactively at each stage's execution. Bit-identical reproduction of the Stage-25 null on a
+different stack is not claimed.
 
 Set `PYTHONUTF8=1` on Windows if the console codepage is not UTF-8, or the stage scripts will fail
 on non-ASCII output rather than on anything meaningful.
@@ -112,6 +117,20 @@ close-out pass caught it. CI now snapshots the tree before the suite and fails t
 suite moved anything.
 
 ---
+
+## 4.1 Per-draw source data
+
+The distributions behind the headline statistic, not just their summaries:
+
+```text
+  results/stage25/stage25_null_draws.csv             1,000 full-refit permutation draws
+  results/stage25/stage25_bootstrap_replicates.csv   2,000 clone-bootstrap replicates
+  results/manuscript/figures/figure_source_data.json every value each panel draws
+```
+
+Regenerate with `python experiments/export_gen1_source_data.py`, which refuses to write any file
+that does not reproduce the recorded verdict statistic exactly. The null draws previously existed
+only in a gitignored shard cache — 10.7 h of compute on a single machine, summarised to six numbers.
 
 ## 5. What is NOT in this package
 
