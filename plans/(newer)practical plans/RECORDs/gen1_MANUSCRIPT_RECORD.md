@@ -14,8 +14,8 @@ mechanically and has been shown to do so.
 
 ## Inputs
 - `results/gen1_handoff_to_manuscript.json` — `GEN1_CLAIMS_LOCKED`
-- evidence digest `a4f81d40d56760346b5c291a3a0fa0a84ca46a56843ca09d754bffea46e78e90`
-- claim digest `f69bd7f682ab3738ce73171ddb148af7e786f5813f717554f4932e1137cc9817` (was `23ea00b8...` when this stage first ran)
+- evidence digest `9245e605f6272aa809858d3f32dbe55ed53864df90e0b55750ab0a7d577da400`
+- claim digest `42e4e1a027022405d16035a2e1ea24f6a42209847ba5d7d39891ffbf6f4d404a` (was `23ea00b8...` when this stage first ran)
 
 ## Files added
 - `plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md`
@@ -36,9 +36,9 @@ checked, and again after.
 ```text
   GEN1_MANUSCRIPT_READY
 
-  package digest   0e69c3f9a16fae2b53ad8f570b3f63e3204be6dfd8d7d83cf74ffa229f87ca6b
-  evidence digest  a4f81d40d56760346b5c291a3a0fa0a84ca46a56843ca09d754bffea46e78e90
-  claim digest     f69bd7f682ab3738ce73171ddb148af7e786f5813f717554f4932e1137cc9817
+  package digest   be2a7bcb3b3a49db3a52d558565677093dc557b881b224b3e8ed1b655fffd9a7
+  evidence digest  9245e605f6272aa809858d3f32dbe55ed53864df90e0b55750ab0a7d577da400
+  claim digest     42e4e1a027022405d16035a2e1ea24f6a42209847ba5d7d39891ffbf6f4d404a
 
   MS-A  both locks verify              6 checks
   MS-C  compliance                     10 checks, 0 forbidden hits
@@ -364,9 +364,9 @@ which is exactly where a reanalysis has the least excuse to be sloppy.
                      ranking_status without the verdict file -> NOT_SUPPORTED
   digests            no stale 64-hex value in any live document
   bundle             384 files, BUNDLE_INTACT
-  locks              evidence a4f81d40d56760346b5c291a3a0fa0a84ca46a56843ca09d754bffea46e78e90
-                     claim    f69bd7f682ab3738ce73171ddb148af7e786f5813f717554f4932e1137cc9817
-                     package  0e69c3f9a16fae2b53ad8f570b3f63e3204be6dfd8d7d83cf74ffa229f87ca6b
+  locks              evidence 9245e605f6272aa809858d3f32dbe55ed53864df90e0b55750ab0a7d577da400
+                     claim    42e4e1a027022405d16035a2e1ea24f6a42209847ba5d7d39891ffbf6f4d404a
+                     package  be2a7bcb3b3a49db3a52d558565677093dc557b881b224b3e8ed1b655fffd9a7
 ```
 
 The evidence lock refused mid-audit when Figure 1's generator was corrected — a locked artifact

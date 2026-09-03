@@ -1,6 +1,6 @@
 {
   "stage": "EL-A",
-  "lock_digest": "a4f81d40d56760346b5c291a3a0fa0a84ca46a56843ca09d754bffea46e78e90",
+  "lock_digest": "9245e605f6272aa809858d3f32dbe55ed53864df90e0b55750ab0a7d577da400",
   "digest_definition": "SHA-256 over 'path  sha256' lines, sorted by path, LF-joined",
   "n_artifacts": 62,
   "by_class": {
@@ -305,7 +305,7 @@
     },
     "environment_lock.txt": {
       "class": "protocol",
-      "sha256": "4483e95ff8ced1fcba6cade9af87c9036ad40d116982cb15777544f2cd8b89d9",
+      "sha256": "99a2884f6210ed76e569d2fc37bdbfcd0b0402b7fe972c2043fb2fb30a604c5a",
       "hashed": "canonical-lf",
       "bytes": 1580,
       "git_tracked": true,
@@ -441,9 +441,9 @@
     },
     "experiments/make_release_bundle.py": {
       "class": "code",
-      "sha256": "d007d0064a3394fdefa86c8379e0f7fde115a44383b2c0095801d58e98aaf895",
+      "sha256": "87ee28a4a22256fda9103a8ac4fda8133073cc49a882a7c0b78dce017ae891b8",
       "hashed": "canonical-lf",
-      "bytes": 8927,
+      "bytes": 11906,
       "git_tracked": true,
       "git_ignored": false
     },
@@ -519,7 +519,8 @@
   "clone_portability": {
     "drifted": [],
     "skipped_uncommitted_edits": [
-      "experiments/make_gen1_figures.py"
+      "environment_lock.txt",
+      "experiments/make_release_bundle.py"
     ]
   },
   "hashing_rule": {
@@ -554,6 +555,6 @@
     "every committed artifact hashes the same from a fresh clone": true
   },
   "all_passed": true,
-  "runtime_seconds": 9.148,
+  "runtime_seconds": 7.458,
   "module_sha256": "d368e966fc42cc15f563718e1a378d4457d30643fb492d729ca1bbd321412144"
 }

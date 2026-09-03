@@ -3,16 +3,21 @@
 Two lines of work live in this repository, and they are kept separate on purpose.
 
 **Generation 1 — shipped.** Clone-level prospective prediction in a lineage-traced melanoma line:
-does a clone's pretreatment transcriptional state say anything about *which* of six observed
-experimental conditions it survives? Complete, locked, and summarised immediately below.
+does a clone's pretreatment transcriptional state say anything about *under which* of six observed
+experimental conditions it remains detected? Complete, locked, and summarised immediately below.
 
 **The earlier reprogramming line.** OSKM fate and ΔAge, with a safety gate. Most of its original
 claims did **not** survive being measured properly; its honest status is kept in full further down
 and in [`ARCHITECTURE.md` §11](ARCHITECTURE.md#11-where-the-project-actually-stands--2026-08-18).
 Nothing there was deleted when Generation 1 shipped.
 
-The whole repository is heavily tested (2,259 tests) and its measurements are reproducible
-bit-for-bit.
+The whole repository is heavily tested (2,259 tests). **Two different things are meant by
+"reproducible" here and they are not interchangeable.** Every locked artifact is *hash-verifiable*:
+three `--verify` commands re-hash 77 files and refuse on a single changed byte, and that holds on
+any machine. Re-*fitting* the models is a weaker guarantee — it depends on BLAS, threading and
+library versions, and the environment that produced these results is recorded in
+`environment_lock.txt` rather than assumed. Bit-identical refitting across environments is not
+claimed.
 
 ---
 
@@ -21,9 +26,9 @@ bit-for-bit.
 ```text
   GEN1_MANUSCRIPT_READY
 
-  evidence lock   a4f81d40d56760346b5c291a3a0fa0a84ca46a56843ca09d754bffea46e78e90
-  claim lock      f69bd7f682ab3738ce73171ddb148af7e786f5813f717554f4932e1137cc9817
-  package         0e69c3f9a16fae2b53ad8f570b3f63e3204be6dfd8d7d83cf74ffa229f87ca6b
+  evidence lock   9245e605f6272aa809858d3f32dbe55ed53864df90e0b55750ab0a7d577da400
+  claim lock      42e4e1a027022405d16035a2e1ea24f6a42209847ba5d7d39891ffbf6f4d404a
+  package         be2a7bcb3b3a49db3a52d558565677093dc557b881b224b3e8ed1b655fffd9a7
 ```
 
 **What was measured.** In WM989 (GSE279162), 1,401 barcoded clones were split across six observed

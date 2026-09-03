@@ -89,8 +89,10 @@ extrinsic factors [5]. Schaff et al. extended clonal tracing to six conditions i
 reported cross-condition resistance correlation plus CD44 as a marker of resistance across several
 conditions [1] — the dataset reanalysed here.
 
-**What this literature establishes is *how resistant* a clone is.** That is a property of the clone,
-largely shared across conditions.
+**We do not claim priority on condition-specific expression analysis.** Schaff et al.'s deposited
+analysis reports condition-associated markers and signatures, and earlier work resolves substructure
+distinguishing resistant outcomes. What that literature does not contain is a frozen, clone-held-out,
+preregistered test of clone-specific *ordering* across conditions with abundance held fixed.
 
 ### 3.2 The gap this addresses
 
@@ -303,8 +305,12 @@ environment lock. Both are in the manuscript.
 [ ] fresh clone verifies: evidence, claim and package digests
 [ ] Zenodo DOI reserved
 [ ] DOI written into MANUSCRIPT.md, README.md, CITATION.cff, this file
-[ ] locks re-run after the DOI edit, digests propagated
-[ ] SHA256SUMS regenerated and checked against the bundle
+[ ] export_gen1_source_data.py run BEFORE the locks -- it writes four LOCKED files
+    (the two per-draw CSVs, figure_source_data.json, environment_lock.txt), so running
+    it afterwards invalidates the very digests just computed
+[ ] locks re-run in order: evidence -> claim -> manuscript, digests propagated
+[ ] bundle rebuilt, then --check: BUNDLE_INTACT (hashes bytes inside the zip, pins the
+    zip against its recorded sha256, and refuses if any locked artifact is absent)
 [ ] Zenodo record published (immutable)
 [ ] GitHub release tagged, release notes link the Zenodo DOI
 [ ] bioRxiv submission (PDF + figures + declarations above)

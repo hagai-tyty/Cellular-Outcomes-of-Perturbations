@@ -3,8 +3,8 @@
 **CellFate-Rx, Generation 1.**
 
 ```text
-  evidence lock   a4f81d40d56760346b5c291a3a0fa0a84ca46a56843ca09d754bffea46e78e90
-  claim lock      f69bd7f682ab3738ce73171ddb148af7e786f5813f717554f4932e1137cc9817
+  evidence lock   9245e605f6272aa809858d3f32dbe55ed53864df90e0b55750ab0a7d577da400
+  claim lock      42e4e1a027022405d16035a2e1ea24f6a42209847ba5d7d39891ffbf6f4d404a
 ```
 
 Both digests are verifiable from the repository. See **Availability**.
@@ -80,12 +80,21 @@ pre-treatment molecular differences and are diverse rather than binary [5]; and 
 extended clonal tracing to six conditions in parallel, reporting cross-condition resistance
 correlation and CD44 as a marker of resistance across several of them [1].
 
-Each of those results concerns **how resistant** a clone is — a property of the clone, shared across
-conditions. This work asks the adjacent question of **which condition**, and the distinction is not
-rhetorical: any quantity that acts on a clone as a whole shifts all six of its predicted scores
-together and therefore contributes exactly zero to a within-clone ordering metric. The comparator is
-chosen to enforce that separation, and the result is that the additive state term contributes
-nothing while the interaction contributes all of the gain.
+**We do not claim to be the first to look at condition-specific expression in this system.** Schaff
+et al.'s own deposited analysis reports condition-associated markers and signatures alongside the
+cross-condition results, and earlier work resolves substructure that distinguishes resistant
+outcomes [4,5]. What has not been done is the specific thing tested here: a **frozen,
+clone-held-out, preregistered test of whether an explicit state-by-condition interaction improves
+clone-specific ORDERING** over a non-interactive additive model, with captured pretreatment
+abundance held fixed in every model including the null.
+
+The distinction the design turns on is not rhetorical. Any quantity acting on a clone as a whole —
+a general resistance propensity, a per-clone marker level — shifts all six of that clone's predicted
+scores together and therefore contributes **exactly zero** to a within-clone ordering metric. The
+comparator was chosen to enforce that separation before any result existed, and the outcome is that
+the additive state term contributes nothing to ordering while the interaction contributes all of the
+gain. The contribution is the evaluation and its preregistration, not the observation that state
+carries condition-relevant information.
 
 The methodological posture is borrowed rather than invented. Kapoor and Narayanan catalogue eight
 kinds of leakage across 294 papers in seventeen fields, and observe that complex models frequently
@@ -376,8 +385,8 @@ The first re-hashes every locked artifact and refuses if one has moved. The seco
 for the claim set. Both were shown to refuse a one-bit change before either was issued.
 
 ```text
-  evidence lock digest   a4f81d40d56760346b5c291a3a0fa0a84ca46a56843ca09d754bffea46e78e90
-  claim lock digest      f69bd7f682ab3738ce73171ddb148af7e786f5813f717554f4932e1137cc9817
+  evidence lock digest   9245e605f6272aa809858d3f32dbe55ed53864df90e0b55750ab0a7d577da400
+  claim lock digest      42e4e1a027022405d16035a2e1ea24f6a42209847ba5d7d39891ffbf6f4d404a
 ```
 
 ### What is in the repository

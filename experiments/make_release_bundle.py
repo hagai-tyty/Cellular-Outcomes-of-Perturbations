@@ -30,15 +30,19 @@ CONTENTS = DIST / "BUNDLE_CONTENTS.json"
 
 # The artifact the repository cannot carry. Present here, absent from git, and the reason this
 # bundle exists at all rather than pointing people at the GitHub tarball.
-GITIGNORED_BUT_REQUIRED = ["results/stage24/stage24_w5_artifact.npz"]
-
-# Gitignored, large, and derived from public GEO data. Not required to VERIFY the bundle -- the
-# model artifact above covers that -- but required to RE-RUN the Stage-25 null from scratch, which
-# is the one thing an independent checker would most want to do. Included when present.
+# Gitignored and REQUIRED. Both were optional or absent once; both are load-bearing.
+#
+#   the model artifact   the bundle must verify without a rebuild
+#   the pseudobulk cache the documented rebuild path (`--stage 24c`) FAILS without it with
+#                        "23A pseudobulk cache missing", so an archive lacking it cannot
+#                        regenerate anything or re-run the Stage-25 null
 #
 # The Rewind cache is deliberately left out: Role A contributes one supporting sentence, and the
-# verdict, power and audit JSONs that sentence rests on are already in the bundle.
-GITIGNORED_IF_PRESENT = ["_cc_cache/stage23/GSE279162_pseudobulk.npz"]
+# verdict, power and audit JSONs it rests on are already here.
+GITIGNORED_BUT_REQUIRED = [
+    "results/stage24/stage24_w5_artifact.npz",
+    "_cc_cache/stage23/GSE279162_pseudobulk.npz",
+]
 
 # Directories taken whole. Everything under them is evidence, a record, or the tooling that checks
 # both; nothing here is scratch.
@@ -59,6 +63,9 @@ FILES = [
     "README.md",
     "ARCHITECTURE.md",
     "CITATION.cff",
+    "LICENSE",
+    "environment_lock.txt",
+    "requirements.txt",
     "pyproject.toml",
     ".gitattributes",
     ".github/workflows/ci.yml",
@@ -93,9 +100,36 @@ def sha256(p: Path) -> str:
     return h.hexdigest()
 
 
+def _git_commit() -> str:
+    """The commit the archive was cut from. Without it a downloader cannot tie the bundle
+    back to a point in the repository's history."""
+    import subprocess
+    r = subprocess.run(["git", "rev-parse", "HEAD"], cwd=str(ROOT),
+                       capture_output=True, text=True)
+    dirty = subprocess.run(["git", "status", "--porcelain"], cwd=str(ROOT),
+                           capture_output=True, text=True).stdout.strip()
+    sha = r.stdout.strip() if r.returncode == 0 else "unknown"
+    return sha + ("+dirty" if dirty else "")
+
+
+def _locked_artifacts() -> set[str]:
+    """Every path any lock manifest hashes. If one of these is missing from the archive, the
+    unpacked bundle cannot verify -- which is the only thing the archive exists to allow.
+    `environment_lock.txt` was missing for exactly this reason and nothing caught it."""
+    import json
+    out: set[str] = set()
+    for rel, key in [("results/evidence_lock/GEN1_EVIDENCE_MANIFEST.json", "artifacts"),
+                     ("results/claim_lock/GEN1_CLAIM_DIGEST.json", "covers"),
+                     ("results/manuscript/GEN1_PACKAGE_DIGEST.json", "covers")]:
+        p = ROOT / rel
+        if p.is_file():
+            out |= set(json.loads(p.read_text(encoding="utf-8"))[key])
+    return out
+
+
 def _members() -> list[str]:
     seen: dict[str, None] = {}
-    for rel in FILES + GITIGNORED_BUT_REQUIRED + GITIGNORED_IF_PRESENT:
+    for rel in FILES + GITIGNORED_BUT_REQUIRED:
         if (ROOT / rel).is_file():
             seen[rel] = None
     for tree in TREES:
@@ -121,6 +155,14 @@ def build() -> int:
         for m in missing:
             print(f"  {m}")
         print("\nRebuild it first:\n  python experiments/run_stage24_gen1_tool.py --stage 24c")
+        return 2
+
+    uncovered = sorted(_locked_artifacts() - set(members))
+    if uncovered:
+        print("REFUSED -- these are hashed by a lock but absent from the archive, so the "
+              "unpacked bundle could not verify:")
+        for u in uncovered:
+            print(f"  {u}")
         return 2
 
     digests = {rel: sha256(ROOT / rel) for rel in members}
@@ -149,8 +191,8 @@ def build() -> int:
         "uncompressed_bytes": total,
         "compressed_bytes": BUNDLE.stat().st_size,
         "lock_digests": locks,
-        "includes_gitignored": [r for r in GITIGNORED_BUT_REQUIRED + GITIGNORED_IF_PRESENT
-                               if (ROOT / r).is_file()],
+        "includes_gitignored": list(GITIGNORED_BUT_REQUIRED),
+        "git_commit": _git_commit(),
         "external_data": {
             "GSE279162": "Role B primary. Raw data not redistributed; the derived clone "
                          "pseudobulk cache is included so the null can be re-run.",
@@ -197,18 +239,41 @@ def check() -> int:
         elif sha256(p) != digest:
             bad.append(rel)
 
+    # Hash what is actually INSIDE the archive, not merely what its filenames claim. Comparing
+    # names proves nothing about bytes, and a bundle is a container of bytes.
+    inside_bad, not_archived = [], []
     with zipfile.ZipFile(BUNDLE) as z:
         inside = {n[len("cellfate-rx-gen1/"):] for n in z.namelist()
                   if n.startswith("cellfate-rx-gen1/")}
-    not_archived = sorted(set(recorded) - inside)
+        not_archived = sorted(set(recorded) - inside)
+        for rel, digest in recorded.items():
+            if rel not in inside:
+                continue
+            h = hashlib.sha256()
+            with z.open(f"cellfate-rx-gen1/{rel}") as fh:
+                for chunk in iter(lambda: fh.read(1 << 20), b""):
+                    h.update(chunk)
+            if h.hexdigest() != digest:
+                inside_bad.append(rel)
 
-    ok = not bad and not gone and not not_archived
+    # And pin the container itself against what the build recorded.
+    now = sha256(BUNDLE)
+    recorded_bundle = (json.loads(CONTENTS.read_text(encoding="utf-8")).get("bundle_sha256")
+                       if CONTENTS.is_file() else None)
+    bundle_ok = recorded_bundle is not None and now == recorded_bundle
+
+    uncovered = sorted(_locked_artifacts() - inside)
+    ok = not bad and not gone and not not_archived and not inside_bad and bundle_ok         and not uncovered
     print(json.dumps({
         "checked": len(recorded),
         "changed_since_build": sorted(bad),
         "missing_from_working_tree": sorted(gone),
         "listed_but_not_in_archive": not_archived,
-        "bundle_sha256": sha256(BUNDLE),
+        "bytes_inside_archive_that_do_not_match": sorted(inside_bad),
+        "locked_artifacts_absent_from_archive": uncovered,
+        "bundle_sha256": now,
+        "bundle_sha256_recorded": recorded_bundle,
+        "bundle_matches_recorded": bundle_ok,
         "verdict": "BUNDLE_INTACT" if ok else "BUNDLE_MISMATCH",
     }, indent=2))
     return 0 if ok else 2

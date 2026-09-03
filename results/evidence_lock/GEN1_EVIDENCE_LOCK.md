@@ -3,7 +3,7 @@
 ```text
   GEN1_EVIDENCE_LOCKED
 
-  lock digest   a4f81d40d56760346b5c291a3a0fa0a84ca46a56843ca09d754bffea46e78e90
+  lock digest   9245e605f6272aa809858d3f32dbe55ed53864df90e0b55750ab0a7d577da400
   artifacts     62
   ship plan     8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48
 ```
@@ -21,11 +21,11 @@ has one identity on every platform. The ship plan therefore carries `59f22e9a...
 
 ```text
   protocol      1af392067f1d8283fbeb7211bbdfffe7dccda62fac811b31695ca18b8b30191e  CITATION.cff
-  protocol      4483e95ff8ced1fcba6cade9af87c9036ad40d116982cb15777544f2cd8b89d9  environment_lock.txt
+  protocol      99a2884f6210ed76e569d2fc37bdbfcd0b0402b7fe972c2043fb2fb30a604c5a  environment_lock.txt
   code          dfd047eff9fb82d0303c24743416d5a3ddc524076976074adceb435cb5d704a7  experiments/build_stage22_prospective_benchmarks.py
   code          ff0bded1828ca59e06cdbad88dada45fa32b40cdeb8bcc583e4e1b275fb753fe  experiments/export_gen1_source_data.py
   code          75321aebe9671002620f2f635999b03754a9dd8fe6ec7511397de98faf32c2f6  experiments/make_gen1_figures.py
-  code          d007d0064a3394fdefa86c8379e0f7fde115a44383b2c0095801d58e98aaf895  experiments/make_release_bundle.py
+  code          87ee28a4a22256fda9103a8ac4fda8133073cc49a882a7c0b78dce017ae891b8  experiments/make_release_bundle.py
   code          cdbcfcbae793f4ed3de4083ddbdadf8c45e5100bf5e90438f73d315f5aa77dd4  experiments/run_gen1_evidence_lock.py
   code          a0801d4d2a91259b53e67c4705da0ccde7c822b73b9670cec9be1919614a0085  experiments/run_stage23_2h_confirmation.py
   code          ce43d831b0c7585a226a61c340c95660fa14e67ab2ea0fa3714d822c64e8b7f7  experiments/run_stage23_learnability_gate.py
