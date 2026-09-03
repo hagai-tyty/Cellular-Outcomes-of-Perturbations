@@ -467,3 +467,64 @@ Writing the above surfaced what the interruption had cost:
 
 All three added. The lesson is the one this project keeps relearning: the work is not finished when
 the code is correct, it is finished when the record says what happened.
+
+---
+
+## The claim lock changed its own digest on every run — 2026-08-28
+
+The most serious defect found in the release-preparation work, and it was inside the lock system
+rather than in anything the locks were guarding.
+
+`runtime_seconds` sat inside `GEN1_CLAIM_LOCK.json`, a file the claim digest **covers**. Re-running
+`--stage all` with nothing substantively changed therefore produced a different digest every time:
+
+```text
+  run 1  528849f2...      run 2  9666ca97...      run 3  fef69804...
+```
+
+**This was not cosmetic.** The claim digest is quoted in the manuscript, the README and the
+submission pack as the identity of what may be said. It was valid for exactly one execution.
+Anyone reproducing the stage would have re-run it, got a different number, and concluded the claim
+set had moved. A lock that cannot survive its own stage being re-run is not a lock.
+
+Found by running the stage three times and watching the number change — not by any check, because
+no check asserted the property.
+
+### The fix
+
+The digest now hashes **content, not timing**: JSON members are normalised with volatile fields
+removed and keys sorted before hashing; other text keeps the canonical-LF rule. Three consecutive
+runs now yield one digest, and all three locks were verified stable across a re-run.
+
+The **evidence manifest is deliberately not changed**. Its hashes must equal the bytes git stores,
+which the clone-portability check depends on; introducing JSON normalisation there would break that
+correspondence. The evidence lock covers frozen upstream outputs that are never regenerated, so it
+was never exposed to this.
+
+### What is still true, and stated rather than hidden
+
+Re-running the three stages still rewrites **10 files on disk** — purely the timing fields. Verified
+mechanically: stripping volatile keys, every one of those files is byte-identical in content to its
+committed version. The digests are unaffected, so verification is unaffected, but a reproducer who
+re-runs the pipeline will see a dirty working tree and should know it is benign.
+
+The release bundle is a snapshot of one tree, and re-running a stage invalidates its checksums. That
+is correct behaviour and the bundle checker catches it: during this audit the determinism test
+itself produced a `BUNDLE_MISMATCH`, which is the checker doing its job on me.
+
+### Two contracts so the class cannot return
+
+```text
+  stable_sha256 must ignore timing and key order, and must still catch a real content change
+  no file any self-digest covers may carry an unstripped volatile field
+```
+
+Neither re-runs a stage, because doing so would dirty the tree that CI checks — the fix for one
+problem must not manufacture another.
+
+### Why this reached a record late
+
+The fix was committed with a full explanation in the commit message and did not reach a record until
+a later verification pass looked for it. That is the second time in this sequence that a correction
+landed without being recorded, and the reason is the same both times: the work felt finished when
+the code was correct. It is finished when the record says what happened.

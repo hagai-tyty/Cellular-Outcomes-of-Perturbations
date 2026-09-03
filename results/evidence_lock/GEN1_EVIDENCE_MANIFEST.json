@@ -552,6 +552,6 @@
     "every committed artifact hashes the same from a fresh clone": true
   },
   "all_passed": true,
-  "runtime_seconds": 7.05,
+  "runtime_seconds": 9.543,
   "module_sha256": "d368e966fc42cc15f563718e1a378d4457d30643fb492d729ca1bbd321412144"
 }

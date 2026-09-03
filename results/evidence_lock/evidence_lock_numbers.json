@@ -37,6 +37,6 @@
     "the ranking verdict is one of the two frozen values": true
   },
   "all_passed": true,
-  "runtime_seconds": 0.003,
+  "runtime_seconds": 0.005,
   "module_sha256": "d368e966fc42cc15f563718e1a378d4457d30643fb492d729ca1bbd321412144"
 }
