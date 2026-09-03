@@ -26,9 +26,9 @@ claimed.
 ```text
   GEN1_MANUSCRIPT_READY
 
-  evidence lock   9245e605f6272aa809858d3f32dbe55ed53864df90e0b55750ab0a7d577da400
-  claim lock      42e4e1a027022405d16035a2e1ea24f6a42209847ba5d7d39891ffbf6f4d404a
-  package         be2a7bcb3b3a49db3a52d558565677093dc557b881b224b3e8ed1b655fffd9a7
+  evidence lock   9315e9df4b98c1acc569ce438082c73aa311a02b7bed7f3476e1dfce57a4755a
+  claim lock      f7c67d59c8aff0def1bb787432e65c2f72b5efa317f1855be224455fed78563d
+  package         be074cc3e0aff003265e96f6c6584ada601077e5122cfd409a01edf0d7a1f07b
 ```
 
 **What was measured.** In WM989 (GSE279162), 1,401 barcoded clones were split across six observed
@@ -157,6 +157,18 @@ Current fold set: **`_s16`**. `_c7t` and `_s12` are retained as comparison basel
 Bars are registered before runs. Comparisons are paired across folds. Records are appended, never
 rewritten. One change per experiment. See `plans/REF_GROUND_RULES.md`.
 
-## License
+## License and citation
 
-See [LICENSE](LICENSE).
+CellFate-Rx is free for academic, educational, nonprofit, personal, and other noncommercial use
+under the [PolyForm Noncommercial License 1.0.0](LICENSE). **No permission request or registration
+is required.**
+
+If you use CellFate-Rx in scholarly work, please cite the project using [`CITATION.cff`](CITATION.cff)
+and the archived Zenodo DOI.
+
+Use of CellFate-Rx as part of a revenue-generating product or paid service requires a separate
+commercial license — see [COMMERCIAL-LICENSING.md](COMMERCIAL-LICENSING.md).
+
+This is **source-available, not OSI "open source"**, because commercial use is restricted. That is
+deliberate. Manuscript text and figures are offered under CC BY 4.0; third-party datasets keep their
+original terms.

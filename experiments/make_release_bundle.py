@@ -64,6 +64,8 @@ FILES = [
     "ARCHITECTURE.md",
     "CITATION.cff",
     "LICENSE",
+    "COMMERCIAL-LICENSING.md",
+    ".zenodo.json",
     "environment_lock.txt",
     "requirements.txt",
     "pyproject.toml",

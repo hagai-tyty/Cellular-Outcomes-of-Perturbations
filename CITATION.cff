@@ -17,7 +17,9 @@ abstract: >-
   were generated.
 
 type: software
-license: "MIT"                                   # <<FILL if the repository licence differs
+license: "PolyForm-Noncommercial-1.0.0"          # source-available; commercial use
+                                                 # needs a separate agreement, see
+                                                 # COMMERCIAL-LICENSING.md
 repository-code: "https://github.com/hagai-tyty/Cellular-Outcomes-of-Perturbations"
 
 authors:

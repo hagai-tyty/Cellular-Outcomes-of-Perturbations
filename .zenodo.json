@@ -1,0 +1,54 @@
+{
+  "title": "CellFate-Rx Gen-1: frozen model and reproducibility artifacts, version 1.0.0",
+  "upload_type": "software",
+  "description": "<p>Archived reproducibility bundle for CellFate-Rx Generation 1: a preregistered reanalysis of the six-condition clonal-tracing dataset GEO GSE279162 (generated and deposited by Schaff et al., <a href=\"https://doi.org/10.1016/j.xgen.2026.101191\">doi:10.1016/j.xgen.2026.101191</a>). <strong>No new data were generated.</strong></p><p>Tests whether pretreatment transcriptional state carries condition-specific information about future clonal detection, beyond condition identity and captured pretreatment clone abundance, under clone-held-out evaluation frozen before any result existed.</p><p>The archive contains the frozen model artifact, the derived clone pseudobulk cache needed to re-run the permutation null, all out-of-fold predictions, the 1,000 per-draw permutation values and 2,000 bootstrap replicates, every stage protocol and record including failed and negative results, the environment lock, and three verification tools that refuse on any modified artifact. A SHA256SUMS manifest accompanies the bundle.</p><p><strong>Licensing.</strong> Software and the frozen model are source-available under the PolyForm Noncommercial License 1.0.0: free for academic, educational, nonprofit and other noncommercial use with no permission request. Commercial use as part of a revenue-generating product or paid service requires a separate license (see COMMERCIAL-LICENSING.md). Manuscript text and figures are CC BY 4.0. Third-party datasets retain their original terms.</p>",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "access_right": "open",
+  "version": "gen1-v1.0.0",
+  "language": "eng",
+  "creators": [
+    {
+      "name": "<<FILL: Family, Given>>",
+      "affiliation": "<<FILL>>",
+      "orcid": "<<FILL>>"
+    }
+  ],
+  "keywords": [
+    "clonal barcoding",
+    "lineage tracing",
+    "drug resistance",
+    "preregistration",
+    "reproducibility",
+    "permutation test",
+    "within-clone ranking",
+    "melanoma",
+    "reanalysis"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.1016/j.xgen.2026.101191",
+      "relation": "isDerivedFrom",
+      "resource_type": "publication-article",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE279162",
+      "relation": "isDerivedFrom",
+      "resource_type": "dataset",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE227151",
+      "relation": "references",
+      "resource_type": "dataset",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://github.com/hagai-tyty/Cellular-Outcomes-of-Perturbations",
+      "relation": "isSupplementTo",
+      "resource_type": "software",
+      "scheme": "url"
+    }
+  ],
+  "notes": "Verify the archive after unpacking: python experiments/run_gen1_evidence_lock.py --verify ; python experiments/run_gen1_claim_lock.py --verify ; python experiments/run_gen1_manuscript.py --verify . Each re-hashes its layer and refuses on a single changed byte. Bit-identical REFITTING across environments is not claimed; environment_lock.txt records the interpreter that produced the results."
+}

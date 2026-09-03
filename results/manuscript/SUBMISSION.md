@@ -26,7 +26,8 @@ PREPRINT SERVER    bioRxiv
 bioRxiv CATEGORY   Bioinformatics   (secondary: Cancer Biology)
 TARGET JOURNAL     BMC Bioinformatics
 BMC SECTION        Methods / benchmarking and reanalysis
-LICENCE            CC BY 4.0
+LICENCE            manuscript + figures  CC BY 4.0
+                   software + model      PolyForm-Noncommercial-1.0.0
 ```
 
 ### Honest note on venue fit
@@ -163,6 +164,19 @@ still uncommon, and the protocol digests make the claim checkable rather than as
 > and developed openly at `https://github.com/hagai-tyty/Cellular-Outcomes-of-Perturbations`.
 > The archive contains a manifest of SHA-256 digests and three verification commands; the evidence,
 > claim and package digests recorded in the manuscript can be re-derived from it.
+
+### Software availability and licensing
+
+> CellFate-Rx is source-available under the PolyForm Noncommercial License 1.0.0 (SPDX:
+> `PolyForm-Noncommercial-1.0.0`). Academic, educational, nonprofit and other noncommercial use
+> requires no permission request, registration, payment or signed agreement. Commercial use as part
+> of a revenue-generating product or paid service requires a separate license; see
+> `COMMERCIAL-LICENSING.md`. Manuscript text and figures are licensed CC BY 4.0.
+
+**Note for the editor.** BMC Bioinformatics' software policy requires that software be freely
+available to non-commercial researchers, which this license satisfies without any gate. It is,
+however, **source-available rather than OSI-approved open source**, since commercial use is
+restricted. State this plainly in the cover letter rather than letting it surface in review.
 
 ### Competing interests
 

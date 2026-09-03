@@ -3,8 +3,8 @@
 **CellFate-Rx, Generation 1.**
 
 ```text
-  evidence lock   9245e605f6272aa809858d3f32dbe55ed53864df90e0b55750ab0a7d577da400
-  claim lock      42e4e1a027022405d16035a2e1ea24f6a42209847ba5d7d39891ffbf6f4d404a
+  evidence lock   9315e9df4b98c1acc569ce438082c73aa311a02b7bed7f3476e1dfce57a4755a
+  claim lock      f7c67d59c8aff0def1bb787432e65c2f72b5efa317f1855be224455fed78563d
 ```
 
 Both digests are verifiable from the repository. See **Availability**.
@@ -385,8 +385,8 @@ The first re-hashes every locked artifact and refuses if one has moved. The seco
 for the claim set. Both were shown to refuse a one-bit change before either was issued.
 
 ```text
-  evidence lock digest   9245e605f6272aa809858d3f32dbe55ed53864df90e0b55750ab0a7d577da400
-  claim lock digest      42e4e1a027022405d16035a2e1ea24f6a42209847ba5d7d39891ffbf6f4d404a
+  evidence lock digest   9315e9df4b98c1acc569ce438082c73aa311a02b7bed7f3476e1dfce57a4755a
+  claim lock digest      f7c67d59c8aff0def1bb787432e65c2f72b5efa317f1855be224455fed78563d
 ```
 
 ### What is in the repository
