@@ -225,6 +225,5 @@
     "the extended patterns find nothing on the already-locked shipped surfaces": true
   },
   "all_passed": true,
-  "runtime_seconds": 0.055,
-  "module_sha256": "bb8e8d631910e64623556e3284093d979af33e3311d09b5adf1d303662ed8283"
+  "module_sha256": "2c5aa941d80fa8a0ce31d85d66cea095029d36ca7ebbbb397b0dfc773ee819cc"
 }

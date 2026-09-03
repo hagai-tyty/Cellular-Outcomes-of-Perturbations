@@ -275,3 +275,55 @@ def test_ready_does_not_claim_the_science_is_good():
     note = v["what_ready_does_not_mean"]
     assert "NOT a judgement that the science is good" in note
     assert "a reviewer will agree" in note
+
+
+# ================================================================================================ #
+# The verifiers must check the verdict, not just the bytes
+# ================================================================================================ #
+@pytest.mark.parametrize("module_name,record_attr,refused", [
+    ("run_gen1_evidence_lock", "LOCK_JSON", "GEN1_EVIDENCE_REFUSED"),
+    ("run_gen1_claim_lock", "CLAIMS_JSON", "GEN1_CLAIM_LOCK_REFUSED"),
+    ("run_gen1_manuscript", "VERDICT_JSON", "GEN1_MANUSCRIPT_REFUSED"),
+])
+def test_verify_refuses_when_the_stage_itself_refused(tmp_path, module_name, record_attr, refused):
+    """Byte-intact is not the same as passed, and the two came apart in practice.
+
+    The manuscript stage recorded GEN1_MANUSCRIPT_REFUSED; its covered files hashed exactly as
+    recorded, because a refused run still writes them; and --verify returned clean. CI runs only
+    the three --verify commands, so it stayed green over a refused package. Each verifier must
+    therefore read the recorded verdict, and this proves it does by planting a refusal.
+    """
+    import json
+    import sys
+    sys.path.insert(0, str(ROOT / "experiments"))
+    mod = __import__(module_name)
+
+    real = getattr(mod, record_attr)
+    if not real.is_file():
+        pytest.skip(f"{module_name} has not been run")
+
+    planted = tmp_path / real.name
+    record = json.loads(real.read_text(encoding="utf-8"))
+    record["verdict"] = refused
+    planted.write_text(json.dumps(record, indent=2), encoding="utf-8")
+
+    try:
+        setattr(mod, record_attr, planted)
+        r = mod.run_verify()
+    finally:
+        setattr(mod, record_attr, real)
+
+    assert r["clean"] is False, (
+        f"{module_name} --verify called a refused stage clean; CI would stay green over it")
+    assert r["verdict"].endswith("STAGE_REFUSED"), (
+        f"{module_name} reported {r['verdict']}, which does not say the stage refused")
+
+
+def test_a_passing_stage_still_verifies_clean():
+    """The guard above must not be satisfiable by a verifier that always refuses."""
+    import sys
+    sys.path.insert(0, str(ROOT / "experiments"))
+    for name in ("run_gen1_evidence_lock", "run_gen1_claim_lock", "run_gen1_manuscript"):
+        mod = __import__(name)
+        r = mod.run_verify()
+        assert r["clean"] is True, f"{name} --verify is not clean on the committed tree: {r}"

@@ -214,7 +214,6 @@ def run_26a() -> dict:
                 for v in CONDITIONS[i + 1:]]
 
     ordering_stable = _signs(six_batch) == _signs(six_solo)
-    mixed_ok = bool(routing_ok and within_tol and ordering_stable)
 
     # ---- structural closure (plan §2.3) ------------------------------------------------------- #
     meta = json.loads(ARTIFACT_META.read_text(encoding="utf-8"))

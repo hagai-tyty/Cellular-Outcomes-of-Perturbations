@@ -248,7 +248,7 @@ def test_no_file_a_self_digest_covers_carries_a_volatile_field(mod):
 
 @ran
 def test_the_claim_lock_has_its_own_digest():
-    """The evidence lock hashes 54 artifacts and none of them is this stage's output."""
+    """The evidence lock hashes the Gen-1 artifacts, none of which is this stage output."""
     d = _json(OUT / "GEN1_CLAIM_DIGEST.json")
     assert len(d["claim_digest"]) == 64
     assert set(d["covers"]) == {
@@ -286,7 +286,13 @@ def test_the_manuscript_binds_to_both_digests():
 def test_the_claim_lock_refuses_to_write_against_unverified_evidence():
     a = _json(CLAIMS)["evidence_verification"]
     assert a["live_verification"]["clean"] is True
-    assert a["checks"]["all 54 locked artifacts still verify"] is True
+    label = next(k for k in a["checks"] if k.endswith("locked artifacts still verify"))
+    assert a["checks"][label] is True
+    claimed = int(label.split()[1])
+    checked = a["live_verification"]["n_checked"]
+    assert claimed == checked, (
+        f"the label claims {claimed} artifacts but {checked} were checked -- a hard-coded "
+        "count in this label went stale once already")
     assert _json(CLAIMS)["evidence_lock_digest"] == \
         _json(RESULTS / "evidence_lock" / "GEN1_EVIDENCE_MANIFEST.json")["lock_digest"]
 

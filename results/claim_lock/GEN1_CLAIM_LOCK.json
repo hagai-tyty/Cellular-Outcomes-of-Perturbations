@@ -8,9 +8,9 @@
     "CL-E_worked_abstract": true
   },
   "failing": [],
-  "evidence_lock_digest": "9315e9df4b98c1acc569ce438082c73aa311a02b7bed7f3476e1dfce57a4755a",
+  "evidence_lock_digest": "79f96dd66fe7a586df585126bc920d9433746e78ca25f7c453e2ed0ab110dfdb",
   "plan": "plans/(newer)practical plans/GEN1_CLAIM_LOCK_V1.md",
-  "plan_canonical_lf_sha256": "4a418f92464eacc323c23c118bfdebae2fca63eac204065f29da8c06fe8ea680",
+  "plan_canonical_lf_sha256": "306d3bc3d92b26a5511da7d5f7de6d33ea601b687d7be00fcf002676484190de",
   "ship_plan_digest": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48",
   "allowed": {
     "primary": {
@@ -109,12 +109,11 @@
       "every mandatory qualifier is present": true,
       "it never says treatment where it means condition": true
     },
-    "all_passed": true,
-    "runtime_seconds": 0.001
+    "all_passed": true
   },
   "evidence_verification": {
     "stage": "CL-A",
-    "lock_digest": "9315e9df4b98c1acc569ce438082c73aa311a02b7bed7f3476e1dfce57a4755a",
+    "lock_digest": "79f96dd66fe7a586df585126bc920d9433746e78ca25f7c453e2ed0ab110dfdb",
     "live_verification": {
       "clean": true,
       "moved": [],
@@ -123,15 +122,13 @@
     },
     "checks": {
       "the evidence lock verdict is GEN1_EVIDENCE_LOCKED": true,
-      "all 54 locked artifacts still verify": true,
+      "all 62 locked artifacts still verify": true,
       "the lock digest is the one this plan was written against": true,
       "the frozen ship-plan digest still holds": true
     },
-    "all_passed": true,
-    "runtime_seconds": 0.148
+    "all_passed": true
   },
   "grants_nothing": "Locking a claim grants nothing. It fixes the ceiling of what may be said. The ceiling may be lowered later; it may not be raised.",
   "next": "MANUSCRIPT + REPRODUCIBILITY PACKAGE",
-  "runtime_seconds": 0.213,
-  "module_sha256": "bb8e8d631910e64623556e3284093d979af33e3311d09b5adf1d303662ed8283"
+  "module_sha256": "2c5aa941d80fa8a0ce31d85d66cea095029d36ca7ebbbb397b0dfc773ee819cc"
 }

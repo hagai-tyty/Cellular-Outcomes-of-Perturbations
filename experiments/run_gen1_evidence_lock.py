@@ -23,7 +23,6 @@ import hashlib
 import json
 import re
 import shutil
-import sys
 import tempfile
 import time
 from pathlib import Path
@@ -65,6 +64,18 @@ def canonical_lf_sha256(p: Path) -> str:
 BINARY_SUFFIXES = {".npz", ".npy"}
 
 
+def artifact_bytes(rel: str) -> int:
+    """Size of the CONTENT that was hashed, not the size on this filesystem.
+
+    `st_size` counts CRLF as two bytes, so a text file rewritten on Windows changes size while its
+    canonical-LF hash does not -- the manifest then churns on a field that is not a property of the
+    content at all. Same class as the raw-vs-canonical hashing bug this file already fixed once.
+    """
+    p = ROOT / rel
+    raw = p.read_bytes()
+    return len(raw if p.suffix in BINARY_SUFFIXES else raw.replace(b"\r\n", b"\n"))
+
+
 def artifact_sha256(rel: str) -> tuple[str, str]:
     """Hash an artifact the way the LOCK must hash it, and say which way that was.
 
@@ -88,8 +99,24 @@ def module_sha256() -> str:
     return hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 
 
+# Volatile-by-construction. Stage 23.2 already established this convention -- its contract
+# `test_the_hashed_protocol_payload_excludes_source_and_runtime_provenance` forbids timing inside a
+# hashed payload, and its docstring records that the class "bit three times". The Gen-1 locks
+# reintroduced it: timing written into a committed output makes every re-run dirty the tree and, in
+# the claim lock, moved the digest itself. Timing is reported on stdout and never written.
+VOLATILE_KEYS = {"runtime_seconds", "runtime_minutes", "total_runtime_seconds"}
+
+
+def _strip_volatile(obj):
+    if isinstance(obj, dict):
+        return {k: _strip_volatile(v) for k, v in obj.items() if k not in VOLATILE_KEYS}
+    if isinstance(obj, list):
+        return [_strip_volatile(v) for v in obj]
+    return obj
+
+
 def write_json(p: Path, obj: dict) -> dict:
-    stamped = {**obj, "module_sha256": module_sha256()}
+    stamped = _strip_volatile({**obj, "module_sha256": module_sha256()})
     p.write_text(json.dumps(stamped, indent=2) + "\n", encoding="utf-8")
     return stamped
 
@@ -272,7 +299,7 @@ def build_manifest() -> dict:
                 continue
             digest, how = artifact_sha256(rel)
             entries[rel] = {"class": cls, "sha256": digest, "hashed": how,
-                            "bytes": p.stat().st_size, "git_tracked": _git_tracked(rel),
+                            "bytes": artifact_bytes(rel), "git_tracked": _git_tracked(rel),
                             "git_ignored": _git_ignored(rel)}
 
     canonical = "\n".join(f"{k}  {entries[k]['sha256']}" for k in sorted(entries))
@@ -775,6 +802,12 @@ def run_verify() -> dict:
     separately rather than counted as a failure, so this can run in CI, which is the only place
     that ever checks out this repository clean. Nothing about MOVED detection is relaxed: a content
     change to any artifact, and any absence that is not the documented one, is still a refusal.
+
+    A verifier that only re-hashes bytes answers 'has this been tampered with?' and NOT 'did
+    the stage that produced this pass?'. Those came apart in practice: the manuscript stage
+    recorded GEN1_MANUSCRIPT_REFUSED, its covered files hashed exactly as recorded -- because a
+    refused run still writes them -- and --verify returned clean, so CI stayed green over a
+    refused package. The recorded verdict is therefore part of what is verified.
     """
     if not MANIFEST_JSON.exists():
         raise SystemExit("no manifest: run --stage all first")
@@ -784,10 +817,16 @@ def run_verify() -> dict:
     ignored = set(m.get("git_ignored", []))
     r["absent_but_gitignored"] = sorted(p for p in r["missing"] if p in ignored)
     r["missing"] = sorted(p for p in r["missing"] if p not in ignored)
-    r["clean"] = not r["moved"] and not r["missing"]
+    bytes_intact = not r["moved"] and not r["missing"]
 
+    stage = (json.loads(LOCK_JSON.read_text(encoding="utf-8")).get("verdict")
+             if LOCK_JSON.exists() else None)
+    r["stage_verdict"] = stage
+    r["stage_passed"] = stage == "GEN1_EVIDENCE_LOCKED"
+    r["clean"] = bytes_intact and r["stage_passed"]
     r["lock_digest"] = m["lock_digest"]
-    r["verdict"] = "EVIDENCE_INTACT" if r["clean"] else "EVIDENCE_MOVED"
+    r["verdict"] = ("EVIDENCE_MOVED" if not bytes_intact
+                    else "EVIDENCE_INTACT" if r["stage_passed"] else "EVIDENCE_STAGE_REFUSED")
     r["note"] = ("A gitignored artifact absent from a fresh clone is expected and reported "
                  "separately. Any content change, or any other absence, is a refusal.")
     return r
@@ -807,10 +846,14 @@ def main(argv=None) -> int:
     if a.stage != "all":
         ap.error("pass --stage all or --verify")
     r = run_all()
-    print(json.dumps({k: r[k] for k in
-                      ("stage", "verdict", "lock_digest", "substages", "failing", "n_artifacts",
-                       "by_class", "negative_controls", "live_verification", "next")},
-                     indent=2, default=str))
+    payload = {k: r[k] for k in
+               ("stage", "verdict", "lock_digest", "substages", "failing", "n_artifacts",
+                "by_class", "negative_controls", "live_verification", "next")}
+    if r["verdict"] != "GEN1_EVIDENCE_LOCKED":
+        # a refused run must not advertise the next stage: it announced "Generation 1 is
+        # complete" while its own verdict was REFUSED.
+        payload.pop("next", None)
+    print(json.dumps(payload, indent=2, default=str))
     return 0 if r["verdict"] == "GEN1_EVIDENCE_LOCKED" else 2
 
 

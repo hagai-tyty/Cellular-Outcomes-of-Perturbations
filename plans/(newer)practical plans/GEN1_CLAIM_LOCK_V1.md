@@ -4,7 +4,7 @@
 **Parent** `STAGE_23_5_GEN1_ROLE_B_SHIP_PLAN_V1.md`, canonical-LF SHA-256
 `8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48`, FROZEN.
 **Entry** `results/gen1_handoff_to_claim_lock.json`, verdict `GEN1_EVIDENCE_LOCKED`,
-lock digest `9315e9df4b98c1acc569ce438082c73aa311a02b7bed7f3476e1dfce57a4755a`.
+lock digest `79f96dd66fe7a586df585126bc920d9433746e78ca25f7c453e2ed0ab110dfdb`.
 
 **Mandate** §9 of the frozen ship plan, verbatim:
 
@@ -63,8 +63,8 @@ Seconds. This stage hashes, scans text, and writes.
 The very first thing, before a single sentence is written:
 
 ```text
-re-run the evidence-lock verifier over all 54 artifacts
-the lock digest must equal 9315e9df4b98c1acc569ce438082c73aa311a02b7bed7f3476e1dfce57a4755a
+re-run the evidence-lock verifier over every locked artifact
+the lock digest must equal 79f96dd66fe7a586df585126bc920d9433746e78ca25f7c453e2ed0ab110dfdb
 ```
 
 A moved artifact is `GEN1_CLAIM_LOCK_REFUSED`. Writing claims against evidence that has shifted is
@@ -237,7 +237,7 @@ one this instrument would refuse.
 
 # 5.1 The claims must have an identity of their own
 
-The evidence lock hashes 54 artifacts, and **none of them is this stage's output**. That is the
+The evidence lock hashes 62 artifacts, and **none of them is this stage's output**. That is the
 correct layering — the claim lock is downstream, and re-locking to include it would make CL-A
 circular, since CL-A pins the evidence digest. But it leaves the document the manuscript is
 actually written from with no identity at all: it could change and nothing would notice, which is
@@ -286,3 +286,28 @@ GEN1_CLAIMS_LOCKED  ->  MANUSCRIPT + REPRODUCIBILITY PACKAGE
 
 Generation 2 — new-system biological replication, unseen-treatment transfer, broad calibration and
 OOD validation — remains future work and is not a Generation-1 gate.
+
+---
+
+# 9. Amendment V1.1 — 2026-09-03
+
+The two numbers this plan pins are re-pinned here rather than quietly overwritten, so that what
+V1 said stays visible.
+
+**Entry lock digest.** V1 was written against evidence lock digest
+`e206bfd37c5a93998a773b8bd058eac5e5e144cd2a8ee5d78e9907911a956bc5`.
+It is now `79f96dd66fe7a586df585126bc920d9433746e78ca25f7c453e2ed0ab110dfdb`.
+Nothing about the evidence changed: the digest moved because the lock's own manifest recorded
+each artifact's `st_size`, which counts a CRLF as two bytes. `results/**` is `text eol=lf`, so a
+file written by a stage on Windows and the same file in a fresh checkout have identical content
+and different sizes -- the manifest disagreed with itself across checkouts and re-dirtied the
+working tree on every run. Sizes are now measured on the same canonical-LF content that is
+hashed. The artifact hashes themselves were already canonical-LF and did not move.
+
+**Artifact count.** V1 said 54. It is 62: the three figures, the source-data export, the release
+bundle builder and the two upstream Gen-1 records were added to the lock after V1 was written.
+The count is no longer written into the CL-A check label, which now derives it from the manifest
+-- a hard-coded count in a label that describes a verification is a claim that can go stale
+while the verification stays correct, which is what happened here.
+
+Neither amendment relaxes a gate. CL-A still refuses if a single covered byte has moved.

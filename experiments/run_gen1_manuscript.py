@@ -53,9 +53,25 @@ VERDICT_JSON = OUT / "GEN1_MANUSCRIPT.json"
 DIGEST_JSON = OUT / "GEN1_PACKAGE_DIGEST.json"
 
 
+# Volatile-by-construction. Stage 23.2 already established this convention -- its contract
+# `test_the_hashed_protocol_payload_excludes_source_and_runtime_provenance` forbids timing inside a
+# hashed payload, and its docstring records that the class "bit three times". The Gen-1 locks
+# reintroduced it: timing written into a committed output makes every re-run dirty the tree and, in
+# the claim lock, moved the digest itself. Timing is reported on stdout and never written.
+VOLATILE_KEYS = {"runtime_seconds", "runtime_minutes", "total_runtime_seconds"}
+
+
+def _strip_volatile(obj):
+    if isinstance(obj, dict):
+        return {k: _strip_volatile(v) for k, v in obj.items() if k not in VOLATILE_KEYS}
+    if isinstance(obj, list):
+        return [_strip_volatile(v) for v in obj]
+    return obj
+
+
 def write_json(p: Path, obj: dict) -> dict:
-    stamped = {**obj, "module_sha256":
-               hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
+    stamped = _strip_volatile({**obj, "module_sha256":
+                               hashlib.sha256(Path(__file__).read_bytes()).hexdigest()})
     p.write_text(json.dumps(stamped, indent=2) + "\n", encoding="utf-8")
     return stamped
 
@@ -379,6 +395,12 @@ PACKAGE_FILES = [
     "results/manuscript/figures/figure_2_primary.svg",
     "results/manuscript/figures/figure_3_robustness.svg",
     "results/manuscript/figures/figure_source_data.json",
+    # The two upstream Gen-1 records. A record of a lock cannot sit inside the lock it describes,
+    # but it CAN be pinned by the layer above: neither of these quotes the package digest, so
+    # there is no cycle. gen1_MANUSCRIPT_RECORD.md stays unpinned because nothing sits above it --
+    # a stated exception rather than an unexamined hole.
+    "plans/(newer)practical plans/RECORDs/gen1_EVIDENCE_LOCK_RECORD.md",
+    "plans/(newer)practical plans/RECORDs/gen1_CLAIM_LOCK_RECORD.md",
 ]
 
 
@@ -438,14 +460,27 @@ def run_all() -> dict:
 
 
 def run_verify() -> dict:
+    """Re-hash the package files and refuse if one moved -- or if the stage itself refused.
+
+    A verifier that only re-hashes bytes answers 'has this been tampered with?' and NOT 'did
+    the stage that produced this pass?'. Those came apart in practice: the manuscript stage
+    recorded GEN1_MANUSCRIPT_REFUSED, its covered files hashed exactly as recorded -- because a
+    refused run still writes them -- and --verify returned clean, so CI stayed green over a
+    refused package. The recorded verdict is therefore part of what is verified.
+    """
     if not DIGEST_JSON.exists():
         raise SystemExit("no package digest: run --stage all first")
     rec = _j(DIGEST_JSON)
     now, per = package_digest()
     moved = [k for k, v in per.items() if rec["covers"].get(k) != v]
-    return {"clean": not moved, "moved": moved, "package_digest": now,
+    bytes_intact = not moved and now == rec["package_digest"]
+    stage = _j(VERDICT_JSON).get("verdict") if VERDICT_JSON.exists() else None
+    passed = stage == "GEN1_MANUSCRIPT_READY"
+    return {"clean": bytes_intact and passed, "moved": moved, "package_digest": now,
             "recorded_digest": rec["package_digest"],
-            "verdict": "PACKAGE_INTACT" if now == rec["package_digest"] else "PACKAGE_MOVED"}
+            "stage_verdict": stage, "stage_passed": passed,
+            "verdict": ("PACKAGE_MOVED" if not bytes_intact
+                        else "PACKAGE_INTACT" if passed else "PACKAGE_STAGE_REFUSED")}
 
 
 def main(argv=None) -> int:
@@ -460,10 +495,14 @@ def main(argv=None) -> int:
     if a.stage != "all":
         ap.error("pass --stage all or --verify")
     r = run_all()
-    print(json.dumps({k: r[k] for k in r if k in
-                      ("stage", "verdict", "substages", "failing", "refused_at",
-                       "numbers_traced", "negative_controls", "package_digest", "next")},
-                     indent=2, default=str))
+    payload = {k: r[k] for k in r if k in
+               ("stage", "verdict", "substages", "failing", "refused_at",
+                "numbers_traced", "negative_controls", "package_digest", "next")}
+    if r["verdict"] != "GEN1_MANUSCRIPT_READY":
+        # a refused run must not advertise the next stage: it announced "Generation 1 is
+        # complete" while its own verdict was REFUSED.
+        payload.pop("next", None)
+    print(json.dumps(payload, indent=2, default=str))
     return 0 if r["verdict"] == "GEN1_MANUSCRIPT_READY" else 2
 
 

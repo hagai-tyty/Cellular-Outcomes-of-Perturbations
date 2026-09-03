@@ -3,7 +3,7 @@
 ```text
   GEN1_EVIDENCE_LOCKED
 
-  lock digest   9315e9df4b98c1acc569ce438082c73aa311a02b7bed7f3476e1dfce57a4755a
+  lock digest   79f96dd66fe7a586df585126bc920d9433746e78ca25f7c453e2ed0ab110dfdb
   artifacts     62
   ship plan     8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48
 ```
@@ -25,13 +25,13 @@ has one identity on every platform. The ship plan therefore carries `59f22e9a...
   code          dfd047eff9fb82d0303c24743416d5a3ddc524076976074adceb435cb5d704a7  experiments/build_stage22_prospective_benchmarks.py
   code          ff0bded1828ca59e06cdbad88dada45fa32b40cdeb8bcc583e4e1b275fb753fe  experiments/export_gen1_source_data.py
   code          75321aebe9671002620f2f635999b03754a9dd8fe6ec7511397de98faf32c2f6  experiments/make_gen1_figures.py
-  code          945fb43e26cdfdec01d66de76fec364ac05df299e9568b2c3681c33938b4366f  experiments/make_release_bundle.py
-  code          cdbcfcbae793f4ed3de4083ddbdadf8c45e5100bf5e90438f73d315f5aa77dd4  experiments/run_gen1_evidence_lock.py
+  code          d9ea495dd0a4a07c23788c13d84de6ce4ba75de784275678aa2405818902a1f7  experiments/make_release_bundle.py
+  code          b72fef6963603fcad579613b724a237646cf6249c4e41c60981903334c1ef1d1  experiments/run_gen1_evidence_lock.py
   code          a0801d4d2a91259b53e67c4705da0ccde7c822b73b9670cec9be1919614a0085  experiments/run_stage23_2h_confirmation.py
   code          ce43d831b0c7585a226a61c340c95660fa14e67ab2ea0fa3714d822c64e8b7f7  experiments/run_stage23_learnability_gate.py
   code          f04743532ef66cca47eb461cc4fdf304b53e0fbf113567ae3e7218f13b7b4ecc  experiments/run_stage24_gen1_tool.py
   code          2c06ff784c535647448b01545428d90aa7fccea5f5b8fda40567634dc386fd22  experiments/run_stage25_ranking.py
-  code          1f207d5f4253a2aa6afc8aac349b6bb425922fa3938e72fd7046e3a0f6d9c511  experiments/run_stage26_scope_lock.py
+  code          89e63b983075db249908819d26b9aac8d6d30b0c9e20d2496fc0807cfed079d4  experiments/run_stage26_scope_lock.py
   protocol      661cc2bf927cf070d1fb78f3bb936690303634b1d8de555a9a3bf29caa760390  plans/(newer)practical plans/GEN1_EVIDENCE_LOCK_V1.md
   records       e42cd1a4c132a3ae94e77a32bf67edfc3a0f69199ad0d7d776b10c1951f6c2dc  plans/(newer)practical plans/RECORDs/stage_22_RECORD.md
   records       bff1365349db9dba981f75e385cac54f4e446acfe9339527701425c2e8f057df  plans/(newer)practical plans/RECORDs/stage_23_2H_RECORD.md
@@ -71,11 +71,11 @@ has one identity on every platform. The ship plan therefore carries `59f22e9a...
   verdicts      9355be0f3e94e82292f82f678b86bf624dd8fb11e9b6baecd37347c78f9e248d  results/stage25/stage25_verdict.json
   verdicts      00af0c8a33a061d609d808c0d02e4d710ccfa7baebe18f7c2edcb2d2757151f3  results/stage25/stage25a_observed.json
   limitations   e24081a49b13bc87e35ae95649d30d1717dc79e250c0b3c5110170ddc71ab6ea  results/stage26/GEN1_SCOPE_LIMIT.md
-  verdicts      8e9888f01ae79884370aa55d96536ba9d62685db9cc457b0ad948e597de25295  results/stage26/stage26_verdict.json
-  verdicts      48aa2a8aa4ffad2fcd7965cddac2450e0c4b8f3222873e7ea2affd1a7f4a2bb5  results/stage26_handoff_to_evidence_lock.json
+  verdicts      f4e8c4a7be16b4e1dd8c534ffc67a92bee967fb9b29a980250658082d09c4dee  results/stage26/stage26_verdict.json
+  verdicts      fbbbdd96eab7053d8958c555230dbd1e92fc305bc38a07831fe7487242cf7b38  results/stage26_handoff_to_evidence_lock.json
   tool          4ec35e3862c592ff1c25bf390dd00ba3d0203777f0585963153491b048fabae3  src/cellfate/gen1_cli.py
   tool          6f7c84a2ab8beb14d64728f0241dcaee1bc39ba0abb1f879e52aca2410cf2944  src/cellfate/gen1_predictor.py
-  code          1ca2450d1d58de9f0f7d5e60b8e7a4213df812aeebe25d272799d7c2461abe8b  tests/test_ci_portability.py
+  code          d75989140bbb35a4d75f4e28cbbf3a2c68010e9ec6575af4ddc544593d134351  tests/test_ci_portability.py
   code          004a48be15d1766a5e4bbb182c3ea3093e2ef069f614660d2a960c082c3d032b  tests/test_gen1_evidence_lock.py
   code          7b9a70e8b979e066b391548ffa59560d1e805e6866874c0f6e95114d8076e43c  tests/test_gen1_predictor.py
   code          7209b237c011ef8fa1498a5f046d204fbfa2600d63ce2cfefe326b5acf871223  tests/test_stage23_2h_confirmation.py

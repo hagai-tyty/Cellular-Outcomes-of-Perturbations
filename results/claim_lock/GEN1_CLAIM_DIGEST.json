@@ -1,5 +1,5 @@
 {
-  "claim_digest": "9cdf7f103332dfddcebe69dc22c61d4825f8a1720295084bafc954c981ecc37f",
+  "claim_digest": "5aab50db44fbbfeb655325e1d329acf1955f383b0ca7c265a6e88a2b803de737",
   "digest_definition": "SHA-256 over 'path  content-sha256' lines, sorted by path, LF-joined. JSON members are normalised -- volatile timing fields removed, keys sorted -- so the digest reflects content rather than when the stage last ran; other text uses canonical-LF.",
   "volatile_keys_excluded": [
     "runtime_minutes",
@@ -7,13 +7,13 @@
     "total_runtime_seconds"
   ],
   "covers": {
-    "plans/(newer)practical plans/GEN1_CLAIM_LOCK_V1.md": "4a418f92464eacc323c23c118bfdebae2fca63eac204065f29da8c06fe8ea680",
-    "experiments/run_gen1_claim_lock.py": "275276d0723abb67ff3d28f3189372e4e90fc1d07899fb8a181299c376240cb6",
-    "tests/test_gen1_claim_lock.py": "7ce61e1a43ca35573823308dc12ee4c6265f4a378d21796f0e970c345587648b",
-    "results/claim_lock/GEN1_CLAIMS.md": "c89a91a27dbaf4542ba71ada9cf4a570ed074c60d0bdf2ae8f45e75f5b03fd50",
-    "results/claim_lock/GEN1_CLAIM_LOCK.json": "3840ff33d4a722c03e89bc2b336e1a2cbafafc20b370c6d254d665b8dcf7691b"
+    "plans/(newer)practical plans/GEN1_CLAIM_LOCK_V1.md": "306d3bc3d92b26a5511da7d5f7de6d33ea601b687d7be00fcf002676484190de",
+    "experiments/run_gen1_claim_lock.py": "1462b5fdafd22dd6a19c40eb58f7e7d054d186f5cf9f33a4d22f86a9ece16be9",
+    "tests/test_gen1_claim_lock.py": "2404d7e23115c3af72113b41049c9e82eac0a399154a9c88f3248309c1214fdf",
+    "results/claim_lock/GEN1_CLAIMS.md": "3ed341fee14accced518837c15c4d381f677585e319f0b854493f8a99e8a3a99",
+    "results/claim_lock/GEN1_CLAIM_LOCK.json": "d5345385df306a435702d53ec28e6cc6a2ddddc2a3b93b7ca79c624b0c08e318"
   },
   "why_it_lives_outside_the_verdict": "a digest stored inside the file it covers would hash itself",
   "verify": "python experiments/run_gen1_claim_lock.py --verify",
-  "module_sha256": "bb8e8d631910e64623556e3284093d979af33e3311d09b5adf1d303662ed8283"
+  "module_sha256": "2c5aa941d80fa8a0ce31d85d66cea095029d36ca7ebbbb397b0dfc773ee819cc"
 }

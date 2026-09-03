@@ -14,8 +14,8 @@ mechanically and has been shown to do so.
 
 ## Inputs
 - `results/gen1_handoff_to_manuscript.json` — `GEN1_CLAIMS_LOCKED`
-- evidence digest `9315e9df4b98c1acc569ce438082c73aa311a02b7bed7f3476e1dfce57a4755a`
-- claim digest `9cdf7f103332dfddcebe69dc22c61d4825f8a1720295084bafc954c981ecc37f` (was `23ea00b8...` when this stage first ran)
+- evidence digest `e206bfd37c5a93998a773b8bd058eac5e5e144cd2a8ee5d78e9907911a956bc5`
+- claim digest `a81ee43b07fae32f9bb45b4a4133de0b1f3979eeda3de7d700a7ca6897affb77` (was `23ea00b8...` when this stage first ran)
 
 ## Files added
 - `plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md`
@@ -36,9 +36,9 @@ checked, and again after.
 ```text
   GEN1_MANUSCRIPT_READY
 
-  package digest   6822a149ec3a1833edf725f7d51b3c8cea58524727f82bb4d8ec3a624446830e
-  evidence digest  9315e9df4b98c1acc569ce438082c73aa311a02b7bed7f3476e1dfce57a4755a
-  claim digest     9cdf7f103332dfddcebe69dc22c61d4825f8a1720295084bafc954c981ecc37f
+  package digest   1e514de4f59570d7a67ed15c4573a12bed6a2250410dc1b1ac58ab9dba732284
+  evidence digest  e206bfd37c5a93998a773b8bd058eac5e5e144cd2a8ee5d78e9907911a956bc5
+  claim digest     a81ee43b07fae32f9bb45b4a4133de0b1f3979eeda3de7d700a7ca6897affb77
 
   MS-A  both locks verify              6 checks
   MS-C  compliance                     10 checks, 0 forbidden hits
@@ -364,9 +364,9 @@ which is exactly where a reanalysis has the least excuse to be sloppy.
                      ranking_status without the verdict file -> NOT_SUPPORTED
   digests            no stale 64-hex value in any live document
   bundle             384 files, BUNDLE_INTACT
-  locks              evidence 9315e9df4b98c1acc569ce438082c73aa311a02b7bed7f3476e1dfce57a4755a
-                     claim    9cdf7f103332dfddcebe69dc22c61d4825f8a1720295084bafc954c981ecc37f
-                     package  6822a149ec3a1833edf725f7d51b3c8cea58524727f82bb4d8ec3a624446830e
+  locks              evidence e206bfd37c5a93998a773b8bd058eac5e5e144cd2a8ee5d78e9907911a956bc5
+                     claim    a81ee43b07fae32f9bb45b4a4133de0b1f3979eeda3de7d700a7ca6897affb77
+                     package  1e514de4f59570d7a67ed15c4573a12bed6a2250410dc1b1ac58ab9dba732284
 ```
 
 The evidence lock refused mid-audit when Figure 1's generator was corrected — a locked artifact
@@ -528,3 +528,84 @@ The fix was committed with a full explanation in the commit message and did not 
 a later verification pass looked for it. That is the second time in this sequence that a correction
 landed without being recorded, and the reason is the same both times: the work felt finished when
 the code was correct. It is finished when the record says what happened.
+
+---
+
+## Tree stability, and a verifier that was not verifying — 2026-09-03
+
+The section above ends by stating, honestly, that re-running the three stages still rewrote **10
+files on disk**, that the churn was purely timing, and that a reproducer should know it was benign.
+That statement was true when written. It is no longer true: the churn is now **zero files**, and
+chasing the last of it turned up something considerably worse than churn.
+
+### The churn had a second cause, and it was not timing
+
+Stripping volatile timing at the three lock writers removed most of it. Sixteen files still moved.
+The residue was one field: the evidence manifest recorded each artifact's size as `st_size`.
+
+`st_size` counts a CRLF as two bytes. `.gitattributes` declares `results/** text eol=lf`, so a file
+written by a stage on Windows lands CRLF while the same file in a fresh checkout is LF — identical
+content, two different sizes. The manifest therefore disagreed with itself across checkouts. This is
+the same class as the raw-versus-canonical hashing bug this lock already fixed once for hashes; the
+size field was simply never brought along.
+
+Measured on a clean clone: **34 of 62 artifacts** had an `st_size` different from the recorded size.
+Sizes are now taken from the same canonical-LF content that is hashed. Hashes never moved.
+
+Checked and found sound, rather than assumed: Stage 22's CSV writers emit LF, so the recorded sizes
+Stage 23 compares against are portable; Stage 26 measures `len(text.encode())` after a universal-
+newline read, which is already LF. Neither needed changing.
+
+### The serious one: `--verify` never looked at the verdict
+
+While cascading, the manuscript stage recorded `GEN1_MANUSCRIPT_REFUSED` — `MANUSCRIPT.md` still
+quoted the previous claim digest, and the compliance check "both digests are quoted" was `False`.
+The gate worked. `--verify` returned **clean anyway**, exit 0.
+
+It did so because all three verifiers asked only one question: *have the covered bytes moved?* A
+refused run still writes its outputs, so the bytes matched what was recorded, and the verifier
+called that intact. CI runs exactly these three commands. **CI would have stayed green over a
+refused package**, and so would the verification a reviewer runs on the unpacked Zenodo bundle.
+
+Byte-intactness is not the same as a passing stage. Each verifier now reads the recorded verdict and
+reports `EVIDENCE_STAGE_REFUSED` / `CLAIMS_STAGE_REFUSED` / `PACKAGE_STAGE_REFUSED`, distinct from
+`*_MOVED`, with a non-zero exit. A guard plants a refusal in each of the three records and requires
+each verifier to catch it, paired with a positive control so it cannot be satisfied by a verifier
+that always refuses.
+
+A refused run also printed `"next": "PREPRINT / SUBMISSION. Generation 1 is complete."` beside its
+own `REFUSED` verdict. All three now drop that line when they refuse.
+
+### A count that went stale while the check stayed correct
+
+CL-A's label read `all 54 locked artifacts still verify`. The lock covers 62. The verification was
+never wrong — it checks `live["clean"]`, not a number — but the label describing it was, and it had
+been shipped that way. The label is now derived from the manifest, and its test cross-checks the
+number against what was actually verified.
+
+### What was changed in the plan, and what was left alone
+
+`GEN1_CLAIM_LOCK_V1.md` pins the evidence digest it was written against, so a cascade moves it. The
+new digest is written in, and **Amendment V1.1 records what V1 said** — the original digest and the
+original count of 54 — so the change is visible rather than silent. No gate was relaxed.
+
+### Final state
+
+```text
+  evidence  79f96dd66fe7a586df585126bc920d9433746e78ca25f7c453e2ed0ab110dfdb
+  claim     5aab50db44fbbfeb655325e1d329acf1955f383b0ca7c265a6e88a2b803de737
+  package   4eb0abcd7d722154df07cf92f03336242686f4edeea5abfd9b7f614ce6694343
+```
+
+Three consecutive full cascades leave **0 files modified**. A fresh clone verifies clean on all
+three layers. The bundle was rebuilt, unpacked into a scratch directory, and verified there by the
+three commands the Zenodo notes give a reviewer — all `INTACT`, with the 44 MB model artifact
+present, so the archive verifies without a rebuild.
+
+### Why this one is worth remembering
+
+The previous record closed by saying the work is finished when the record says what happened. This
+one adds a second edge: a check that cannot fail is not a check. The manuscript gate did fail, said
+so in its own record, and the verifier built to police it read straight past the verdict and
+reported clean. Everything downstream — CI, the bundle, the reviewer's three commands — inherited
+that blind spot. It was found only because a single file kept dirtying the working tree.

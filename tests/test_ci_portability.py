@@ -26,7 +26,12 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 TESTS = ROOT / "tests"
 
-# `st_size` is deliberately NOT here: git preserves content, so size assertions are portable.
+# `st_size` is deliberately NOT banned outright -- a loose bound ("under 2 MB") is portable and
+# several stages use one. But it is NOT a property of the content: `results/**` is `text eol=lf`,
+# so a checkout lands LF while a Python `write_text` on Windows lands CRLF, and the same file
+# then has two different sizes. Recording `st_size` as if it described the file is what made the
+# evidence manifest churn on every re-run. A size COMPARED against a recorded value must be
+# measured on the same normalised content that was hashed.
 NON_PORTABLE = {
     "st_mtime": "git does not preserve modification times",
     "st_ctime": "git does not preserve creation/change times",
@@ -127,3 +132,101 @@ def test_documented_commands_use_forward_slashes():
         pytest.skip("the package document has not been written")
     for m in re.finditer(r"python (experiments\S+)", doc.read_text(encoding="utf-8")):
         assert "\\" not in m.group(1), f"{m.group(1)} is not runnable on Linux"
+
+# ============================================================================================== #
+# Re-running a stage must not dirty the working tree
+# ============================================================================================== #
+VOLATILE = {"runtime_seconds", "runtime_minutes", "total_runtime_seconds"}
+
+GEN1_STAGE_OUTPUTS = [
+    "results/evidence_lock", "results/claim_lock", "results/manuscript",
+]
+
+
+def _volatile_paths(obj, path=""):
+    hits = []
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            if k in VOLATILE:
+                hits.append(f"{path}.{k}".lstrip("."))
+            hits += _volatile_paths(v, f"{path}.{k}")
+    elif isinstance(obj, list):
+        for v in obj:
+            hits += _volatile_paths(v, path)
+    return hits
+
+
+def test_no_committed_gen1_stage_output_carries_a_timestamp():
+    """Timing written into a committed output makes every re-run dirty the tree, and in the claim
+    lock it moved the digest itself. Stage 23.2 established this convention first -- its contract
+    forbids timing inside a hashed payload and its docstring records that the class bit three
+    times. The Gen-1 locks reintroduced it; this stops a third occurrence."""
+    import json
+    offenders = {}
+    for d in GEN1_STAGE_OUTPUTS:
+        base = ROOT / d
+        if not base.is_dir():
+            continue
+        for p in sorted(base.rglob("*.json")):
+            hits = _volatile_paths(json.loads(p.read_text(encoding="utf-8")))
+            if hits:
+                offenders[p.relative_to(ROOT).as_posix()] = hits
+    assert not offenders, f"volatile timing in committed stage outputs: {offenders}"
+
+
+def test_each_gen1_lock_writer_strips_timing():
+    """Directly, at the writer, so the property holds by construction rather than by discipline."""
+    import sys
+    sys.path.insert(0, str(ROOT / "experiments"))
+    for name in ("run_gen1_evidence_lock", "run_gen1_claim_lock", "run_gen1_manuscript"):
+        mod = __import__(name)
+        assert hasattr(mod, "_strip_volatile"), f"{name} has no volatile stripper"
+        stripped = mod._strip_volatile({"a": 1, "runtime_seconds": 9.9,
+                                        "n": [{"runtime_minutes": 1, "b": 2}]})
+        assert stripped == {"a": 1, "n": [{"b": 2}]}, f"{name} strips incompletely"
+
+
+def test_manifest_sizes_are_measured_on_hashed_content():
+    """The manifest's `bytes` must describe the content, not this filesystem.
+
+    `st_size` counts CRLF as two bytes. Because `results/**` is `text eol=lf`, a file written by a
+    stage on Windows (CRLF) and the same file in a fresh checkout (LF) have identical content and
+    different `st_size` -- so a manifest built from `st_size` disagrees with itself across checkouts
+    and re-dirties the tree on every run. Sizes must come from the bytes that were hashed.
+    """
+    import json
+    import sys
+    manifest = ROOT / "results" / "evidence_lock" / "GEN1_EVIDENCE_MANIFEST.json"
+    if not manifest.is_file():
+        pytest.skip("the evidence lock has not been built")
+    sys.path.insert(0, str(ROOT / "experiments"))
+    import run_gen1_evidence_lock as EL
+
+    wrong = []
+    for rel, meta in sorted(json.loads(manifest.read_text(encoding="utf-8"))["artifacts"].items()):
+        if not (ROOT / rel).is_file():
+            continue                      # gitignored artifact; its absence is checked elsewhere
+        measured = EL.artifact_bytes(rel)
+        if meta["bytes"] != measured:
+            wrong.append(f"{rel}: manifest {meta['bytes']} != hashed-content {measured}")
+    assert not wrong, "manifest sizes do not describe the hashed content: " + "; ".join(wrong)
+
+
+def test_the_size_measurement_is_line_ending_independent(tmp_path):
+    """A guard that would also pass under the old buggy implementation is worthless."""
+    import sys
+    sys.path.insert(0, str(ROOT / "experiments"))
+    import run_gen1_evidence_lock as EL
+
+    crlf, lf = tmp_path / "a.json", tmp_path / "b.json"
+    crlf.write_bytes(b'{"a":1}\r\n{"b":2}\r\n')
+    lf.write_bytes(b'{"a":1}\n{"b":2}\n')
+    assert crlf.stat().st_size != lf.stat().st_size, "the fixture must differ on disk"
+
+    original = EL.ROOT
+    try:
+        EL.ROOT = tmp_path
+        assert EL.artifact_bytes("a.json") == EL.artifact_bytes("b.json"), \
+            "identical content measured to different sizes -- the CRLF bug is back"
+    finally:
+        EL.ROOT = original

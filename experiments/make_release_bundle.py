@@ -218,7 +218,8 @@ def build() -> int:
     print(f"  compressed   {BUNDLE.stat().st_size / 1e6:.1f} MB")
     print(f"  sha256       {sha256(BUNDLE)}")
     for k, v in locks.items():
-        print(f"  {k + ' digest':<13s}{v}")
+        # 13 was narrower than "evidence digest", so two labels printed flush against the hash
+        print(f"  {k + ' digest':<16s}{v}")
     print(f"\n  checksums    {SUMS.relative_to(ROOT).as_posix()}")
     return 0
 

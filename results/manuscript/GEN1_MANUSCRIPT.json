@@ -8,9 +8,9 @@
     "MS-F_controls_fire": true
   },
   "failing": [],
-  "evidence_digest": "9315e9df4b98c1acc569ce438082c73aa311a02b7bed7f3476e1dfce57a4755a",
-  "claim_digest": "9cdf7f103332dfddcebe69dc22c61d4825f8a1720295084bafc954c981ecc37f",
-  "plan_canonical_lf_sha256": "484aaa9622fd2281b9d70759e35da9ab86ab02b64a191dca3463c99f5a96caf5",
+  "evidence_digest": "79f96dd66fe7a586df585126bc920d9433746e78ca25f7c453e2ed0ab110dfdb",
+  "claim_digest": "5aab50db44fbbfeb655325e1d329acf1955f383b0ca7c265a6e88a2b803de737",
+  "plan_canonical_lf_sha256": "149e070002f954bd79340d1366911a8f3d117a19f789160808f8bebffac78802",
   "manuscript": "results/manuscript/MANUSCRIPT.md",
   "package": "results/manuscript/REPRODUCIBILITY.md",
   "numbers_traced": 17,
@@ -35,6 +35,5 @@
   },
   "what_ready_does_not_mean": "GEN1_MANUSCRIPT_READY means the document is consistent with everything locked beneath it. It is NOT a judgement that the science is good, that the writing is clear, or that a reviewer will agree.",
   "next": "PREPRINT / SUBMISSION. Generation 1 is complete.",
-  "runtime_seconds": 0.202,
-  "module_sha256": "e90ee3e4eaaa6ab6555582d9d51913ecf5a3613e79835decbf26fad0fdbded3c"
+  "module_sha256": "78170ecca62c75bb62c0283dc02b74f2de38169350ffd76a01b7e90fb7908bba"
 }

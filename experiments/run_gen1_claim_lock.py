@@ -52,30 +52,6 @@ DIGEST_JSON = OUT / "GEN1_CLAIM_DIGEST.json"
 HANDOFF_JSON = RESULTS / "gen1_handoff_to_manuscript.json"
 
 
-def write_json(p: Path, obj: dict) -> dict:
-    stamped = {**obj, "module_sha256":
-               hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
-    p.write_text(json.dumps(stamped, indent=2) + "\n", encoding="utf-8")
-    return stamped
-
-
-def _j(p: Path) -> dict:
-    return json.loads(p.read_text(encoding="utf-8"))
-
-
-# The evidence lock hashes 54 artifacts and none of them is this stage's output -- correct
-# layering, since re-locking to include them would make CL-A circular. But it leaves the document
-# the manuscript is written from with no identity at all. So the claim lock hashes itself, by the
-# same canonical-LF rule, and the manuscript binds to two numbers: the evidence digest for what the
-# claims are made of, the claim digest for what may be said about it.
-CLAIM_LOCK_FILES = [
-    "plans/(newer)practical plans/GEN1_CLAIM_LOCK_V1.md",
-    "experiments/run_gen1_claim_lock.py",
-    "tests/test_gen1_claim_lock.py",
-    "results/claim_lock/GEN1_CLAIMS.md",
-]
-
-
 # Wall-clock timings say nothing about content, and one of them sat inside a file this digest
 # covers. The consequence was not cosmetic: re-running `--stage all` with nothing changed produced
 # a DIFFERENT claim digest every time, so the value quoted in the manuscript and the README was
@@ -100,6 +76,33 @@ def stable_sha256(p: Path) -> str:
         blob = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
         return hashlib.sha256(blob).hexdigest()
     return EL.canonical_lf_sha256(p)
+
+def write_json(p: Path, obj: dict) -> dict:
+    stamped = _strip_volatile({**obj, "module_sha256":
+                               hashlib.sha256(Path(__file__).read_bytes()).hexdigest()})
+    p.write_text(json.dumps(stamped, indent=2) + "\n", encoding="utf-8")
+    return stamped
+
+
+def _j(p: Path) -> dict:
+    return json.loads(p.read_text(encoding="utf-8"))
+
+
+# The evidence lock hashes every Gen-1 artifact -- 54 when this plan was written, 62 once the
+# figures, source-data export and release bundle were added -- and none of them is this
+# stage's output. That is correct
+# layering, since re-locking to include them would make CL-A circular. But it leaves the document
+# the manuscript is written from with no identity at all. So the claim lock hashes itself, by the
+# same canonical-LF rule, and the manuscript binds to two numbers: the evidence digest for what the
+# claims are made of, the claim digest for what may be said about it.
+CLAIM_LOCK_FILES = [
+    "plans/(newer)practical plans/GEN1_CLAIM_LOCK_V1.md",
+    "experiments/run_gen1_claim_lock.py",
+    "tests/test_gen1_claim_lock.py",
+    "results/claim_lock/GEN1_CLAIMS.md",
+]
+
+
 
 
 def claim_digest() -> tuple[str, dict]:
@@ -286,7 +289,7 @@ def verify_evidence() -> dict:
     checks = {
         "the evidence lock verdict is GEN1_EVIDENCE_LOCKED":
             handoff["verdict"] == "GEN1_EVIDENCE_LOCKED",
-        "all 54 locked artifacts still verify": live["clean"],
+        f"all {manifest['n_artifacts']} locked artifacts still verify": live["clean"],
         "the lock digest is the one this plan was written against":
             manifest["lock_digest"] == expected and expected in plan_text,
         "the frozen ship-plan digest still holds":
@@ -689,14 +692,27 @@ def run_all() -> dict:
 
 
 def run_verify() -> dict:
+    """Re-hash the claim files and refuse if one moved -- or if the stage itself refused.
+
+    A verifier that only re-hashes bytes answers 'has this been tampered with?' and NOT 'did
+    the stage that produced this pass?'. Those came apart in practice: the manuscript stage
+    recorded GEN1_MANUSCRIPT_REFUSED, its covered files hashed exactly as recorded -- because a
+    refused run still writes them -- and --verify returned clean, so CI stayed green over a
+    refused package. The recorded verdict is therefore part of what is verified.
+    """
     if not DIGEST_JSON.exists():
         raise SystemExit("no claim digest: run --stage all first")
     recorded = _j(DIGEST_JSON)
     now, per = claim_digest()
     moved = [k for k, v in per.items() if recorded["covers"].get(k) != v]
-    return {"clean": not moved, "moved": moved, "claim_digest": now,
+    bytes_intact = not moved and now == recorded["claim_digest"]
+    stage = _j(CLAIMS_JSON).get("verdict") if CLAIMS_JSON.exists() else None
+    passed = stage == "GEN1_CLAIMS_LOCKED"
+    return {"clean": bytes_intact and passed, "moved": moved, "claim_digest": now,
             "recorded_digest": recorded["claim_digest"],
-            "verdict": "CLAIMS_INTACT" if now == recorded["claim_digest"] else "CLAIMS_MOVED"}
+            "stage_verdict": stage, "stage_passed": passed,
+            "verdict": ("CLAIMS_MOVED" if not bytes_intact
+                        else "CLAIMS_INTACT" if passed else "CLAIMS_STAGE_REFUSED")}
 
 
 def main(argv=None) -> int:
@@ -712,10 +728,14 @@ def main(argv=None) -> int:
     if a.stage != "all":
         ap.error("pass --stage all or --verify")
     r = run_all()
-    print(json.dumps({k: r[k] for k in r if k in
-                      ("stage", "verdict", "substages", "failing", "evidence_lock_digest",
-                       "claim_digest", "adversarial", "refused_at", "next")},
-                     indent=2, default=str))
+    payload = {k: r[k] for k in r if k in
+               ("stage", "verdict", "substages", "failing", "evidence_lock_digest",
+                "claim_digest", "adversarial", "refused_at", "next")}
+    if r["verdict"] != "GEN1_CLAIMS_LOCKED":
+        # a refused run must not advertise the next stage: it announced "Generation 1 is
+        # complete" while its own verdict was REFUSED.
+        payload.pop("next", None)
+    print(json.dumps(payload, indent=2, default=str))
     return 0 if r["verdict"] == "GEN1_CLAIMS_LOCKED" else 2
 
 

@@ -1,7 +1,7 @@
 {
   "stage": "GEN-1 EVIDENCE LOCK",
   "verdict": "GEN1_EVIDENCE_LOCKED",
-  "lock_digest": "9315e9df4b98c1acc569ce438082c73aa311a02b7bed7f3476e1dfce57a4755a",
+  "lock_digest": "79f96dd66fe7a586df585126bc920d9433746e78ca25f7c453e2ed0ab110dfdb",
   "substages": {
     "EL-A_inventory": true,
     "EL-B_chain_of_custody": true,
@@ -62,8 +62,7 @@
       "every stage asserted the same ship-plan digest": true,
       "Stage 26 handed this lock a KNOWN_TREATMENT_ONLY_SCOPED_LIMIT": true
     },
-    "all_passed": true,
-    "runtime_seconds": 0.107
+    "all_passed": true
   },
   "negative_controls": {
     "INTACT reports clean": true,
@@ -114,6 +113,5 @@
   },
   "grants_no_claim": "Locking fixes what the existing claims are made of. It grants no new claim and reopens no earlier stage.",
   "next": "GEN-1 CLAIM LOCK",
-  "runtime_seconds": 10.685,
-  "module_sha256": "d368e966fc42cc15f563718e1a378d4457d30643fb492d729ca1bbd321412144"
+  "module_sha256": "ef410c39f3f9a097a714da301a18306e2b6600ba1dc71660fef233431733de3b"
 }
