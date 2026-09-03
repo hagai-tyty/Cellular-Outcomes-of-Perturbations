@@ -1,5 +1,5 @@
 {
-  "claim_digest": "f7c67d59c8aff0def1bb787432e65c2f72b5efa317f1855be224455fed78563d",
+  "claim_digest": "9cdf7f103332dfddcebe69dc22c61d4825f8a1720295084bafc954c981ecc37f",
   "from_stage": "GEN-1 CLAIM LOCK",
   "to_stage": "MANUSCRIPT + REPRODUCIBILITY PACKAGE",
   "verdict": "GEN1_CLAIMS_LOCKED",
@@ -15,5 +15,5 @@
   ],
   "the_ceiling_may_be_lowered_not_raised": true,
   "no_claim_lock_outcome_reopens_an_earlier_stage": true,
-  "module_sha256": "ad15b870841b916eedffda5df12a842fc7e20d80418a62774e4a0b6e2011755e"
+  "module_sha256": "bb8e8d631910e64623556e3284093d979af33e3311d09b5adf1d303662ed8283"
 }

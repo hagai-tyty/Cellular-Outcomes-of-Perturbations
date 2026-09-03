@@ -76,12 +76,38 @@ CLAIM_LOCK_FILES = [
 ]
 
 
+# Wall-clock timings say nothing about content, and one of them sat inside a file this digest
+# covers. The consequence was not cosmetic: re-running `--stage all` with nothing changed produced
+# a DIFFERENT claim digest every time, so the value quoted in the manuscript and the README was
+# valid for exactly one execution, and anyone reproducing the stage would conclude something had
+# moved. A lock that cannot survive its own stage being re-run is not a lock.
+VOLATILE_KEYS = {"runtime_seconds", "runtime_minutes", "total_runtime_seconds"}
+
+
+def _strip_volatile(obj):
+    if isinstance(obj, dict):
+        return {k: _strip_volatile(v) for k, v in obj.items() if k not in VOLATILE_KEYS}
+    if isinstance(obj, list):
+        return [_strip_volatile(v) for v in obj]
+    return obj
+
+
+def stable_sha256(p: Path) -> str:
+    """Hash CONTENT, not timing. JSON is normalised with volatile fields removed and keys sorted;
+    everything else keeps the canonical-LF rule the evidence lock uses."""
+    if p.suffix == ".json":
+        payload = _strip_volatile(json.loads(p.read_text(encoding="utf-8")))
+        blob = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        return hashlib.sha256(blob).hexdigest()
+    return EL.canonical_lf_sha256(p)
+
+
 def claim_digest() -> tuple[str, dict]:
     """The digest lives OUTSIDE the verdict JSON it covers -- otherwise it would hash itself."""
     per = {}
     for rel in CLAIM_LOCK_FILES + ["results/claim_lock/GEN1_CLAIM_LOCK.json"]:
         p = ROOT / rel
-        per[rel] = EL.canonical_lf_sha256(p) if p.exists() else "MISSING"
+        per[rel] = stable_sha256(p) if p.exists() else "MISSING"
     canonical = "\n".join(f"{k}  {per[k]}" for k in sorted(per))
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest(), per
 
@@ -627,8 +653,11 @@ def run_all() -> dict:
     digest, per_file = claim_digest()
     write_json(DIGEST_JSON, {
         "claim_digest": digest,
-        "digest_definition": "SHA-256 over 'path  canonical-lf-sha256' lines, sorted by path, "
-                             "LF-joined -- the same rule the evidence lock uses",
+        "digest_definition": "SHA-256 over 'path  content-sha256' lines, sorted by path, "
+                             "LF-joined. JSON members are normalised -- volatile timing fields "
+                             "removed, keys sorted -- so the digest reflects content rather than "
+                             "when the stage last ran; other text uses canonical-LF.",
+        "volatile_keys_excluded": sorted(VOLATILE_KEYS),
         "covers": per_file,
         "why_it_lives_outside_the_verdict": "a digest stored inside the file it covers would hash "
                                             "itself",

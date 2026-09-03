@@ -315,6 +315,8 @@ environment lock. Both are in the manuscript.
 ## 7. Pre-flight checklist
 
 ```text
+[ ] licence coherent: LICENSE, pyproject.toml, CITATION.cff and .zenodo.json all say
+    PolyForm-Noncommercial-1.0.0, and COMMERCIAL-LICENSING.md is present
 [ ] GitHub CI green on the commit being archived
 [ ] fresh clone verifies: evidence, claim and package digests
 [ ] Zenodo DOI reserved

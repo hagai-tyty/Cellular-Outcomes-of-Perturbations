@@ -518,10 +518,7 @@
   ],
   "clone_portability": {
     "drifted": [],
-    "skipped_uncommitted_edits": [
-      "CITATION.cff",
-      "experiments/make_release_bundle.py"
-    ]
+    "skipped_uncommitted_edits": []
   },
   "hashing_rule": {
     "binary": [
@@ -555,6 +552,6 @@
     "every committed artifact hashes the same from a fresh clone": true
   },
   "all_passed": true,
-  "runtime_seconds": 7.532,
+  "runtime_seconds": 7.05,
   "module_sha256": "d368e966fc42cc15f563718e1a378d4457d30643fb492d729ca1bbd321412144"
 }

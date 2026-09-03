@@ -15,7 +15,7 @@ Before reproducing anything, confirm the artifacts are the ones the manuscript w
 
 ```text
   evidence lock digest   9315e9df4b98c1acc569ce438082c73aa311a02b7bed7f3476e1dfce57a4755a
-  claim lock digest      f7c67d59c8aff0def1bb787432e65c2f72b5efa317f1855be224455fed78563d
+  claim lock digest      9cdf7f103332dfddcebe69dc22c61d4825f8a1720295084bafc954c981ecc37f
 ```
 
 `EVIDENCE_INTACT` and `CLAIMS_INTACT` mean every hashed file is byte-for-byte what was locked.
@@ -167,6 +167,17 @@ Inputs, outputs and refusal semantics: `results/stage24/tool/io_schema.json` and
 `results/stage24/tool/MODEL_CARD.md`.
 
 ---
+
+## 6.1 Terms
+
+```text
+  software + frozen model     PolyForm Noncommercial License 1.0.0  (see LICENSE)
+  manuscript + figures        CC BY 4.0
+  GSE279162 / GSE227151       original depositors' terms; not relicensed
+```
+
+Academic, educational, nonprofit and personal research need no permission request, registration or
+agreement. Commercial deployment needs a separate license: `COMMERCIAL-LICENSING.md`.
 
 ## 7. Reading the record
 

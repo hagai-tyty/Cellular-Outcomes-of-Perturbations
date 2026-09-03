@@ -36,7 +36,7 @@ verifies clean over all 54 artifacts, before and after.
   GEN1_CLAIMS_LOCKED
 
   evidence lock digest   9315e9df4b98c1acc569ce438082c73aa311a02b7bed7f3476e1dfce57a4755a
-  claim digest           f7c67d59c8aff0def1bb787432e65c2f72b5efa317f1855be224455fed78563d
+  claim digest           9cdf7f103332dfddcebe69dc22c61d4825f8a1720295084bafc954c981ecc37f
   allowed claims          3    each bound to its evidence and its mandatory qualifiers
   forbidden claims        9    verbatim from §3.5, parsed from the plan not from a copy
   adversarial sentences  15 of 15 caught

@@ -192,6 +192,60 @@ def test_a_word_may_negate_itself(mod):
 # ============================================================================================== #
 # The claims must have an identity of their own
 # ============================================================================================== #
+def test_the_digest_ignores_timing_not_content(mod, tmp_path):
+    """A lock that changes when nothing changed is not a lock.
+
+    `runtime_seconds` sat inside a file the claim digest covers, so re-running `--stage all` with
+    no substantive change produced a different digest every time -- meaning the value quoted in the
+    manuscript and README was valid for exactly one execution. Caught only by running the stage
+    three times and watching the number move.
+    """
+    import json
+    a = tmp_path / "a.json"
+    b = tmp_path / "b.json"
+    a.write_text(json.dumps({"verdict": "X", "runtime_seconds": 0.1, "n": [1, 2]}), encoding="utf-8")
+    b.write_text(json.dumps({"n": [1, 2], "runtime_seconds": 99.9, "verdict": "X"}), encoding="utf-8")
+    assert mod.stable_sha256(a) == mod.stable_sha256(b), "timing and key order must not matter"
+
+    c = tmp_path / "c.json"
+    c.write_text(json.dumps({"verdict": "Y", "runtime_seconds": 0.1, "n": [1, 2]}), encoding="utf-8")
+    assert mod.stable_sha256(a) != mod.stable_sha256(c), "a real content change must still show"
+
+
+def test_no_file_a_self_digest_covers_carries_a_volatile_field(mod):
+    """Static guard: the bug was a timing field inside a covered file. Catch the class, not
+    the instance. Deliberately does NOT re-run any stage -- doing so would rewrite results
+    files and leave the working tree dirty, which CI fails on."""
+    import json
+    import sys
+    sys.path.insert(0, str(ROOT / "experiments"))
+    import run_gen1_manuscript as MS
+
+    def volatile_in(obj, path=""):
+        hits = []
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                if k in mod.VOLATILE_KEYS:
+                    hits.append(f"{path}.{k}".lstrip("."))
+                hits += volatile_in(v, f"{path}.{k}")
+        elif isinstance(obj, list):
+            for v in obj:
+                hits += volatile_in(v, path)
+        return hits
+
+    covered = (mod.CLAIM_LOCK_FILES + ["results/claim_lock/GEN1_CLAIM_LOCK.json"]
+               + MS.PACKAGE_FILES)
+    offenders = {}
+    for rel in covered:
+        p = ROOT / rel
+        if p.suffix == ".json" and p.exists():
+            hits = volatile_in(json.loads(p.read_text(encoding="utf-8")))
+            # the claim verdict may carry one; stable_sha256 strips it before hashing
+            if hits and rel != "results/claim_lock/GEN1_CLAIM_LOCK.json":
+                offenders[rel] = hits
+    assert not offenders, f"volatile fields in digest-covered files not stripped: {offenders}"
+
+
 @ran
 def test_the_claim_lock_has_its_own_digest():
     """The evidence lock hashes 54 artifacts and none of them is this stage's output."""

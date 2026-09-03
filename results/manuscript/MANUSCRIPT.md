@@ -4,7 +4,7 @@
 
 ```text
   evidence lock   9315e9df4b98c1acc569ce438082c73aa311a02b7bed7f3476e1dfce57a4755a
-  claim lock      f7c67d59c8aff0def1bb787432e65c2f72b5efa317f1855be224455fed78563d
+  claim lock      9cdf7f103332dfddcebe69dc22c61d4825f8a1720295084bafc954c981ecc37f
 ```
 
 Both digests are verifiable from the repository. See **Availability**.
@@ -386,8 +386,23 @@ for the claim set. Both were shown to refuse a one-bit change before either was 
 
 ```text
   evidence lock digest   9315e9df4b98c1acc569ce438082c73aa311a02b7bed7f3476e1dfce57a4755a
-  claim lock digest      f7c67d59c8aff0def1bb787432e65c2f72b5efa317f1855be224455fed78563d
+  claim lock digest      9cdf7f103332dfddcebe69dc22c61d4825f8a1720295084bafc954c981ecc37f
 ```
+
+### Licensing
+
+```text
+  software and frozen model   PolyForm Noncommercial License 1.0.0
+                              SPDX: PolyForm-Noncommercial-1.0.0
+  manuscript text and figures CC BY 4.0
+  GSE279162, GSE227151        original depositors' terms; NOT relicensed here
+```
+
+Academic, educational, nonprofit and personal research use requires **no permission request,
+registration, payment or signed agreement**. Use as a material part of a revenue-generating product
+or paid service requires a separate commercial license (`COMMERCIAL-LICENSING.md`). This is
+source-available rather than OSI-approved open source, because commercial use is restricted; it is
+stated here rather than left to be discovered.
 
 ### What is in the repository
 

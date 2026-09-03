@@ -7,7 +7,7 @@
 
 ```text
   evidence digest  9315e9df4b98c1acc569ce438082c73aa311a02b7bed7f3476e1dfce57a4755a
-  claim digest     f7c67d59c8aff0def1bb787432e65c2f72b5efa317f1855be224455fed78563d
+  claim digest     9cdf7f103332dfddcebe69dc22c61d4825f8a1720295084bafc954c981ecc37f
 ```
 
 **Mandate** §9 of the frozen ship plan: `MANUSCRIPT + REPRODUCIBILITY PACKAGE -> PREPRINT /

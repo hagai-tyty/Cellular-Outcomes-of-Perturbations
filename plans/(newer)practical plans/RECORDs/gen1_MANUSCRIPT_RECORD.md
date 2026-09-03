@@ -15,7 +15,7 @@ mechanically and has been shown to do so.
 ## Inputs
 - `results/gen1_handoff_to_manuscript.json` — `GEN1_CLAIMS_LOCKED`
 - evidence digest `9315e9df4b98c1acc569ce438082c73aa311a02b7bed7f3476e1dfce57a4755a`
-- claim digest `f7c67d59c8aff0def1bb787432e65c2f72b5efa317f1855be224455fed78563d` (was `23ea00b8...` when this stage first ran)
+- claim digest `9cdf7f103332dfddcebe69dc22c61d4825f8a1720295084bafc954c981ecc37f` (was `23ea00b8...` when this stage first ran)
 
 ## Files added
 - `plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md`
@@ -36,9 +36,9 @@ checked, and again after.
 ```text
   GEN1_MANUSCRIPT_READY
 
-  package digest   be074cc3e0aff003265e96f6c6584ada601077e5122cfd409a01edf0d7a1f07b
+  package digest   6822a149ec3a1833edf725f7d51b3c8cea58524727f82bb4d8ec3a624446830e
   evidence digest  9315e9df4b98c1acc569ce438082c73aa311a02b7bed7f3476e1dfce57a4755a
-  claim digest     f7c67d59c8aff0def1bb787432e65c2f72b5efa317f1855be224455fed78563d
+  claim digest     9cdf7f103332dfddcebe69dc22c61d4825f8a1720295084bafc954c981ecc37f
 
   MS-A  both locks verify              6 checks
   MS-C  compliance                     10 checks, 0 forbidden hits
@@ -365,10 +365,105 @@ which is exactly where a reanalysis has the least excuse to be sloppy.
   digests            no stale 64-hex value in any live document
   bundle             384 files, BUNDLE_INTACT
   locks              evidence 9315e9df4b98c1acc569ce438082c73aa311a02b7bed7f3476e1dfce57a4755a
-                     claim    f7c67d59c8aff0def1bb787432e65c2f72b5efa317f1855be224455fed78563d
-                     package  be074cc3e0aff003265e96f6c6584ada601077e5122cfd409a01edf0d7a1f07b
+                     claim    9cdf7f103332dfddcebe69dc22c61d4825f8a1720295084bafc954c981ecc37f
+                     package  6822a149ec3a1833edf725f7d51b3c8cea58524727f82bb4d8ec3a624446830e
 ```
 
 The evidence lock refused mid-audit when Figure 1's generator was corrected — a locked artifact
 changed and the chain would not proceed until it was re-locked. That is the machinery working, not
 a fault.
+
+---
+
+## Release-preparation corrections — 2026-08-28
+
+Four problems raised in external review, all verified before acting on, all real. Two were
+defects rather than tidying. Recorded here because none of them was written down when it was
+fixed — the corrections landed while a summary of them was interrupted, and an unrecorded fix is
+the failure mode this project's records exist to prevent.
+
+### 1. The published step order would have invalidated the locks
+
+`export_gen1_source_data.py` writes **four locked files**: the two per-draw CSVs and
+`environment_lock.txt` (evidence lock), and `figure_source_data.json` (package digest). The release
+checklist had it running *after* the three locks, which would have invalidated the digests just
+computed. Corrected to run before. The lock demonstrated the point unprompted by refusing mid-work
+for exactly this reason.
+
+### 2. The bundle could not verify after unpacking
+
+`environment_lock.txt` is evidence-locked and was **absent from the archive**, so `--verify` on an
+unpacked bundle would have reported it missing — defeating the only thing the archive exists to
+allow. `LICENSE` and `requirements.txt` were missing too.
+
+`--check` was also weaker than it read: it compared working-tree files and ZIP **filenames**, never
+the bytes inside the archive, and printed the bundle's own SHA-256 without comparing it to
+anything. It now hashes every member from inside the zip, pins the zip against its recorded
+checksum, and records the git commit.
+
+A build-time guard now **refuses** if any artifact hashed by any lock is absent from the archive.
+Negative control: run against the previous member set it names `environment_lock.txt` — it would
+have caught the original bug.
+
+### 3. The pseudobulk cache was optional and must not be
+
+The documented rebuild path `--stage 24c` fails without it (`23A pseudobulk cache missing`), so an
+archive lacking it can regenerate nothing and cannot re-run the Stage-25 null. Now required; the
+build refuses without it.
+
+### 4. Wording, and the novelty claim
+
+```text
+  README   "which conditions it survives"  ->  "under which conditions it remains detected"
+  README   "reproducible bit-for-bit"      ->  hash-verification of locked artifacts (holds
+                                               on any machine) distinguished from REFITTING
+                                               (depends on BLAS, threading, library versions;
+                                               not claimed)
+```
+
+And the prior-work paragraph was **narrowed**, which matters more than the wording. Schaff et al.'s
+deposited analysis does report condition-associated markers and signatures. The manuscript no longer
+implies the literature establishes only a general propensity. The contribution is now stated as what
+it is — a frozen, clone-held-out, preregistered test of clone-specific *ordering* with abundance held
+fixed — not priority on condition-specific expression analysis.
+
+## The licence was contradictory, and unsound as written
+
+Three files disagreed: `pyproject.toml` and `CITATION.cff` said MIT while `LICENSE` declared
+"GPLv3 for academic and non-commercial use" plus a required commercial licence.
+
+Beyond the contradiction, that clause **cannot be offered**: GPLv3 §7 forbids adding field-of-use
+restrictions, so "GPLv3, non-commercial only" is not a licence GPLv3 permits anyone to grant. This
+was surfaced rather than resolved unilaterally, because the choice is the copyright holder's.
+
+Resolved to **PolyForm Noncommercial License 1.0.0** (SPDX `PolyForm-Noncommercial-1.0.0`), the
+official text unmodified, with a separate `COMMERCIAL-LICENSING.md`. It expresses the intended
+structure precisely, and its *Noncommercial Organizations* clause covers educational institutions
+and public research organisations **regardless of source of funding** — so grant money does not make
+academic work commercial.
+
+```text
+  LICENSE  pyproject.toml  CITATION.cff  .zenodo.json  README  SUBMISSION.md  MANUSCRIPT.md
+  all now say PolyForm-Noncommercial-1.0.0; no "MIT" remains anywhere
+```
+
+Citation is requested strongly in the README and the commercial notice but is deliberately **not**
+in the licence grant, so it never becomes a condition on running the software. This is
+source-available, not OSI open source. It satisfies BMC Bioinformatics' requirement that software be
+freely available to non-commercial researchers with no gate, and the submission pack tells the
+editor so directly rather than letting it surface in review.
+
+## Three gaps this record pass itself found
+
+Writing the above surfaced what the interruption had cost:
+
+```text
+  MANUSCRIPT.md         had NO software-availability or licence statement at all, which a
+                        BMC submission requires
+  REPRODUCIBILITY.md    said nothing about terms, so someone unpacking the bundle had no
+                        statement of what they may do with it
+  SUBMISSION.md         the pre-flight checklist had no licence-coherence step
+```
+
+All three added. The lesson is the one this project keeps relearning: the work is not finished when
+the code is correct, it is finished when the record says what happened.
