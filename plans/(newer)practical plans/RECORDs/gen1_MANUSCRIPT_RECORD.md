@@ -14,8 +14,8 @@ mechanically and has been shown to do so.
 
 ## Inputs
 - `results/gen1_handoff_to_manuscript.json` — `GEN1_CLAIMS_LOCKED`
-- evidence digest `2b29d8c198e56ccb4823d0eed7cd15d5dd67c51694108fb9920a16c2b3e11cae`
-- claim digest `7db3c35948267d32552ad80aab374160ecb620f170faff870a7ee9e4066ca0fa` (was `23ea00b8...` when this stage first ran)
+- evidence digest `06250a75fcb80b07e129714518765cf34e142cc51693357d1df606120d64c076`
+- claim digest `177e233c53396a7c6149d665e8ed0180ffe1cb54a53e5e8dedc3e1cb1be17858` (was `23ea00b8...` when this stage first ran)
 
 ## Files added
 - `plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md`
@@ -37,8 +37,8 @@ checked, and again after.
   GEN1_MANUSCRIPT_READY
 
   package digest   0ae9e46a74da6ab0d057408f5b63442ddaf4ae891cfff46b883217e4ef36e1b9
-  evidence digest  2b29d8c198e56ccb4823d0eed7cd15d5dd67c51694108fb9920a16c2b3e11cae
-  claim digest     7db3c35948267d32552ad80aab374160ecb620f170faff870a7ee9e4066ca0fa
+  evidence digest  06250a75fcb80b07e129714518765cf34e142cc51693357d1df606120d64c076
+  claim digest     177e233c53396a7c6149d665e8ed0180ffe1cb54a53e5e8dedc3e1cb1be17858
 
   MS-A  both locks verify              6 checks
   MS-C  compliance                     10 checks, 0 forbidden hits

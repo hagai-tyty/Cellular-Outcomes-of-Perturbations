@@ -3,8 +3,8 @@
 **CellFate-Rx, Generation 1.**
 
 ```text
-  evidence lock   2b29d8c198e56ccb4823d0eed7cd15d5dd67c51694108fb9920a16c2b3e11cae
-  claim lock      7db3c35948267d32552ad80aab374160ecb620f170faff870a7ee9e4066ca0fa
+  evidence lock   06250a75fcb80b07e129714518765cf34e142cc51693357d1df606120d64c076
+  claim lock      177e233c53396a7c6149d665e8ed0180ffe1cb54a53e5e8dedc3e1cb1be17858
 ```
 
 Both digests are verifiable from the repository. See **Availability**.
@@ -39,7 +39,8 @@ not a gate on this result.
 ## Introduction
 
 The question is easy to state and hard to evaluate honestly: before a perturbation is applied, does
-a cell's transcriptional state say anything about which perturbation it will survive?
+a cell's transcriptional state say anything about which perturbation that cell is still detected
+after?
 
 Barcoded lineage tracing solves the hardest part of asking it. A clone is split, part of it is
 profiled before anything is done to it, and the remaining parts are exposed to different
@@ -52,10 +53,10 @@ resist, identifying high CD44 expression in treatment-naive cells as a marker of
 multiple conditions [1]. This work is a reanalysis of their data and takes no credit for the
 experiment.
 
-What that establishes is a **general propensity**: some clones are more likely to survive many
-things. It leaves a different question open — whether pretreatment state says *which* condition a
-given clone survives, rather than how resistant that clone is overall. The two are separable, and
-separating them is what this work does.
+What that establishes is a **general propensity**: some clones resist more of the conditions than
+others do. It leaves a different question open — whether pretreatment state says *which* condition a
+given clone is still detected after, rather than how resistant that clone is overall. The two are
+separable, and separating them is what this work does.
 
 Two things make the ordering question hard to evaluate rather than merely to observe. The first is
 that clone abundance dominates: a clone that was large before treatment is more likely to be
@@ -66,6 +67,32 @@ clone — it requires an explicit interaction between state and condition, becau
 acts on a clone as a whole shifts all six of its scores together and leaves their order untouched.
 
 This work evaluates exactly that, once, under a protocol frozen in advance.
+
+### Relation to prior work
+
+The finding that pre-existing, non-genetic single-cell state predicts which cells resist therapy is
+established in this system and is not claimed here. Shaffer et al. showed that rare transcriptional
+states in WM989 predict which cells resist vemurafenib and are stabilised by drug exposure [3];
+Emert et al. resolved substructure within those rare states and linked it to distinct resistant
+outcomes [4]; Goyal et al. showed that clonal fates after drug are largely predetermined by
+pre-treatment molecular differences and are diverse rather than binary [5]; and Schaff et al.
+extended clonal tracing to six conditions in parallel, reporting cross-condition resistance
+correlation and CD44 as a marker of resistance across several of them [1].
+
+Each of those results concerns **how resistant** a clone is — a property of the clone, shared across
+conditions. This work asks the adjacent question of **which condition**, and the distinction is not
+rhetorical: any quantity that acts on a clone as a whole shifts all six of its predicted scores
+together and therefore contributes exactly zero to a within-clone ordering metric. The comparator is
+chosen to enforce that separation, and the result is that the additive state term contributes
+nothing while the interaction contributes all of the gain.
+
+The methodological posture is borrowed rather than invented. Kapoor and Narayanan catalogue eight
+kinds of leakage across 294 papers in seventeen fields, and observe that complex models frequently
+fail to beat logistic regression once the leakage is corrected [6]. That is the failure mode this
+design is built against: the comparator is a simpler model of the same family, every preprocessing
+step is refitted inside the training fold, the permutation null refits the whole pipeline rather
+than shuffling labels, and the metric, population, comparator and verdict rule were fixed in a
+digest-frozen protocol before any of the numbers existed.
 
 ---
 
@@ -90,7 +117,8 @@ sentence and nothing else; its own confirmation gate failed. It is not a replica
 it does not provide the same multi-condition task or the same outcome.
 
 No additional dataset was searched, downloaded, qualified or used. Raw sequencing data is not
-vendored; accessions are given above.
+vendored; accessions are given above. **Figure 1** summarises the design and the evaluable
+population.
 
 ### References
 
@@ -102,7 +130,26 @@ vendored; accessions are given above.
 
 [2] GEO GSE227151 -- Retrospective identification of cell-intrinsic factors that mark
     pluripotency potential in rare somatic cells (scRNA-seq), human hiF-T fibroblasts.
+
+[3] Shaffer SM, Dunagin MC, Torborg SR, Torre EA, Emert B, et al.
+    Rare cell variability and drug-induced reprogramming as a mode of cancer drug resistance.
+    Nature 546(7658):431-435, 2017.  doi:10.1038/nature22794   PMID 28607484
+
+[4] Emert BL, Cote CJ, Torre EA, Dardani IP, Jiang CL, Jain N, Shaffer SM, Raj A.
+    Variability within rare cell states enables multiple paths toward drug resistance.
+    Nature Biotechnology 39(7):865-876, 2021.  doi:10.1038/s41587-021-00837-3   PMID 33619394
+
+[5] Goyal Y, Busch GT, Pillai M, Li J, Boe RH, et al.
+    Diverse clonal fates emerge upon drug treatment of homogeneous cancer cells.
+    Nature 620(7974):651-659, 2023.  doi:10.1038/s41586-023-06342-8   PMID 37468627
+
+[6] Kapoor S, Narayanan A.
+    Leakage and the reproducibility crisis in machine-learning-based science.
+    Patterns 4(9):100804, 2023.  doi:10.1016/j.patter.2023.100804   PMID 37720327
 ```
+
+Figures are generated from the locked result files by
+`python experiments/make_gen1_figures.py`; no number in them is typed by hand.
 
 ---
 
@@ -181,12 +228,14 @@ fitted models.
   delta_RANK   +0.051605     CI95 [+0.037197, +0.065571]
 ```
 
+**Figure 2** shows the three models and the observed statistic against its null.
+
 `R(W4)` sits *below* `R(W1)` by 0.0005. The additive expression term contributes nothing to
 ordering, which is precisely why W4 was preregistered as the comparator. The entire ordering gain is
 the interaction.
 
 **This also settles what the result is not.** A general resistance-propensity axis — a clone
-disposed to survive many conditions, the kind of signal CD44 marks in this system [1] — enters a
+detected after many conditions, the kind of signal CD44 marks in this system [1] — enters a
 model as an additive state term. That term is in W4, and here it adds nothing. The metric is
 stricter still: within-clone AUROC compares the six scores of a single clone, so any quantity
 acting on that clone as a whole shifts all six equally and cannot change their order. A purely
@@ -217,8 +266,8 @@ estimate. The number that carries weight is the separation: nothing the null pro
     fold 4   +0.0435                  10+        +0.0779
 ```
 
-Positive in all five folds and all five depth strata. These were preregistered as descriptive and
-could not have rescued a failed primary gate; they were not asked to.
+Positive in all five folds and all five depth strata (**Figure 3A, 3B**). These were preregistered
+as descriptive and could not have rescued a failed primary gate; they were not asked to.
 
 ### Choosing the lowest-scoring condition
 
@@ -227,7 +276,7 @@ could not have rescued a failed primary gate; they were not asked to.
 ```
 
 Selecting each clone's lowest predicted detection score finds a genuine zero for 82.8% of evaluable
-clones under W5 against 71.3% under W4. This was preregistered as a directional-consistency check,
+clones under W5 against 71.3% under W4 (**Figure 3C**). This was preregistered as a directional-consistency check,
 not a significance test: it could withhold support, never grant it. It did not withhold.
 
 ---
@@ -322,8 +371,8 @@ The first re-hashes every locked artifact and refuses if one has moved. The seco
 for the claim set. Both were shown to refuse a one-bit change before either was issued.
 
 ```text
-  evidence lock digest   2b29d8c198e56ccb4823d0eed7cd15d5dd67c51694108fb9920a16c2b3e11cae
-  claim lock digest      7db3c35948267d32552ad80aab374160ecb620f170faff870a7ee9e4066ca0fa
+  evidence lock digest   06250a75fcb80b07e129714518765cf34e142cc51693357d1df606120d64c076
+  claim lock digest      177e233c53396a7c6149d665e8ed0180ffe1cb54a53e5e8dedc3e1cb1be17858
 ```
 
 ### What is in the repository

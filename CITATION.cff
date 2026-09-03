@@ -1,0 +1,79 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, the frozen benchmark, or the reproducibility bundle,
+  please cite both this record and the paper that generated the underlying data
+  (Schaff et al. 2026, listed under references).
+title: >-
+  CellFate-Rx Generation 1: clone-level prospective evaluation of
+  condition-specific state information in a lineage-traced melanoma line
+abstract: >-
+  A preregistered reanalysis of the six-condition clonal-tracing dataset
+  GSE279162. Tests whether pretreatment transcriptional state carries
+  condition-specific information about future clonal detection, beyond
+  condition identity and captured pretreatment clone abundance, under
+  clone-held-out evaluation frozen before any result existed. Ships the frozen
+  predictor, the full stage record including failed and negative results, and
+  three verification tools that refuse on any modified artifact. No new data
+  were generated.
+
+type: software
+license: "MIT"                                   # <<FILL if the repository licence differs
+repository-code: "https://github.com/hagai-tyty/Cellular-Outcomes-of-Perturbations"
+
+authors:
+  - family-names: "<<FILL>>"
+    given-names: "<<FILL>>"
+    orcid: "https://orcid.org/<<FILL>>"
+    affiliation: "<<FILL>>"
+
+version: "gen1-v1.0.0"
+date-released: "<<FILL: YYYY-MM-DD, the Zenodo publication date>>"
+
+# Reserve the DOI in Zenodo FIRST, write it here, then re-run the three locks.
+# Editing this file after locking changes the evidence digest, because CITATION.cff
+# sits in the repository the bundle archives.
+doi: "<<FILL: 10.5281/zenodo.XXXXXXX>>"
+
+identifiers:
+  - type: doi
+    value: "<<FILL: 10.5281/zenodo.XXXXXXX>>"
+    description: Archived reproducibility bundle for Generation 1
+
+keywords:
+  - clonal barcoding
+  - lineage tracing
+  - drug resistance
+  - preregistration
+  - reproducibility
+  - permutation test
+  - melanoma
+  - reanalysis
+
+references:
+  - type: article
+    title: "Pre-existing cell states predict resistance to multiple treatments"
+    doi: "10.1016/j.xgen.2026.101191"
+    journal: "Cell Genomics"
+    volume: 6
+    issue: 6
+    year: 2026
+    notes: >-
+      Generated GSE279162, the dataset reanalysed here. This work produced no
+      new data and takes no credit for the experiment.
+    authors:
+      - family-names: "Schaff"
+        given-names: "Dylan L"
+      - family-names: "White"
+        given-names: "Phoebe E"
+      - family-names: "Cote"
+        given-names: "Christopher J"
+      - family-names: "Watterson"
+        given-names: "Grace E"
+      - family-names: "Lin"
+        given-names: "Kevin Z"
+      - family-names: "Fasse"
+        given-names: "Aria J"
+      - family-names: "Zhang"
+        given-names: "Nancy R"
+      - family-names: "Shaffer"
+        given-names: "Sydney M"

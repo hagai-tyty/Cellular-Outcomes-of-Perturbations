@@ -144,6 +144,63 @@ def _numbers() -> list[tuple[str, str, str]]:
     ]
 
 
+def _partition_references(text: str) -> tuple[str, list[str], list[str]]:
+    """Split a manuscript into (text to scan, exempt title lines, structural problems).
+
+    A cited paper's TITLE is third-party text, not a claim this manuscript makes -- scanning it is a
+    category error, and `Rare cell variability ... as a mode of cancer drug resistance` tripped the
+    cross-cell-line pattern on `cancer` in a title we must reproduce verbatim.
+
+    So exactly ONE line per entry is exempt: the line immediately after the `[n] Authors` line.
+    Everything else in the block is still scanned, and any line that is neither an entry opener nor
+    an indented continuation is reported. A first attempt exempted the whole block and absorbed a
+    planted sentence as a continuation -- the loophole test caught it, which is why the test exists.
+    """
+    if "### References" not in text:
+        return text, [], []
+    head, tail = text.split("### References", 1)
+    parts = tail.split("```")
+    if len(parts) < 3:
+        return text, [], []
+    refs = parts[1]
+    # the fence carries a language tag (```text); its first line is not a citation. The claim lock
+    # hit this same bug and counted "text" as a forbidden claim.
+    refs = refs.split("\n", 1)[1] if "\n" in refs else refs
+    rest = "```".join([parts[0]] + parts[2:])
+
+    titles: list[str] = []
+    scannable: list[str] = []
+    problems: list[str] = []
+    entries: list[str] = []
+    expect_title = False
+
+    for ln in refs.splitlines():
+        if not ln.strip():
+            expect_title = False
+            continue
+        if re.match(r"^\s*\[\d+\]", ln):
+            entries.append(ln.strip())
+            expect_title = True
+            scannable.append(ln)
+            continue
+        if expect_title:
+            expect_title = False
+            if len(ln.strip()) > 200:
+                problems.append("over-long title line: " + ln.strip()[:60])
+            titles.append(ln.strip())
+            continue
+        if not ln.startswith(("    ", "	")):
+            problems.append("unindented non-entry line: " + ln.strip()[:60])
+        entries[-1] = entries[-1] + " " + ln.strip() if entries else ln.strip()
+        scannable.append(ln)
+
+    for e in entries:
+        if not re.search(r"doi:|GSE\d+|PMID\s*\d+", e):
+            problems.append("entry without a resolvable identifier: " + e[:60])
+
+    return head + "### References" + rest + "\n" + "\n".join(scannable), titles, problems
+
+
 def compliance() -> dict:
     t0 = time.perf_counter()
     text = MANUSCRIPT.read_text(encoding="utf-8")
@@ -151,7 +208,8 @@ def compliance() -> dict:
     full = CL.combined_patterns()
     handoff = _j(CLAIM_HANDOFF)
 
-    forbidden_hits = CL.scan(text, full)
+    prose, exempt_titles, bad_refs = _partition_references(text)
+    forbidden_hits = CL.scan(prose, full)
     repro_hits = CL.scan(repro, full)
 
     missing_sections = [s for s in REQUIRED_SECTIONS if f"# {s}" not in text
@@ -175,7 +233,8 @@ def compliance() -> dict:
                    for lab, tmpl, val in _numbers() if not _hit(flat, tmpl, val)]
 
     checks = {
-        "no forbidden claim appears unnegated in the manuscript": not forbidden_hits,
+        "no forbidden claim appears unnegated in the manuscript prose": not forbidden_hits,
+        "the reference block is citations only, each with an identifier": not bad_refs,
         "no forbidden claim appears unnegated in the package document": not repro_hits,
         "every required section is present": not missing_sections,
         "all five mandatory qualifiers appear": not missing_qual,
@@ -192,6 +251,12 @@ def compliance() -> dict:
         "stage": "MS-C/MS-D",
         "instrument": "the claim lock's extended patterns under clause-scoped negation",
         "forbidden_hits": forbidden_hits,
+        "references_excluded_from_the_claim_scan":
+            "a cited paper's title is third-party text, not a claim this manuscript makes; only "
+            "the fenced block under '### References' is excluded, and every entry in it must "
+            "carry a DOI, PMID or accession",
+        "reference_block_problems": bad_refs,
+        "exempt_title_lines": exempt_titles,
         "package_forbidden_hits": repro_hits,
         "missing_sections": missing_sections,
         "missing_qualifiers": missing_qual,
@@ -265,8 +330,15 @@ def negative_controls(write: bool = True) -> dict:
     h = _j(EVIDENCE_LOCK)["headline_numbers"]
     results = {}
 
+    def _scan(doc: str) -> list:
+        """The same partition compliance uses. Scanning the raw document here made the controls
+        test a different document than the gate does, and the cited titles failed the positive
+        control -- the one line that proves the other four mean anything."""
+        prose, _titles, _problems = _partition_references(doc)
+        return CL.scan(prose, full)
+
     planted = original + "\n\nThe model generalises to new treatments.\n"
-    results["a planted forbidden claim is caught"] = bool(CL.scan(planted, full))
+    results["a planted forbidden claim is caught"] = bool(_scan(planted))
 
     dropped = original.replace("not death", "the outcome")
     results["a dropped qualifier is caught"] = QUALIFIER_MARKERS["outcome"] not in dropped
@@ -281,7 +353,7 @@ def negative_controls(write: bool = True) -> dict:
 
     # and the unmodified document must still pass all four, or the controls prove nothing
     results["the real manuscript passes all four"] = (
-        not CL.scan(original, full)
+        not _scan(original)
         and QUALIFIER_MARKERS["outcome"] in original
         and "p < 0.001" in original and "0.000999" not in original
         and f"{h['delta_RANK']:+.6f}" in original)
@@ -302,6 +374,10 @@ PACKAGE_FILES = [
     "tests/test_gen1_manuscript.py",
     "results/manuscript/MANUSCRIPT.md",
     "results/manuscript/REPRODUCIBILITY.md",
+    "results/manuscript/SUBMISSION.md",
+    "results/manuscript/figures/figure_1_design.svg",
+    "results/manuscript/figures/figure_2_primary.svg",
+    "results/manuscript/figures/figure_3_robustness.svg",
 ]
 
 

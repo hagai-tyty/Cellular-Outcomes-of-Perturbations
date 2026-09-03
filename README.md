@@ -21,8 +21,8 @@ bit-for-bit.
 ```text
   GEN1_MANUSCRIPT_READY
 
-  evidence lock   2b29d8c198e56ccb4823d0eed7cd15d5dd67c51694108fb9920a16c2b3e11cae
-  claim lock      7db3c35948267d32552ad80aab374160ecb620f170faff870a7ee9e4066ca0fa
+  evidence lock   06250a75fcb80b07e129714518765cf34e142cc51693357d1df606120d64c076
+  claim lock      177e233c53396a7c6149d665e8ed0180ffe1cb54a53e5e8dedc3e1cb1be17858
   package         0ae9e46a74da6ab0d057408f5b63442ddaf4ae891cfff46b883217e4ef36e1b9
 ```
 
@@ -53,6 +53,8 @@ it. Independent biological replication has not been performed and is Generation 
 | [`results/claim_lock/GEN1_CLAIMS.md`](results/claim_lock/GEN1_CLAIMS.md) | what may and may not be said |
 | [`results/evidence_lock/GEN1_EVIDENCE_LOCK.md`](results/evidence_lock/GEN1_EVIDENCE_LOCK.md) | the 54 locked artifacts |
 | `plans/(newer)practical plans/RECORDs/stage_25_RECORD.md` | the result itself |
+| [`results/manuscript/SUBMISSION.md`](results/manuscript/SUBMISSION.md) | related work, declarations, venue checklist |
+| [`results/manuscript/figures/`](results/manuscript/figures) | three figures, regenerated from locked results |
 
 **Verify before trusting any of it.** Each command re-hashes its layer and refuses if anything
 moved; each was shown to catch a one-bit change before it was issued.

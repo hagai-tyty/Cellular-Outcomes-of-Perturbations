@@ -14,8 +14,8 @@ Before reproducing anything, confirm the artifacts are the ones the manuscript w
 ```
 
 ```text
-  evidence lock digest   2b29d8c198e56ccb4823d0eed7cd15d5dd67c51694108fb9920a16c2b3e11cae
-  claim lock digest      7db3c35948267d32552ad80aab374160ecb620f170faff870a7ee9e4066ca0fa
+  evidence lock digest   06250a75fcb80b07e129714518765cf34e142cc51693357d1df606120d64c076
+  claim lock digest      177e233c53396a7c6149d665e8ed0180ffe1cb54a53e5e8dedc3e1cb1be17858
 ```
 
 `EVIDENCE_INTACT` and `CLAIMS_INTACT` mean every hashed file is byte-for-byte what was locked.

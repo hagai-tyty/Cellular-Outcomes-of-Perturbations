@@ -1,8 +1,8 @@
 {
   "stage": "EL-A",
-  "lock_digest": "2b29d8c198e56ccb4823d0eed7cd15d5dd67c51694108fb9920a16c2b3e11cae",
+  "lock_digest": "06250a75fcb80b07e129714518765cf34e142cc51693357d1df606120d64c076",
   "digest_definition": "SHA-256 over 'path  sha256' lines, sorted by path, LF-joined",
-  "n_artifacts": 54,
+  "n_artifacts": 58,
   "by_class": {
     "benchmark": 3,
     "predictions": 1,
@@ -10,9 +10,9 @@
     "verdicts": 6,
     "limitations": 1,
     "supporting_role_A": 5,
-    "protocol": 7,
+    "protocol": 8,
     "records": 8,
-    "code": 13
+    "code": 16
   },
   "artifacts": {
     "results/stage22_wm989_clones.csv": {
@@ -279,6 +279,14 @@
       "git_tracked": true,
       "git_ignored": false
     },
+    "CITATION.cff": {
+      "class": "protocol",
+      "sha256": "1af392067f1d8283fbeb7211bbdfffe7dccda62fac811b31695ca18b8b30191e",
+      "hashed": "canonical-lf",
+      "bytes": 2787,
+      "git_tracked": false,
+      "git_ignored": false
+    },
     "plans/(newer)practical plans/RECORDs/stage_22_RECORD.md": {
       "class": "records",
       "sha256": "e42cd1a4c132a3ae94e77a32bf67edfc3a0f69199ad0d7d776b10c1951f6c2dc",
@@ -393,10 +401,26 @@
     },
     "experiments/run_gen1_evidence_lock.py": {
       "class": "code",
-      "sha256": "74bc64ed20fa06ae1c80bae427f5485ca4d26023510706bedd881cbae998ca5e",
+      "sha256": "18cf1ba27a7351907289038379f75aada2d0d4c19f7132b3561d5944bfc11411",
       "hashed": "canonical-lf",
-      "bytes": 38978,
+      "bytes": 39136,
       "git_tracked": true,
+      "git_ignored": false
+    },
+    "experiments/make_gen1_figures.py": {
+      "class": "code",
+      "sha256": "ca1a1b7ea2dd13a8f8a8de3c287839a009bceb0ad5241ca3c702f64fa581bfb9",
+      "hashed": "canonical-lf",
+      "bytes": 14530,
+      "git_tracked": false,
+      "git_ignored": false
+    },
+    "experiments/make_release_bundle.py": {
+      "class": "code",
+      "sha256": "2bc649211211841a802fed93d1763d65445d27e0fe389130b89dbeb1c1f09b21",
+      "hashed": "canonical-lf",
+      "bytes": 7658,
+      "git_tracked": false,
       "git_ignored": false
     },
     "tests/test_gen1_predictor.py": {
@@ -446,6 +470,14 @@
       "bytes": 13258,
       "git_tracked": true,
       "git_ignored": false
+    },
+    "tests/test_ci_portability.py": {
+      "class": "code",
+      "sha256": "1ca2450d1d58de9f0f7d5e60b8e7a4213df812aeebe25d272799d7c2461abe8b",
+      "hashed": "canonical-lf",
+      "bytes": 5686,
+      "git_tracked": true,
+      "git_ignored": false
     }
   },
   "missing": [],
@@ -467,7 +499,11 @@
     "text_hashed": "canonical-LF (CRLF normalised to LF)",
     "why": "core.autocrlf=true means a text file's working-tree bytes are not its repository bytes; a raw-byte lock would refuse for everyone who cloned the repo"
   },
-  "pending_first_commit": [],
+  "pending_first_commit": [
+    "CITATION.cff",
+    "experiments/make_gen1_figures.py",
+    "experiments/make_release_bundle.py"
+  ],
   "pending_note": "Reported, not gating. These are new files awaiting their first commit -- the lock digest covers content, not commit state. They are committed in the same commit as this lock.",
   "not_in_the_lock": {
     "results/stage24/stage24_w5_artifact.npz": {
@@ -490,6 +526,6 @@
     "every committed artifact hashes the same from a fresh clone": true
   },
   "all_passed": true,
-  "runtime_seconds": 6.953,
-  "module_sha256": "88abad19600722ce13fb43795f545f4e59a18e11a1942e6fa8f55c7c08971603"
+  "runtime_seconds": 8.822,
+  "module_sha256": "c4e9278ad51a05de0ca03384a5462b48e186c4eb33da9ba23f4da2f529b553bc"
 }

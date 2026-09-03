@@ -155,6 +155,7 @@ INVENTORY: dict[str, list[str]] = {
         "plans/(newer)practical plans/GEN1_EVIDENCE_LOCK_V1.md",
         "results/stage23_5_protocol.json",
         "results/stage23_5_handoff_to_stage24.json",
+        "CITATION.cff",
     ],
     # The records are the prose the manuscript will be written from, and EL-D checks numbers
     # against them. A record that can change after the lock makes that check meaningless.
@@ -176,12 +177,15 @@ INVENTORY: dict[str, list[str]] = {
         "experiments/run_stage25_ranking.py",
         "experiments/run_stage26_scope_lock.py",
         "experiments/run_gen1_evidence_lock.py",
+        "experiments/make_gen1_figures.py",
+        "experiments/make_release_bundle.py",
         "tests/test_gen1_predictor.py",
         "tests/test_stage23_2h_confirmation.py",
         "tests/test_stage24_gen1_tool.py",
         "tests/test_stage25_ranking.py",
         "tests/test_stage26_scope_lock.py",
         "tests/test_gen1_evidence_lock.py",
+        "tests/test_ci_portability.py",
     ],
 }
 

@@ -1,0 +1,253 @@
+# Submission pack — Generation 1
+
+Everything a submission form asks for, in one place, plus the full related-work section. Nothing
+here is uploaded by this repository; this is the copy-paste source.
+
+**Fields marked `<<FILL>>` need a human.** They are things I cannot know or must not invent.
+
+---
+
+## 1. Identity
+
+```text
+TITLE
+  Pretreatment transcriptional state carries condition-specific information about
+  future clonal detection in a lineage-traced melanoma line
+
+SHORT TITLE
+  Condition-specific state information in lineage-traced melanoma clones
+
+AUTHORS            <<FILL: full name, ORCID>>
+AFFILIATION        <<FILL>>
+CORRESPONDING      <<FILL: email>>
+
+ARTICLE TYPE       Research Article
+PREPRINT SERVER    bioRxiv
+bioRxiv CATEGORY   Bioinformatics   (secondary: Cancer Biology)
+TARGET JOURNAL     BMC Bioinformatics
+BMC SECTION        Methods / benchmarking and reanalysis
+LICENCE            CC BY 4.0
+```
+
+### Honest note on venue fit
+
+BMC Bioinformatics publishes reanalyses and benchmark/methodology papers, which this is. Two things
+a handling editor will notice immediately, and neither should be hidden in a cover letter:
+
+- **No new data.** The primary dataset is Schaff et al.'s. The contribution is the evaluation
+  design, the preregistered test, and the reproducibility apparatus.
+- **One biological system.** No replication. The manuscript says so in the abstract.
+
+If the editor considers the increment too small for a Research Article, the natural fallbacks are a
+BMC Bioinformatics *Software* article (the frozen predictor plus its refusal semantics), or *GigaScience*
+/ *Bioinformatics Advances*, both of which take reanalysis-plus-resource submissions. Deciding that
+is not a Generation-1 gate.
+
+---
+
+## 2. Abstract as submitted
+
+> Whether a cell's molecular state before a perturbation predicts what happens to it afterwards is
+> usually asked retrospectively, after outcome and state have been measured in the same cells. We
+> ask it prospectively at clone level, in one BRAF-V600E melanoma cell line (WM989, GSE279162) in
+> which 1,401 barcoded clones were split and exposed to six observed experimental conditions: Acid,
+> Cisplatin, CoCl2, Dabrafenib, Doxorubicin and Trametinib.
+>
+> Within this system, pretreatment gene expression contains condition-specific information about
+> future clonal detection beyond condition identity and captured pretreatment clone abundance, under
+> clone-held-out evaluation frozen before any result existed. Under a test preregistered in full,
+> a frozen state-by-condition interaction model improves clone-specific ordering of the six
+> conditions over a non-interactive additive model: +0.051605 in equal-clone-weighted within-clone
+> AUROC, 95% CI [+0.037197, +0.065571], with 0 of 1000 full-refit permutation draws reaching the
+> observed value (p < 0.001).
+>
+> The outcome is an observed post-treatment clone-detection proxy and is not death, sensitivity,
+> resistance or clinical response. The six conditions are the entire supported vocabulary. We make
+> no claim about unseen conditions, other cell lines, or patients, and the model emits no calibrated
+> probability. Independent biological replication has not been performed and is Generation 2 work,
+> not a gate on this result.
+
+**KEYWORDS**
+clonal barcoding; lineage tracing; drug resistance; preregistration; reproducibility;
+within-clone ranking; permutation test; melanoma; reanalysis
+
+---
+
+## 3. Related work
+
+Four strands, and the paper sits at the intersection of the first and the last.
+
+### 3.1 Non-genetic single-cell state predicts which cells resist
+
+The founding result in this exact system: Shaffer et al. showed that rare, transient transcriptional
+states in WM989 predict which cells resist vemurafenib, and that drug exposure epigenetically
+stabilises those states into durable resistance [3]. Emert et al. developed Rewind to capture the
+rare precursors directly, resolving substructure within them that predicts distinct downstream
+resistant behaviours [4]. Goyal et al., with FateMap, showed that resistant fates are diverse rather
+than binary and are largely **predetermined** by pre-treatment molecular differences rather than by
+extrinsic factors [5]. Schaff et al. extended clonal tracing to six conditions in parallel and
+reported cross-condition resistance correlation plus CD44 as a marker of resistance across several
+conditions [1] — the dataset reanalysed here.
+
+**What this literature establishes is *how resistant* a clone is.** That is a property of the clone,
+largely shared across conditions.
+
+### 3.2 The gap this addresses
+
+A clone-level propensity cannot, by construction, order conditions *within* a clone: any quantity
+acting on the clone as a whole shifts all of its predicted scores together and leaves their order
+unchanged. So "state predicts resistance" and "state predicts which condition" are separate claims
+requiring separate tests, and the second needs an explicit state-by-condition interaction. This work
+tests the second, with the first entering the model as an additive term so that it cannot supply the
+answer. Empirically it does not: the additive model scores *below* the no-state baseline on ordering.
+
+### 3.3 Confounding by capture depth
+
+Detection-based clone outcomes are dominated by how many cells a clone contributed before treatment.
+Any comparison that does not hold that fixed measures a headcount. Here abundance is a mandatory
+model term, present in every model including the permutation null, and the shipped tool refuses to
+score without it. It remains roughly 3.45× the whole state contribution.
+
+### 3.4 Leakage and preregistration in ML-based science
+
+Kapoor and Narayanan document eight kinds of leakage across 294 papers in seventeen fields and show
+that complex models frequently fail to beat logistic regression once leakage is corrected [6]. The
+design here is a direct response: the comparator is a simpler model of the same family; gene
+filtering, PCA and scalers are refitted inside each training fold; hyperparameters are selected in
+an inner split of the training folds only; the null refits the entire pipeline rather than shuffling
+labels; and the metric, population, weighting, comparator, null and verdict rule were fixed in a
+digest-frozen protocol before any number existed. Preregistration of a computational analysis is
+still uncommon, and the protocol digests make the claim checkable rather than assertable.
+
+### 3.5 References
+
+```text
+[1] Schaff DL, White PE, Cote CJ, Watterson GE, Lin KZ, Fasse AJ, Zhang NR, Shaffer SM.
+    Pre-existing cell states predict resistance to multiple treatments.
+    Cell Genomics 6(6):101191, 2026. doi:10.1016/j.xgen.2026.101191  PMID 41916275
+
+[2] GEO GSE227151. Retrospective identification of cell-intrinsic factors that mark
+    pluripotency potential in rare somatic cells (scRNA-seq). Human hiF-T fibroblasts.
+
+[3] Shaffer SM, Dunagin MC, Torborg SR, Torre EA, Emert B, et al.
+    Rare cell variability and drug-induced reprogramming as a mode of cancer drug resistance.
+    Nature 546(7658):431-435, 2017. doi:10.1038/nature22794  PMID 28607484
+
+[4] Emert BL, Cote CJ, Torre EA, Dardani IP, Jiang CL, Jain N, Shaffer SM, Raj A.
+    Variability within rare cell states enables multiple paths toward drug resistance.
+    Nature Biotechnology 39(7):865-876, 2021. doi:10.1038/s41587-021-00837-3  PMID 33619394
+
+[5] Goyal Y, Busch GT, Pillai M, Li J, Boe RH, et al.
+    Diverse clonal fates emerge upon drug treatment of homogeneous cancer cells.
+    Nature 620(7974):651-659, 2023. doi:10.1038/s41586-023-06342-8  PMID 37468627
+
+[6] Kapoor S, Narayanan A.
+    Leakage and the reproducibility crisis in machine-learning-based science.
+    Patterns 4(9):100804, 2023. doi:10.1016/j.patter.2023.100804  PMID 37720327
+```
+
+---
+
+## 4. Declarations
+
+### Availability of data and materials
+
+> The dataset analysed here is publicly available from the Gene Expression Omnibus under accession
+> GSE279162, generated and deposited by Schaff et al. [1]. Supporting Role-A evidence uses
+> GSE227151. **No new data were generated for this study.**
+>
+> All analysis code, frozen protocols, stage records, out-of-fold predictions, the serialized
+> predictor and the verification tooling are archived at Zenodo, DOI `<<FILL: 10.5281/zenodo.XXXXXXX>>`,
+> and developed openly at `https://github.com/hagai-tyty/Cellular-Outcomes-of-Perturbations`.
+> The archive contains a manifest of SHA-256 digests and three verification commands; the evidence,
+> claim and package digests recorded in the manuscript can be re-derived from it.
+
+### Competing interests
+
+> `<<FILL — if none: "The author declares no competing interests.">>`
+
+### Funding
+
+> `<<FILL — if none: "This research received no specific grant from any funding agency.">>`
+
+### Ethics approval and consent to participate
+
+> Not applicable. This study is a computational reanalysis of published, publicly available data
+> from an immortalised cell line. No human participants, human material or animals were involved.
+
+### Consent for publication
+
+> Not applicable.
+
+### Authors' contributions
+
+> `<<FILL>>` — single-author template: "H.A. designed the evaluation, implemented the analysis and
+> verification tooling, and wrote the manuscript."
+
+### Acknowledgements
+
+> We thank Schaff et al. for generating and openly depositing GSE279162, without which this
+> reanalysis would not be possible. `<<FILL: any AI-assistance disclosure your venue requires>>`
+
+**Note on AI assistance.** BMC and bioRxiv both require disclosure where generative AI contributed
+to the work. This project was developed with substantial AI assistance for implementation, checking
+and drafting. Say so plainly in the Acknowledgements; do not list a model as an author, which every
+major publisher forbids.
+
+---
+
+## 5. Figures
+
+```text
+Figure 1  Clone-level prospective design and evaluable population
+Figure 2  Preregistered clone-specific ranking result (models; observed vs null)
+Figure 3  Robustness across strata, and the top-choice diagnostic
+```
+
+Vector SVG at `results/manuscript/figures/`. Regenerate with
+`python experiments/make_gen1_figures.py`; every number is read from a locked result file, none is
+typed into the script. Convert to PDF/EPS/TIFF at submission time if the venue demands it.
+
+---
+
+## 6. Cover-letter skeleton
+
+> We submit *Pretreatment transcriptional state carries condition-specific information about future
+> clonal detection in a lineage-traced melanoma line* for consideration as a Research Article.
+>
+> Prior work in this system has established that pre-existing single-cell state predicts *whether* a
+> clone resists treatment. We ask the adjacent question of *which* condition a clone is still
+> detected after — a clone-specific ordering claim that a general resistance propensity cannot, by
+> construction, satisfy. Using the publicly deposited six-condition clonal-tracing dataset of Schaff
+> et al. (GSE279162), and a protocol frozen by cryptographic digest before any result existed, we
+> find that an explicit state-by-condition interaction improves within-clone ordering over a
+> non-interactive additive model, exceeding all 1,000 full-refit permutation draws.
+>
+> The work generates no new data and makes a deliberately bounded claim: one cell line, six observed
+> conditions, an observed detection proxy, and no independent biological replication. Those limits
+> are stated in the abstract, not only the discussion.
+>
+> The complete analysis, frozen protocols, stage-by-stage records including negative and failed
+> results, and a verification tool that refuses on any modified artifact are archived at Zenodo
+> `<<FILL DOI>>`.
+
+---
+
+## 7. Pre-flight checklist
+
+```text
+[ ] GitHub CI green on the commit being archived
+[ ] fresh clone verifies: evidence, claim and package digests
+[ ] Zenodo DOI reserved
+[ ] DOI written into MANUSCRIPT.md, README.md, CITATION.cff, this file
+[ ] locks re-run after the DOI edit, digests propagated
+[ ] SHA256SUMS regenerated and checked against the bundle
+[ ] Zenodo record published (immutable)
+[ ] GitHub release tagged, release notes link the Zenodo DOI
+[ ] bioRxiv submission (PDF + figures + declarations above)
+[ ] BMC Bioinformatics submission
+```
+
+**Order matters at steps 3–6.** Reserving the DOI first, then writing it into the documents, then
+re-running the locks, is the only sequence in which the archived bundle contains its own DOI *and*
+its digests are correct. Writing the DOI after locking silently invalidates all three digests.

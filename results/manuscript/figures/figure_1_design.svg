@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="460" viewBox="0 0 760 460" role="img" aria-labelledby="t d">
+<title id="t">Study design and evaluable population</title><desc id="d">Clone-level prospective design in WM989 and the funnel from all clones to the evaluable subset.</desc>
+<rect x="0.0" y="0.0" width="760.0" height="460.0" fill="#ffffff" stroke="none" rx="0"/>
+<text x="24.0" y="30.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="13" fill="#1a1a1a" text-anchor="start" font-weight="bold" font-style="normal">Figure 1  Clone-level prospective design and evaluable population</text>
+<text x="24.0" y="50.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10.5" fill="#6b6b6b" text-anchor="start" font-weight="normal" font-style="normal">One BRAF-V600E melanoma line (WM989). Data from Schaff et al. 2026; reanalysis only.</text>
+<rect x="24.0" y="86.0" width="150.0" height="54.0" fill="#eef2f6" stroke="#1f4e79" rx="4"/>
+<text x="99.0" y="108.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="11" fill="#1a1a1a" text-anchor="middle" font-weight="bold" font-style="normal">1,401 barcoded</text>
+<text x="99.0" y="124.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">clones, pretreatment</text>
+<text x="196.0" y="112.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">split</text>
+<line x1="180.0" y1="116.0" x2="214.0" y2="116.0" stroke="#6b6b6b" stroke-width="1.2"/>
+<polygon points="214,116 208,113 208,119" fill="#6b6b6b"/>
+<rect x="224.0" y="86.0" width="84.0" height="54.0" fill="#ffffff" stroke="#c9c9c9" rx="3"/>
+<text x="266.0" y="110.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9.5" fill="#1a1a1a" text-anchor="middle" font-weight="normal" font-style="normal">Acid</text>
+<text x="266.0" y="126.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">4 wk</text>
+<rect x="312.0" y="86.0" width="84.0" height="54.0" fill="#ffffff" stroke="#c9c9c9" rx="3"/>
+<text x="354.0" y="110.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9.5" fill="#1a1a1a" text-anchor="middle" font-weight="normal" font-style="normal">Cisplatin</text>
+<text x="354.0" y="126.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">2 wk + 2</text>
+<rect x="400.0" y="86.0" width="84.0" height="54.0" fill="#ffffff" stroke="#c9c9c9" rx="3"/>
+<text x="442.0" y="110.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9.5" fill="#1a1a1a" text-anchor="middle" font-weight="normal" font-style="normal">CoCl2</text>
+<text x="442.0" y="126.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">4 wk</text>
+<rect x="488.0" y="86.0" width="84.0" height="54.0" fill="#ffffff" stroke="#c9c9c9" rx="3"/>
+<text x="530.0" y="110.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9.5" fill="#1a1a1a" text-anchor="middle" font-weight="normal" font-style="normal">Dabrafenib</text>
+<text x="530.0" y="126.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">4 wk</text>
+<rect x="576.0" y="86.0" width="84.0" height="54.0" fill="#ffffff" stroke="#c9c9c9" rx="3"/>
+<text x="618.0" y="110.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9.5" fill="#1a1a1a" text-anchor="middle" font-weight="normal" font-style="normal">Doxorubicin</text>
+<text x="618.0" y="126.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">2 wk + 2</text>
+<rect x="664.0" y="86.0" width="84.0" height="54.0" fill="#ffffff" stroke="#c9c9c9" rx="3"/>
+<text x="706.0" y="110.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9.5" fill="#1a1a1a" text-anchor="middle" font-weight="normal" font-style="normal">Trametinib</text>
+<text x="706.0" y="126.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">4 wk</text>
+<text x="24.0" y="168.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10.5" fill="#1a1a1a" text-anchor="start" font-weight="normal" font-style="normal">Outcome C1  post-treatment clone DETECTION — an observed zero means no assigned cell was seen.</text>
+<text x="24.0" y="184.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10.5" fill="#a33b20" text-anchor="start" font-weight="normal" font-style="italic">Not death, not sensitivity, not clinical response.</text>
+<text x="24.0" y="224.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1a1a1a" text-anchor="start" font-weight="bold" font-style="normal">Evaluable population</text>
+<text x="24.0" y="241.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#6b6b6b" text-anchor="start" font-weight="normal" font-style="normal">A within-clone AUROC is undefined without both a detected and an undetected condition.</text>
+<rect x="150.0" y="258.0" width="470.0" height="18.0" fill="#dfe6ec" stroke="none" rx="2"/>
+<text x="142.0" y="271.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#1a1a1a" text-anchor="end" font-weight="normal" font-style="normal">all clones</text>
+<text x="626.0" y="271.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#6b6b6b" text-anchor="start" font-weight="normal" font-style="normal">1,401</text>
+<rect x="150.0" y="284.0" width="158.3" height="18.0" fill="#f0f0f0" stroke="none" rx="2"/>
+<text x="142.0" y="297.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#1a1a1a" text-anchor="end" font-weight="normal" font-style="normal">never detected — excluded</text>
+<text x="314.3" y="297.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#6b6b6b" text-anchor="start" font-weight="normal" font-style="normal">472</text>
+<rect x="150.0" y="310.0" width="12.4" height="18.0" fill="#f0f0f0" stroke="none" rx="2"/>
+<text x="142.0" y="323.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#1a1a1a" text-anchor="end" font-weight="normal" font-style="normal">always detected — excluded</text>
+<text x="168.4" y="323.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#6b6b6b" text-anchor="start" font-weight="normal" font-style="normal">37</text>
+<rect x="150.0" y="336.0" width="299.2" height="18.0" fill="#1f4e79" stroke="none" rx="2"/>
+<text x="142.0" y="349.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#1a1a1a" text-anchor="end" font-weight="normal" font-style="normal">evaluable</text>
+<text x="455.2" y="349.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#1a1a1a" text-anchor="start" font-weight="bold" font-style="normal">892</text>
+<line x1="24.0" y1="384.0" x2="736.0" y2="384.0" stroke="#c9c9c9" stroke-width="1"/>
+<text x="24.0" y="404.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1a1a1a" text-anchor="start" font-weight="bold" font-style="normal">Closed vocabulary</text>
+<text x="24.0" y="421.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#6b6b6b" text-anchor="start" font-weight="normal" font-style="normal">56 of 56 adversarial condition strings refused, including 16 oncology drugs (Vemurafenib, Carboplatin, ...).</text>
+<text x="24.0" y="437.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#6b6b6b" text-anchor="start" font-weight="normal" font-style="normal">Design width 309 columns = 50 PCs + 4 abundance + 5 condition + 250 interaction.</text>
+</svg>

@@ -1,13 +1,17 @@
 {
-  "package_digest": "0ae9e46a74da6ab0d057408f5b63442ddaf4ae891cfff46b883217e4ef36e1b9",
+  "package_digest": "de8ae3749aca12946d3bb7c880b54f6eb8d2f542340609ce979d69100ea46638",
   "digest_definition": "SHA-256 over 'path  canonical-lf-sha256' lines, sorted by path",
   "covers": {
-    "plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md": "ebaa74ff01c707d1f2a7f389d89c19e8c763a8d440e743e9b35c4583d9211408",
-    "experiments/run_gen1_manuscript.py": "4cf390fd25c18dcfc5f3f2fb13471974e3dedabfc36d9476ec9b81780b850a0c",
+    "plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md": "91c8b4f85a824ee038dbf916807106d097b4d5b942667b11f042bd244c73724d",
+    "experiments/run_gen1_manuscript.py": "7b906b785c815f8e323b813e585218c91926b33e5b071850a25f415672885bf2",
     "tests/test_gen1_manuscript.py": "b0392d4fca2dd96a3146161c74c3c56279ac46d33abed66bd032c32e1800f63e",
-    "results/manuscript/MANUSCRIPT.md": "6c16fe50d5aede5332c9b69a438a369bedadbe2d2b1d08c371b0da6f330a148b",
-    "results/manuscript/REPRODUCIBILITY.md": "df4d95d295e371eb60fa669ec7635adda977c9262db1d54cf9960474bc07c6cc"
+    "results/manuscript/MANUSCRIPT.md": "d85414b3394c78082d59737b99c6fd47518a7c53e6643357713a038a9e1a2eb8",
+    "results/manuscript/REPRODUCIBILITY.md": "3aeef82fb7542d65b6ff712d71638eada2855ea998b4384a5f9027144850b3aa",
+    "results/manuscript/SUBMISSION.md": "906dd20576cdd9d1a3ee550c4d60ef9e13a1c941b45c1a8195e04f6142aff433",
+    "results/manuscript/figures/figure_1_design.svg": "edfd5b87d6a5630672252c94aec25f8370bc0ccf5cc48254311b458c16c35d7e",
+    "results/manuscript/figures/figure_2_primary.svg": "e2a13d883068725ab86e411bbf868647adde21b9b8e5d82a78e0f3dacc938d44",
+    "results/manuscript/figures/figure_3_robustness.svg": "5d9914a4d43e00d67a2e0b319e2fb1e7fbc22626379724cabaee853518fbe01e"
   },
   "verify": "python experiments/run_gen1_manuscript.py --verify",
-  "module_sha256": "153b9dc87c889c50d4c3c76c5b9c4574d29b721658204946c21efe27cc88bf5a"
+  "module_sha256": "f667832b9a7809137a288a5bc90850167fb4cbdc01925ffa66b64feb150c1767"
 }

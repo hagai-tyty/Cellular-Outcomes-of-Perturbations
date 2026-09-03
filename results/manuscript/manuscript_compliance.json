@@ -2,6 +2,16 @@
   "stage": "MS-C/MS-D",
   "instrument": "the claim lock's extended patterns under clause-scoped negation",
   "forbidden_hits": [],
+  "references_excluded_from_the_claim_scan": "a cited paper's title is third-party text, not a claim this manuscript makes; only the fenced block under '### References' is excluded, and every entry in it must carry a DOI, PMID or accession",
+  "reference_block_problems": [],
+  "exempt_title_lines": [
+    "Pre-existing cell states predict resistance to multiple treatments.",
+    "pluripotency potential in rare somatic cells (scRNA-seq), human hiF-T fibroblasts.",
+    "Rare cell variability and drug-induced reprogramming as a mode of cancer drug resistance.",
+    "Variability within rare cell states enables multiple paths toward drug resistance.",
+    "Diverse clonal fates emerge upon drug treatment of homogeneous cancer cells.",
+    "Leakage and the reproducibility crisis in machine-learning-based science."
+  ],
   "package_forbidden_hits": [],
   "missing_sections": [],
   "missing_qualifiers": [],
@@ -9,7 +19,8 @@
   "numbers_checked": 17,
   "untraceable_numbers": [],
   "checks": {
-    "no forbidden claim appears unnegated in the manuscript": true,
+    "no forbidden claim appears unnegated in the manuscript prose": true,
+    "the reference block is citations only, each with an identifier": true,
     "no forbidden claim appears unnegated in the package document": true,
     "every required section is present": true,
     "all five mandatory qualifiers appear": true,
@@ -21,6 +32,6 @@
     "every number traces to a locked artifact": true
   },
   "all_passed": true,
-  "runtime_seconds": 0.041,
-  "module_sha256": "153b9dc87c889c50d4c3c76c5b9c4574d29b721658204946c21efe27cc88bf5a"
+  "runtime_seconds": 0.039,
+  "module_sha256": "f667832b9a7809137a288a5bc90850167fb4cbdc01925ffa66b64feb150c1767"
 }

@@ -10,7 +10,7 @@
       "clean": true,
       "moved": [],
       "missing": [],
-      "n_checked": 54
+      "n_checked": 58
     },
     "one_bit_flipped": {
       "clean": false,
@@ -18,7 +18,7 @@
         "results/stage24/stage24_oof_for_stage25.csv"
       ],
       "missing": [],
-      "n_checked": 54
+      "n_checked": 58
     },
     "one_file_deleted": {
       "clean": false,
@@ -26,7 +26,7 @@
       "missing": [
         "results/stage25/stage25_verdict.json"
       ],
-      "n_checked": 54
+      "n_checked": 58
     }
   },
   "note": "A verifier that has never failed is an assumption. These run on copies in a scratch directory; no locked artifact is ever touched.",
@@ -36,6 +36,6 @@
     "MISSING is detected and names the file": true
   },
   "all_passed": true,
-  "runtime_seconds": 0.953,
-  "module_sha256": "88abad19600722ce13fb43795f545f4e59a18e11a1942e6fa8f55c7c08971603"
+  "runtime_seconds": 0.962,
+  "module_sha256": "c4e9278ad51a05de0ca03384a5462b48e186c4eb33da9ba23f4da2f529b553bc"
 }

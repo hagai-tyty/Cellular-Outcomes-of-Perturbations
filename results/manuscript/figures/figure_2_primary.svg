@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="476" viewBox="0 0 760 476" role="img" aria-labelledby="t d">
+<title id="t">Preregistered ranking result</title><desc id="d">Ranking score for three models and the observed statistic against a 1,000-draw full-refit permutation null.</desc>
+<rect x="0.0" y="0.0" width="760.0" height="476.0" fill="#ffffff" stroke="none" rx="0"/>
+<text x="24.0" y="30.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="13" fill="#1a1a1a" text-anchor="start" font-weight="bold" font-style="normal">Figure 2  Preregistered clone-specific ranking result</text>
+<text x="24.0" y="50.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10.5" fill="#6b6b6b" text-anchor="start" font-weight="normal" font-style="normal">Equal-clone-weighted within-clone AUROC. Every degree of freedom fixed before these numbers existed.</text>
+<text x="24.0" y="84.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1a1a1a" text-anchor="start" font-weight="bold" font-style="normal">A   Ranking score by model</text>
+<line x1="150.0" y1="104.0" x2="150.0" y2="208.0" stroke="#c9c9c9" stroke-width="1" stroke-dasharray="2,3"/>
+<text x="150.0" y="224.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">0.66</text>
+<line x1="248.0" y1="104.0" x2="248.0" y2="208.0" stroke="#c9c9c9" stroke-width="1" stroke-dasharray="2,3"/>
+<text x="248.0" y="224.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">0.68</text>
+<line x1="346.0" y1="104.0" x2="346.0" y2="208.0" stroke="#c9c9c9" stroke-width="1" stroke-dasharray="2,3"/>
+<text x="346.0" y="224.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">0.70</text>
+<line x1="444.0" y1="104.0" x2="444.0" y2="208.0" stroke="#c9c9c9" stroke-width="1" stroke-dasharray="2,3"/>
+<text x="444.0" y="224.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">0.72</text>
+<line x1="542.0" y1="104.0" x2="542.0" y2="208.0" stroke="#c9c9c9" stroke-width="1" stroke-dasharray="2,3"/>
+<text x="542.0" y="224.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">0.74</text>
+<line x1="640.0" y1="104.0" x2="640.0" y2="208.0" stroke="#c9c9c9" stroke-width="1" stroke-dasharray="2,3"/>
+<text x="640.0" y="224.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">0.76</text>
+<rect x="150.0" y="112.0" width="160.0" height="18.0" fill="#8a8a8a" stroke="none" rx="2"/>
+<text x="142.0" y="125.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#1a1a1a" text-anchor="end" font-weight="normal" font-style="normal">W1   B + U</text>
+<text x="318.0" y="125.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9.5" fill="#1a1a1a" text-anchor="start" font-weight="normal" font-style="normal">0.692654</text>
+<text x="376.0" y="125.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9" fill="#6b6b6b" text-anchor="start" font-weight="normal" font-style="normal">nuisance + condition</text>
+<rect x="150.0" y="146.0" width="157.7" height="18.0" fill="#8a8a8a" stroke="none" rx="2"/>
+<text x="142.0" y="159.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#1a1a1a" text-anchor="end" font-weight="normal" font-style="normal">W4   X + B + U</text>
+<text x="315.7" y="159.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9.5" fill="#1a1a1a" text-anchor="start" font-weight="normal" font-style="normal">0.692176</text>
+<text x="373.7" y="159.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9" fill="#6b6b6b" text-anchor="start" font-weight="normal" font-style="normal">+ additive state  (comparator)</text>
+<rect x="150.0" y="180.0" width="410.5" height="18.0" fill="#1f4e79" stroke="none" rx="2"/>
+<text x="142.0" y="193.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#1a1a1a" text-anchor="end" font-weight="normal" font-style="normal">W5   X + B + U + X×U</text>
+<text x="568.5" y="193.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9.5" fill="#1a1a1a" text-anchor="start" font-weight="bold" font-style="normal">0.743781</text>
+<text x="626.5" y="193.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9" fill="#6b6b6b" text-anchor="start" font-weight="normal" font-style="normal">+ state × condition</text>
+<text x="150.0" y="246.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9.5" fill="#a33b20" text-anchor="start" font-weight="normal" font-style="normal">R(W4) sits BELOW R(W1): the additive state term adds nothing to ordering. The entire gain is the interaction.</text>
+<text x="24.0" y="300.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1a1a1a" text-anchor="start" font-weight="bold" font-style="normal">B   Observed ΔRANK against 1,000 full-refit permutations</text>
+<line x1="150.0" y1="376.0" x2="640.0" y2="376.0" stroke="#6b6b6b" stroke-width="1"/>
+<line x1="181.6" y1="376.0" x2="181.6" y2="381.0" stroke="#6b6b6b" stroke-width="1"/>
+<text x="181.6" y="395.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">+0.00</text>
+<line x1="260.6" y1="376.0" x2="260.6" y2="381.0" stroke="#6b6b6b" stroke-width="1"/>
+<text x="260.6" y="395.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">+0.01</text>
+<line x1="339.7" y1="376.0" x2="339.7" y2="381.0" stroke="#6b6b6b" stroke-width="1"/>
+<text x="339.7" y="395.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">+0.02</text>
+<line x1="418.7" y1="376.0" x2="418.7" y2="381.0" stroke="#6b6b6b" stroke-width="1"/>
+<text x="418.7" y="395.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">+0.03</text>
+<line x1="497.7" y1="376.0" x2="497.7" y2="381.0" stroke="#6b6b6b" stroke-width="1"/>
+<text x="497.7" y="395.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">+0.04</text>
+<line x1="576.8" y1="376.0" x2="576.8" y2="381.0" stroke="#6b6b6b" stroke-width="1"/>
+<text x="576.8" y="395.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">+0.05</text>
+<rect x="159.9" y="348.0" width="67.1" height="22.0" fill="#d9d9d9" stroke="none" rx="2"/>
+<line x1="193.4" y1="344.0" x2="193.4" y2="374.0" stroke="#6b6b6b" stroke-width="1.4"/>
+<text x="193.4" y="338.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">null mean ± SD</text>
+<line x1="250.2" y1="344.0" x2="250.2" y2="374.0" stroke="#6b6b6b" stroke-width="1" stroke-dasharray="3,2"/>
+<text x="250.2" y="410.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">p95 0.0087</text>
+<line x1="290.1" y1="344.0" x2="290.1" y2="374.0" stroke="#6b6b6b" stroke-width="1" stroke-dasharray="3,2"/>
+<text x="290.1" y="410.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">max of 1,000 0.0137</text>
+<line x1="475.6" y1="359.0" x2="699.8" y2="359.0" stroke="#a33b20" stroke-width="2"/>
+<line x1="475.6" y1="353.0" x2="475.6" y2="365.0" stroke="#a33b20" stroke-width="2"/>
+<line x1="699.8" y1="353.0" x2="699.8" y2="365.0" stroke="#a33b20" stroke-width="2"/>
+<circle cx="589.5" cy="359.0" r="5" fill="#a33b20"/>
+<text x="589.5" y="336.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#a33b20" text-anchor="middle" font-weight="bold" font-style="normal">observed +0.051605</text>
+<text x="150.0" y="434.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#1a1a1a" text-anchor="start" font-weight="normal" font-style="normal">0 of 1000 draws reached the observed value  →  p &lt; 0.001.  6.0× the null p95; 11.8 SD above the null mean.</text>
+<text x="150.0" y="450.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9.5" fill="#6b6b6b" text-anchor="start" font-weight="normal" font-style="normal">Permutation refits the entire pipeline inside every draw; observed-data hyperparameters are never reused.</text>
+</svg>

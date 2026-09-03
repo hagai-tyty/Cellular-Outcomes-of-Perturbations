@@ -3,8 +3,8 @@
 ```text
   GEN1_EVIDENCE_LOCKED
 
-  lock digest   2b29d8c198e56ccb4823d0eed7cd15d5dd67c51694108fb9920a16c2b3e11cae
-  artifacts     54
+  lock digest   06250a75fcb80b07e129714518765cf34e142cc51693357d1df606120d64c076
+  artifacts     58
   ship plan     8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48
 ```
 
@@ -20,8 +20,11 @@ has one identity on every platform. The ship plan therefore carries `59f22e9a...
 ## What is locked
 
 ```text
+  protocol      1af392067f1d8283fbeb7211bbdfffe7dccda62fac811b31695ca18b8b30191e  CITATION.cff
   code          dfd047eff9fb82d0303c24743416d5a3ddc524076976074adceb435cb5d704a7  experiments/build_stage22_prospective_benchmarks.py
-  code          74bc64ed20fa06ae1c80bae427f5485ca4d26023510706bedd881cbae998ca5e  experiments/run_gen1_evidence_lock.py
+  code          ca1a1b7ea2dd13a8f8a8de3c287839a009bceb0ad5241ca3c702f64fa581bfb9  experiments/make_gen1_figures.py
+  code          2bc649211211841a802fed93d1763d65445d27e0fe389130b89dbeb1c1f09b21  experiments/make_release_bundle.py
+  code          18cf1ba27a7351907289038379f75aada2d0d4c19f7132b3561d5944bfc11411  experiments/run_gen1_evidence_lock.py
   code          a0801d4d2a91259b53e67c4705da0ccde7c822b73b9670cec9be1919614a0085  experiments/run_stage23_2h_confirmation.py
   code          ce43d831b0c7585a226a61c340c95660fa14e67ab2ea0fa3714d822c64e8b7f7  experiments/run_stage23_learnability_gate.py
   code          f04743532ef66cca47eb461cc4fdf304b53e0fbf113567ae3e7218f13b7b4ecc  experiments/run_stage24_gen1_tool.py
@@ -68,6 +71,7 @@ has one identity on every platform. The ship plan therefore carries `59f22e9a...
   verdicts      48aa2a8aa4ffad2fcd7965cddac2450e0c4b8f3222873e7ea2affd1a7f4a2bb5  results/stage26_handoff_to_evidence_lock.json
   tool          4ec35e3862c592ff1c25bf390dd00ba3d0203777f0585963153491b048fabae3  src/cellfate/gen1_cli.py
   tool          6f7c84a2ab8beb14d64728f0241dcaee1bc39ba0abb1f879e52aca2410cf2944  src/cellfate/gen1_predictor.py
+  code          1ca2450d1d58de9f0f7d5e60b8e7a4213df812aeebe25d272799d7c2461abe8b  tests/test_ci_portability.py
   code          004a48be15d1766a5e4bbb182c3ea3093e2ef069f614660d2a960c082c3d032b  tests/test_gen1_evidence_lock.py
   code          7b9a70e8b979e066b391548ffa59560d1e805e6866874c0f6e95114d8076e43c  tests/test_gen1_predictor.py
   code          7209b237c011ef8fa1498a5f046d204fbfa2600d63ce2cfefe326b5acf871223  tests/test_stage23_2h_confirmation.py
