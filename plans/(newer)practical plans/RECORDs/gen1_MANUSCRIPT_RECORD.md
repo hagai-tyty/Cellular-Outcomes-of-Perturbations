@@ -15,7 +15,7 @@ mechanically and has been shown to do so.
 ## Inputs
 - `results/gen1_handoff_to_manuscript.json` — `GEN1_CLAIMS_LOCKED`
 - evidence digest `06250a75fcb80b07e129714518765cf34e142cc51693357d1df606120d64c076`
-- claim digest `177e233c53396a7c6149d665e8ed0180ffe1cb54a53e5e8dedc3e1cb1be17858` (was `23ea00b8...` when this stage first ran)
+- claim digest `539a05abc27bfdb9f5ceb44eb7c3daac13f81c1354e519b918f36eaf56747f64` (was `23ea00b8...` when this stage first ran)
 
 ## Files added
 - `plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md`
@@ -38,7 +38,7 @@ checked, and again after.
 
   package digest   0ae9e46a74da6ab0d057408f5b63442ddaf4ae891cfff46b883217e4ef36e1b9
   evidence digest  06250a75fcb80b07e129714518765cf34e142cc51693357d1df606120d64c076
-  claim digest     177e233c53396a7c6149d665e8ed0180ffe1cb54a53e5e8dedc3e1cb1be17858
+  claim digest     539a05abc27bfdb9f5ceb44eb7c3daac13f81c1354e519b918f36eaf56747f64
 
   MS-A  both locks verify              6 checks
   MS-C  compliance                     10 checks, 0 forbidden hits

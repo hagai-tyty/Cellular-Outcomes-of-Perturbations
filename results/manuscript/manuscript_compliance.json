@@ -32,6 +32,6 @@
     "every number traces to a locked artifact": true
   },
   "all_passed": true,
-  "runtime_seconds": 0.039,
+  "runtime_seconds": 0.033,
   "module_sha256": "f667832b9a7809137a288a5bc90850167fb4cbdc01925ffa66b64feb150c1767"
 }

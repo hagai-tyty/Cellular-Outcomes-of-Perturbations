@@ -62,15 +62,26 @@ def test_the_checker_refuses_a_broken_copy():
 
 
 def test_a_planted_forbidden_claim_is_caught_end_to_end(mod):
-    """Directly, not by reading a JSON that says so."""
+    """Directly, not by reading a JSON that says so.
+
+    Scans through the same reference partition the gate uses. Scanning the raw document instead
+    made this contract test a different document than the gate does, and the cited paper titles —
+    third-party text containing the word `cancer` — failed it. Third time this project has learned
+    that a check must read exactly what the thing it is checking reads.
+    """
     import run_gen1_claim_lock as CL
     full = CL.combined_patterns()
+
+    def scan(doc: str) -> list:
+        prose, _titles, _problems = mod._partition_references(doc)
+        return CL.scan(prose, full)
+
     clean = MANUSCRIPT.read_text(encoding="utf-8")
-    assert CL.scan(clean, full) == []
+    assert scan(clean) == []
     for planted in ("The model generalises to new treatments.",
                     "This supports clinical decision-making.",
                     "Independently replicated in an external cohort."):
-        assert CL.scan(clean + "\n\n" + planted + "\n", full), planted
+        assert scan(clean + "\n\n" + planted + "\n"), planted
 
 
 def test_the_controls_never_modify_the_manuscript(mod):

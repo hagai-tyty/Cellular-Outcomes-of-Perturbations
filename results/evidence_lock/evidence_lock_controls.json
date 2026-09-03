@@ -36,6 +36,6 @@
     "MISSING is detected and names the file": true
   },
   "all_passed": true,
-  "runtime_seconds": 0.962,
+  "runtime_seconds": 0.995,
   "module_sha256": "c4e9278ad51a05de0ca03384a5462b48e186c4eb33da9ba23f4da2f529b553bc"
 }

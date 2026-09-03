@@ -1,12 +1,12 @@
 {
-  "package_digest": "de8ae3749aca12946d3bb7c880b54f6eb8d2f542340609ce979d69100ea46638",
+  "package_digest": "bc60b542b33cfbc46c44dcf60124541033241eb19be91d9198b6e042b91fa39e",
   "digest_definition": "SHA-256 over 'path  canonical-lf-sha256' lines, sorted by path",
   "covers": {
-    "plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md": "91c8b4f85a824ee038dbf916807106d097b4d5b942667b11f042bd244c73724d",
+    "plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md": "40967f2d9f55355c04c6373bdb0ed1dcf8ec1cc7ddff9b2fc37ead33d8fea2ec",
     "experiments/run_gen1_manuscript.py": "7b906b785c815f8e323b813e585218c91926b33e5b071850a25f415672885bf2",
-    "tests/test_gen1_manuscript.py": "b0392d4fca2dd96a3146161c74c3c56279ac46d33abed66bd032c32e1800f63e",
-    "results/manuscript/MANUSCRIPT.md": "d85414b3394c78082d59737b99c6fd47518a7c53e6643357713a038a9e1a2eb8",
-    "results/manuscript/REPRODUCIBILITY.md": "3aeef82fb7542d65b6ff712d71638eada2855ea998b4384a5f9027144850b3aa",
+    "tests/test_gen1_manuscript.py": "d29517af7df3bcf43b47e1a96834c405fb3f90d18b5ddd963a23d9a7e1d537f3",
+    "results/manuscript/MANUSCRIPT.md": "daef77dcaa990458b37ce7ef6ac7fcd8aedbfda4a1d7903ad457f4938421cb0f",
+    "results/manuscript/REPRODUCIBILITY.md": "002b87d951bf564839f76b814f2fb1767d2f09e372cec79879d6bc15231abf31",
     "results/manuscript/SUBMISSION.md": "906dd20576cdd9d1a3ee550c4d60ef9e13a1c941b45c1a8195e04f6142aff433",
     "results/manuscript/figures/figure_1_design.svg": "edfd5b87d6a5630672252c94aec25f8370bc0ccf5cc48254311b458c16c35d7e",
     "results/manuscript/figures/figure_2_primary.svg": "e2a13d883068725ab86e411bbf868647adde21b9b8e5d82a78e0f3dacc938d44",

@@ -16,6 +16,6 @@
     "the real manuscript passes all four": true
   },
   "all_passed": true,
-  "runtime_seconds": 0.034,
+  "runtime_seconds": 0.021,
   "module_sha256": "f667832b9a7809137a288a5bc90850167fb4cbdc01925ffa66b64feb150c1767"
 }

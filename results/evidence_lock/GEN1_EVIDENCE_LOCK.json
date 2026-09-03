@@ -63,7 +63,7 @@
       "Stage 26 handed this lock a KNOWN_TREATMENT_ONLY_SCOPED_LIMIT": true
     },
     "all_passed": true,
-    "runtime_seconds": 0.114
+    "runtime_seconds": 0.106
   },
   "negative_controls": {
     "INTACT reports clean": true,
@@ -114,6 +114,6 @@
   },
   "grants_no_claim": "Locking fixes what the existing claims are made of. It grants no new claim and reopens no earlier stage.",
   "next": "GEN-1 CLAIM LOCK",
-  "runtime_seconds": 10.07,
+  "runtime_seconds": 8.333,
   "module_sha256": "c4e9278ad51a05de0ca03384a5462b48e186c4eb33da9ba23f4da2f529b553bc"
 }
