@@ -1,6 +1,24 @@
-# Pinned versions for reproducibility (the stack CellFate-Rx was developed and
-# tested against; 171 tests pass, ruff clean). pyproject.toml holds the loose
-# floors used for `pip install -e .`; this file locks exact versions.
+# Pinned versions for the EARLIER reprogramming line. pyproject.toml holds the loose
+# floors used for `pip install -e .`; this file pins exact versions.
+#
+# ============================================================================
+# NOT AUTHORITATIVE FOR GENERATION 1. Use `environment_lock.txt` instead.
+#
+# Measured divergence between this file and the interpreter that actually
+# produced the Generation-1 locked results:
+#
+#     scikit-learn   here 1.8.0      used 1.9.0     <- fits the models
+#     numpy          here 2.4.4      used 2.4.6
+#     pandas         here 3.0.2      used 3.0.3
+#     hydra-core     here 1.3.3      used 1.3.4
+#     ruff           here 0.15.20    used 0.16.0
+#     torch          here 2.12.1     used 2.5.1+cu121   (unused by Gen-1)
+#
+# Installing from this file therefore gives a DIFFERENT scikit-learn than the
+# one that fitted the shipped model. The pins are left as they stand because
+# they may be accurate for the earlier line's results, and rewriting them
+# would misdescribe that work; environment_lock.txt is the Generation-1 record.
+# ============================================================================
 #
 # Core runtime (needed for build -> train -> serve -> evaluate):
 numpy==2.4.4
