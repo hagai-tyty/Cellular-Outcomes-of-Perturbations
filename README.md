@@ -32,10 +32,11 @@ claimed.
 ```
 
 **What was measured.** In WM989 (GSE279162), a barcoded population was split across six observed
-experimental conditions — Acid, Cisplatin, CoCl2, Dabrafenib, Doxorubicin, Trametinib. Of the clones
-that experiment recovered, 1,401 carry a pretreatment profile and are therefore analysable
-prospectively; those are the clones used here. Under a test preregistered in full, a frozen state-by-condition interaction model improves clone-specific
-ordering of those conditions over a non-interactive additive model:
+experimental conditions — Acid, Cisplatin, CoCl2, Dabrafenib, Doxorubicin, Trametinib. Of the
+clones that experiment recovered, 1,401 carry a pretreatment profile and are therefore analysable
+prospectively; those are the clones used here. Under a test preregistered in full, a frozen
+state-by-condition interaction model improves clone-specific ordering of those conditions over a
+non-interactive additive model:
 
 ```text
   delta_RANK   +0.051605   CI95 [+0.037197, +0.065571]

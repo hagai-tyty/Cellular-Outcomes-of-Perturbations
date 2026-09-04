@@ -679,3 +679,29 @@ most people will actually read had not.
   claim     a5a92ad356a571fb30aa26254745bf70d445c9496a79b569388832aa924d5366
   package   db2c8aa7bd83dd770a6d6a60f57de03d3b651fbdcc942b6dd76be73ef8192e6a
 ```
+
+### The same correction had not reached the abstract that gets submitted
+
+Sweeping for the corrected sentence rather than for digests found a third copy. `SUBMISSION.md`
+carries an "Abstract as submitted" block — the text that is actually pasted into a preprint server
+or a journal's submission form — and it still read:
+
+> in which 1,401 barcoded clones were split and exposed to six observed experimental conditions
+
+That is the pre-correction wording. The manuscript had been fixed; its submission copy had not. Of
+the three places this sentence lived, the correction had reached one.
+
+The submitted abstract is now regenerated from the manuscript's own abstract, and a check requires
+them to be identical after whitespace normalisation, so wrapping cannot hide a divergence. Proven by
+restoring the old wording: the stage refuses, and putting it back returns the package digest to the
+identical value.
+
+This is the same failure as the README, one step further along: a correction applied to the primary
+document and not to its copies. Both copies are now checked against the primary rather than
+maintained by hand.
+
+```text
+  evidence  6e0c805592d515214fe8795d852b01c7778680762c9deae15d601faa0189e081
+  claim     a5a92ad356a571fb30aa26254745bf70d445c9496a79b569388832aa924d5366
+  package   9ff5419237d78c67b363f7a59f38db0b398e6c76b39b5ec049438492fdc7fac6
+```

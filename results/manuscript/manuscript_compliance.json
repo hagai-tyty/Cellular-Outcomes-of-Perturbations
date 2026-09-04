@@ -29,9 +29,10 @@
     "the point estimate for p appears nowhere": true,
     "replication is stated as Generation 2": true,
     "both digests are quoted": true,
+    "the abstract in the submission pack is the manuscript abstract": true,
     "the README quotes the current evidence and claim digests": true,
     "every number traces to a locked artifact": true
   },
   "all_passed": true,
-  "module_sha256": "94ea174ff8f983c72fdd5fa3ad51fb1a3bcf6f3df86fa93edf4c919cd545ee48"
+  "module_sha256": "98120ac20f158c84d50670a1d762c8c33b87de8956f6fbc546c95af15151db96"
 }

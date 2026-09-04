@@ -48,6 +48,7 @@ CLAIM_LOCK = RESULTS / "claim_lock" / "GEN1_CLAIM_LOCK.json"
 MANUSCRIPT = OUT / "MANUSCRIPT.md"
 REPRO = OUT / "REPRODUCIBILITY.md"
 README = ROOT / "README.md"
+SUBMIT = OUT / "SUBMISSION.md"
 COMPLIANCE_JSON = OUT / "manuscript_compliance.json"
 CONTROLS_JSON = OUT / "manuscript_controls.json"
 VERDICT_JSON = OUT / "GEN1_MANUSCRIPT.json"
@@ -161,6 +162,29 @@ def _numbers() -> list[tuple[str, str, str]]:
     ]
 
 
+
+def _abstract_of(text: str) -> str:
+    """The manuscript's abstract, whitespace-normalised so line wrapping cannot matter."""
+    m = re.search(r"## Abstract\n\n(.*?)\n\n## ", text, re.S)
+    return re.sub(r"\s+", " ", m.group(1)).strip() if m else ""
+
+
+def _submitted_abstract(text: str) -> str:
+    """The blockquoted abstract in the submission pack, unquoted and whitespace-normalised.
+
+    The submission pack carries the abstract that is actually pasted into a preprint server or a
+    journal form. It had silently kept the pre-correction wording -- it still said the source
+    experiment split 1,401 clones, which describes our analysable subset and not their design --
+    after the manuscript itself was fixed. Two copies of one paragraph diverge unless something
+    compares them.
+    """
+    m = re.search(r"## 2\. Abstract as submitted\n\n((?:> ?.*\n)+)", text)
+    if not m:
+        return ""
+    joined = " ".join(ln[1:].strip() for ln in m.group(1).splitlines())
+    return re.sub(r"\s+", " ", joined).strip()
+
+
 def _partition_references(text: str) -> tuple[str, list[str], list[str]]:
     """Split a manuscript into (text to scan, exempt title lines, structural problems).
 
@@ -223,6 +247,7 @@ def compliance() -> dict:
     text = MANUSCRIPT.read_text(encoding="utf-8")
     repro = REPRO.read_text(encoding="utf-8") if REPRO.exists() else ""
     readme = README.read_text(encoding="utf-8") if README.exists() else ""
+    submission = SUBMIT.read_text(encoding="utf-8") if SUBMIT.exists() else ""
     full = CL.combined_patterns()
     handoff = _j(CLAIM_HANDOFF)
 
@@ -267,6 +292,10 @@ def compliance() -> dict:
         # nothing noticed -- it still quoted the first evidence and claim digests of the
         # release. It quotes those two and points at the package digest rather than inlining
         # it, which is what keeps it coverable without a cycle.
+        # The submission pack holds a second copy of the abstract -- the one pasted into a
+        # preprint server. It kept the pre-correction wording after the manuscript was fixed.
+        "the abstract in the submission pack is the manuscript abstract":
+            _submitted_abstract(submission) == _abstract_of(text) != "",
         "the README quotes the current evidence and claim digests":
             (handoff["evidence_lock_digest"] in readme and handoff["claim_digest"] in readme),
         "every number traces to a locked artifact": not untraceable,

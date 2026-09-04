@@ -50,23 +50,28 @@ is not a Generation-1 gate.
 
 > Whether a cell's molecular state before a perturbation predicts what happens to it afterwards is
 > usually asked retrospectively, after outcome and state have been measured in the same cells. We
-> ask it prospectively at clone level, in one BRAF-V600E melanoma cell line (WM989, GSE279162) in
-> which 1,401 barcoded clones were split and exposed to six observed experimental conditions: Acid,
-> Cisplatin, CoCl2, Dabrafenib, Doxorubicin and Trametinib.
+> ask it prospectively at clone level, in one BRAF-V600E melanoma cell line (WM989, GSE279162), in
+> which a barcoded population was split across six observed experimental conditions: Acid,
+> Cisplatin, CoCl2, Dabrafenib, Doxorubicin and Trametinib. Of the clones that experiment
+> recovered, 1,401 carry a pretreatment profile and are therefore analysable prospectively; those
+> are the clones used here.
 >
 > Within this system, pretreatment gene expression contains condition-specific information about
-> future clonal detection beyond condition identity and captured pretreatment clone abundance, under
-> clone-held-out evaluation frozen before any result existed. Under a test preregistered in full,
-> a frozen state-by-condition interaction model improves clone-specific ordering of the six
-> conditions over a non-interactive additive model: +0.051605 in equal-clone-weighted within-clone
-> AUROC, 95% CI [+0.037197, +0.065571], with 0 of 1000 full-refit permutation draws reaching the
-> observed value (p < 0.001).
+> future clonal detection beyond condition identity and captured pretreatment clone abundance,
+> under clone-held-out evaluation frozen before any result existed. Under a test preregistered in
+> full — the metric, population, weighting, comparator, null and verdict rule all fixed before the
+> numbers existed — a frozen state-by-condition interaction model improves clone-specific ordering
+> of the six conditions over a non-interactive additive model: +0.051605 in equal-clone-weighted
+> within-clone AUROC, 95% CI [+0.037197, +0.065571], with 0 of 1000 full-refit permutation draws
+> reaching the observed value (p < 0.001).
 >
-> The outcome is an observed post-treatment clone-detection proxy and is not death, sensitivity,
-> resistance or clinical response. The six conditions are the entire supported vocabulary. We make
-> no claim about unseen conditions, other cell lines, or patients, and the model emits no calibrated
-> probability. Independent biological replication has not been performed and is Generation 2 work,
-> not a gate on this result.
+> The outcome is an observed post-treatment clone-detection proxy and is **not death**,
+> sensitivity, resistance or clinical response. The six conditions are the entire supported
+> vocabulary. We make no claim about unseen conditions, other cell lines, or patients, and the
+> model emits no calibrated probability. Independent biological replication has not been performed
+> and is Generation 2 work, not a gate on this result.
+>
+> ---
 
 **KEYWORDS**
 clonal barcoding; lineage tracing; drug resistance; preregistration; reproducibility;
