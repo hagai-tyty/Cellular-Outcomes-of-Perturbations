@@ -47,6 +47,7 @@ CLAIM_LOCK = RESULTS / "claim_lock" / "GEN1_CLAIM_LOCK.json"
 
 MANUSCRIPT = OUT / "MANUSCRIPT.md"
 REPRO = OUT / "REPRODUCIBILITY.md"
+README = ROOT / "README.md"
 COMPLIANCE_JSON = OUT / "manuscript_compliance.json"
 CONTROLS_JSON = OUT / "manuscript_controls.json"
 VERDICT_JSON = OUT / "GEN1_MANUSCRIPT.json"
@@ -221,6 +222,7 @@ def compliance() -> dict:
     t0 = time.perf_counter()
     text = MANUSCRIPT.read_text(encoding="utf-8")
     repro = REPRO.read_text(encoding="utf-8") if REPRO.exists() else ""
+    readme = README.read_text(encoding="utf-8") if README.exists() else ""
     full = CL.combined_patterns()
     handoff = _j(CLAIM_HANDOFF)
 
@@ -261,6 +263,12 @@ def compliance() -> dict:
             "Generation 2" in text and "biological replication" in text,
         "both digests are quoted": (handoff["evidence_lock_digest"] in text
                                     and handoff["claim_digest"] in text),
+        # The README is the front page and it had gone stale across several cascades while
+        # nothing noticed -- it still quoted the first evidence and claim digests of the
+        # release. It quotes those two and points at the package digest rather than inlining
+        # it, which is what keeps it coverable without a cycle.
+        "the README quotes the current evidence and claim digests":
+            (handoff["evidence_lock_digest"] in readme and handoff["claim_digest"] in readme),
         "every number traces to a locked artifact": not untraceable,
     }
     return write_json(COMPLIANCE_JSON, {
@@ -401,6 +409,9 @@ PACKAGE_FILES = [
     # a stated exception rather than an unexamined hole.
     "plans/(newer)practical plans/RECORDs/gen1_EVIDENCE_LOCK_RECORD.md",
     "plans/(newer)practical plans/RECORDs/gen1_CLAIM_LOCK_RECORD.md",
+    # The front page. Same no-cycle rule: it quotes the evidence and claim digests and points
+    # at the package digest file instead of inlining it, so covering it here terminates.
+    "README.md",
 ]
 
 

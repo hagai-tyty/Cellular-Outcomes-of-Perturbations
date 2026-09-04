@@ -26,14 +26,15 @@ claimed.
 ```text
   GEN1_MANUSCRIPT_READY
 
-  evidence lock   e206bfd37c5a93998a773b8bd058eac5e5e144cd2a8ee5d78e9907911a956bc5
-  claim lock      a81ee43b07fae32f9bb45b4a4133de0b1f3979eeda3de7d700a7ca6897affb77
-  package         1e514de4f59570d7a67ed15c4573a12bed6a2250410dc1b1ac58ab9dba732284
+  evidence lock   6e0c805592d515214fe8795d852b01c7778680762c9deae15d601faa0189e081
+  claim lock      a5a92ad356a571fb30aa26254745bf70d445c9496a79b569388832aa924d5366
+  package         results/manuscript/GEN1_PACKAGE_DIGEST.json
 ```
 
-**What was measured.** In WM989 (GSE279162), 1,401 barcoded clones were split across six observed
-experimental conditions — Acid, Cisplatin, CoCl2, Dabrafenib, Doxorubicin, Trametinib. Under a test
-preregistered in full, a frozen state-by-condition interaction model improves clone-specific
+**What was measured.** In WM989 (GSE279162), a barcoded population was split across six observed
+experimental conditions — Acid, Cisplatin, CoCl2, Dabrafenib, Doxorubicin, Trametinib. Of the clones
+that experiment recovered, 1,401 carry a pretreatment profile and are therefore analysable
+prospectively; those are the clones used here. Under a test preregistered in full, a frozen state-by-condition interaction model improves clone-specific
 ordering of those conditions over a non-interactive additive model:
 
 ```text

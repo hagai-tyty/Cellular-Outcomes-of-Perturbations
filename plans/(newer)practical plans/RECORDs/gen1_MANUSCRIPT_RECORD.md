@@ -643,3 +643,39 @@ Separately, and left alone deliberately: seven evidence-locked JSONs from the fr
 stages would churn the tree. They are never re-run — the cascade touches only the three Gen-1 lock
 stages — and rewriting a frozen artifact to strip a field is exactly what the no-rewrite rule
 forbids. The count is stated here so the exposure is known rather than discovered later.
+
+### The front page was stale, and nothing was checking it
+
+A sweep of every tracked document for superseded digests found two that assert current state rather
+than history:
+
+`README.md` still displayed the release's **first** evidence, claim and package digests — stale
+across several cascades. A reader following the front page would have been given three digests that
+verify against nothing.
+
+Worse, the same paragraph still carried the uncorrected sentence: *"1,401 barcoded clones were split
+across six observed experimental conditions."* That is the misstatement about Schaff et al.'s
+experiment that was corrected in the manuscript during the earlier verification pass — it attributes
+our analysable subset to their experimental design. The correction reached `MANUSCRIPT.md` and never
+reached the README. It now matches the manuscript: a barcoded population was split across the six
+conditions, and of the clones that experiment recovered, 1,401 carry a pretreatment profile.
+
+The README could not simply be added to the package digest, because it inlined the package digest —
+a file covered by a digest cannot quote that digest. It now quotes the evidence and claim digests
+and points at `results/manuscript/GEN1_PACKAGE_DIGEST.json` for the third, which is the same
+no-cycle rule the two upstream records already follow. It is covered by the package digest, and a
+new MS-C/MS-D check requires it to quote both current digests. Verified by planting a wrong digest:
+the stage refuses, and restoring it returns the package digest to the identical value.
+
+`GEN1_MANUSCRIPT_PACKAGE_V1.md` pinned the same two stale digests in its Entry block. Re-pinned,
+with Amendment V1.1 recording what V1 said.
+
+Both were found by sweeping for stale digests rather than by any check, which is why the check now
+exists. The manuscript document had been protected this way since it was written; the front page
+most people will actually read had not.
+
+```text
+  evidence  6e0c805592d515214fe8795d852b01c7778680762c9deae15d601faa0189e081
+  claim     a5a92ad356a571fb30aa26254745bf70d445c9496a79b569388832aa924d5366
+  package   db2c8aa7bd83dd770a6d6a60f57de03d3b651fbdcc942b6dd76be73ef8192e6a
+```

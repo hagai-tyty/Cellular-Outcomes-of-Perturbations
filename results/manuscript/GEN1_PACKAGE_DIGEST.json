@@ -1,9 +1,9 @@
 {
-  "package_digest": "28ecf262b97c6dd460011b6be4c5c43b30fe9109e114821ad7134d84eb088396",
+  "package_digest": "db2c8aa7bd83dd770a6d6a60f57de03d3b651fbdcc942b6dd76be73ef8192e6a",
   "digest_definition": "SHA-256 over 'path  canonical-lf-sha256' lines, sorted by path",
   "covers": {
-    "plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md": "149e070002f954bd79340d1366911a8f3d117a19f789160808f8bebffac78802",
-    "experiments/run_gen1_manuscript.py": "b21126fbdbca644e797834857074884106745274b660473e2e2be30bdd6f98af",
+    "plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md": "fb51834ce9a0eb8b8896ed1fa39a5db44f41cd79f57d89c8e766d12bfe02981d",
+    "experiments/run_gen1_manuscript.py": "059b3bf15df15e0b666d12e91af283964e8515d1490583386da8186a4d21e31e",
     "tests/test_gen1_manuscript.py": "c5bd941701cb17ccb2b2b8adba3d291d484d1f8aca65b332e634529835129640",
     "results/manuscript/MANUSCRIPT.md": "d647823ab469be1158d6e02b5077ac92a4cd94713777893bd092767e4bece18b",
     "results/manuscript/REPRODUCIBILITY.md": "9b263d91b01780ba2389308d6b6cc64db7baa8d7dc9546bb1a067f1845409898",
@@ -13,8 +13,9 @@
     "results/manuscript/figures/figure_3_robustness.svg": "5d9914a4d43e00d67a2e0b319e2fb1e7fbc22626379724cabaee853518fbe01e",
     "results/manuscript/figures/figure_source_data.json": "3664698efec05f36c461b53220c3aadf4d5ae027079821e36930fc7a42da273a",
     "plans/(newer)practical plans/RECORDs/gen1_EVIDENCE_LOCK_RECORD.md": "db8d668fa7184bcdaa91449c6ae1bc72c3aae7423a1b4df3f86ee27cd05a95d8",
-    "plans/(newer)practical plans/RECORDs/gen1_CLAIM_LOCK_RECORD.md": "5a962f4295a439241454fd9e34ce603673dc64fa3afcaf8f282f1564b2de8691"
+    "plans/(newer)practical plans/RECORDs/gen1_CLAIM_LOCK_RECORD.md": "5a962f4295a439241454fd9e34ce603673dc64fa3afcaf8f282f1564b2de8691",
+    "README.md": "c427a1c014952f27735c4d1a0820e9336382bbab7cd81fb70e1b5b1edae59b17"
   },
   "verify": "python experiments/run_gen1_manuscript.py --verify",
-  "module_sha256": "78170ecca62c75bb62c0283dc02b74f2de38169350ffd76a01b7e90fb7908bba"
+  "module_sha256": "94ea174ff8f983c72fdd5fa3ad51fb1a3bcf6f3df86fa93edf4c919cd545ee48"
 }
