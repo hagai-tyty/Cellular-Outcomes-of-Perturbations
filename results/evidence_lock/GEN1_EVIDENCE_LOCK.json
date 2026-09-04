@@ -1,7 +1,7 @@
 {
   "stage": "GEN-1 EVIDENCE LOCK",
   "verdict": "GEN1_EVIDENCE_LOCKED",
-  "lock_digest": "de6429c8d7075249b03b508000ec14eafcfe048101f6923ce32541a9394e6c95",
+  "lock_digest": "213593c3b71e7db7064a5bb704288d3d51bddf725d5002aeefaa5b936c0e53b8",
   "substages": {
     "EL-A_inventory": true,
     "EL-B_chain_of_custody": true,
@@ -15,7 +15,7 @@
   "plan_canonical_lf_sha256": "661cc2bf927cf070d1fb78f3bb936690303634b1d8de555a9a3bf29caa760390",
   "ship_plan_digest": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48",
   "ship_plan_digest_holds": true,
-  "n_artifacts": 62,
+  "n_artifacts": 63,
   "by_class": {
     "benchmark": 3,
     "predictions": 3,
@@ -25,7 +25,7 @@
     "supporting_role_A": 5,
     "protocol": 9,
     "records": 8,
-    "code": 17
+    "code": 18
   },
   "chain_of_custody": {
     "stage": "EL-B",
@@ -73,7 +73,7 @@
     "clean": true,
     "moved": [],
     "missing": [],
-    "n_checked": 62
+    "n_checked": 63
   },
   "headline_numbers": {
     "eligible_clones": 892,
@@ -113,5 +113,5 @@
   },
   "grants_no_claim": "Locking fixes what the existing claims are made of. It grants no new claim and reopens no earlier stage.",
   "next": "GEN-1 CLAIM LOCK",
-  "module_sha256": "ef410c39f3f9a097a714da301a18306e2b6600ba1dc71660fef233431733de3b"
+  "module_sha256": "9f8bd13e2e7d683bb8165355ad3b096747a9c201e8b1873d0e6c1e5a4accf5d2"
 }

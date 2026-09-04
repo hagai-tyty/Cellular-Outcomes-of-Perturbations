@@ -327,3 +327,61 @@ def test_a_passing_stage_still_verifies_clean():
         mod = __import__(name)
         r = mod.run_verify()
         assert r["clean"] is True, f"{name} --verify is not clean on the committed tree: {r}"
+
+
+# ================================================================================================ #
+# The cascade tool, and the documents it is responsible for
+# ================================================================================================ #
+def test_every_quoted_digest_is_current():
+    """A document that quotes a digest must quote the live one.
+
+    `GEN1_MANUSCRIPT_PACKAGE_V1.md` pinned both digests in its Entry block and nothing checked it,
+    so it sat stale through several cascades while every lock verified clean -- the package digest
+    hashes that file, but hashing it only proves it has not changed, not that what it says is true.
+    """
+    import sys
+    sys.path.insert(0, str(ROOT / "experiments"))
+    import cascade_gen1 as C
+
+    evidence, claim, _ = C.digests()
+    stale = []
+    for p in C.EVIDENCE_ONLY:
+        if evidence not in p.read_text(encoding="utf-8"):
+            stale.append(f"{p.name}: evidence digest")
+    for p in C.BOTH:
+        text = p.read_text(encoding="utf-8")
+        if evidence not in text:
+            stale.append(f"{p.name}: evidence digest")
+        if claim not in text:
+            stale.append(f"{p.name}: claim digest")
+    assert not stale, ("documents quoting a superseded digest: " + "; ".join(stale) +
+                       " -- run python experiments/cascade_gen1.py")
+
+
+def test_no_document_quotes_a_digest_without_being_registered():
+    """A new document that starts quoting digests must be added to the cascade tool.
+
+    Otherwise it is maintained by hand, which is how every stale pin in this project happened. The
+    RECORDs are excluded: they quote superseded digests on purpose, as history.
+    """
+    import subprocess
+    import sys
+    sys.path.insert(0, str(ROOT / "experiments"))
+    import cascade_gen1 as C
+
+    registered = {p.resolve() for p in C.EVIDENCE_ONLY + C.BOTH}
+    tracked = subprocess.run(["git", "ls-files", "*.md"], cwd=ROOT,
+                             capture_output=True, text=True).stdout.split()
+    unregistered = []
+    for rel in tracked:
+        if "RECORDs/" in rel:
+            continue
+        p = ROOT / rel
+        if not p.is_file() or p.resolve() in registered:
+            continue
+        text = p.read_text(encoding="utf-8", errors="replace")
+        if C.EVIDENCE_PIN.search(text) or C.CLAIM_PIN.search(text):
+            unregistered.append(rel)
+    assert not unregistered, (
+        "these quote a lock digest but are not re-pinned by experiments/cascade_gen1.py: "
+        + "; ".join(unregistered))

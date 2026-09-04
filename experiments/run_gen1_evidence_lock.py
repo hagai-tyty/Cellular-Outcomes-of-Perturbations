@@ -211,6 +211,7 @@ INVENTORY: dict[str, list[str]] = {
         "experiments/run_gen1_evidence_lock.py",
         "experiments/make_gen1_figures.py",
         "experiments/make_release_bundle.py",
+        "experiments/cascade_gen1.py",
         "experiments/export_gen1_source_data.py",
         "tests/test_gen1_predictor.py",
         "tests/test_stage23_2h_confirmation.py",

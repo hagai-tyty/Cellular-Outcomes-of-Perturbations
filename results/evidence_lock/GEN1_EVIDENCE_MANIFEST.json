@@ -1,8 +1,8 @@
 {
   "stage": "EL-A",
-  "lock_digest": "de6429c8d7075249b03b508000ec14eafcfe048101f6923ce32541a9394e6c95",
+  "lock_digest": "213593c3b71e7db7064a5bb704288d3d51bddf725d5002aeefaa5b936c0e53b8",
   "digest_definition": "SHA-256 over 'path  sha256' lines, sorted by path, LF-joined",
-  "n_artifacts": 62,
+  "n_artifacts": 63,
   "by_class": {
     "benchmark": 3,
     "predictions": 3,
@@ -12,7 +12,7 @@
     "supporting_role_A": 5,
     "protocol": 9,
     "records": 8,
-    "code": 17
+    "code": 18
   },
   "artifacts": {
     "results/stage22_wm989_clones.csv": {
@@ -425,9 +425,9 @@
     },
     "experiments/run_gen1_evidence_lock.py": {
       "class": "code",
-      "sha256": "b72fef6963603fcad579613b724a237646cf6249c4e41c60981903334c1ef1d1",
+      "sha256": "1f8a8f88a285cfd686603fe6b3e683cfd8ed604d6b8004390c89aaed439b5e46",
       "hashed": "canonical-lf",
-      "bytes": 41069,
+      "bytes": 41108,
       "git_tracked": true,
       "git_ignored": false
     },
@@ -444,6 +444,14 @@
       "sha256": "60386be794a908fbc52b82a5726f939074b87af08d133d27ca3119cc99637830",
       "hashed": "canonical-lf",
       "bytes": 12988,
+      "git_tracked": true,
+      "git_ignored": false
+    },
+    "experiments/cascade_gen1.py": {
+      "class": "code",
+      "sha256": "dd567397068dd7d005748a17d0aee6c96b63fc48db81d8a8788305092877438c",
+      "hashed": "canonical-lf",
+      "bytes": 8301,
       "git_tracked": true,
       "git_ignored": false
     },
@@ -552,5 +560,5 @@
     "every committed artifact hashes the same from a fresh clone": true
   },
   "all_passed": true,
-  "module_sha256": "ef410c39f3f9a097a714da301a18306e2b6600ba1dc71660fef233431733de3b"
+  "module_sha256": "9f8bd13e2e7d683bb8165355ad3b096747a9c201e8b1873d0e6c1e5a4accf5d2"
 }

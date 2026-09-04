@@ -837,3 +837,39 @@ Corrected digests, from a tree that does contain the fix:
 The general lesson is the one the bisect already taught, in a second form: a background process that
 writes to the repository does not merely produce misleading readings, it can silently undo work that
 is then committed as done. Nothing that mutates the tree should run unattended alongside editing.
+
+## The cascade became a script, and it found a stale pin on its first run
+
+The release sequence was being carried out by hand: run the exporter, run three locks in a forced
+order, and re-pin four documents that quote the digests those locks produce. Re-pinning by hand is
+the same failure this pass spent its time removing — a fact maintained beside the primary rather
+than checked against it — and it had already cost one refused cascade when the README was missed.
+
+`experiments/cascade_gen1.py` now does it. The ordering is forced by what each layer hashes, and
+the docstring says so rather than leaving it to be rediscovered: the evidence lock hashes its own
+module and the exported source data; the claim lock hashes the plan that pins the evidence digest;
+the manuscript hashes the documents that quote both. Out of order, a lock refuses against a digest
+that has already moved.
+
+Two things it deliberately does not do. It does not run the exporter — that is slow, it is the only
+step that touches the derived source data, and regenerating it should be a decision rather than a
+side effect. It does not build the bundle — the bundle records the commit it was cut from and
+refuses a dirty tree, so the sequence is cascade, commit, then build.
+
+**On its first `--check` it reported `PINS_STALE`.** `GEN1_MANUSCRIPT_PACKAGE_V1.md` pins both
+digests in its Entry block, and had been quoting superseded values for several cascades. Every lock
+verified clean throughout, because the package digest hashes that file — and hashing a file proves
+only that it has not changed, never that what it says is true. The scratch helper used during this
+pass did not know about the document at all; that is precisely why the helper had to stop being a
+scratch helper.
+
+Two contracts now hold it: every document the tool is responsible for must quote the live digests,
+and any tracked non-record `.md` that quotes a lock digest must be registered with the tool. The
+second one is the important half — it catches the next document that starts quoting a digest
+without being added, which is how every stale pin here happened.
+
+```text
+  evidence  213593c3b71e7db7064a5bb704288d3d51bddf725d5002aeefaa5b936c0e53b8
+  claim     a5b014a08c898d6f8aa2a627e2bb8f2f6c78efcc64c7d83b807d8a53b5fce2f9
+  package   8f9394cfa719f25a7a274ca98ecf1bd490e8c215058e1e9608aef7778fe7f28d
+```
