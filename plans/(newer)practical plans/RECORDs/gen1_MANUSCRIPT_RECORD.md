@@ -752,3 +752,14 @@ and any number either of them quotes against the locked artifacts.
 ```text
   package   4ae3404f987b3dee5a1b91dacfe78dc5e90a77172908d17954f0fcdb6b3eb362
 ```
+
+One more instance of the same shape, found while checking the documents against each other: the
+Zenodo notes gave a reviewer all three verify commands, but `REPRODUCIBILITY.md` — the document a
+stranger is told to follow first — listed only two. Anyone following it never checked the package
+layer at all. The third command is now documented there, with its digest read from
+`GEN1_PACKAGE_DIGEST.json` rather than inlined, because this document is one of the files that
+digest covers.
+
+```text
+  package   67db3051099a77b9ba822c35dde6bc55f31c4eb46ddfb463b58917c76e12db3d
+```

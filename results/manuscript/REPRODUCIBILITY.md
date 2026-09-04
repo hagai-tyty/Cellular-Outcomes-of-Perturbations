@@ -11,17 +11,24 @@ Before reproducing anything, confirm the artifacts are the ones the manuscript w
 ```text
   python experiments/run_gen1_evidence_lock.py --verify
   python experiments/run_gen1_claim_lock.py --verify
+  python experiments/run_gen1_manuscript.py --verify
 ```
 
 ```text
   evidence lock digest   6e0c805592d515214fe8795d852b01c7778680762c9deae15d601faa0189e081
   claim lock digest      a5a92ad356a571fb30aa26254745bf70d445c9496a79b569388832aa924d5366
+  package digest         results/manuscript/GEN1_PACKAGE_DIGEST.json
 ```
 
-`EVIDENCE_INTACT` and `CLAIMS_INTACT` mean two things at once: every hashed file is byte-for-byte
-what was locked, **and** the stage that produced it recorded a passing verdict. The two are checked
-separately because they came apart once — a refused run still writes its outputs, so its bytes match
-what was recorded, and a verifier that only re-hashed them reported clean over a refused package.
+The third command checks the manuscript and this document itself. Its digest is not printed here
+because this file is one of the files it covers — a document cannot quote a digest taken over its
+own bytes without changing it. Read it from the file named above.
+
+`EVIDENCE_INTACT`, `CLAIMS_INTACT` and `PACKAGE_INTACT` mean two things at once: every hashed file
+is byte-for-byte what was locked, **and** the stage that produced it recorded a passing verdict.
+The two are checked separately because they came apart once — a refused run still writes its
+outputs, so its bytes match what was recorded, and a verifier that only re-hashed them reported
+clean over a refused package.
 
 A failure therefore names which of the two it is. `*_MOVED` means a hashed file changed;
 `*_STAGE_REFUSED` means nothing moved but the stage itself refused, so the recorded state is
