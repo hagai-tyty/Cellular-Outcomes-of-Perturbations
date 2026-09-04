@@ -147,9 +147,25 @@ def _members() -> list[str]:
     return sorted(seen)
 
 
-def build() -> int:
+def build(allow_dirty: bool = False) -> int:
     DIST.mkdir(exist_ok=True)
     members = _members()
+
+    commit = _git_commit()
+    if commit.endswith('+dirty') and not allow_dirty:
+        # A bundle built from a dirty tree records a commit that does not describe its own
+        # bytes -- and if that commit is later squashed or rebased away, the archive cites a
+        # commit that no longer exists. That happened once: a bundle was cut mid-session and
+        # the checkpoint commits it named were squashed before the push. On Zenodo the DOI is
+        # immutable, so this has to be caught before the upload, not after.
+        print('REFUSED -- the working tree has uncommitted changes.')
+        print()
+        print('  A published archive records the commit it was cut from. Built dirty, that')
+        print('  reference does not identify the bytes inside the archive, and a later')
+        print('  squash or rebase can remove the commit entirely.')
+        print()
+        print('  Commit first, then build. For a throwaway build: --allow-dirty')
+        return 2
 
     missing = [m for m in GITIGNORED_BUT_REQUIRED if not (ROOT / m).is_file()]
     if missing:
@@ -194,7 +210,7 @@ def build() -> int:
         "compressed_bytes": BUNDLE.stat().st_size,
         "lock_digests": locks,
         "includes_gitignored": list(GITIGNORED_BUT_REQUIRED),
-        "git_commit": _git_commit(),
+        "git_commit": commit,
         "external_data": {
             "GSE279162": "Role B primary. Raw data not redistributed; the derived clone "
                          "pseudobulk cache is included so the null can be re-run.",
@@ -286,8 +302,10 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Build the Generation-1 release bundle")
     ap.add_argument("--check", action="store_true",
                     help="re-verify an existing bundle against its checksums")
+    ap.add_argument("--allow-dirty", action="store_true",
+                    help="build from a tree with uncommitted changes (throwaway builds only; the recorded commit will not describe the archive)")
     a = ap.parse_args(argv)
-    return check() if a.check else build()
+    return check() if a.check else build(allow_dirty=a.allow_dirty)
 
 
 if __name__ == "__main__":

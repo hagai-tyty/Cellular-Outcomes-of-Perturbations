@@ -609,3 +609,37 @@ one adds a second edge: a check that cannot fail is not a check. The manuscript 
 so in its own record, and the verifier built to police it read straight past the verdict and
 reported clean. Everything downstream — CI, the bundle, the reviewer's three commands — inherited
 that blind spot. It was found only because a single file kept dirtying the working tree.
+
+### Follow-up: the bundle cited a commit that no longer existed
+
+Immediately after the push above, the release bundle was checked and found to record
+`git_commit: 9d6745c470942986668c1935b1886ecbf8cec78c+dirty`. Both halves were wrong for a
+published artifact. It was cut from a tree with uncommitted changes, so the commit it names does not
+describe the bytes in the archive; and those checkpoint commits were squashed before the push, so
+the commit does not exist in the repository at all. `git cat-file -e` on it fails.
+
+Nothing downstream caught this. The bundle checker compares the archive against its own manifest and
+was perfectly happy — the archive was internally consistent, it simply carried false provenance.
+
+This had to be fixed before an upload rather than after, because a Zenodo DOI is immutable: an
+archive published with a dangling commit reference stays that way.
+
+`make_release_bundle.py` now refuses to build from a dirty tree, naming both failure modes, with
+`--allow-dirty` for throwaway builds. The correct release order is therefore: cascade, commit, then
+build — the bundle is written to a gitignored directory, so building never dirties the tree it
+records.
+
+The digests in the section above were correct at commit `ff08966`. Adding this guard moved them, as
+any change to a locked file does:
+
+```text
+  evidence  6e0c805592d515214fe8795d852b01c7778680762c9deae15d601faa0189e081
+  claim     a5a92ad356a571fb30aa26254745bf70d445c9496a79b569388832aa924d5366
+  package   28ecf262b97c6dd460011b6be4c5c43b30fe9109e114821ad7134d84eb088396
+```
+
+Separately, and left alone deliberately: seven evidence-locked JSONs from the frozen upstream stages
+(23.2H, 24F, 25, 26) still carry a `runtime_minutes` or `runtime_seconds` field. Re-running those
+stages would churn the tree. They are never re-run — the cascade touches only the three Gen-1 lock
+stages — and rewriting a frozen artifact to strip a field is exactly what the no-rewrite rule
+forbids. The count is stated here so the exposure is known rather than discovered later.

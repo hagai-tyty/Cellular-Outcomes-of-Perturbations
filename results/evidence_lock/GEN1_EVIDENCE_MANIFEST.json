@@ -1,6 +1,6 @@
 {
   "stage": "EL-A",
-  "lock_digest": "79f96dd66fe7a586df585126bc920d9433746e78ca25f7c453e2ed0ab110dfdb",
+  "lock_digest": "6e0c805592d515214fe8795d852b01c7778680762c9deae15d601faa0189e081",
   "digest_definition": "SHA-256 over 'path  sha256' lines, sorted by path, LF-joined",
   "n_artifacts": 62,
   "by_class": {
@@ -441,9 +441,9 @@
     },
     "experiments/make_release_bundle.py": {
       "class": "code",
-      "sha256": "d9ea495dd0a4a07c23788c13d84de6ce4ba75de784275678aa2405818902a1f7",
+      "sha256": "60386be794a908fbc52b82a5726f939074b87af08d133d27ca3119cc99637830",
       "hashed": "canonical-lf",
-      "bytes": 11761,
+      "bytes": 12988,
       "git_tracked": true,
       "git_ignored": false
     },
