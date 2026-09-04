@@ -18,6 +18,7 @@
   "abstract_missing_qualifiers": [],
   "numbers_checked": 17,
   "untraceable_numbers": [],
+  "divergent_secondary_numbers": [],
   "checks": {
     "no forbidden claim appears unnegated in the manuscript prose": true,
     "the reference block is citations only, each with an identifier": true,
@@ -29,10 +30,11 @@
     "the point estimate for p appears nowhere": true,
     "replication is stated as Generation 2": true,
     "both digests are quoted": true,
+    "no secondary document quotes a number that is not the locked value": true,
     "the abstract in the submission pack is the manuscript abstract": true,
     "the README quotes the current evidence and claim digests": true,
     "every number traces to a locked artifact": true
   },
   "all_passed": true,
-  "module_sha256": "98120ac20f158c84d50670a1d762c8c33b87de8956f6fbc546c95af15151db96"
+  "module_sha256": "3fa20a2cabd773ec627dc961283a838841e1a86f0e590e8752c1cc593c30077d"
 }

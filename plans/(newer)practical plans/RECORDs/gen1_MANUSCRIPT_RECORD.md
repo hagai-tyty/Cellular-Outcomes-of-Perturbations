@@ -723,3 +723,32 @@ written down.
 ```text
   package   ed4321ea1ca369e46c9421af8c44ff631b4c6925ed93975baaac6a09a3e782b5
 ```
+
+### Acting on the pattern instead of the instance
+
+Three separate copy-of-a-fact failures in one pass — the README's digests, the submitted abstract's
+wording, the package document's description of verification — is a pattern, not three accidents. The
+common shape: a fact is corrected in the primary document and the copies are maintained by hand.
+
+A sweep of every headline number across all live documents found **no** further divergence, which is
+luck rather than design: nothing was checking. The manuscript is held to a strong contract — it must
+*state* each of the seventeen pinned numbers with the words around it — but that tracer cannot be
+pointed at the README or the submission pack, which quote only a subset.
+
+So they are held to the complementary contract: any number they quote must be a locked value, and
+the `p` floor applies to them exactly as it does to the manuscript. DOIs are stripped before the
+scan, because `10.1016/j.xgen.2026.101191` ends in a six-decimal fragment that is not a number this
+project reports — a detail worth naming, since a checker that flagged it would have been switched
+off within a day.
+
+Both proven by planting a failure: one digit changed in the README's confidence interval refuses,
+and `p = 0.000999` in the submission pack refuses. Restoring each returns the package digest to the
+identical value.
+
+The three secondary documents are now checked against the primary rather than maintained beside it:
+the README against the current digests, the submitted abstract against the manuscript's abstract,
+and any number either of them quotes against the locked artifacts.
+
+```text
+  package   4ae3404f987b3dee5a1b91dacfe78dc5e90a77172908d17954f0fcdb6b3eb362
+```

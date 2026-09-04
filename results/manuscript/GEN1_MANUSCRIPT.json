@@ -35,5 +35,5 @@
   },
   "what_ready_does_not_mean": "GEN1_MANUSCRIPT_READY means the document is consistent with everything locked beneath it. It is NOT a judgement that the science is good, that the writing is clear, or that a reviewer will agree.",
   "next": "PREPRINT / SUBMISSION. Generation 1 is complete.",
-  "module_sha256": "98120ac20f158c84d50670a1d762c8c33b87de8956f6fbc546c95af15151db96"
+  "module_sha256": "3fa20a2cabd773ec627dc961283a838841e1a86f0e590e8752c1cc593c30077d"
 }

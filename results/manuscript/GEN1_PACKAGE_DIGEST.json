@@ -1,9 +1,9 @@
 {
-  "package_digest": "ed4321ea1ca369e46c9421af8c44ff631b4c6925ed93975baaac6a09a3e782b5",
+  "package_digest": "4ae3404f987b3dee5a1b91dacfe78dc5e90a77172908d17954f0fcdb6b3eb362",
   "digest_definition": "SHA-256 over 'path  canonical-lf-sha256' lines, sorted by path",
   "covers": {
     "plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md": "fb51834ce9a0eb8b8896ed1fa39a5db44f41cd79f57d89c8e766d12bfe02981d",
-    "experiments/run_gen1_manuscript.py": "d321f05aa16a0da5881b3f6db258ff2690f63fba4d515c311a23ceaf42edb004",
+    "experiments/run_gen1_manuscript.py": "37e56ecd311bc6c38ff17dd55c509f40bf84bad70b6b95fee302ad20aa6d8b59",
     "tests/test_gen1_manuscript.py": "c5bd941701cb17ccb2b2b8adba3d291d484d1f8aca65b332e634529835129640",
     "results/manuscript/MANUSCRIPT.md": "d647823ab469be1158d6e02b5077ac92a4cd94713777893bd092767e4bece18b",
     "results/manuscript/REPRODUCIBILITY.md": "083df9a18612a17791f8e2e91c96ff5f565413cd9418d312aaf2f676099f2fe2",
@@ -17,5 +17,5 @@
     "README.md": "dae892ee5eb03c448f3ee4791e95163aa1e9c826760010f87564157447dce172"
   },
   "verify": "python experiments/run_gen1_manuscript.py --verify",
-  "module_sha256": "98120ac20f158c84d50670a1d762c8c33b87de8956f6fbc546c95af15151db96"
+  "module_sha256": "3fa20a2cabd773ec627dc961283a838841e1a86f0e590e8752c1cc593c30077d"
 }

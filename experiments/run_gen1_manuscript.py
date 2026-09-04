@@ -163,6 +163,29 @@ def _numbers() -> list[tuple[str, str, str]]:
 
 
 
+
+def _divergent_numbers(text: str) -> list[str]:
+    """Numbers copied into a secondary document that are not the locked values.
+
+    The manuscript is held to a stronger contract: it must STATE each pinned number, with the words
+    around it. The README and the submission pack quote only a subset, so the same tracer cannot be
+    pointed at them. What they must not do is drift -- a headline number copied by hand into a
+    second document and then updated in only one place is the same failure as the abstract that kept
+    its pre-correction wording. DOIs are stripped first: `10.1016/j.xgen.2026.101191` ends in a
+    six-decimal fragment that is not a number this project reports.
+    """
+    h = _j(EVIDENCE_LOCK)["headline_numbers"]
+    allowed = {f"{v:.6f}" for v in (h["delta_RANK"], h["bootstrap_ci95"][0], h["bootstrap_ci95"][1],
+                                    h["R_W1"], h["R_W4"], h["R_W5"], h["null_p95"],
+                                    h["delta_TOP1"])}
+    stripped = re.sub(r"10\.\d{4,9}/[^\s)\]`,]+", " ", text)
+    bad = [m.group(0) for m in re.finditer(r"[+-]?\d\.\d{6}", stripped)
+           if m.group(0).lstrip("+-") not in allowed]
+    if f"{h['p_perm']:.6f}" in stripped or "0.000999" in stripped:
+        bad.append("the p point estimate, which must be reported as a floor")
+    return sorted(set(bad))
+
+
 def _abstract_of(text: str) -> str:
     """The manuscript's abstract, whitespace-normalised so line wrapping cannot matter."""
     m = re.search(r"## Abstract\n\n(.*?)\n\n## ", text, re.S)
@@ -294,6 +317,10 @@ def compliance() -> dict:
         # it, which is what keeps it coverable without a cycle.
         # The submission pack holds a second copy of the abstract -- the one pasted into a
         # preprint server. It kept the pre-correction wording after the manuscript was fixed.
+        # The secondary documents quote a subset of the headline numbers by hand. They may not
+        # drift from the locked values, and the p floor applies to them as it does here.
+        "no secondary document quotes a number that is not the locked value":
+            not (_divergent_numbers(readme) + _divergent_numbers(submission)),
         "the abstract in the submission pack is the manuscript abstract":
             _submitted_abstract(submission) == _abstract_of(text) != "",
         "the README quotes the current evidence and claim digests":
@@ -316,6 +343,8 @@ def compliance() -> dict:
         "abstract_missing_qualifiers": abstract_missing,
         "numbers_checked": len(_numbers()),
         "untraceable_numbers": untraceable,
+        "divergent_secondary_numbers": (_divergent_numbers(readme)
+                                         + _divergent_numbers(submission)),
         "checks": checks, "all_passed": all(checks.values()),
         "runtime_seconds": round(time.perf_counter() - t0, 3)})
 
