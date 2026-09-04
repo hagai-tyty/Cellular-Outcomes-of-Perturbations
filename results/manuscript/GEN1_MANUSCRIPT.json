@@ -8,8 +8,8 @@
     "MS-F_controls_fire": true
   },
   "failing": [],
-  "evidence_digest": "6e0c805592d515214fe8795d852b01c7778680762c9deae15d601faa0189e081",
-  "claim_digest": "a5a92ad356a571fb30aa26254745bf70d445c9496a79b569388832aa924d5366",
+  "evidence_digest": "e9326ab66143337b0bc547f38bbf6599daa34f722bdcd2290280ebfd0078f491",
+  "claim_digest": "7cd881265a94cc6d7847d2f5889e5dd9fa95e6a6b647c3b3ad739b5b9fa41a99",
   "plan_canonical_lf_sha256": "fb51834ce9a0eb8b8896ed1fa39a5db44f41cd79f57d89c8e766d12bfe02981d",
   "manuscript": "results/manuscript/MANUSCRIPT.md",
   "package": "results/manuscript/REPRODUCIBILITY.md",

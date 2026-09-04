@@ -28,6 +28,7 @@ from __future__ import annotations
 import glob
 import json
 import platform
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -161,6 +162,16 @@ def export_environment() -> dict:
     """The environment that produced these results, not the one a stale file claims."""
     freeze = subprocess.run([sys.executable, "-m", "pip", "freeze"],
                             capture_output=True, text=True).stdout
+    # `pip freeze` renders this project's own editable install as
+    #     -e git+https://.../Cellular-Outcomes-of-Perturbations.git@<HEAD sha>#egg=cellfate_rx
+    # and pip resolves that sha by asking git for HEAD at freeze time. So the environment lock
+    # changed on every commit -- and it is one of the evidence-locked artifacts, which means every
+    # commit silently invalidated it. The commit is already recorded twice over, in git history and
+    # in the release bundle's `git_commit`. What belongs in an environment lock is the dependency
+    # set, which is stable.
+    freeze = re.sub(r"^-e git\+[^#\s]+#egg=(\S+)$",
+                    r"# \1 is this project itself, installed editable from this repository",
+                    freeze, flags=re.M)
     header = (
         "# Environment lock for CellFate-Rx Generation 1.\n"
         "#\n"

@@ -8,9 +8,9 @@
     "CL-E_worked_abstract": true
   },
   "failing": [],
-  "evidence_lock_digest": "6e0c805592d515214fe8795d852b01c7778680762c9deae15d601faa0189e081",
+  "evidence_lock_digest": "e9326ab66143337b0bc547f38bbf6599daa34f722bdcd2290280ebfd0078f491",
   "plan": "plans/(newer)practical plans/GEN1_CLAIM_LOCK_V1.md",
-  "plan_canonical_lf_sha256": "52abcd0153184614d40f488321d6b93c0f43f1705d673d34b3db7dc7a7d7d594",
+  "plan_canonical_lf_sha256": "2deb81690baba7206cfadb9e0112318e1d8f681330e5b9600d65ea8a81fe34f4",
   "ship_plan_digest": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48",
   "allowed": {
     "primary": {
@@ -113,7 +113,7 @@
   },
   "evidence_verification": {
     "stage": "CL-A",
-    "lock_digest": "6e0c805592d515214fe8795d852b01c7778680762c9deae15d601faa0189e081",
+    "lock_digest": "e9326ab66143337b0bc547f38bbf6599daa34f722bdcd2290280ebfd0078f491",
     "live_verification": {
       "clean": true,
       "moved": [],
