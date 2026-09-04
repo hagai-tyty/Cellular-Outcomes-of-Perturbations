@@ -62,6 +62,14 @@ BOTH = [
     PLANS / "GEN1_MANUSCRIPT_PACKAGE_V1.md",
 ]
 
+# Written by a stage on every run, and quoting a digest because it is GENERATED from one --
+# not maintained beside it. These must not be re-pinned: the stage that writes them is the
+# thing that keeps them current, and editing one by hand would move a digest under its own
+# lock. The distinction this file exists to enforce is hand-maintained versus generated.
+GENERATED = {
+    ROOT / "results" / "claim_lock" / "GEN1_CLAIMS.md",
+}
+
 EVIDENCE_PIN = re.compile(r"(evidence(?: lock)?(?: digest)?\s+`?)[a-f0-9]{64}")
 CLAIM_PIN = re.compile(r"(claim(?: lock)?(?: digest)?\s+`?)[a-f0-9]{64}")
 PLAN_PIN = re.compile(r"lock digest `([a-f0-9]{64})`")

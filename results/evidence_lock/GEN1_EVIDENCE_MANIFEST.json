@@ -1,6 +1,6 @@
 {
   "stage": "EL-A",
-  "lock_digest": "213593c3b71e7db7064a5bb704288d3d51bddf725d5002aeefaa5b936c0e53b8",
+  "lock_digest": "61e3303be1e49b6a0861c877339ab498c6c787e2ec5567d876cebeba95664627",
   "digest_definition": "SHA-256 over 'path  sha256' lines, sorted by path, LF-joined",
   "n_artifacts": 63,
   "by_class": {
@@ -449,9 +449,9 @@
     },
     "experiments/cascade_gen1.py": {
       "class": "code",
-      "sha256": "dd567397068dd7d005748a17d0aee6c96b63fc48db81d8a8788305092877438c",
+      "sha256": "094e069bd93371be8c842c0fa987fb03ae6dc6a961e63750a76bae6ab1c2f06c",
       "hashed": "canonical-lf",
-      "bytes": 8301,
+      "bytes": 8737,
       "git_tracked": true,
       "git_ignored": false
     },

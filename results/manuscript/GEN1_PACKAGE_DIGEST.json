@@ -1,12 +1,12 @@
 {
-  "package_digest": "8f9394cfa719f25a7a274ca98ecf1bd490e8c215058e1e9608aef7778fe7f28d",
+  "package_digest": "002bc903963e28656c648d1ee511b1c362540e50fc69da3746b7e68e604e974f",
   "digest_definition": "SHA-256 over 'path  canonical-lf-sha256' lines, sorted by path",
   "covers": {
-    "plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md": "094e68ce648793e3d61f0fb7758a210174d6ab7121e777f189082837d2c813c3",
+    "plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md": "b31942cb0d6da12448fee27d09b5fe9169fa87f122570bed3f6e93bc67eeff99",
     "experiments/run_gen1_manuscript.py": "37e56ecd311bc6c38ff17dd55c509f40bf84bad70b6b95fee302ad20aa6d8b59",
-    "tests/test_gen1_manuscript.py": "5458140050d8c820803d915d16635dfecb21b9282fbedc1c1c789c577aee4124",
-    "results/manuscript/MANUSCRIPT.md": "1e6130bb73b2bf16da3e7b8e8c12f759a22f0d82cd6b6d3dfd3eab720e96a84e",
-    "results/manuscript/REPRODUCIBILITY.md": "cc84319bcba875c436feda3bd028ac08184d733f65c942e0f6d4468b253fb9f3",
+    "tests/test_gen1_manuscript.py": "65c00c2b297e1bbf5bc1bee1916d3b54aca2d905ba04059638c9b8f4d53d11d1",
+    "results/manuscript/MANUSCRIPT.md": "d1552052a046cf6f6297c246eae5913f877c7cee36673c3a8cd10779bcdd5325",
+    "results/manuscript/REPRODUCIBILITY.md": "0e898a4c7f59d71c0206c3ad2edea847a59a379b75f29270178132ebca3b98c1",
     "results/manuscript/SUBMISSION.md": "1fcb5f61a1061dc1e956eed78dcd1a040f4ff345ad18c133d950a752ec871f26",
     "results/manuscript/figures/figure_1_design.svg": "12cce5e16a6e40958808c44311d4156e0eb56949c1ac52e6cfefc57c98ef1ed7",
     "results/manuscript/figures/figure_2_primary.svg": "e2a13d883068725ab86e411bbf868647adde21b9b8e5d82a78e0f3dacc938d44",
@@ -14,7 +14,7 @@
     "results/manuscript/figures/figure_source_data.json": "3664698efec05f36c461b53220c3aadf4d5ae027079821e36930fc7a42da273a",
     "plans/(newer)practical plans/RECORDs/gen1_EVIDENCE_LOCK_RECORD.md": "db8d668fa7184bcdaa91449c6ae1bc72c3aae7423a1b4df3f86ee27cd05a95d8",
     "plans/(newer)practical plans/RECORDs/gen1_CLAIM_LOCK_RECORD.md": "5a962f4295a439241454fd9e34ce603673dc64fa3afcaf8f282f1564b2de8691",
-    "README.md": "8f6cb059dfdf3f6729df9df4a2a031ab9cd2633d61e9e13782da907b4b0337e4"
+    "README.md": "ddaa784d50797d5ac591a592686e7a37f63c6e88afb6ab11190f9b2e8010ef4b"
   },
   "verify": "python experiments/run_gen1_manuscript.py --verify",
   "module_sha256": "3fa20a2cabd773ec627dc961283a838841e1a86f0e590e8752c1cc593c30077d"

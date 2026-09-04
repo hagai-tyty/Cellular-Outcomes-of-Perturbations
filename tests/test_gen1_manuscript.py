@@ -362,14 +362,16 @@ def test_no_document_quotes_a_digest_without_being_registered():
     """A new document that starts quoting digests must be added to the cascade tool.
 
     Otherwise it is maintained by hand, which is how every stale pin in this project happened. The
-    RECORDs are excluded: they quote superseded digests on purpose, as history.
+    RECORDs are excluded: they quote superseded digests on purpose, as history. So are the
+    files a stage generates, which quote a digest because they are derived from one.
     """
     import subprocess
     import sys
     sys.path.insert(0, str(ROOT / "experiments"))
     import cascade_gen1 as C
 
-    registered = {p.resolve() for p in C.EVIDENCE_ONLY + C.BOTH}
+    registered = {p.resolve() for p in C.EVIDENCE_ONLY + C.BOTH} | {
+        p.resolve() for p in C.GENERATED}
     tracked = subprocess.run(["git", "ls-files", "*.md"], cwd=ROOT,
                              capture_output=True, text=True).stdout.split()
     unregistered = []
