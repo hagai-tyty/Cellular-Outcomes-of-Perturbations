@@ -18,8 +18,15 @@ Before reproducing anything, confirm the artifacts are the ones the manuscript w
   claim lock digest      a5a92ad356a571fb30aa26254745bf70d445c9496a79b569388832aa924d5366
 ```
 
-`EVIDENCE_INTACT` and `CLAIMS_INTACT` mean every hashed file is byte-for-byte what was locked.
-Anything else means something moved, and the right response is to find out why — not to re-lock.
+`EVIDENCE_INTACT` and `CLAIMS_INTACT` mean two things at once: every hashed file is byte-for-byte
+what was locked, **and** the stage that produced it recorded a passing verdict. The two are checked
+separately because they came apart once — a refused run still writes its outputs, so its bytes match
+what was recorded, and a verifier that only re-hashed them reported clean over a refused package.
+
+A failure therefore names which of the two it is. `*_MOVED` means a hashed file changed;
+`*_STAGE_REFUSED` means nothing moved but the stage itself refused, so the recorded state is
+not one to build on.
+Either way the right response is to find out why — not to re-lock.
 
 Text is hashed canonical-LF and binary raw, so the digests are the same on Windows, macOS and
 Linux regardless of line-ending settings.

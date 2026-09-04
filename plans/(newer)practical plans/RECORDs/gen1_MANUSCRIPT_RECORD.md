@@ -705,3 +705,21 @@ maintained by hand.
   claim     a5a92ad356a571fb30aa26254745bf70d445c9496a79b569388832aa924d5366
   package   9ff5419237d78c67b363f7a59f38db0b398e6c76b39b5ec049438492fdc7fac6
 ```
+
+### The package document still described the old verification semantics
+
+`REPRODUCIBILITY.md` told a reviewer that `EVIDENCE_INTACT` and `CLAIMS_INTACT` mean every hashed
+file is byte-for-byte what was locked, and that *"anything else means something moved"*. After the
+verifier fix that second half is wrong: `*_STAGE_REFUSED` means nothing moved and the stage itself
+refused. A reviewer reading the old text would have gone looking for a changed file that does not
+exist.
+
+The document now states both conditions and distinguishes the two failure modes. This is the third
+copy-of-a-fact problem in this pass — the fix changed behaviour, and the document describing that
+behaviour was a separate copy that did not follow. The pattern is consistent enough to name: every
+correction in this repository should end with a search for the other places the same fact is
+written down.
+
+```text
+  package   ed4321ea1ca369e46c9421af8c44ff631b4c6925ed93975baaac6a09a3e782b5
+```
