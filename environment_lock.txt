@@ -16,7 +16,7 @@
 #
 annotated-types==0.7.0
 antlr4-python3-runtime==4.9.3
--e git+https://github.com/hagai-tyty/Cellular-Outcomes-of-Perturbations.git@5e348df3344fd350c334d7d23cbfdfb5b7580001#egg=cellfate_rx
+# cellfate_rx is this project itself, installed editable from this repository
 colorama==0.4.6
 filelock==3.29.0
 fsspec==2026.4.0

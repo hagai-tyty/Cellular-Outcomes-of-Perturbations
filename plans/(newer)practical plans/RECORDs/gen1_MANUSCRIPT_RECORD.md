@@ -802,3 +802,38 @@ leaves the tree clean.
 The README needed re-pinning in this cascade and the new MS-C/MS-D check caught it, refusing the
 manuscript stage until it was current. That is the check earning its place on the first cascade
 after it was added.
+
+### Correction: the environment-lock fix above was not actually in the tree
+
+The section above states the exporter now normalises the editable-install line and reports the
+resulting digests. The exporter change was real and was committed. **The regenerated
+`environment_lock.txt` was not.** The bisect script described above holds a `git checkout` on that
+file; it reverted the regenerated lock before the commit, and `git add -A` therefore staged nothing
+for it. `git log -- environment_lock.txt` shows no commit of mine touching it at all.
+
+The repository was left in a state where the exporter normalised and the committed lock did not —
+internally consistent to every verifier, because the lock hashed the old file and the old file was
+what was there, and broken the moment anyone ran the exporter.
+
+It was caught by unpacking the published bundle and grepping its `environment_lock.txt` for the
+normalised line, which was absent while the working tree appeared correct.
+
+Two things this changes about the account above. The digests recorded there
+(`e9326ab6…` / `7cd88126…` / `9f6d9d00…`) are the digests of a tree that did not contain the fix.
+And the claim that a test re-runs the exporter is **not established**: with the normalising exporter
+and the old committed lock, a full suite left the tree clean, which it could not have done if a test
+had regenerated that file. What originally dirtied it during a suite run remains unexplained. The
+honest position is that the volatile line is gone and the lock is now stable across runs, and that
+the trigger was never identified.
+
+Corrected digests, from a tree that does contain the fix:
+
+```text
+  evidence  de6429c8d7075249b03b508000ec14eafcfe048101f6923ce32541a9394e6c95
+  claim     670f89a136c11cde54aeb62279ecf14e920fbcdfb7010986cae899b47a9c7aab
+  package   5f5cf37d0b39aaa9006c5e08a2cf20db9e8c209b269b6de4f9aa7d825cf0ec89
+```
+
+The general lesson is the one the bisect already taught, in a second form: a background process that
+writes to the repository does not merely produce misleading readings, it can silently undo work that
+is then committed as done. Nothing that mutates the tree should run unattended alongside editing.
