@@ -34,6 +34,15 @@ HANDOFF = RESULTS / "gen1_handoff_to_manuscript.json"
 
 ran = pytest.mark.skipif(not VERDICT.exists(), reason="the manuscript stage has not been run")
 
+# Amendment V1.2 added one negative control per structure check.
+STRUCTURE_CONTROLS = (
+    "sections out of order are caught",
+    "a missing Declarations heading is caught",
+    "an unstructured abstract is caught",
+    "an over-long abstract is caught",
+    "too many keywords are caught",
+)
+
 
 def _json(p: Path) -> dict:
     return json.loads(p.read_text(encoding="utf-8"))
@@ -52,13 +61,15 @@ def mod():
 # ============================================================================================== #
 @ran
 def test_the_checker_refuses_a_broken_copy():
-    """Four ways to break the manuscript; all four must be caught, and the real one must pass."""
+    """Every way to break the manuscript must be caught, and the real one must pass."""
     c = _json(CONTROLS)["controls"]
     assert c["a planted forbidden claim is caught"] is True
     assert c["a dropped qualifier is caught"] is True
     assert c["p quoted as a point estimate is caught"] is True
     assert c["a changed number is caught"] is True
-    assert c["the real manuscript passes all four"] is True
+    for control in STRUCTURE_CONTROLS:
+        assert c[control] is True, control
+    assert c["the real manuscript passes every control"] is True
 
 
 def test_a_planted_forbidden_claim_is_caught_end_to_end(mod):
@@ -161,10 +172,14 @@ def test_every_mandatory_qualifier_is_present():
 def test_the_manuscript_separates_limitations_from_forbidden_claims():
     """What the result cannot support, and what may not be said, are different things."""
     text = MANUSCRIPT.read_text(encoding="utf-8")
-    assert "## Limitations" in text
-    assert "## What this does not show" in text
-    assert text.index("## Limitations") < text.index("## What this does not show")
-    forbidden = text.split("## What this does not show")[1]
+    # Amendment V1.2 made both subsections of Discussion. They stay separate, and in this order.
+    discussion = text.index("\n## Discussion\n")
+    limitations = text.index("\n### Limitations\n")
+    forbidden_at = text.index("\n### What this does not show\n")
+    generation_2 = text.index("\n### Generation 2\n")
+    conclusions = text.index("\n## Conclusions\n")
+    assert discussion < limitations < forbidden_at < generation_2 < conclusions
+    forbidden = text[forbidden_at:generation_2]
     assert forbidden.count("NEVER") >= 9
 
 
@@ -387,3 +402,30 @@ def test_no_document_quotes_a_digest_without_being_registered():
     assert not unregistered, (
         "these quote a lock digest but are not re-pinned by experiments/cascade_gen1.py: "
         + "; ".join(unregistered))
+
+
+# ================================================================================================ #
+# Amendment V1.2 -- the BMC Research-article structure
+# ================================================================================================ #
+def test_the_manuscript_has_the_research_article_structure(mod):
+    """The shape Amendment V1.2 requires, checked on the real document rather than through a JSON."""
+    text = MANUSCRIPT.read_text(encoding="utf-8")
+    problems = mod.structure_problems(text)
+    assert not any(problems.values()), problems
+    assert re.findall(r"^## (.+?)[ \t]*$", text, re.M) == mod.TOP_LEVEL_ORDER
+
+
+def test_every_structure_check_refuses_a_broken_copy(mod):
+    """Directly, not by reading a JSON that says so."""
+    controls = mod.negative_controls(write=False)["controls"]
+    for control in STRUCTURE_CONTROLS + ("the real manuscript passes every control",):
+        assert controls[control] is True, control
+
+
+def test_every_v1_section_survives_the_restructure():
+    """V1.2 renamed and moved sections. It may not have dropped one."""
+    text = MANUSCRIPT.read_text(encoding="utf-8")
+    for heading in ("### Relation to prior work", "### Data", "### The tool", "### Limitations",
+                    "### What this does not show", "### Generation 2",
+                    "### Availability of data and materials"):
+        assert f"\n{heading}\n" in text, heading

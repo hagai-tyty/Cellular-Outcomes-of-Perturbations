@@ -6,8 +6,8 @@
 **Entry** `results/gen1_handoff_to_manuscript.json`, verdict `GEN1_CLAIMS_LOCKED`.
 
 ```text
-  evidence digest  61e3303be1e49b6a0861c877339ab498c6c787e2ec5567d876cebeba95664627
-  claim digest     5e24dd0f8861bee23ea495512ccf6e60f7878a7b67c2e3841ba6c0fd57b592bc
+  evidence digest  0763f9229665c50c1cb74769e2271f0fc5664b4fb807679ee873ef87f984efa2
+  claim digest     939a26854adf2942776bd96cbd38f1ea8973699d3769b8bc4d8b5fdc97197228
 ```
 
 **Mandate** §9 of the frozen ship plan: `MANUSCRIPT + REPRODUCIBILITY PACKAGE -> PREPRINT /
@@ -202,7 +202,7 @@ never a Generation-1 gate.
 # Amendment V1.1 — 2026-09-04
 
 The Entry block above is re-pinned rather than quietly overwritten. V1 was written against
-evidence digest `61e3303be1e49b6a0861c877339ab498c6c787e2ec5567d876cebeba95664627` and claim
+evidence digest `0763f9229665c50c1cb74769e2271f0fc5664b4fb807679ee873ef87f984efa2` and claim
 digest `a81ee43b07fae32f9bb45b4a4133de0b1f3979eeda3de7d700a7ca6897affb77`.
 
 Both moved during the release-verification pass: the evidence manifest had been recording each
@@ -212,3 +212,61 @@ canonical-LF content that is hashed. No artifact content changed and no gate was
 
 This plan is covered by the package digest, so it is re-pinned in the same pass that rebuilds
 the package.
+
+---
+
+# Amendment V1.2 — 2026-09-12
+
+**What changes is the shape of the manuscript, not what it says.** §2 above pins eleven required
+sections, and it stays as written. From V1.2 the manuscript takes the structure of a BMC
+Bioinformatics Research article, so that one text serves the preprint and any later journal
+submission. On 2026-09-12 the decision was to release through Zenodo and bioRxiv only, defer any
+journal, and hold the manuscript to a journal's structure regardless.
+
+Required top-level structure from V1.2, in this order:
+
+```text
+ABSTRACT               structured under Background / Results / Conclusions; at most 350 words
+KEYWORDS               three to ten
+BACKGROUND             was INTRODUCTION, including "Relation to prior work"
+METHODS                DATA becomes its first subsection; adds "Use of AI assistance"
+RESULTS                THE TOOL becomes its last subsection
+DISCUSSION             LIMITATIONS, WHAT THIS DOES NOT SHOW and GENERATION 2 as subsections, in that order
+CONCLUSIONS            new
+LIST OF ABBREVIATIONS  new
+DECLARATIONS           the eight BMC headings; AVAILABILITY becomes "Availability of data and materials"
+REFERENCES             moved from inside DATA to the end
+FIGURE LEGENDS         new
+```
+
+Source for the structure: the BMC Bioinformatics Research-article submission guidelines, read on
+2026-09-12 (https://link.springer.com/journal/12859/submission-guidelines/research-article). Source
+for placing AI disclosure in Methods: Springer Nature's editorial policy on large language models.
+
+**What does not change.**
+
+```text
+every V1 section's content is carried into the new structure -- moved, not rewritten
+LIMITATIONS and WHAT THIS DOES NOT SHOW stay separate sections, in the same order
+MS-A through MS-F are unchanged; no check is removed or loosened
+the anti-rescue firewall (§8) is unchanged: no recorded number, locked artifact or lock
+  changes, and the manuscript may state fewer claims than the lock permits, never more
+```
+
+**New prose, and how it is held.** The title-page author block, Keywords, a short opening to the
+Discussion, Conclusions, Use of AI assistance, List of abbreviations, the Declarations text (carried
+from `SUBMISSION.md` §4), and Figure legends (from the figure builder's own titles and
+descriptions). All of it is scanned by the same instrument as the rest of the document. The
+Conclusions may be assembled only from the locked claims and their qualifiers.
+
+**Checks added by V1.2.** Each must be shown to refuse a broken copy:
+
+```text
+the top-level sections appear in the required order
+all eight Declarations headings are present
+the abstract carries the three structured labels, in order, and is at most 350 words
+there are three to ten keywords
+```
+
+**Placeholders.** Fields only a human can supply are marked FILL and must block the release bundle.
+Fields that cannot exist until after archiving -- the preprint DOI -- are marked LATER and do not.

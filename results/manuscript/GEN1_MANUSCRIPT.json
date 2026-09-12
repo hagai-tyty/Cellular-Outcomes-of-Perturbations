@@ -8,32 +8,44 @@
     "MS-F_controls_fire": true
   },
   "failing": [],
-  "evidence_digest": "61e3303be1e49b6a0861c877339ab498c6c787e2ec5567d876cebeba95664627",
-  "claim_digest": "5e24dd0f8861bee23ea495512ccf6e60f7878a7b67c2e3841ba6c0fd57b592bc",
-  "plan_canonical_lf_sha256": "b31942cb0d6da12448fee27d09b5fe9169fa87f122570bed3f6e93bc67eeff99",
+  "evidence_digest": "0763f9229665c50c1cb74769e2271f0fc5664b4fb807679ee873ef87f984efa2",
+  "claim_digest": "939a26854adf2942776bd96cbd38f1ea8973699d3769b8bc4d8b5fdc97197228",
+  "plan_canonical_lf_sha256": "f76f30cd549f03b3698adf5646e07be66a85456cdc4bbe42ebe83147dc9a6b87",
   "manuscript": "results/manuscript/MANUSCRIPT.md",
   "package": "results/manuscript/REPRODUCIBILITY.md",
   "numbers_traced": 17,
   "sections": [
     "Abstract",
-    "Introduction",
-    "Data",
+    "Keywords",
+    "Background",
     "Methods",
+    "Data",
     "Results",
     "The tool",
+    "Discussion",
     "Limitations",
     "What this does not show",
-    "Availability",
-    "Generation 2"
+    "Generation 2",
+    "Conclusions",
+    "List of abbreviations",
+    "Declarations",
+    "Availability of data and materials",
+    "References",
+    "Figure legends"
   ],
   "negative_controls": {
     "a planted forbidden claim is caught": true,
     "a dropped qualifier is caught": true,
     "p quoted as a point estimate is caught": true,
     "a changed number is caught": true,
-    "the real manuscript passes all four": true
+    "sections out of order are caught": true,
+    "a missing Declarations heading is caught": true,
+    "an unstructured abstract is caught": true,
+    "an over-long abstract is caught": true,
+    "too many keywords are caught": true,
+    "the real manuscript passes every control": true
   },
   "what_ready_does_not_mean": "GEN1_MANUSCRIPT_READY means the document is consistent with everything locked beneath it. It is NOT a judgement that the science is good, that the writing is clear, or that a reviewer will agree.",
   "next": "PREPRINT / SUBMISSION. Generation 1 is complete.",
-  "module_sha256": "3fa20a2cabd773ec627dc961283a838841e1a86f0e590e8752c1cc593c30077d"
+  "module_sha256": "1c293fdcbe9837e5f9797302d42d21b222d309b95b9de562eac56c120dc9a24c"
 }

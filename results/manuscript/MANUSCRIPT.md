@@ -2,17 +2,24 @@
 
 **CellFate-Rx, Generation 1.**
 
+**Author:** <<FILL: full name>> · ORCID <<FILL: 0000-0000-0000-0000>>
+
+**Affiliation:** <<FILL: affiliation, city, country>>
+
+**Correspondence:** <<FILL: email address>>
+
 ```text
-  evidence lock   61e3303be1e49b6a0861c877339ab498c6c787e2ec5567d876cebeba95664627
-  claim lock      5e24dd0f8861bee23ea495512ccf6e60f7878a7b67c2e3841ba6c0fd57b592bc
+  evidence lock   0763f9229665c50c1cb74769e2271f0fc5664b4fb807679ee873ef87f984efa2
+  claim lock      939a26854adf2942776bd96cbd38f1ea8973699d3769b8bc4d8b5fdc97197228
 ```
 
-Both digests are verifiable from the repository. See **Availability**.
+Both digests are verifiable from the repository. See **Availability of data and materials**.
 
 ---
 
 ## Abstract
 
+**Background.**
 Whether a cell's molecular state before a perturbation predicts what happens to it afterwards is
 usually asked retrospectively, after outcome and state have been measured in the same cells. We ask
 it prospectively at clone level, in one BRAF-V600E melanoma cell line (WM989, GSE279162), in which
@@ -20,6 +27,7 @@ a barcoded population was split across six observed experimental conditions: Aci
 Dabrafenib, Doxorubicin and Trametinib. Of the clones that experiment recovered, 1,401 carry a
 pretreatment profile and are therefore analysable prospectively; those are the clones used here.
 
+**Results.**
 Within this system, pretreatment gene expression contains condition-specific information about
 future clonal detection beyond condition identity and captured pretreatment clone abundance, under
 clone-held-out evaluation frozen before any result existed. Under a test preregistered in full — the
@@ -29,6 +37,7 @@ conditions over a non-interactive additive model: +0.051605 in equal-clone-weigh
 AUROC, 95% CI [+0.037197, +0.065571], with 0 of 1000 full-refit permutation draws reaching the
 observed value (p < 0.001).
 
+**Conclusions.**
 The outcome is an observed post-treatment clone-detection proxy and is **not death**, sensitivity,
 resistance or clinical response. The six conditions are the entire supported vocabulary. We make no
 claim about unseen conditions, other cell lines, or patients, and the model emits no calibrated
@@ -37,7 +46,14 @@ not a gate on this result.
 
 ---
 
-## Introduction
+## Keywords
+
+clonal barcoding; lineage tracing; drug resistance; preregistration; reproducibility;
+within-clone ranking; permutation test; melanoma; reanalysis
+
+---
+
+## Background
 
 The question is easy to state and hard to evaluate honestly: before a perturbation is applied, does
 a cell's transcriptional state say anything about which perturbation that cell is still detected
@@ -106,7 +122,9 @@ digest-frozen protocol before any of the numbers existed.
 
 ---
 
-## Data
+## Methods
+
+### Data
 
 ```text
 ROLE B, primary       GSE279162 (WM989)      benchmark, model, tool and ranking analysis
@@ -133,41 +151,6 @@ it does not provide the same multi-condition task or the same outcome.
 No additional dataset was searched, downloaded, qualified or used. Raw sequencing data is not
 vendored; accessions are given above. **Figure 1** summarises the design and the evaluable
 population.
-
-### References
-
-```text
-[1] Schaff DL, White PE, Cote CJ, Watterson GE, Lin KZ, Fasse AJ, Zhang NR, Shaffer SM.
-    Pre-existing cell states predict resistance to multiple treatments.
-    Cell Genomics 6(6):101191, 2026.  doi:10.1016/j.xgen.2026.101191   PMID 41916275
-    Data: GEO GSE279162
-
-[2] GEO GSE227151 -- Retrospective identification of cell-intrinsic factors that mark
-    pluripotency potential in rare somatic cells (scRNA-seq), human hiF-T fibroblasts.
-
-[3] Shaffer SM, Dunagin MC, Torborg SR, Torre EA, Emert B, et al.
-    Rare cell variability and drug-induced reprogramming as a mode of cancer drug resistance.
-    Nature 546(7658):431-435, 2017.  doi:10.1038/nature22794   PMID 28607484
-
-[4] Emert BL, Cote CJ, Torre EA, Dardani IP, Jiang CL, Jain N, Shaffer SM, Raj A.
-    Variability within rare cell states enables multiple paths toward drug resistance.
-    Nature Biotechnology 39(7):865-876, 2021.  doi:10.1038/s41587-021-00837-3   PMID 33619394
-
-[5] Goyal Y, Busch GT, Pillai M, Li J, Boe RH, et al.
-    Diverse clonal fates emerge upon drug treatment of homogeneous cancer cells.
-    Nature 620(7974):651-659, 2023.  doi:10.1038/s41586-023-06342-8   PMID 37468627
-
-[6] Kapoor S, Narayanan A.
-    Leakage and the reproducibility crisis in machine-learning-based science.
-    Patterns 4(9):100804, 2023.  doi:10.1016/j.patter.2023.100804   PMID 37720327
-```
-
-Figures are generated from the locked result files by
-`python experiments/make_gen1_figures.py`; no number in them is typed by hand.
-
----
-
-## Methods
 
 ### Benchmark construction
 
@@ -227,6 +210,16 @@ null rather than silently reporting a smaller one.
 
 Uncertainty on the observed statistic is a 2,000-replicate clone bootstrap, conditional on the
 fitted models.
+
+### Use of AI assistance
+
+Generative AI assistants (<<FILL: name each tool and version used>>) were used during this work,
+including for writing and checking analysis and verification code and for drafting text.
+<<FILL: describe, in your own words, what the AI tools did and did not do.>> Independently of who
+or what wrote them, the protocols were fixed by cryptographic digest before any result existed, and
+every number reported here is produced by the frozen code and traced mechanically to a locked
+artifact. <<FILL: confirm or edit — "The author reviewed the work and takes full responsibility
+for its content.">>
 
 ---
 
@@ -293,9 +286,7 @@ Selecting each clone's lowest predicted detection score finds a genuine zero for
 clones under W5 against 71.3% under W4 (**Figure 3C**). This was preregistered as a directional-consistency check,
 not a significance test: it could withhold support, never grant it. It did not withhold.
 
----
-
-## The tool
+### The tool
 
 A frozen predictor ships with this work. For one starting clone it returns a
 `future_detection_score` for each of the six observed conditions, reproducing the frozen
@@ -322,7 +313,14 @@ and it was verified to hold rather than assumed to.
 
 ---
 
-## Limitations
+## Discussion
+
+The result is narrow by design, and this section keeps apart three things that are easy to run
+together: what the result cannot support, what may not be said about it in any form, and what would
+actually test it. The first two are separate on purpose; neither should have to be inferred from the
+other.
+
+### Limitations
 
 Carried verbatim from the preregistered verdict.
 
@@ -348,9 +346,7 @@ times larger.
 Limitation 6 is the honest position on Role A. Its own gate failed, we audited our own power
 calculation and found it had been too generous, and we report the worse number.
 
----
-
-## What this does not show
+### What this does not show
 
 Separate from the limitations above, these are claims this work may not make, in any form.
 
@@ -370,63 +366,7 @@ The result is bounded to one cell line, six observed experimental conditions, an
 detection proxy. It is not evidence about therapy, and the six conditions include non-clinical
 stress contexts that no one would administer to anything.
 
----
-
-## Availability
-
-### Verify before reading anything else
-
-```text
-  python experiments/run_gen1_evidence_lock.py --verify
-  python experiments/run_gen1_claim_lock.py --verify
-```
-
-The first re-hashes every locked artifact and refuses if one has moved. The second does the same
-for the claim set. Both were shown to refuse a one-bit change before either was issued.
-
-```text
-  evidence lock digest   61e3303be1e49b6a0861c877339ab498c6c787e2ec5567d876cebeba95664627
-  claim lock digest      5e24dd0f8861bee23ea495512ccf6e60f7878a7b67c2e3841ba6c0fd57b592bc
-```
-
-### Licensing
-
-```text
-  software and frozen model   PolyForm Noncommercial License 1.0.0
-                              SPDX: PolyForm-Noncommercial-1.0.0
-  manuscript text and figures CC BY 4.0
-  GSE279162, GSE227151        original depositors' terms; NOT relicensed here
-```
-
-Academic, educational, nonprofit and personal research use requires **no permission request,
-registration, payment or signed agreement**. Use as a material part of a revenue-generating product
-or paid service requires a separate commercial license (`COMMERCIAL-LICENSING.md`). This is
-source-available rather than OSI-approved open source, because commercial use is restricted; it is
-stated here rather than left to be discovered.
-
-### What is in the repository
-
-Benchmark tables, frozen out-of-fold predictions, the serialized model metadata, the prediction API
-and CLI, the model card and schema, every stage protocol, every stage record, and every executor
-and contract file. Full inventory and per-file hashes: `results/evidence_lock/`.
-
-### What is not
-
-```text
-  stage24_w5_artifact.npz   44 MB, gitignored. A fresh clone does NOT contain it. Its hash
-                            is locked and it rebuilds in about half a minute:
-                              python experiments/run_stage24_gen1_tool.py --stage 24c
-  raw sequencing data       GSE279162, GSE227151. Accessions are locked; bytes are not
-                            vendored.
-```
-
-Naming a gap is not closing it. Both remain open.
-
-Full reproduction instructions, environment and runtimes: `results/manuscript/REPRODUCIBILITY.md`.
-
----
-
-## Generation 2
+### Generation 2
 
 What would actually test this, none of which was a gate on the present result:
 
@@ -443,3 +383,185 @@ What would actually test this, none of which was a gate on the present result:
 
 The first is the one that matters. Everything here rests on a single lineage-traced system, and one
 system is one system however carefully it is evaluated.
+
+---
+
+## Conclusions
+
+Within the existing multi-condition WM989 lineage system, pretreatment gene expression carries
+condition-specific information about future clonal detection beyond condition identity and captured
+pretreatment clone abundance, under clone-held-out evaluation frozen before any result existed. Under
+a test preregistered in full, an explicit state-by-condition interaction improves clone-specific
+ordering of the six observed experimental conditions over a non-interactive additive model, and no
+full-refit permutation draw reached the observed value (p < 0.001).
+
+The claim is bounded to one cell line, six observed experimental conditions and an observed detection
+proxy that is not death, sensitivity, resistance or clinical response, and captured pretreatment
+abundance remains the larger term. Independent biological replication has not been performed and is
+Generation 2 work.
+
+---
+
+## List of abbreviations
+
+- **AUROC** — area under the receiver operating characteristic curve
+- **B** — the captured-abundance nuisance block
+- **C1, C2** — the two endpoint families: post-treatment clone detection, and clone-balanced abundance
+- **CI** — confidence interval
+- **CoCl2** — cobalt(II) chloride
+- **CP10K** — counts per 10,000
+- **delta_RANK** — W5 minus W4 in equal-clone-weighted within-clone AUROC
+- **delta_TOP1** — W5 minus W4 in the lowest-predicted-score top-choice diagnostic
+- **GEO** — Gene Expression Omnibus
+- **PCA** — principal component analysis
+- **U** — the condition-identity indicators
+- **W1, W4, W5** — the three preregistered model specifications
+- **X** — the clone expression profile, as 50 train-only principal components
+
+---
+
+## Declarations
+
+### Ethics approval and consent to participate
+
+Not applicable. This study is a computational reanalysis of published, publicly available data from
+an immortalised cell line. No human participants, human material or animals were involved.
+
+### Consent for publication
+
+Not applicable.
+
+### Availability of data and materials
+
+The dataset analysed here is publicly available from the Gene Expression Omnibus under accession
+GSE279162, generated and deposited by Schaff et al. [1]. Supporting Role-A evidence uses GSE227151.
+**No new data were generated for this study.**
+
+All analysis code, frozen protocols, stage records, out-of-fold predictions, the serialized
+predictor and the verification tooling are archived at Zenodo, DOI
+<<FILL: 10.5281/zenodo.XXXXXXX>>, and developed openly at
+https://github.com/hagai-tyty/Cellular-Outcomes-of-Perturbations.
+
+#### Verify before reading anything else
+
+```text
+  python experiments/run_gen1_evidence_lock.py --verify
+  python experiments/run_gen1_claim_lock.py --verify
+  python experiments/run_gen1_manuscript.py --verify
+```
+
+The first re-hashes every locked artifact and refuses if one has moved. The second does the same
+for the claim set. Both were shown to refuse a one-bit change before either was issued. The
+third does the same for this manuscript and the package around it. All three also refuse if the
+stage that produced the files did not pass.
+
+```text
+  evidence lock digest   0763f9229665c50c1cb74769e2271f0fc5664b4fb807679ee873ef87f984efa2
+  claim lock digest      939a26854adf2942776bd96cbd38f1ea8973699d3769b8bc4d8b5fdc97197228
+```
+
+#### Licensing
+
+```text
+  software and frozen model   PolyForm Noncommercial License 1.0.0
+                              SPDX: PolyForm-Noncommercial-1.0.0
+  manuscript text and figures CC BY 4.0
+  GSE279162, GSE227151        original depositors' terms; NOT relicensed here
+```
+
+Academic, educational, nonprofit and personal research use requires **no permission request,
+registration, payment or signed agreement**. Use as a material part of a revenue-generating product
+or paid service requires a separate commercial license (`COMMERCIAL-LICENSING.md`). This is
+source-available rather than OSI-approved open source, because commercial use is restricted; it is
+stated here rather than left to be discovered.
+
+#### What is in the repository
+
+Benchmark tables, frozen out-of-fold predictions, the serialized model metadata, the prediction API
+and CLI, the model card and schema, every stage protocol, every stage record, and every executor
+and contract file. Full inventory and per-file hashes: `results/evidence_lock/`.
+
+#### What is not
+
+```text
+  stage24_w5_artifact.npz   44 MB, gitignored. A fresh clone does NOT contain it. Its hash
+                            is locked and it rebuilds in about half a minute:
+                              python experiments/run_stage24_gen1_tool.py --stage 24c
+                            The Zenodo archive does include it, so an unpacked archive
+                            verifies without a rebuild.
+  raw sequencing data       GSE279162, GSE227151. Accessions are locked; bytes are not
+                            vendored.
+```
+
+Naming a gap is not closing it. Both remain open.
+
+Full reproduction instructions, environment and runtimes: `results/manuscript/REPRODUCIBILITY.md`.
+
+### Competing interests
+
+<<FILL — if none: "The author declares no competing interests.">>
+
+### Funding
+
+<<FILL — if none: "This research received no specific grant from any funding agency.">>
+
+### Authors' contributions
+
+<<FILL — single-author template: "H.A. designed the evaluation, implemented the analysis and
+verification tooling, and wrote the manuscript.">>
+
+### Acknowledgements
+
+We thank Schaff et al. for generating and openly depositing GSE279162, without which this
+reanalysis would not be possible. <<FILL: anyone else to acknowledge — or delete this marker>>
+
+### Authors' information
+
+Not applicable.
+
+---
+
+## References
+
+```text
+[1] Schaff DL, White PE, Cote CJ, Watterson GE, Lin KZ, Fasse AJ, Zhang NR, Shaffer SM.
+    Pre-existing cell states predict resistance to multiple treatments.
+    Cell Genomics 6(6):101191, 2026.  doi:10.1016/j.xgen.2026.101191   PMID 41916275
+    Data: GEO GSE279162
+
+[2] GEO GSE227151 -- Retrospective identification of cell-intrinsic factors that mark
+    pluripotency potential in rare somatic cells (scRNA-seq), human hiF-T fibroblasts.
+
+[3] Shaffer SM, Dunagin MC, Torborg SR, Torre EA, Emert B, et al.
+    Rare cell variability and drug-induced reprogramming as a mode of cancer drug resistance.
+    Nature 546(7658):431-435, 2017.  doi:10.1038/nature22794   PMID 28607484
+
+[4] Emert BL, Cote CJ, Torre EA, Dardani IP, Jiang CL, Jain N, Shaffer SM, Raj A.
+    Variability within rare cell states enables multiple paths toward drug resistance.
+    Nature Biotechnology 39(7):865-876, 2021.  doi:10.1038/s41587-021-00837-3   PMID 33619394
+
+[5] Goyal Y, Busch GT, Pillai M, Li J, Boe RH, et al.
+    Diverse clonal fates emerge upon drug treatment of homogeneous cancer cells.
+    Nature 620(7974):651-659, 2023.  doi:10.1038/s41586-023-06342-8   PMID 37468627
+
+[6] Kapoor S, Narayanan A.
+    Leakage and the reproducibility crisis in machine-learning-based science.
+    Patterns 4(9):100804, 2023.  doi:10.1016/j.patter.2023.100804   PMID 37720327
+```
+
+---
+
+## Figure legends
+
+Figures are generated from the locked result files by
+`python experiments/make_gen1_figures.py`; no number in them is typed by hand.
+
+**Figure 1. Clone-level prospective design and evaluable population.** The design in WM989, and
+the funnel from all clones to the evaluable subset.
+
+**Figure 2. Preregistered clone-specific ranking result.** **(A)** Ranking score by model: W1, W4
+and W5. **(B)** The observed ΔRANK against 1,000 full-refit permutations.
+
+**Figure 3. Robustness across strata, and the top-choice diagnostic.** **(A)** ΔRANK by held-out
+fold. **(B)** ΔRANK by pretreatment clone depth. **(C)** Choosing each clone's lowest predicted
+detection score under W5 and W4 — a consistency check, not a significance test.

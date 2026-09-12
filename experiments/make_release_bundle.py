@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import zipfile
 from pathlib import Path
 
@@ -147,6 +148,33 @@ def _members() -> list[str]:
     return sorted(seen)
 
 
+# Documents a reader of the archive meets first. A FILL marker left in any of them would be published
+# permanently: a Zenodo record's files cannot be changed after publication, beyond a short window for
+# minor corrections. So the check has to run before the archive exists, not after it is uploaded.
+RELEASE_DOCUMENTS = [
+    "README.md", "CITATION.cff", ".zenodo.json",
+    "results/manuscript/MANUSCRIPT.md", "results/manuscript/REPRODUCIBILITY.md",
+    "results/manuscript/SUBMISSION.md",
+]
+FILL_MARKER = re.compile(r"<<FILL\b[^>]*>>")
+# A field that can only exist after archiving -- the preprint DOI is the case. Allowed, and listed.
+LATER_MARKER = re.compile(r"<<LATER\b[^>]*>>")
+
+
+def placeholders(root: Path = ROOT) -> tuple[list[str], list[str]]:
+    """(unfilled FILL markers, pending LATER markers) in the release documents, as 'path: marker'."""
+    fill: list[str] = []
+    later: list[str] = []
+    for rel in RELEASE_DOCUMENTS:
+        p = root / rel
+        if not p.is_file():
+            continue
+        text = p.read_text(encoding="utf-8")
+        fill += [f"{rel}: {' '.join(m.group(0).split())}" for m in FILL_MARKER.finditer(text)]
+        later += [f"{rel}: {' '.join(m.group(0).split())}" for m in LATER_MARKER.finditer(text)]
+    return fill, later
+
+
 def build(allow_dirty: bool = False) -> int:
     DIST.mkdir(exist_ok=True)
     members = _members()
@@ -166,6 +194,19 @@ def build(allow_dirty: bool = False) -> int:
         print()
         print('  Commit first, then build. For a throwaway build: --allow-dirty')
         return 2
+
+    fill, later = placeholders()
+    if fill:
+        print('REFUSED -- unfilled FILL markers in documents the archive publishes:')
+        for f in fill:
+            print(f'  {f}')
+        print()
+        print('  A published Zenodo record cannot have its files changed. Fill these first.')
+        return 2
+    if later:
+        print('  pending LATER markers -- allowed, since they can only be filled after archiving:')
+        for f in later:
+            print(f'    {f}')
 
     missing = [m for m in GITIGNORED_BUT_REQUIRED if not (ROOT / m).is_file()]
     if missing:
@@ -209,6 +250,7 @@ def build(allow_dirty: bool = False) -> int:
         "uncompressed_bytes": total,
         "compressed_bytes": BUNDLE.stat().st_size,
         "lock_digests": locks,
+        "pending_later_markers": later,
         "includes_gitignored": list(GITIGNORED_BUT_REQUIRED),
         "git_commit": commit,
         "external_data": {

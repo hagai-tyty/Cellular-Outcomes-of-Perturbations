@@ -873,3 +873,88 @@ without being added, which is how every stale pin here happened.
   claim     a5b014a08c898d6f8aa2a627e2bb8f2f6c78efcc64c7d83b807d8a53b5fce2f9
   package   8f9394cfa719f25a7a274ca98ecf1bd490e8c215058e1e9608aef7778fe7f28d
 ```
+
+---
+
+## Phase 1 of the release: the manuscript in BMC Research-article form — 2026-09-12
+
+Decision, 2026-09-12: release through Zenodo and bioRxiv, defer any journal, and hold the manuscript
+to BMC Bioinformatics' Research-article structure regardless, so that it is journal-ready.
+
+### What was done
+
+- **Frozen plan.** Amendment V1.2 appended to `GEN1_MANUSCRIPT_PACKAGE_V1.md`. §2's V1 section list is
+  left as written; the amendment records the new structure and the source it was read from.
+- **Checks.** The required-section list follows V1.2. Five structure checks were added: section order,
+  the eight Declarations headings, the abstract's three labels, at most 350 words, three to ten
+  keywords. The references partition now accepts a top-level `## References`. Each new check has a
+  negative control.
+- **Manuscript.** Restructured by moving the V1 sections, not retyping them. Of 75 V1 paragraphs, 72
+  are carried verbatim and 3 changed, all declared in advance: the pointer to the renamed
+  Availability section, the verify-command block gaining the third command, and the "what is not"
+  block gaining a line saying the archive includes the model file. 17 of 17 numbers still trace;
+  the abstract is 243 words.
+- **New prose**, each piece scanned clean by the claim lock's instrument before it was written: the
+  author block, keywords, Use of AI assistance, the Discussion opening, Conclusions (assembled only
+  from locked claims), the list of abbreviations, the Declarations, and figure legends taken from the
+  figures' own on-image titles and panel labels.
+- **Submission pack.** Declarations and keywords single-sourced in the manuscript. The submitted
+  abstract regenerated and parity-checked. The AI note corrected: disclosure belongs in Methods under
+  Springer Nature's policy, and bioRxiv's guidance asks for no separate disclosure. The fee recorded:
+  £2,290 / $3,090 / €2,590 plus VAT, due only on acceptance, waiver requestable only at submission.
+  Cover letter finished with the preprint and licence disclosures; pre-flight checklist rewritten.
+- **Release.** README gains a DOI slot. Version 1.0.0 in `pyproject.toml` and
+  `src/cellfate/__init__.py`, which had both said 0.1.0. The release bundle refuses any FILL marker in
+  its six release documents; LATER markers are allowed and recorded in `BUNDLE_CONTENTS.json`. Six
+  tests cover the gate.
+
+### Registered results
+
+```text
+  manuscript stage      GEN1_MANUSCRIPT_READY
+  compliance checks     19 of 19 pass
+  negative controls     10 of 10 fire
+  three --verify        EVIDENCE_INTACT, CLAIMS_INTACT, PACKAGE_INTACT
+  digest pins           PINS_CURRENT
+  lint, CI paths        clean
+  bundle gate tests     6 passed
+  full test suite       pytest's own exit code 0, no failures, 2176 tests collected;
+                        the run left the working tree unchanged
+```
+
+The test count comes from `--collect-only`, not from pytest's summary line, and there is a reason.
+`pyproject.toml` already sets `addopts = "-q"`; adding a second `-q` suppresses the summary line
+entirely, which is why no full-suite log in this pass showed one. It also broke the first attempt to
+count: at that verbosity `--collect-only` prints per-file counts rather than test IDs, so counting
+test IDs gave 0 and the finish script refused before committing anything. Pass or fail was read
+from pytest's own exit code throughout, and verbosity does not change that.
+
+### A negative control that could not fire
+
+The first cascade after the restructure was REFUSED at MS-F: "an unstructured abstract is caught"
+stayed silent. The control built its broken copy by deleting `**Results.** ` with a trailing space.
+The restructured manuscript puts each label on its own line, so the deletion matched nothing and an
+unbroken copy was handed to the checker. The checker was right; the control never exercised it.
+
+The step-2 smoke test had passed because its synthetic abstract put a space after the label — a test
+document shaped differently from the real one. It is the lesson this project has recorded before: a
+check has to read what the gate reads.
+
+Fixed two ways. The label is removed whatever follows it, and every V1.2 control now requires its
+copy to differ from the original, so a mutation that silently does not happen can never read as a
+catch.
+
+### Digests
+
+```text
+  evidence  0763f9229665c50c1cb74769e2271f0fc5664b4fb807679ee873ef87f984efa2
+  claim     939a26854adf2942776bd96cbd38f1ea8973699d3769b8bc4d8b5fdc97197228
+  package   3f0855ab579fed2096a4ebf3ddf76da498bb8916dbcb50d4a2a4c3f613ee92b3
+```
+
+### Deliberately not done yet
+
+The release bundle now refuses to build: 25 FILL markers remain across `README.md`, `CITATION.cff`,
+`.zenodo.json`, `MANUSCRIPT.md` and `SUBMISSION.md`. They are author details, declarations, the
+AI-use description and the Zenodo DOI, all Phase 2 inputs. The restructured manuscript has not yet
+been read by its author.

@@ -82,10 +82,32 @@ def _j(p: Path) -> dict:
     return json.loads(p.read_text(encoding="utf-8"))
 
 
+# Amendment V1.2 (2026-09-12): the manuscript takes the BMC Bioinformatics Research-article
+# structure. Every V1 section survives -- Data, The tool, Limitations, What this does not show and
+# Generation 2 become subsections, which the `# {s}` match in compliance() still finds -- and V1's
+# Introduction and Availability are renamed rather than dropped. §2 of the plan keeps the V1 list
+# as written; the amendment records the change.
 REQUIRED_SECTIONS = [
-    "Abstract", "Introduction", "Data", "Methods", "Results", "The tool",
-    "Limitations", "What this does not show", "Availability", "Generation 2",
+    "Abstract", "Keywords", "Background", "Methods", "Data", "Results", "The tool",
+    "Discussion", "Limitations", "What this does not show", "Generation 2", "Conclusions",
+    "List of abbreviations", "Declarations", "Availability of data and materials",
+    "References", "Figure legends",
 ]
+
+# The top level, in the order BMC requires. Subsections are covered by REQUIRED_SECTIONS; the
+# order and the absence of stray top-level sections are checked on `## ` headings only.
+TOP_LEVEL_ORDER = [
+    "Abstract", "Keywords", "Background", "Methods", "Results", "Discussion", "Conclusions",
+    "List of abbreviations", "Declarations", "References", "Figure legends",
+]
+DECLARATIONS = [
+    "Ethics approval and consent to participate", "Consent for publication",
+    "Availability of data and materials", "Competing interests", "Funding",
+    "Authors' contributions", "Acknowledgements", "Authors' information",
+]
+ABSTRACT_LABELS = ["**Background.**", "**Results.**", "**Conclusions.**"]
+ABSTRACT_MAX_WORDS = 350
+KEYWORDS_RANGE = (3, 10)
 
 # The five mandatory qualifiers, each reduced to a phrase that must literally appear. A qualifier
 # that is "conveyed by the general tone of the document" is not a qualifier.
@@ -208,6 +230,50 @@ def _submitted_abstract(text: str) -> str:
     return re.sub(r"\s+", " ", joined).strip()
 
 
+def _section(text: str, name: str) -> str:
+    """The body of one top-level `## ` section, up to the next top-level heading."""
+    m = re.search(rf"^## {re.escape(name)}[ \t]*$(.*?)(?=^## |\Z)", text, re.M | re.S)
+    return m.group(1) if m else ""
+
+
+def structure_problems(text: str) -> dict[str, list[str]]:
+    """The BMC Research-article shape Amendment V1.2 requires, as named lists of problems.
+
+    Every list empty means the shape is right. Each key is reported separately so a refusal names
+    what is wrong instead of collapsing to one boolean, and each has a negative control in MS-F.
+    """
+    problems: dict[str, list[str]] = {}
+
+    top = re.findall(r"^## (.+?)[ \t]*$", text, re.M)
+    present = [h for h in top if h in TOP_LEVEL_ORDER]
+    order = [] if present == TOP_LEVEL_ORDER else [
+        f"top-level sections are {present}; required {TOP_LEVEL_ORDER}"]
+    order += [f"unexpected top-level section: {h}" for h in top if h not in TOP_LEVEL_ORDER]
+    problems["order"] = order
+
+    found = re.findall(r"^### (.+?)[ \t]*$", _section(text, "Declarations"), re.M)
+    listed = [h for h in found if h in DECLARATIONS]
+    problems["declarations"] = [] if listed == DECLARATIONS else [
+        f"Declarations headings are {listed}; required {DECLARATIONS}"]
+
+    abstract = _section(text, "Abstract")
+    at = [abstract.find(label) for label in ABSTRACT_LABELS]
+    problems["abstract_labels"] = [] if min(at) >= 0 and at == sorted(at) else [
+        f"abstract labels found at {dict(zip(ABSTRACT_LABELS, at, strict=True))}; all three required, in order"]
+
+    words = len(abstract.replace("**", " ").replace("---", " ").split())
+    problems["abstract_length"] = [] if words <= ABSTRACT_MAX_WORDS else [
+        f"abstract is {words} words; limit {ABSTRACT_MAX_WORDS}"]
+
+    body = " ".join(ln for ln in _section(text, "Keywords").splitlines()
+                    if ln.strip() and ln.strip() != "---")
+    keywords = [k.strip() for k in body.split(";") if k.strip()]
+    lo, hi = KEYWORDS_RANGE
+    problems["keywords"] = [] if lo <= len(keywords) <= hi else [
+        f"{len(keywords)} keywords; required {lo} to {hi}"]
+    return problems
+
+
 def _partition_references(text: str) -> tuple[str, list[str], list[str]]:
     """Split a manuscript into (text to scan, exempt title lines, structural problems).
 
@@ -220,9 +286,12 @@ def _partition_references(text: str) -> tuple[str, list[str], list[str]]:
     an indented continuation is reported. A first attempt exempted the whole block and absorbed a
     planted sentence as a continuation -- the loophole test caught it, which is why the test exists.
     """
-    if "### References" not in text:
+    # V1 kept the references as `### References` inside Data. Amendment V1.2 moved them to the end
+    # as a top-level `## References` section. Either heading level opens the block.
+    m = re.search(r"^#{2,3} References[ \t]*$", text, re.M)
+    if not m:
         return text, [], []
-    head, tail = text.split("### References", 1)
+    head, heading, tail = text[:m.start()], m.group(0), text[m.end():]
     parts = tail.split("```")
     if len(parts) < 3:
         return text, [], []
@@ -262,7 +331,7 @@ def _partition_references(text: str) -> tuple[str, list[str], list[str]]:
         if not re.search(r"doi:|GSE\d+|PMID\s*\d+", e):
             problems.append("entry without a resolvable identifier: " + e[:60])
 
-    return head + "### References" + rest + "\n" + "\n".join(scannable), titles, problems
+    return head + heading + rest + "\n" + "\n".join(scannable), titles, problems
 
 
 def compliance() -> dict:
@@ -281,6 +350,7 @@ def compliance() -> dict:
     missing_sections = [s for s in REQUIRED_SECTIONS if f"# {s}" not in text
                         and f"## {s}" not in text]
     missing_qual = [k for k, v in QUALIFIER_MARKERS.items() if v not in text]
+    structure = structure_problems(text)
 
     abstract = text.split("## Abstract", 1)[-1].split("\n## ", 1)[0] if "## Abstract" in text else ""
     abstract_missing = [k for k in ABSTRACT_MUST_CARRY if QUALIFIER_MARKERS[k] not in abstract]
@@ -325,6 +395,13 @@ def compliance() -> dict:
             _submitted_abstract(submission) == _abstract_of(text) != "",
         "the README quotes the current evidence and claim digests":
             (handoff["evidence_lock_digest"] in readme and handoff["claim_digest"] in readme),
+        # Amendment V1.2 -- the BMC Research-article shape
+        "the top-level sections are the required ones, in order": not structure["order"],
+        "all eight Declarations headings are present, in order": not structure["declarations"],
+        "the abstract is structured under Background, Results and Conclusions":
+            not structure["abstract_labels"],
+        "the abstract is at most 350 words": not structure["abstract_length"],
+        "there are three to ten keywords": not structure["keywords"],
         "every number traces to a locked artifact": not untraceable,
     }
     return write_json(COMPLIANCE_JSON, {
@@ -333,12 +410,13 @@ def compliance() -> dict:
         "forbidden_hits": forbidden_hits,
         "references_excluded_from_the_claim_scan":
             "a cited paper's title is third-party text, not a claim this manuscript makes; only "
-            "the fenced block under '### References' is excluded, and every entry in it must "
+            "the fenced block under the References heading is excluded, and every entry in it must "
             "carry a DOI, PMID or accession",
         "reference_block_problems": bad_refs,
         "exempt_title_lines": exempt_titles,
         "package_forbidden_hits": repro_hits,
         "missing_sections": missing_sections,
+        "structure_problems": structure,
         "missing_qualifiers": missing_qual,
         "abstract_missing_qualifiers": abstract_missing,
         "numbers_checked": len(_numbers()),
@@ -433,12 +511,42 @@ def negative_controls(write: bool = True) -> dict:
     results["a changed number is caught"] = not re.search(
         re.escape(f"{h['delta_RANK']:+.6f}"), broken)
 
-    # and the unmodified document must still pass all four, or the controls prove nothing
-    results["the real manuscript passes all four"] = (
+    # Amendment V1.2: each structure check must refuse a broken copy as well. Every control also
+    # requires its copy to DIFFER from the original: the first version of the abstract control
+    # deleted "**Results.** " with a trailing space, the real manuscript puts the label on its own
+    # line, the deletion matched nothing, and an unbroken copy was fed to the checker. A mutation
+    # that silently does not happen must never read as a catch or as a pass.
+    swapped = (original.replace("\n## Discussion\n", "\n## @@SWAP@@\n")
+               .replace("\n## Conclusions\n", "\n## Discussion\n")
+               .replace("\n## @@SWAP@@\n", "\n## Conclusions\n"))
+    results["sections out of order are caught"] = (
+        swapped != original and bool(structure_problems(swapped)["order"]))
+
+    no_funding = re.sub(r"^### Funding[ \t]*$", "### Money", original, count=1, flags=re.M)
+    results["a missing Declarations heading is caught"] = (
+        no_funding != original and bool(structure_problems(no_funding)["declarations"]))
+
+    unlabelled = original.replace("**Results.**", "", 1)
+    results["an unstructured abstract is caught"] = (
+        unlabelled != original and bool(structure_problems(unlabelled)["abstract_labels"]))
+
+    padded = original.replace("## Abstract\n\n", "## Abstract\n\n" + "word " * 400 + "\n\n", 1)
+    results["an over-long abstract is caught"] = (
+        padded != original and bool(structure_problems(padded)["abstract_length"]))
+
+    keywords = _section(original, "Keywords")
+    crowded = (original.replace(keywords, "\n\n" + "; ".join(f"k{i}" for i in range(12)) + "\n\n", 1)
+               if keywords else original)
+    results["too many keywords are caught"] = (
+        crowded != original and bool(structure_problems(crowded)["keywords"]))
+
+    # and the unmodified document must pass every control, or the controls prove nothing
+    results["the real manuscript passes every control"] = (
         not _scan(original)
         and QUALIFIER_MARKERS["outcome"] in original
         and "p < 0.001" in original and "0.000999" not in original
-        and f"{h['delta_RANK']:+.6f}" in original)
+        and f"{h['delta_RANK']:+.6f}" in original
+        and not any(structure_problems(original).values()))
 
     payload = {
         "stage": "MS-F",

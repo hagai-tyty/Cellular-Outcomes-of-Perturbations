@@ -6,15 +6,25 @@
     "a dropped qualifier is caught": true,
     "p quoted as a point estimate is caught": true,
     "a changed number is caught": true,
-    "the real manuscript passes all four": true
+    "sections out of order are caught": true,
+    "a missing Declarations heading is caught": true,
+    "an unstructured abstract is caught": true,
+    "an over-long abstract is caught": true,
+    "too many keywords are caught": true,
+    "the real manuscript passes every control": true
   },
   "checks": {
     "a planted forbidden claim is caught": true,
     "a dropped qualifier is caught": true,
     "p quoted as a point estimate is caught": true,
     "a changed number is caught": true,
-    "the real manuscript passes all four": true
+    "sections out of order are caught": true,
+    "a missing Declarations heading is caught": true,
+    "an unstructured abstract is caught": true,
+    "an over-long abstract is caught": true,
+    "too many keywords are caught": true,
+    "the real manuscript passes every control": true
   },
   "all_passed": true,
-  "module_sha256": "3fa20a2cabd773ec627dc961283a838841e1a86f0e590e8752c1cc593c30077d"
+  "module_sha256": "1c293fdcbe9837e5f9797302d42d21b222d309b95b9de562eac56c120dc9a24c"
 }

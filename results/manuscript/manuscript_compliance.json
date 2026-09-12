@@ -2,7 +2,7 @@
   "stage": "MS-C/MS-D",
   "instrument": "the claim lock's extended patterns under clause-scoped negation",
   "forbidden_hits": [],
-  "references_excluded_from_the_claim_scan": "a cited paper's title is third-party text, not a claim this manuscript makes; only the fenced block under '### References' is excluded, and every entry in it must carry a DOI, PMID or accession",
+  "references_excluded_from_the_claim_scan": "a cited paper's title is third-party text, not a claim this manuscript makes; only the fenced block under the References heading is excluded, and every entry in it must carry a DOI, PMID or accession",
   "reference_block_problems": [],
   "exempt_title_lines": [
     "Pre-existing cell states predict resistance to multiple treatments.",
@@ -14,6 +14,13 @@
   ],
   "package_forbidden_hits": [],
   "missing_sections": [],
+  "structure_problems": {
+    "order": [],
+    "declarations": [],
+    "abstract_labels": [],
+    "abstract_length": [],
+    "keywords": []
+  },
   "missing_qualifiers": [],
   "abstract_missing_qualifiers": [],
   "numbers_checked": 17,
@@ -33,8 +40,13 @@
     "no secondary document quotes a number that is not the locked value": true,
     "the abstract in the submission pack is the manuscript abstract": true,
     "the README quotes the current evidence and claim digests": true,
+    "the top-level sections are the required ones, in order": true,
+    "all eight Declarations headings are present, in order": true,
+    "the abstract is structured under Background, Results and Conclusions": true,
+    "the abstract is at most 350 words": true,
+    "there are three to ten keywords": true,
     "every number traces to a locked artifact": true
   },
   "all_passed": true,
-  "module_sha256": "3fa20a2cabd773ec627dc961283a838841e1a86f0e590e8752c1cc593c30077d"
+  "module_sha256": "1c293fdcbe9837e5f9797302d42d21b222d309b95b9de562eac56c120dc9a24c"
 }

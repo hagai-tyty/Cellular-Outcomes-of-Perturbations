@@ -3,7 +3,9 @@
 Everything a submission form asks for, in one place, plus the full related-work section. Nothing
 here is uploaded by this repository; this is the copy-paste source.
 
-**Fields marked `<<FILL>>` need a human.** They are things I cannot know or must not invent.
+**Fields marked FILL, in double angle brackets, need a human** — things that cannot be known here
+or must not be invented. The release bundle refuses to build while any remains. Fields marked
+LATER can only be filled after archiving, such as the preprint DOI, and do not block it.
 
 ---
 
@@ -17,15 +19,15 @@ TITLE
 SHORT TITLE
   Condition-specific state information in lineage-traced melanoma clones
 
-AUTHORS            <<FILL: full name, ORCID>>
-AFFILIATION        <<FILL>>
-CORRESPONDING      <<FILL: email>>
+AUTHORS            as on the MANUSCRIPT.md title page -- one source, not a copy
+AFFILIATION        as on the MANUSCRIPT.md title page
+CORRESPONDING      as on the MANUSCRIPT.md title page
 
 ARTICLE TYPE       Research Article
 PREPRINT SERVER    bioRxiv
 bioRxiv CATEGORY   Bioinformatics   (secondary: Cancer Biology)
-TARGET JOURNAL     BMC Bioinformatics
-BMC SECTION        Methods / benchmarking and reanalysis
+RELEASE            Zenodo archive and bioRxiv preprint; journal submission deferred (2026-09-12)
+FORMATTED FOR      BMC Bioinformatics Research article, ready if a journal is chosen later
 LICENCE            manuscript + figures  CC BY 4.0
                    software + model      PolyForm-Noncommercial-1.0.0
 ```
@@ -44,38 +46,46 @@ BMC Bioinformatics *Software* article (the frozen predictor plus its refusal sem
 / *Bioinformatics Advances*, both of which take reanalysis-plus-resource submissions. Deciding that
 is not a Generation-1 gate.
 
+### Fee, if a journal is chosen
+
+BMC Bioinformatics charges an article-processing charge of £2,290 / $3,090 / €2,590, plus VAT or
+local taxes, with country-tiered pricing. There is no submission fee: the charge falls due only after
+editorial acceptance. Discretionary waivers are considered case by case and can be requested **only
+at submission**, never later. Checked on 2026-09-12 against the journal's own "How to publish with
+us" page and BMC's article-processing-charge page.
+
 ---
 
 ## 2. Abstract as submitted
 
+> **Background.**
 > Whether a cell's molecular state before a perturbation predicts what happens to it afterwards is
-> usually asked retrospectively, after outcome and state have been measured in the same cells. We
-> ask it prospectively at clone level, in one BRAF-V600E melanoma cell line (WM989, GSE279162), in
-> which a barcoded population was split across six observed experimental conditions: Acid,
-> Cisplatin, CoCl2, Dabrafenib, Doxorubicin and Trametinib. Of the clones that experiment
-> recovered, 1,401 carry a pretreatment profile and are therefore analysable prospectively; those
-> are the clones used here.
+> usually asked retrospectively, after outcome and state have been measured in the same cells. We ask
+> it prospectively at clone level, in one BRAF-V600E melanoma cell line (WM989, GSE279162), in which
+> a barcoded population was split across six observed experimental conditions: Acid, Cisplatin, CoCl2,
+> Dabrafenib, Doxorubicin and Trametinib. Of the clones that experiment recovered, 1,401 carry a
+> pretreatment profile and are therefore analysable prospectively; those are the clones used here.
 >
+> **Results.**
 > Within this system, pretreatment gene expression contains condition-specific information about
-> future clonal detection beyond condition identity and captured pretreatment clone abundance,
-> under clone-held-out evaluation frozen before any result existed. Under a test preregistered in
-> full — the metric, population, weighting, comparator, null and verdict rule all fixed before the
-> numbers existed — a frozen state-by-condition interaction model improves clone-specific ordering
-> of the six conditions over a non-interactive additive model: +0.051605 in equal-clone-weighted
-> within-clone AUROC, 95% CI [+0.037197, +0.065571], with 0 of 1000 full-refit permutation draws
-> reaching the observed value (p < 0.001).
+> future clonal detection beyond condition identity and captured pretreatment clone abundance, under
+> clone-held-out evaluation frozen before any result existed. Under a test preregistered in full — the
+> metric, population, weighting, comparator, null and verdict rule all fixed before the numbers
+> existed — a frozen state-by-condition interaction model improves clone-specific ordering of the six
+> conditions over a non-interactive additive model: +0.051605 in equal-clone-weighted within-clone
+> AUROC, 95% CI [+0.037197, +0.065571], with 0 of 1000 full-refit permutation draws reaching the
+> observed value (p < 0.001).
 >
-> The outcome is an observed post-treatment clone-detection proxy and is **not death**,
-> sensitivity, resistance or clinical response. The six conditions are the entire supported
-> vocabulary. We make no claim about unseen conditions, other cell lines, or patients, and the
-> model emits no calibrated probability. Independent biological replication has not been performed
-> and is Generation 2 work, not a gate on this result.
+> **Conclusions.**
+> The outcome is an observed post-treatment clone-detection proxy and is **not death**, sensitivity,
+> resistance or clinical response. The six conditions are the entire supported vocabulary. We make no
+> claim about unseen conditions, other cell lines, or patients, and the model emits no calibrated
+> probability. Independent biological replication has not been performed and is Generation 2 work,
+> not a gate on this result.
 >
 > ---
 
-**KEYWORDS**
-clonal barcoding; lineage tracing; drug resistance; preregistration; reproducibility;
-within-clone ranking; permutation test; melanoma; reanalysis
+**KEYWORDS** — one source: the `## Keywords` section of `MANUSCRIPT.md`.
 
 ---
 
@@ -158,62 +168,22 @@ still uncommon, and the protocol digests make the claim checkable rather than as
 
 ## 4. Declarations
 
-### Availability of data and materials
+The declarations live in one place: the `## Declarations` section of `MANUSCRIPT.md`, under the eight
+headings BMC requires (Amendment V1.2). They are not repeated here, so there is no second copy to fall
+out of date.
 
-> The dataset analysed here is publicly available from the Gene Expression Omnibus under accession
-> GSE279162, generated and deposited by Schaff et al. [1]. Supporting Role-A evidence uses
-> GSE227151. **No new data were generated for this study.**
->
-> All analysis code, frozen protocols, stage records, out-of-fold predictions, the serialized
-> predictor and the verification tooling are archived at Zenodo, DOI `<<FILL: 10.5281/zenodo.XXXXXXX>>`,
-> and developed openly at `https://github.com/hagai-tyty/Cellular-Outcomes-of-Perturbations`.
-> The archive contains a manifest of SHA-256 digests and three verification commands; the evidence,
-> claim and package digests recorded in the manuscript can be re-derived from it.
+Form-entry notes:
 
-### Software availability and licensing
-
-> CellFate-Rx is source-available under the PolyForm Noncommercial License 1.0.0 (SPDX:
-> `PolyForm-Noncommercial-1.0.0`). Academic, educational, nonprofit and other noncommercial use
-> requires no permission request, registration, payment or signed agreement. Commercial use as part
-> of a revenue-generating product or paid service requires a separate license; see
-> `COMMERCIAL-LICENSING.md`. Manuscript text and figures are licensed CC BY 4.0.
-
-**Note for the editor.** BMC Bioinformatics' software policy requires that software be freely
-available to non-commercial researchers, which this license satisfies without any gate. It is,
-however, **source-available rather than OSI-approved open source**, since commercial use is
-restricted. State this plainly in the cover letter rather than letting it surface in review.
-
-### Competing interests
-
-> `<<FILL — if none: "The author declares no competing interests.">>`
-
-### Funding
-
-> `<<FILL — if none: "This research received no specific grant from any funding agency.">>`
-
-### Ethics approval and consent to participate
-
-> Not applicable. This study is a computational reanalysis of published, publicly available data
-> from an immortalised cell line. No human participants, human material or animals were involved.
-
-### Consent for publication
-
-> Not applicable.
-
-### Authors' contributions
-
-> `<<FILL>>` — single-author template: "H.A. designed the evaluation, implemented the analysis and
-> verification tooling, and wrote the manuscript."
-
-### Acknowledgements
-
-> We thank Schaff et al. for generating and openly depositing GSE279162, without which this
-> reanalysis would not be possible. `<<FILL: any AI-assistance disclosure your venue requires>>`
-
-**Note on AI assistance.** BMC and bioRxiv both require disclosure where generative AI contributed
-to the work. This project was developed with substantial AI assistance for implementation, checking
-and drafting. Say so plainly in the Acknowledgements; do not list a model as an author, which every
-major publisher forbids.
+- **bioRxiv** asks during submission for the organisations that funded the work, with any grant
+  numbers. Copy them from the manuscript's Funding declaration.
+- **AI use** is documented in the manuscript's Methods, under *Use of AI assistance* — where Springer
+  Nature's editorial policy asks for it. bioRxiv's guidance holds authors responsible for content
+  produced with generative AI and says AI tools cannot be authors; it does not ask for a separate
+  disclosure. No AI tool is listed as an author.
+- **Software licence.** BMC Bioinformatics requires software to be freely available for non-commercial
+  use, without restrictions such as a material transfer agreement, and recommends but does not require
+  an open-source licence. PolyForm Noncommercial 1.0.0 meets the requirement. It is source-available
+  rather than OSI open source, and the cover letter says so.
 
 ---
 
@@ -225,9 +195,13 @@ Figure 2  Preregistered clone-specific ranking result (models; observed vs null)
 Figure 3  Robustness across strata, and the top-choice diagnostic
 ```
 
-Vector SVG at `results/manuscript/figures/`. Regenerate with
-`python experiments/make_gen1_figures.py`; every number is read from a locked result file, none is
-typed into the script. Convert to PDF/EPS/TIFF at submission time if the venue demands it.
+Vector SVG at `results/manuscript/figures/`, regenerated with `python experiments/make_gen1_figures.py`;
+every number is read from a locked result file and none is typed into the script. The legends are in
+the manuscript's `## Figure legends` section.
+
+For submission the SVGs are converted to PDF. bioRxiv's conversion engine does not list SVG among the
+figure formats it accepts, and Springer Nature accepts vector PDF for separate figure files. The
+conversion is one of the release steps below, not something this document does.
 
 ---
 
@@ -294,8 +268,12 @@ environment lock. Both are in the manuscript.
 
 ---
 
-## 6. Cover-letter skeleton
+## 6. Cover letter
 
+For a journal submission, if one is made. Paste it unchanged apart from the marked fields.
+
+> Dear Editor,
+>
 > We submit *Pretreatment transcriptional state carries condition-specific information about future
 > clonal detection in a lineage-traced melanoma line* for consideration as a Research Article.
 >
@@ -313,31 +291,58 @@ environment lock. Both are in the manuscript.
 >
 > The complete analysis, frozen protocols, stage-by-stage records including negative and failed
 > results, and a verification tool that refuses on any modified artifact are archived at Zenodo
-> `<<FILL DOI>>`.
+> `<<FILL: 10.5281/zenodo.XXXXXXX>>`.
+>
+> **Preprint.** This manuscript was posted on bioRxiv, DOI `<<LATER: bioRxiv DOI>>`, under a CC BY
+> licence.
+>
+> **Software licence.** The software and frozen model are released under the PolyForm Noncommercial
+> License 1.0.0. They are free for any non-commercial use without registration or agreement, which
+> meets the journal's software-availability policy, but the licence is source-available rather
+> than OSI-approved open source, because commercial use is restricted. We say so here rather than
+> leave it to be discovered in review.
+>
+> **Use of AI.** Generative AI assistance is disclosed in the Methods section.
+>
+> `<<LATER: request an APC waiver here if one is needed -- it can only be requested at submission>>`
+>
+> Sincerely,
+> `<<FILL: full name, as on the manuscript title page>>`
 
 ---
 
 ## 7. Pre-flight checklist
 
 ```text
-[ ] licence coherent: LICENSE, pyproject.toml, CITATION.cff and .zenodo.json all say
-    PolyForm-Noncommercial-1.0.0, and COMMERCIAL-LICENSING.md is present
-[ ] GitHub CI green on the commit being archived
-[ ] fresh clone verifies: evidence, claim and package digests
-[ ] Zenodo DOI reserved
-[ ] DOI written into MANUSCRIPT.md, README.md, CITATION.cff, this file
-[ ] export_gen1_source_data.py run BEFORE the locks -- it writes four LOCKED files
-    (the two per-draw CSVs, figure_source_data.json, environment_lock.txt), so running
-    it afterwards invalidates the very digests just computed
-[ ] locks re-run in order: evidence -> claim -> manuscript, digests propagated
-[ ] bundle rebuilt, then --check: BUNDLE_INTACT (hashes bytes inside the zip, pins the
-    zip against its recorded sha256, and refuses if any locked artifact is absent)
-[ ] Zenodo record published (immutable)
-[ ] GitHub release tagged, release notes link the Zenodo DOI
-[ ] bioRxiv submission (PDF + figures + declarations above)
-[ ] BMC Bioinformatics submission
+PHASE 1 -- structure, in the repository
+[x] manuscript in BMC Research-article structure (Amendment V1.2); structure checks added, each
+    shown to refuse a broken copy
+[x] declarations single-sourced in MANUSCRIPT.md; the submitted abstract checked against it
+[x] the release bundle refuses any FILL marker; LATER markers are allowed and listed
+
+PHASE 2 -- human inputs
+[ ] the restructured manuscript read and approved, especially the new prose
+[ ] author block, declarations and the AI-use paragraph filled
+[ ] Zenodo: GitHub integration OFF for this repository; DOI reserved on a saved draft
+
+PHASE 3 -- lock and build
+[ ] DOI written into MANUSCRIPT.md, README.md, CITATION.cff and this file
+[ ] python experiments/export_gen1_source_data.py    -- the numbers still reproduce
+[ ] python experiments/cascade_gen1.py               -- locks in order, digests re-pinned
+[ ] the three --verify commands, and the full test suite read by pytest's own exit code
+[ ] CITATION.cff validated
+[ ] submission files rendered: MANUSCRIPT.docx, MANUSCRIPT.pdf, figure PDFs, cover letter
+[ ] commit, push, green CI on that exact commit
+[ ] python experiments/make_release_bundle.py, then --check; the unpacked archive verifies
+
+PHASE 4 -- publish, in this order
+[ ] Zenodo record published; the downloaded ZIP's SHA-256 matches BUNDLE_CONTENTS.json
+[ ] GitHub release gen1-v1.0.0 on the archived commit, linking the DOI
+[ ] bioRxiv: MANUSCRIPT.pdf, CC BY, category Bioinformatics
+[ ] the bioRxiv DOI written into the LATER fields
 ```
 
-**Order matters at steps 3–6.** Reserving the DOI first, then writing it into the documents, then
-re-running the locks, is the only sequence in which the archived bundle contains its own DOI *and*
-its digests are correct. Writing the DOI after locking silently invalidates all three digests.
+**Order matters in Phase 3.** The DOI and every FILL field must be written before the locks are
+re-run, or the archived bundle does not contain its own DOI. The locks must be re-run before the
+commit, and the bundle built after it: the bundle records the commit it was cut from and refuses a
+dirty tree. A Zenodo record's files cannot be changed once it is published.

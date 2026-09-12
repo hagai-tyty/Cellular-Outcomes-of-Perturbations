@@ -1,21 +1,21 @@
 {
-  "package_digest": "002bc903963e28656c648d1ee511b1c362540e50fc69da3746b7e68e604e974f",
+  "package_digest": "3f0855ab579fed2096a4ebf3ddf76da498bb8916dbcb50d4a2a4c3f613ee92b3",
   "digest_definition": "SHA-256 over 'path  canonical-lf-sha256' lines, sorted by path",
   "covers": {
-    "plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md": "b31942cb0d6da12448fee27d09b5fe9169fa87f122570bed3f6e93bc67eeff99",
-    "experiments/run_gen1_manuscript.py": "37e56ecd311bc6c38ff17dd55c509f40bf84bad70b6b95fee302ad20aa6d8b59",
-    "tests/test_gen1_manuscript.py": "65c00c2b297e1bbf5bc1bee1916d3b54aca2d905ba04059638c9b8f4d53d11d1",
-    "results/manuscript/MANUSCRIPT.md": "d1552052a046cf6f6297c246eae5913f877c7cee36673c3a8cd10779bcdd5325",
-    "results/manuscript/REPRODUCIBILITY.md": "0e898a4c7f59d71c0206c3ad2edea847a59a379b75f29270178132ebca3b98c1",
-    "results/manuscript/SUBMISSION.md": "1fcb5f61a1061dc1e956eed78dcd1a040f4ff345ad18c133d950a752ec871f26",
+    "plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md": "f76f30cd549f03b3698adf5646e07be66a85456cdc4bbe42ebe83147dc9a6b87",
+    "experiments/run_gen1_manuscript.py": "0c784b37434bfaa75fae98cdbd6868592daf23c5269d5489aa69bdcfe7b5f74b",
+    "tests/test_gen1_manuscript.py": "cf121e0ee74ea609644df2255658cbd277c71ecca42da0651e61d6aa5cbbd18c",
+    "results/manuscript/MANUSCRIPT.md": "02995170006f233aa6f0ddd63ba2260b881334f6d70f135ceb5e4bc66c25da8b",
+    "results/manuscript/REPRODUCIBILITY.md": "806ddd091b00c6c951185dc15830d5b8dcc677d0dc21f0ef4b4e44a2c951fed5",
+    "results/manuscript/SUBMISSION.md": "91f9cca73c24bdc66c8f8619a26b3b71a339ab00a147d5813707416bd0a74148",
     "results/manuscript/figures/figure_1_design.svg": "12cce5e16a6e40958808c44311d4156e0eb56949c1ac52e6cfefc57c98ef1ed7",
     "results/manuscript/figures/figure_2_primary.svg": "e2a13d883068725ab86e411bbf868647adde21b9b8e5d82a78e0f3dacc938d44",
     "results/manuscript/figures/figure_3_robustness.svg": "5d9914a4d43e00d67a2e0b319e2fb1e7fbc22626379724cabaee853518fbe01e",
     "results/manuscript/figures/figure_source_data.json": "3664698efec05f36c461b53220c3aadf4d5ae027079821e36930fc7a42da273a",
     "plans/(newer)practical plans/RECORDs/gen1_EVIDENCE_LOCK_RECORD.md": "db8d668fa7184bcdaa91449c6ae1bc72c3aae7423a1b4df3f86ee27cd05a95d8",
     "plans/(newer)practical plans/RECORDs/gen1_CLAIM_LOCK_RECORD.md": "5a962f4295a439241454fd9e34ce603673dc64fa3afcaf8f282f1564b2de8691",
-    "README.md": "ddaa784d50797d5ac591a592686e7a37f63c6e88afb6ab11190f9b2e8010ef4b"
+    "README.md": "8f6976d355785c94885f599f9dc9de3ffb07073c2386dd66bc9b8e6b806c529d"
   },
   "verify": "python experiments/run_gen1_manuscript.py --verify",
-  "module_sha256": "3fa20a2cabd773ec627dc961283a838841e1a86f0e590e8752c1cc593c30077d"
+  "module_sha256": "1c293fdcbe9837e5f9797302d42d21b222d309b95b9de562eac56c120dc9a24c"
 }
