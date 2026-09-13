@@ -65,3 +65,8 @@ def test_the_gate_is_not_bypassed_by_allow_dirty():
     src = inspect.getsource(B.build)
     gate = src[src.index("fill, later = placeholders()"):src.index("zipfile.ZipFile")]
     assert "allow_dirty" not in gate
+
+
+def test_draft_renders_are_never_swept_into_the_archive():
+    """The bundle walks the tree on disk, not git, so a gitignored draft render would be archived."""
+    assert "draft" in B.SKIP_DIR

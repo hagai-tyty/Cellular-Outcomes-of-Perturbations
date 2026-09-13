@@ -8,9 +8,9 @@
     "MS-F_controls_fire": true
   },
   "failing": [],
-  "evidence_digest": "0763f9229665c50c1cb74769e2271f0fc5664b4fb807679ee873ef87f984efa2",
-  "claim_digest": "939a26854adf2942776bd96cbd38f1ea8973699d3769b8bc4d8b5fdc97197228",
-  "plan_canonical_lf_sha256": "f76f30cd549f03b3698adf5646e07be66a85456cdc4bbe42ebe83147dc9a6b87",
+  "evidence_digest": "e467de64fd0cb0f9ca00d67db3c9ff99a2b04a3db4424a1207cf7eb53e01f71f",
+  "claim_digest": "c6895e963baf43b024b5701eb004b723ff95ef0de422d0d426ebe32403112e9a",
+  "plan_canonical_lf_sha256": "b7bf401c31293cefa644cf95e6c47f3c4efe97d3040531f18e28e213fa00b26b",
   "manuscript": "results/manuscript/MANUSCRIPT.md",
   "package": "results/manuscript/REPRODUCIBILITY.md",
   "numbers_traced": 17,
@@ -43,9 +43,12 @@
     "an unstructured abstract is caught": true,
     "an over-long abstract is caught": true,
     "too many keywords are caught": true,
+    "overstated freeze wording is caught": true,
+    "an archive check that could run the installed copy is caught": true,
+    "the real package document passes the archive check": true,
     "the real manuscript passes every control": true
   },
   "what_ready_does_not_mean": "GEN1_MANUSCRIPT_READY means the document is consistent with everything locked beneath it. It is NOT a judgement that the science is good, that the writing is clear, or that a reviewer will agree.",
   "next": "PREPRINT / SUBMISSION. Generation 1 is complete.",
-  "module_sha256": "1c293fdcbe9837e5f9797302d42d21b222d309b95b9de562eac56c120dc9a24c"
+  "module_sha256": "55a71a5edaf3611e84c4bb164cd892ca8eaee9f2a02d4bf7ef3d270638372a8c"
 }

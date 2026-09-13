@@ -72,3 +72,7 @@ results/.cache/stage23_2h_clones.json
 # stage24_w5_artifact.json. For the reproducibility package it ships as a release asset.
 results/stage24/stage24_w5_artifact.npz
 results/.cache/stage25_null_shards/
+
+# --- Submission renders ---
+# Draft renders carry FILL placeholders and are never committed. Final renders are.
+results/manuscript/submission/draft/

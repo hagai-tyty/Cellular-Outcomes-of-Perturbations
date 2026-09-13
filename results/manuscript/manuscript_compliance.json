@@ -21,6 +21,7 @@
     "abstract_length": [],
     "keywords": []
   },
+  "overstated_freeze": {},
   "missing_qualifiers": [],
   "abstract_missing_qualifiers": [],
   "numbers_checked": 17,
@@ -45,8 +46,9 @@
     "the abstract is structured under Background, Results and Conclusions": true,
     "the abstract is at most 350 words": true,
     "there are three to ten keywords": true,
+    "no release document says a protocol was frozen before any result existed": true,
     "every number traces to a locked artifact": true
   },
   "all_passed": true,
-  "module_sha256": "1c293fdcbe9837e5f9797302d42d21b222d309b95b9de562eac56c120dc9a24c"
+  "module_sha256": "55a71a5edaf3611e84c4bb164cd892ca8eaee9f2a02d4bf7ef3d270638372a8c"
 }

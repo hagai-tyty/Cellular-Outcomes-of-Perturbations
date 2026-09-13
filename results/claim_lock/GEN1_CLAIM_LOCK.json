@@ -8,9 +8,9 @@
     "CL-E_worked_abstract": true
   },
   "failing": [],
-  "evidence_lock_digest": "0763f9229665c50c1cb74769e2271f0fc5664b4fb807679ee873ef87f984efa2",
+  "evidence_lock_digest": "e467de64fd0cb0f9ca00d67db3c9ff99a2b04a3db4424a1207cf7eb53e01f71f",
   "plan": "plans/(newer)practical plans/GEN1_CLAIM_LOCK_V1.md",
-  "plan_canonical_lf_sha256": "74e47aab81e74f2a19fdff8752c9e7dc36ecc67d32b8405e5d615429b9b8edbf",
+  "plan_canonical_lf_sha256": "c3f551cf3380345bddec549898d0f32affd027ee1871c1d5fc46b38fb0ef4126",
   "ship_plan_digest": "8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48",
   "allowed": {
     "primary": {
@@ -113,16 +113,16 @@
   },
   "evidence_verification": {
     "stage": "CL-A",
-    "lock_digest": "0763f9229665c50c1cb74769e2271f0fc5664b4fb807679ee873ef87f984efa2",
+    "lock_digest": "e467de64fd0cb0f9ca00d67db3c9ff99a2b04a3db4424a1207cf7eb53e01f71f",
     "live_verification": {
       "clean": true,
       "moved": [],
       "missing": [],
-      "n_checked": 63
+      "n_checked": 64
     },
     "checks": {
       "the evidence lock verdict is GEN1_EVIDENCE_LOCKED": true,
-      "all 63 locked artifacts still verify": true,
+      "all 64 locked artifacts still verify": true,
       "the lock digest is the one this plan was written against": true,
       "the frozen ship-plan digest still holds": true
     },

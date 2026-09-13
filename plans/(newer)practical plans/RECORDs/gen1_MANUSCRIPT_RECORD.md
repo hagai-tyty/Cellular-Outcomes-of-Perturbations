@@ -958,3 +958,98 @@ The release bundle now refuses to build: 25 FILL markers remain across `README.m
 `.zenodo.json`, `MANUSCRIPT.md` and `SUBMISSION.md`. They are author details, declarations, the
 AI-use description and the Zenodo DOI, all Phase 2 inputs. The restructured manuscript has not yet
 been read by its author.
+
+---
+
+## Phase 2A of the release: corrections from an external review — 2026-09-13
+
+An external review of the release workflow made five claims. Each was checked against the repository
+and against primary sources before anything changed. All five held; two held more narrowly than
+they were stated.
+
+### What was checked, and what was found
+
+- **Freeze wording.** The Stage-23 predictive analyses of WM989 are recorded on 2026-08-22. The
+  Stage-23.5 plan that preregistered the ranking test was committed on 2026-08-26 and states that no
+  Stage-25 ranking statistic existed. "Frozen before any result existed" was therefore true of the
+  ranking statistics and false of the analysis as a whole. Counted with the gate's own pattern, the
+  overstated form appeared 13 times: 6 in `MANUSCRIPT.md`, 4 in `SUBMISSION.md`, and one each in
+  `README.md`, `.zenodo.json` and `CITATION.cff`. A first count from a line-based grep said 11 — a
+  phrase broken across a line is invisible to grep — and it was corrected before anything was
+  written.
+- **Competing interests.** BMC counts financial interests that may be affected by publication. The
+  author holds the copyright and offers commercial licences, so "none" must not be the default.
+- **Licence wording.** PolyForm Noncommercial 1.0.0 permits personal use only "without any
+  anticipated commercial application". `COMMERCIAL-LICENSING.md`, the README, the manuscript,
+  `REPRODUCIBILITY.md` and `.zenodo.json` describe a commercial licence as needed only for
+  revenue-generating use, and the notice says evaluation needs none. The licence governs, not the
+  notice. **Not changed in this phase**: how to resolve it is the author's decision, in Phase 2B.
+- **Figures.** The manuscript embedded none, and pandoc's default PDF route needs LaTeX, which is not
+  installed.
+- **Archive and checkout.** `REPRODUCIBILITY.md` said the model was not in "this package". The Zenodo
+  archive contains it, and the pseudobulk cache as well.
+
+### A verification that tested the wrong code
+
+Run inside an unpacked archive, a plain `python -m cellfate.gen1_cli` imported
+`D:/cellfate-rx/src` — the checkout's editable install — and exited 0. With `PYTHONPATH=src` it
+imported the archive's own copy, and the documented example exited 0 with a score for each of the six
+conditions. A verification of an archive that silently runs a different copy of the code is not a
+verification. The flag is now required by the package document and by an MS-E check.
+
+### What was done
+
+- **Freeze wording** made precise in all 13 places: clone-held-out folds, features and exclusions
+  fixed before any model was fitted; the ranking test frozen before any ranking statistic was
+  computed, after earlier predictive analyses of the same data. `GEN1_CLAIMS.md` is a lock and keeps
+  its wording; the manuscript says less than the lock, never more. MS-C check and MS-F control added.
+- **Placeholder prompts** for competing interests and AI use sharpened. Nothing was filled on the
+  author's behalf.
+- **`REPRODUCIBILITY.md`** separates a checkout from the archive, and a new section verifies the
+  unpacked archive with the three verifiers and the predictor under `PYTHONPATH=src`. MS-E check and
+  MS-F control added. Recorded as Amendment V1.3.
+- **`experiments/render_gen1_submission.py`** builds the BMC `.docx` with separate figure PDFs, and a
+  bioRxiv `.docx` with the figures embedded above their legends, exported to PDF by Word. It refuses
+  while any FILL marker remains unless run as a draft, and writes a manifest of output hashes. Seven
+  tests, none of which needs pandoc. Not yet run: the tools are not installed.
+- **`.gitattributes`** gains binary rules. `results/** text eol=lf` forced text handling on binary
+  files. `example_clone_expression.npy` had been committed under it; its attribute moved from
+  `text eol=lf` to `-text`, and git showed no change, so its committed bytes were unaffected. A
+  rendered `.docx` or `.pdf` would have been corrupted on commit.
+- **Draft renders** are gitignored, and the release bundle skips them: it walks the tree on disk, not
+  git, so a draft would otherwise have been archived.
+- **`SUBMISSION.md`** sections 5 and 7 now carry the render step, page inspection, the archive
+  predictor, the licensing decision, the competing-interests disclosure, and the rule that the release
+  tag never moves.
+
+### Two script bugs the gates caught before anything was written
+
+- The step-1 script re-wrapped any paragraph that grew long. `.zenodo.json` keeps its description on
+  one line and `CITATION.cff` has no blank lines, so both would have collapsed into prose. The parse
+  checks refused it; those two files are now edited without re-wrapping.
+- A patch anchor containing a newline escape lost its backslash in the shell and matched nothing. The
+  patch stopped before saving.
+
+### Registered results
+
+```text
+  manuscript stage      GEN1_MANUSCRIPT_READY
+  compliance checks     20 of 20 pass
+  negative controls     13 of 13 fire
+  three --verify        EVIDENCE_INTACT, CLAIMS_INTACT, PACKAGE_INTACT
+  full test suite       pytest's own exit code 0, 2189 tests collected
+  FILL markers left     25, all Phase 2B inputs
+```
+
+### Digests
+
+```text
+  evidence  e467de64fd0cb0f9ca00d67db3c9ff99a2b04a3db4424a1207cf7eb53e01f71f
+  claim     c6895e963baf43b024b5701eb004b723ff95ef0de422d0d426ebe32403112e9a
+  package   b15ab5ddb010175b5bb99ff6a9f60e3935bfb76d0b3a8e319348b90c3dcbcff9
+```
+
+### Not done in this phase
+
+The licensing wording, which waits on the author's choice; the FILL markers; the installs; rendering;
+and the Zenodo DOI.

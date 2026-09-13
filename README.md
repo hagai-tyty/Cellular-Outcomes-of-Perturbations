@@ -26,8 +26,8 @@ claimed.
 ```text
   GEN1_MANUSCRIPT_READY
 
-  evidence lock   0763f9229665c50c1cb74769e2271f0fc5664b4fb807679ee873ef87f984efa2
-  claim lock      939a26854adf2942776bd96cbd38f1ea8973699d3769b8bc4d8b5fdc97197228
+  evidence lock   e467de64fd0cb0f9ca00d67db3c9ff99a2b04a3db4424a1207cf7eb53e01f71f
+  claim lock      c6895e963baf43b024b5701eb004b723ff95ef0de422d0d426ebe32403112e9a
   package         results/manuscript/GEN1_PACKAGE_DIGEST.json
 ```
 
@@ -41,7 +41,8 @@ non-interactive additive model:
 ```text
   delta_RANK   +0.051605   CI95 [+0.037197, +0.065571]
   null         0 of 1000 full-refit permutation draws reached the observed value, p < 0.001
-  population   892 of 1,401 clones, clone-held-out, frozen before any result existed
+  population   892 of 1,401 clones, clone-held-out
+  frozen       the ranking test, by digest, before any ranking statistic was computed
 ```
 
 **What it is not.** The outcome is an observed post-treatment clone-detection proxy and is **not

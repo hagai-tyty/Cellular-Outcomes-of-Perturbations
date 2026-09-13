@@ -3,8 +3,8 @@
 ```text
   GEN1_EVIDENCE_LOCKED
 
-  lock digest   0763f9229665c50c1cb74769e2271f0fc5664b4fb807679ee873ef87f984efa2
-  artifacts     63
+  lock digest   e467de64fd0cb0f9ca00d67db3c9ff99a2b04a3db4424a1207cf7eb53e01f71f
+  artifacts     64
   ship plan     8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48
 ```
 
@@ -20,14 +20,15 @@ has one identity on every platform. The ship plan therefore carries `59f22e9a...
 ## What is locked
 
 ```text
-  protocol      8954749ef2fbf71de2191e378a2650ca076bddc2d45623f633d3f356bfac7cbf  CITATION.cff
+  protocol      12e66e72d96cbbda5bb1882c98b2b3a92dc40a4ef4bc6df2319fbe31399d0bd1  CITATION.cff
   protocol      fcaf661314768f30a01f7ed9fb16e2493eb1e39f88a04114280bdb2c0d3bdcc6  environment_lock.txt
   code          dfd047eff9fb82d0303c24743416d5a3ddc524076976074adceb435cb5d704a7  experiments/build_stage22_prospective_benchmarks.py
   code          094e069bd93371be8c842c0fa987fb03ae6dc6a961e63750a76bae6ab1c2f06c  experiments/cascade_gen1.py
   code          be0547e4aa8407dab2680aba3605536099173b6cea31c8574b4da6cb699b9ea5  experiments/export_gen1_source_data.py
   code          75321aebe9671002620f2f635999b03754a9dd8fe6ec7511397de98faf32c2f6  experiments/make_gen1_figures.py
-  code          cc7c7318115fb5e116a8a2a377edcb41bda6eb4cf61ac63288fcb1fb8077f8a1  experiments/make_release_bundle.py
-  code          1f8a8f88a285cfd686603fe6b3e683cfd8ed604d6b8004390c89aaed439b5e46  experiments/run_gen1_evidence_lock.py
+  code          76219085118dc30b577a708bd40ea65d998f36eb8c6073e101014423735b6c15  experiments/make_release_bundle.py
+  code          3770bda34e6508afbb8f016599af7ed18d2d8b259a4a0e80fbad600663ebd3e8  experiments/render_gen1_submission.py
+  code          9a7c3ad0581d07104e3e153f32a7d6140de97ec9b6f6f5bcec4bf47aab4db5e8  experiments/run_gen1_evidence_lock.py
   code          a0801d4d2a91259b53e67c4705da0ccde7c822b73b9670cec9be1919614a0085  experiments/run_stage23_2h_confirmation.py
   code          ce43d831b0c7585a226a61c340c95660fa14e67ab2ea0fa3714d822c64e8b7f7  experiments/run_stage23_learnability_gate.py
   code          f04743532ef66cca47eb461cc4fdf304b53e0fbf113567ae3e7218f13b7b4ecc  experiments/run_stage24_gen1_tool.py

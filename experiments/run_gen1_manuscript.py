@@ -49,6 +49,21 @@ MANUSCRIPT = OUT / "MANUSCRIPT.md"
 REPRO = OUT / "REPRODUCIBILITY.md"
 README = ROOT / "README.md"
 SUBMIT = OUT / "SUBMISSION.md"
+ZENODO = ROOT / ".zenodo.json"
+CITATION = ROOT / "CITATION.cff"
+
+# Amendment V1.3. The ranking test was frozen by digest before any ranking statistic was computed, but
+# after earlier predictive analyses of the same data -- not "before any result existed". That
+# overstatement appeared thirteen times across the documents that travel with the release. The locked
+# claim file keeps it, because a lock is not edited; the release documents may not.
+OVERSTATED_FREEZE = re.compile(
+    r"before\s+(?:any|the)\s+(?:results?|numbers?|of\s+the\s+numbers)\s+existed", re.I)
+
+
+def _overstated_freeze(text: str) -> list[str]:
+    """Overstated freeze wording, found even across a line wrap or a blockquote."""
+    flat = " ".join(re.sub(r"(?m)^>[ \t]?", "", text).split())
+    return [m.group(0) for m in OVERSTATED_FREEZE.finditer(flat)]
 COMPLIANCE_JSON = OUT / "manuscript_compliance.json"
 CONTROLS_JSON = OUT / "manuscript_controls.json"
 VERDICT_JSON = OUT / "GEN1_MANUSCRIPT.json"
@@ -230,6 +245,31 @@ def _submitted_abstract(text: str) -> str:
     return re.sub(r"\s+", " ", joined).strip()
 
 
+# Amendment V1.3. A GitHub checkout lacks the model artifact and the pseudobulk cache; the Zenodo
+# archive carries both. And the archive has to be verified with its OWN code: inside an unpacked archive
+# a plain `python -m cellfate.gen1_cli` imported the checkout's editable install and exited 0 -- a pass
+# on the wrong code. PYTHONPATH=src forces the archive's copy.
+ARCHIVE_SECTION = "## 5.1 Verifying the Zenodo archive"
+ARCHIVE_COMMANDS = (
+    "run_gen1_evidence_lock.py --verify",
+    "run_gen1_claim_lock.py --verify",
+    "run_gen1_manuscript.py --verify",
+    "PYTHONPATH=src python -m cellfate.gen1_cli",
+)
+
+
+def archive_problems(text: str) -> list[str]:
+    """What the package document fails to say about the Zenodo archive (Amendment V1.3)."""
+    problems = []
+    if text.count("The Zenodo archive includes it") < 2:
+        problems.append("the model artifact and the pseudobulk cache are not both marked as archived")
+    if ARCHIVE_SECTION not in text:
+        return problems + ["there is no section verifying the Zenodo archive"]
+    section = text.split(ARCHIVE_SECTION, 1)[1].split("\n## ", 1)[0]
+    return problems + [f"the archive section does not run: {c}" for c in ARCHIVE_COMMANDS
+                       if c not in section]
+
+
 def _section(text: str, name: str) -> str:
     """The body of one top-level `## ` section, up to the next top-level heading."""
     m = re.search(rf"^## {re.escape(name)}[ \t]*$(.*?)(?=^## |\Z)", text, re.M | re.S)
@@ -351,6 +391,14 @@ def compliance() -> dict:
                         and f"## {s}" not in text]
     missing_qual = [k for k, v in QUALIFIER_MARKERS.items() if v not in text]
     structure = structure_problems(text)
+    release_documents = {
+        "MANUSCRIPT.md": text, "REPRODUCIBILITY.md": repro, "README.md": readme,
+        "SUBMISSION.md": submission,
+        ".zenodo.json": ZENODO.read_text(encoding="utf-8") if ZENODO.exists() else "",
+        "CITATION.cff": CITATION.read_text(encoding="utf-8") if CITATION.exists() else "",
+    }
+    overstated = {k: _overstated_freeze(v) for k, v in release_documents.items()
+                  if _overstated_freeze(v)}
 
     abstract = text.split("## Abstract", 1)[-1].split("\n## ", 1)[0] if "## Abstract" in text else ""
     abstract_missing = [k for k in ABSTRACT_MUST_CARRY if QUALIFIER_MARKERS[k] not in abstract]
@@ -402,6 +450,8 @@ def compliance() -> dict:
             not structure["abstract_labels"],
         "the abstract is at most 350 words": not structure["abstract_length"],
         "there are three to ten keywords": not structure["keywords"],
+        # Amendment V1.3 -- say when the protocol was frozen, precisely
+        "no release document says a protocol was frozen before any result existed": not overstated,
         "every number traces to a locked artifact": not untraceable,
     }
     return write_json(COMPLIANCE_JSON, {
@@ -417,6 +467,7 @@ def compliance() -> dict:
         "package_forbidden_hits": repro_hits,
         "missing_sections": missing_sections,
         "structure_problems": structure,
+        "overstated_freeze": overstated,
         "missing_qualifiers": missing_qual,
         "abstract_missing_qualifiers": abstract_missing,
         "numbers_checked": len(_numbers()),
@@ -467,8 +518,12 @@ def package_check() -> dict:
         "the rebuild command for the gitignored artifact is given":
             "--stage 24c" in text,
         "the long runtime is stated honestly": "10.7" in text,
+        # Amendment V1.3
+        "a checkout and the Zenodo archive are distinguished, and the archive is verified with its own code":
+            not archive_problems(text),
     }
     return {"stage": "MS-E", "commands_found": len(cmds), "bad_commands": bad_cmd,
+            "archive_problems": archive_problems(text),
             "unknown_paths": unknown, "checks": checks, "all_passed": all(checks.values()),
             "runtime_seconds": round(time.perf_counter() - t0, 3)}
 
@@ -540,13 +595,26 @@ def negative_controls(write: bool = True) -> dict:
     results["too many keywords are caught"] = (
         crowded != original and bool(structure_problems(crowded)["keywords"]))
 
+    # Amendment V1.3: the overstated freeze wording must be caught if it comes back.
+    overstated_copy = original + "\n\nThe protocol was frozen before any result existed.\n"
+    results["overstated freeze wording is caught"] = (
+        overstated_copy != original and bool(_overstated_freeze(overstated_copy)))
+
+    # Amendment V1.3: an archive check that would run the installed copy must be refused.
+    package = REPRO.read_text(encoding="utf-8") if REPRO.exists() else ""
+    unforced = package.replace("PYTHONPATH=src python -m cellfate.gen1_cli", "python -m cellfate.gen1_cli")
+    results["an archive check that could run the installed copy is caught"] = (
+        unforced != package and bool(archive_problems(unforced)))
+    results["the real package document passes the archive check"] = not archive_problems(package)
+
     # and the unmodified document must pass every control, or the controls prove nothing
     results["the real manuscript passes every control"] = (
         not _scan(original)
         and QUALIFIER_MARKERS["outcome"] in original
         and "p < 0.001" in original and "0.000999" not in original
         and f"{h['delta_RANK']:+.6f}" in original
-        and not any(structure_problems(original).values()))
+        and not any(structure_problems(original).values())
+        and not _overstated_freeze(original))
 
     payload = {
         "stage": "MS-F",

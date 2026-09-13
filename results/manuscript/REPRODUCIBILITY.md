@@ -15,8 +15,8 @@ Before reproducing anything, confirm the artifacts are the ones the manuscript w
 ```
 
 ```text
-  evidence lock digest   0763f9229665c50c1cb74769e2271f0fc5664b4fb807679ee873ef87f984efa2
-  claim lock digest      939a26854adf2942776bd96cbd38f1ea8973699d3769b8bc4d8b5fdc97197228
+  evidence lock digest   e467de64fd0cb0f9ca00d67db3c9ff99a2b04a3db4424a1207cf7eb53e01f71f
+  claim lock digest      c6895e963baf43b024b5701eb004b723ff95ef0de422d0d426ebe32403112e9a
   package digest         results/manuscript/GEN1_PACKAGE_DIGEST.json
 ```
 
@@ -38,8 +38,8 @@ Either way the right response is to find out why — not to re-lock.
 Text is hashed canonical-LF and binary raw, so the digests are the same on Windows, macOS and
 Linux regardless of line-ending settings.
 
-**One step first.** The model artifact is not in the repository (see §5), so rebuild it before
-verifying:
+**In a GitHub checkout, one step first.** The model artifact is not in the repository (see §5), so
+rebuild it before verifying. The Zenodo archive already contains it; skip this step there (§5.1).
 
 ```text
   python experiments/run_stage24_gen1_tool.py --stage 24c
@@ -146,19 +146,47 @@ Regenerate with `python experiments/export_gen1_source_data.py`, which refuses t
 that does not reproduce the recorded verdict statistic exactly. The null draws previously existed
 only in a gitignored shard cache — 10.7 h of compute on a single machine, summarised to six numbers.
 
-## 5. What is NOT in this package
+## 5. What a GitHub checkout lacks, and what the Zenodo archive adds
 
 ```text
   results/stage24/stage24_w5_artifact.npz
       44 MB, gitignored. A fresh clone does NOT contain it. Its hash is locked and the
-      rebuild is one command, above.
+      rebuild is one command, above. The Zenodo archive includes it.
+
+  _cc_cache/stage23/GSE279162_pseudobulk.npz
+      the clone pseudobulk the permutation null refits on. Gitignored, so a fresh clone
+      lacks it too, and rebuilding it starts from the raw GEO data. The Zenodo archive includes it.
 
   raw sequencing data
-      GSE279162 (WM989, Role B primary) and GSE227151 (Rewind, Role A supporting) are
-      not vendored. Accessions are locked; bytes are not.
+      GSE279162 (WM989, Role B primary) and GSE227151 (Rewind, Role A supporting) are in
+      neither. Accessions are locked; bytes are not vendored.
 ```
 
-Naming a gap is not closing it. Both stay open.
+Naming a gap is not closing it. In a checkout the model is one command away and the pseudobulk a data
+download; in the archive only the raw sequencing data remains outside.
+
+## 5.1 Verifying the Zenodo archive
+
+Check the download before unpacking it: its SHA-256 must equal `bundle_sha256` in
+`BUNDLE_CONTENTS.json`, published beside it. Then, from inside the unpacked `cellfate-rx-gen1/`:
+
+```text
+  python experiments/run_gen1_evidence_lock.py --verify
+  python experiments/run_gen1_claim_lock.py --verify
+  python experiments/run_gen1_manuscript.py --verify
+  PYTHONPATH=src python -m cellfate.gen1_cli \
+      --artifact results/stage24/stage24_w5_artifact.npz \
+      --meta results/stage24/stage24_w5_artifact.json \
+      --expression results/stage24/tool/example_clone_expression.npy \
+      --nuisance results/stage24/tool/example_clone_nuisance.txt
+```
+
+`PYTHONPATH=src` is not decoration. If CellFate-Rx is also installed from a checkout, a plain
+`python -m cellfate.gen1_cli` run inside the archive imports that installed copy instead of the
+archive's own code, and exits cleanly while testing the wrong thing -- this was observed, not
+supposed. In Windows PowerShell set it first with `$env:PYTHONPATH = "src"`. The predictor should exit
+`0` and print a score for each of the six conditions; its ordering is reported as not validated unless
+the preregistered verdict file is supplied, which is the tool working as specified.
 
 ---
 

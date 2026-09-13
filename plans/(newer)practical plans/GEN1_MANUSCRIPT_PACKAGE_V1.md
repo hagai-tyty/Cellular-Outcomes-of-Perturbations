@@ -6,8 +6,8 @@
 **Entry** `results/gen1_handoff_to_manuscript.json`, verdict `GEN1_CLAIMS_LOCKED`.
 
 ```text
-  evidence digest  0763f9229665c50c1cb74769e2271f0fc5664b4fb807679ee873ef87f984efa2
-  claim digest     939a26854adf2942776bd96cbd38f1ea8973699d3769b8bc4d8b5fdc97197228
+  evidence digest  e467de64fd0cb0f9ca00d67db3c9ff99a2b04a3db4424a1207cf7eb53e01f71f
+  claim digest     c6895e963baf43b024b5701eb004b723ff95ef0de422d0d426ebe32403112e9a
 ```
 
 **Mandate** §9 of the frozen ship plan: `MANUSCRIPT + REPRODUCIBILITY PACKAGE -> PREPRINT /
@@ -202,7 +202,7 @@ never a Generation-1 gate.
 # Amendment V1.1 — 2026-09-04
 
 The Entry block above is re-pinned rather than quietly overwritten. V1 was written against
-evidence digest `0763f9229665c50c1cb74769e2271f0fc5664b4fb807679ee873ef87f984efa2` and claim
+evidence digest `e467de64fd0cb0f9ca00d67db3c9ff99a2b04a3db4424a1207cf7eb53e01f71f` and claim
 digest `a81ee43b07fae32f9bb45b4a4133de0b1f3979eeda3de7d700a7ca6897affb77`.
 
 Both moved during the release-verification pass: the evidence manifest had been recording each
@@ -270,3 +270,31 @@ there are three to ten keywords
 
 **Placeholders.** Fields only a human can supply are marked FILL and must block the release bundle.
 Fields that cannot exist until after archiving -- the preprint DOI -- are marked LATER and do not.
+
+---
+
+# Amendment V1.3 — 2026-09-13
+
+Two corrections from an external review of the release workflow. Each was checked against the
+repository before it was accepted.
+
+**1. When the protocol was frozen, said precisely.** The manuscript said the evaluation was frozen
+"before any result existed". The ranking test was frozen by digest before any ranking statistic was
+computed -- the Stage-23.5 plan, committed 2026-08-26, states that no Stage-25 statistic exists -- but
+after the Stage-23 predictive analyses of the same data, recorded 2026-08-22. The overstated form
+appeared 13 times across the release documents. Each now says what is true: clone-held-out
+folds, features and exclusions fixed before any model was fitted, and the ranking test frozen before
+any ranking statistic was computed, after earlier predictive analyses. An MS-C check refuses the
+overstated wording in any release document, with a negative control. The locked claim file
+`GEN1_CLAIMS.md` keeps the old wording, because a lock is not edited; the manuscript may say less
+than the lock, never more, and here it says less.
+
+**2. A checkout is not the archive (§5).** §5 required the package to name what it does not contain.
+The Zenodo archive does contain the 44 MB model artifact, and the pseudobulk cache the null refits on,
+so "not in this package" was true of a GitHub checkout and false of the archive. `REPRODUCIBILITY.md`
+now separates the two and verifies the unpacked archive with the three verifiers and the predictor,
+run with `PYTHONPATH=src`. That flag is required: inside an unpacked archive, a plain
+`python -m cellfate.gen1_cli` imported the checkout's editable install and exited 0 -- a pass on the
+wrong code. MS-E gains a check for both points, with a negative control.
+
+No gate is loosened. MS-A to MS-F otherwise stand as written, with the structure of V1.2.

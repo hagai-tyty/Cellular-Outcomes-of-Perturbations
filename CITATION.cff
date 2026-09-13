@@ -10,8 +10,7 @@ abstract: >-
   A preregistered reanalysis of the six-condition clonal-tracing dataset
   GSE279162. Tests whether pretreatment transcriptional state carries
   condition-specific information about future clonal detection, beyond
-  condition identity and captured pretreatment clone abundance, under
-  clone-held-out evaluation frozen before any result existed. Ships the frozen
+  condition identity and captured pretreatment clone abundance, under clone-held-out evaluation, with the ranking test frozen by digest before any ranking statistic was computed. Ships the frozen
   predictor, the full stage record including failed and negative results, and
   three verification tools that refuse on any modified artifact. No new data
   were generated.

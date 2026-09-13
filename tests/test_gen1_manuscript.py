@@ -69,6 +69,9 @@ def test_the_checker_refuses_a_broken_copy():
     assert c["a changed number is caught"] is True
     for control in STRUCTURE_CONTROLS:
         assert c[control] is True, control
+    assert c["overstated freeze wording is caught"] is True
+    assert c["an archive check that could run the installed copy is caught"] is True
+    assert c["the real package document passes the archive check"] is True
     assert c["the real manuscript passes every control"] is True
 
 
@@ -429,3 +432,49 @@ def test_every_v1_section_survives_the_restructure():
                     "### What this does not show", "### Generation 2",
                     "### Availability of data and materials"):
         assert f"\n{heading}\n" in text, heading
+
+
+# ================================================================================================ #
+# Amendment V1.3 -- when the protocol was frozen, said precisely
+# ================================================================================================ #
+def test_no_release_document_overstates_when_the_protocol_was_frozen(mod):
+    """The ranking test was frozen before any ranking statistic was computed, after earlier predictive
+    analyses of the same data -- not before any result existed. Checked on every release document."""
+    for p in (MANUSCRIPT, REPRO, ROOT / "README.md", OUT / "SUBMISSION.md", ROOT / ".zenodo.json",
+              ROOT / "CITATION.cff"):
+        assert mod._overstated_freeze(p.read_text(encoding="utf-8")) == [], p.name
+
+
+def test_the_precise_freeze_wording_is_present():
+    flat = " ".join(MANUSCRIPT.read_text(encoding="utf-8").split())
+    assert "before any ranking statistic was computed" in flat
+    assert "earlier predictive analyses of the same data" in flat
+    assert "fixed before any model was fitted" in flat
+
+
+def test_overstated_wording_is_caught_across_a_wrap_or_a_blockquote(mod):
+    assert mod._overstated_freeze("frozen before any\nresult existed")
+    assert mod._overstated_freeze("> frozen before any result\n> existed")
+    assert mod._overstated_freeze("fixed before the numbers existed")
+    assert not mod._overstated_freeze("fixed before any ranking statistic was computed")
+    assert not mod._overstated_freeze("fixed before any of these numbers existed")
+
+
+# ================================================================================================ #
+# Amendment V1.3 -- a checkout is not the archive
+# ================================================================================================ #
+def test_the_package_distinguishes_a_checkout_from_the_archive(mod):
+    text = REPRO.read_text(encoding="utf-8")
+    assert mod.archive_problems(text) == []
+    assert "44 MB" in text and "does NOT contain it" in text
+
+
+def test_the_archive_is_verified_with_its_own_code_not_an_installed_copy(mod):
+    """Inside an unpacked archive, a plain `python -m cellfate.gen1_cli` imported the checkout's
+    editable install and exited 0 -- a pass on the wrong code."""
+    text = REPRO.read_text(encoding="utf-8")
+    section = text.split(mod.ARCHIVE_SECTION, 1)[1].split("\n## ", 1)[0]
+    for command in mod.ARCHIVE_COMMANDS:
+        assert command in section, command
+    broken = text.replace("PYTHONPATH=src python -m cellfate.gen1_cli", "python -m cellfate.gen1_cli")
+    assert mod.archive_problems(broken)

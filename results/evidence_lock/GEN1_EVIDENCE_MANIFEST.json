@@ -1,8 +1,8 @@
 {
   "stage": "EL-A",
-  "lock_digest": "0763f9229665c50c1cb74769e2271f0fc5664b4fb807679ee873ef87f984efa2",
+  "lock_digest": "e467de64fd0cb0f9ca00d67db3c9ff99a2b04a3db4424a1207cf7eb53e01f71f",
   "digest_definition": "SHA-256 over 'path  sha256' lines, sorted by path, LF-joined",
-  "n_artifacts": 63,
+  "n_artifacts": 64,
   "by_class": {
     "benchmark": 3,
     "predictions": 3,
@@ -12,7 +12,7 @@
     "supporting_role_A": 5,
     "protocol": 9,
     "records": 8,
-    "code": 18
+    "code": 19
   },
   "artifacts": {
     "results/stage22_wm989_clones.csv": {
@@ -297,9 +297,9 @@
     },
     "CITATION.cff": {
       "class": "protocol",
-      "sha256": "8954749ef2fbf71de2191e378a2650ca076bddc2d45623f633d3f356bfac7cbf",
+      "sha256": "12e66e72d96cbbda5bb1882c98b2b3a92dc40a4ef4bc6df2319fbe31399d0bd1",
       "hashed": "canonical-lf",
-      "bytes": 2937,
+      "bytes": 2984,
       "git_tracked": true,
       "git_ignored": false
     },
@@ -425,9 +425,9 @@
     },
     "experiments/run_gen1_evidence_lock.py": {
       "class": "code",
-      "sha256": "1f8a8f88a285cfd686603fe6b3e683cfd8ed604d6b8004390c89aaed439b5e46",
+      "sha256": "9a7c3ad0581d07104e3e153f32a7d6140de97ec9b6f6f5bcec4bf47aab4db5e8",
       "hashed": "canonical-lf",
-      "bytes": 41108,
+      "bytes": 41157,
       "git_tracked": true,
       "git_ignored": false
     },
@@ -441,9 +441,9 @@
     },
     "experiments/make_release_bundle.py": {
       "class": "code",
-      "sha256": "cc7c7318115fb5e116a8a2a377edcb41bda6eb4cf61ac63288fcb1fb8077f8a1",
+      "sha256": "76219085118dc30b577a708bd40ea65d998f36eb8c6073e101014423735b6c15",
       "hashed": "canonical-lf",
-      "bytes": 14796,
+      "bytes": 14958,
       "git_tracked": true,
       "git_ignored": false
     },
@@ -452,6 +452,14 @@
       "sha256": "094e069bd93371be8c842c0fa987fb03ae6dc6a961e63750a76bae6ab1c2f06c",
       "hashed": "canonical-lf",
       "bytes": 8737,
+      "git_tracked": true,
+      "git_ignored": false
+    },
+    "experiments/render_gen1_submission.py": {
+      "class": "code",
+      "sha256": "3770bda34e6508afbb8f016599af7ed18d2d8b259a4a0e80fbad600663ebd3e8",
+      "hashed": "canonical-lf",
+      "bytes": 9491,
       "git_tracked": true,
       "git_ignored": false
     },
@@ -560,5 +568,5 @@
     "every committed artifact hashes the same from a fresh clone": true
   },
   "all_passed": true,
-  "module_sha256": "9f8bd13e2e7d683bb8165355ad3b096747a9c201e8b1873d0e6c1e5a4accf5d2"
+  "module_sha256": "a627f1e986b9fb1f38fc28989c0e35b2c3282ae0e54dbc5e8b67f41e05e93579"
 }

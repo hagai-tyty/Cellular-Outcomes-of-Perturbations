@@ -11,6 +11,9 @@
     "an unstructured abstract is caught": true,
     "an over-long abstract is caught": true,
     "too many keywords are caught": true,
+    "overstated freeze wording is caught": true,
+    "an archive check that could run the installed copy is caught": true,
+    "the real package document passes the archive check": true,
     "the real manuscript passes every control": true
   },
   "checks": {
@@ -23,8 +26,11 @@
     "an unstructured abstract is caught": true,
     "an over-long abstract is caught": true,
     "too many keywords are caught": true,
+    "overstated freeze wording is caught": true,
+    "an archive check that could run the installed copy is caught": true,
+    "the real package document passes the archive check": true,
     "the real manuscript passes every control": true
   },
   "all_passed": true,
-  "module_sha256": "1c293fdcbe9837e5f9797302d42d21b222d309b95b9de562eac56c120dc9a24c"
+  "module_sha256": "55a71a5edaf3611e84c4bb164cd892ca8eaee9f2a02d4bf7ef3d270638372a8c"
 }

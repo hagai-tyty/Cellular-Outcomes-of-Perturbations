@@ -69,12 +69,13 @@ us" page and BMC's article-processing-charge page.
 > **Results.**
 > Within this system, pretreatment gene expression contains condition-specific information about
 > future clonal detection beyond condition identity and captured pretreatment clone abundance, under
-> clone-held-out evaluation frozen before any result existed. Under a test preregistered in full — the
-> metric, population, weighting, comparator, null and verdict rule all fixed before the numbers
-> existed — a frozen state-by-condition interaction model improves clone-specific ordering of the six
-> conditions over a non-interactive additive model: +0.051605 in equal-clone-weighted within-clone
-> AUROC, 95% CI [+0.037197, +0.065571], with 0 of 1000 full-refit permutation draws reaching the
-> observed value (p < 0.001).
+> clone-held-out evaluation whose folds, features and exclusions were fixed
+> before any model was fitted. Under a test preregistered in full — the metric, population, weighting,
+> comparator, null and verdict rule all fixed by digest before any ranking statistic was computed,
+> though after earlier predictive analyses of the same data — a frozen state-by-condition interaction
+> model improves clone-specific ordering of the six conditions over a non-interactive additive model:
+> +0.051605 in equal-clone-weighted within-clone AUROC, 95% CI [+0.037197, +0.065571], with 0 of 1000
+> full-refit permutation draws reaching the observed value (p < 0.001).
 >
 > **Conclusions.**
 > The outcome is an observed post-treatment clone-detection proxy and is **not death**, sensitivity,
@@ -134,8 +135,9 @@ design here is a direct response: the comparator is a simpler model of the same 
 filtering, PCA and scalers are refitted inside each training fold; hyperparameters are selected in
 an inner split of the training folds only; the null refits the entire pipeline rather than shuffling
 labels; and the metric, population, weighting, comparator, null and verdict rule were fixed in a
-digest-frozen protocol before any number existed. Preregistration of a computational analysis is
-still uncommon, and the protocol digests make the claim checkable rather than assertable.
+digest-frozen protocol before any ranking statistic was computed, and after earlier predictive
+analyses of the same data. Preregistration of a computational analysis is still uncommon, and the
+protocol digests make the claim checkable rather than assertable.
 
 ### 3.5 References
 
@@ -180,6 +182,9 @@ Form-entry notes:
   Nature's editorial policy asks for it. bioRxiv's guidance holds authors responsible for content
   produced with generative AI and says AI tools cannot be authors; it does not ask for a separate
   disclosure. No AI tool is listed as an author.
+- **Competing interests.** Do not default to "none". The author holds the copyright in
+  CellFate-Rx and offers commercial licences for it, which is the kind of financial interest BMC
+  asks authors to declare. Disclose it, and say whether any income has been received from it.
 - **Software licence.** BMC Bioinformatics requires software to be freely available for non-commercial
   use, without restrictions such as a material transfer agreement, and recommends but does not require
   an open-source licence. PolyForm Noncommercial 1.0.0 meets the requirement. It is source-available
@@ -199,9 +204,12 @@ Vector SVG at `results/manuscript/figures/`, regenerated with `python experiment
 every number is read from a locked result file and none is typed into the script. The legends are in
 the manuscript's `## Figure legends` section.
 
-For submission the SVGs are converted to PDF. bioRxiv's conversion engine does not list SVG among the
-figure formats it accepts, and Springer Nature accepts vector PDF for separate figure files. The
-conversion is one of the release steps below, not something this document does.
+For submission, `python experiments/render_gen1_submission.py` builds two manuscript files from the
+one Markdown source. `MANUSCRIPT_bioRxiv.pdf` has the three figures embedded above their legends,
+because bioRxiv takes a single PDF and its conversion engine does not list SVG.
+`MANUSCRIPT_BMC.docx` keeps the legends in the text and ships the figures as separate PDF files,
+which Springer Nature accepts. The PDF is exported through Word, since pandoc's own PDF route needs
+LaTeX. Every page is inspected before it is approved.
 
 ---
 
@@ -281,9 +289,10 @@ For a journal submission, if one is made. Paste it unchanged apart from the mark
 > clone resists treatment. We ask the adjacent question of *which* condition a clone is still
 > detected after — a clone-specific ordering claim that a general resistance propensity cannot, by
 > construction, satisfy. Using the publicly deposited six-condition clonal-tracing dataset of Schaff
-> et al. (GSE279162), and a protocol frozen by cryptographic digest before any result existed, we
-> find that an explicit state-by-condition interaction improves within-clone ordering over a
-> non-interactive additive model, exceeding all 1,000 full-refit permutation draws.
+> et al. (GSE279162), and a ranking protocol frozen by cryptographic digest
+> before any ranking statistic was computed, we find that an explicit state-by-condition interaction
+> improves within-clone ordering over a non-interactive additive model, exceeding all 1,000
+> full-refit permutation draws.
 >
 > The work generates no new data and makes a deliberately bounded claim: one cell line, six observed
 > conditions, an observed detection proxy, and no independent biological replication. Those limits
@@ -320,29 +329,44 @@ PHASE 1 -- structure, in the repository
 [x] declarations single-sourced in MANUSCRIPT.md; the submitted abstract checked against it
 [x] the release bundle refuses any FILL marker; LATER markers are allowed and listed
 
-PHASE 2 -- human inputs
-[ ] the restructured manuscript read and approved, especially the new prose
-[ ] author block, declarations and the AI-use paragraph filled
-[ ] Zenodo: GitHub integration OFF for this repository; DOI reserved on a saved draft
+PHASE 2A -- review corrections, in the repository (Amendment V1.3)
+[x] freeze wording precise: folds and features fixed before any model was fitted; the ranking test
+    frozen before any ranking statistic, after earlier predictive analyses; checked
+[x] REPRODUCIBILITY.md separates a checkout from the Zenodo archive, and verifies the archive with
+    its own code (PYTHONPATH=src)
+[x] render script for the bioRxiv PDF, the BMC .docx and the figure files; binary outputs protected
+    from line-ending conversion; draft renders kept out of git and out of the archive
 
-PHASE 3 -- lock and build
-[ ] DOI written into MANUSCRIPT.md, README.md, CITATION.cff and this file
+PHASE 2B -- human inputs and decisions
+[ ] the manuscript read and approved, including the new prose
+[ ] author block, declarations and the AI-use description filled -- competing interests disclose the
+    copyright and the commercial-licence offer rather than "none"
+[ ] licensing: A (wording matches the licence) or B (an explicit additional permission, reviewed)
+[ ] installs approved: pandoc; svglib, reportlab, cffconvert
+[ ] Zenodo: GitHub integration OFF for this repository; DOI reserved on a saved draft, draft kept
+
+PHASE 3 -- lock, render, build
+[ ] the licensing decision applied wherever the commercial boundary is described
+[ ] every FILL marker filled; the DOI written into MANUSCRIPT.md, README.md, CITATION.cff, this file
 [ ] python experiments/export_gen1_source_data.py    -- the numbers still reproduce
 [ ] python experiments/cascade_gen1.py               -- locks in order, digests re-pinned
-[ ] the three --verify commands, and the full test suite read by pytest's own exit code
+[ ] the three --verify commands; the full test suite read by pytest's own exit code
 [ ] CITATION.cff validated
-[ ] submission files rendered: MANUSCRIPT.docx, MANUSCRIPT.pdf, figure PDFs, cover letter
+[ ] python experiments/render_gen1_submission.py; every page of the PDF inspected: three figures,
+    their legends, the DOI, no placeholder
 [ ] commit, push, green CI on that exact commit
-[ ] python experiments/make_release_bundle.py, then --check; the unpacked archive verifies
+[ ] python experiments/make_release_bundle.py, then --check
+[ ] the unpacked archive passes the three --verify commands and the PYTHONPATH=src predictor
 
 PHASE 4 -- publish, in this order
 [ ] Zenodo record published; the downloaded ZIP's SHA-256 matches BUNDLE_CONTENTS.json
-[ ] GitHub release gen1-v1.0.0 on the archived commit, linking the DOI
-[ ] bioRxiv: MANUSCRIPT.pdf, CC BY, category Bioinformatics
-[ ] the bioRxiv DOI written into the LATER fields
+[ ] GitHub release gen1-v1.0.0 on the archived commit, linking the DOI -- the tag never moves
+[ ] bioRxiv: MANUSCRIPT_bioRxiv.pdf, CC BY, category Bioinformatics
+[ ] the bioRxiv DOI added to the Zenodo record's metadata and, in a NEW commit, to the LATER fields
 ```
 
 **Order matters in Phase 3.** The DOI and every FILL field must be written before the locks are
 re-run, or the archived bundle does not contain its own DOI. The locks must be re-run before the
 commit, and the bundle built after it: the bundle records the commit it was cut from and refuses a
-dirty tree. A Zenodo record's files cannot be changed once it is published.
+dirty tree. A Zenodo record's files cannot be changed once it is published, and the release tag is
+never moved afterwards -- later corrections are new commits.

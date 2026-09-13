@@ -9,8 +9,8 @@
 **Correspondence:** <<FILL: email address>>
 
 ```text
-  evidence lock   0763f9229665c50c1cb74769e2271f0fc5664b4fb807679ee873ef87f984efa2
-  claim lock      939a26854adf2942776bd96cbd38f1ea8973699d3769b8bc4d8b5fdc97197228
+  evidence lock   e467de64fd0cb0f9ca00d67db3c9ff99a2b04a3db4424a1207cf7eb53e01f71f
+  claim lock      c6895e963baf43b024b5701eb004b723ff95ef0de422d0d426ebe32403112e9a
 ```
 
 Both digests are verifiable from the repository. See **Availability of data and materials**.
@@ -30,12 +30,13 @@ pretreatment profile and are therefore analysable prospectively; those are the c
 **Results.**
 Within this system, pretreatment gene expression contains condition-specific information about
 future clonal detection beyond condition identity and captured pretreatment clone abundance, under
-clone-held-out evaluation frozen before any result existed. Under a test preregistered in full — the
-metric, population, weighting, comparator, null and verdict rule all fixed before the numbers
-existed — a frozen state-by-condition interaction model improves clone-specific ordering of the six
-conditions over a non-interactive additive model: +0.051605 in equal-clone-weighted within-clone
-AUROC, 95% CI [+0.037197, +0.065571], with 0 of 1000 full-refit permutation draws reaching the
-observed value (p < 0.001).
+clone-held-out evaluation whose folds, features and exclusions were fixed
+before any model was fitted. Under a test preregistered in full — the metric, population, weighting,
+comparator, null and verdict rule all fixed by digest before any ranking statistic was computed,
+though after earlier predictive analyses of the same data — a frozen state-by-condition interaction
+model improves clone-specific ordering of the six conditions over a non-interactive additive model:
++0.051605 in equal-clone-weighted within-clone AUROC, 95% CI [+0.037197, +0.065571], with 0 of 1000
+full-refit permutation draws reaching the observed value (p < 0.001).
 
 **Conclusions.**
 The outcome is an observed post-treatment clone-detection proxy and is **not death**, sensitivity,
@@ -104,13 +105,13 @@ clone-held-out, preregistered test of whether an explicit state-by-condition int
 clone-specific ORDERING** over a non-interactive additive model, with captured pretreatment
 abundance held fixed in every model including the null.
 
-The distinction the design turns on is not rhetorical. Any quantity acting on a clone as a whole —
-a general resistance propensity, a per-clone marker level — shifts all six of that clone's predicted
+The distinction the design turns on is not rhetorical. Any quantity acting on a clone as a whole — a
+general resistance propensity, a per-clone marker level — shifts all six of that clone's predicted
 scores together and therefore contributes **exactly zero** to a within-clone ordering metric. The
-comparator was chosen to enforce that separation before any result existed, and the outcome is that
-the additive state term contributes nothing to ordering while the interaction contributes all of the
-gain. The contribution is the evaluation and its preregistration, not the observation that state
-carries condition-relevant information.
+comparator was chosen to enforce that separation before any ranking statistic was computed, and the
+outcome is that the additive state term contributes nothing to ordering while the interaction
+contributes all of the gain. The contribution is the evaluation and its preregistration, not the
+observation that state carries condition-relevant information.
 
 The methodological posture is borrowed rather than invented. Kapoor and Narayanan catalogue eight
 kinds of leakage across 294 papers in seventeen fields, and observe that complex models frequently
@@ -118,7 +119,9 @@ fail to beat logistic regression once the leakage is corrected [6]. That is the 
 design is built against: the comparator is a simpler model of the same family, every preprocessing
 step is refitted inside the training fold, the permutation null refits the whole pipeline rather
 than shuffling labels, and the metric, population, comparator and verdict rule were fixed in a
-digest-frozen protocol before any of the numbers existed.
+digest-frozen protocol before any ranking statistic was computed. That protocol was written after,
+and in the light of, earlier predictive analyses of the same data, which the stage records keep in
+full.
 
 ---
 
@@ -214,12 +217,12 @@ fitted models.
 ### Use of AI assistance
 
 Generative AI assistants (<<FILL: name each tool and version used>>) were used during this work,
-including for writing and checking analysis and verification code and for drafting text.
-<<FILL: describe, in your own words, what the AI tools did and did not do.>> Independently of who
-or what wrote them, the protocols were fixed by cryptographic digest before any result existed, and
-every number reported here is produced by the frozen code and traced mechanically to a locked
-artifact. <<FILL: confirm or edit — "The author reviewed the work and takes full responsibility
-for its content.">>
+including for writing and checking analysis and verification code and for drafting text. <<FILL: in
+your own words, what the AI tools did and did not do in the study design, the code, the analysis and
+the writing>> Independently of who or what wrote them, each protocol was fixed by cryptographic
+digest before the statistics it governs were computed, and every number reported here is produced by
+the frozen code and traced mechanically to a locked artifact. <<FILL: confirm or edit — "The author
+reviewed the work and takes full responsibility for its content.">>
 
 ---
 
@@ -390,10 +393,11 @@ system is one system however carefully it is evaluated.
 
 Within the existing multi-condition WM989 lineage system, pretreatment gene expression carries
 condition-specific information about future clonal detection beyond condition identity and captured
-pretreatment clone abundance, under clone-held-out evaluation frozen before any result existed. Under
-a test preregistered in full, an explicit state-by-condition interaction improves clone-specific
-ordering of the six observed experimental conditions over a non-interactive additive model, and no
-full-refit permutation draw reached the observed value (p < 0.001).
+pretreatment clone abundance, under clone-held-out evaluation whose folds, features and exclusions
+were fixed before any model was fitted. Under a test preregistered in full, an explicit
+state-by-condition interaction improves clone-specific ordering of the
+six observed experimental conditions over a non-interactive additive model, and no full-refit
+permutation draw reached the observed value (p < 0.001).
 
 The claim is bounded to one cell line, six observed experimental conditions and an observed detection
 proxy that is not death, sensitivity, resistance or clinical response, and captured pretreatment
@@ -456,8 +460,8 @@ third does the same for this manuscript and the package around it. All three als
 stage that produced the files did not pass.
 
 ```text
-  evidence lock digest   0763f9229665c50c1cb74769e2271f0fc5664b4fb807679ee873ef87f984efa2
-  claim lock digest      939a26854adf2942776bd96cbd38f1ea8973699d3769b8bc4d8b5fdc97197228
+  evidence lock digest   e467de64fd0cb0f9ca00d67db3c9ff99a2b04a3db4424a1207cf7eb53e01f71f
+  claim lock digest      c6895e963baf43b024b5701eb004b723ff95ef0de422d0d426ebe32403112e9a
 ```
 
 #### Licensing
@@ -499,7 +503,8 @@ Full reproduction instructions, environment and runtimes: `results/manuscript/RE
 
 ### Competing interests
 
-<<FILL — if none: "The author declares no competing interests.">>
+<<FILL — do not default to none: the author holds the copyright in CellFate-Rx and offers commercial
+licences for it; state that, and whether any income has been received from it>>
 
 ### Funding
 

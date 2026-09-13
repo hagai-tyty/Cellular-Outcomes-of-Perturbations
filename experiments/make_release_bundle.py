@@ -92,7 +92,9 @@ FILES = [
 ]
 
 SKIP_SUFFIX = {".pyc"}
-SKIP_DIR = {"__pycache__", ".pytest_cache", ".cache"}
+# "draft": the bundle walks the tree on disk, not git, so a gitignored draft render would
+# otherwise be swept into the archive -- placeholders and all.
+SKIP_DIR = {"__pycache__", ".pytest_cache", ".cache", "draft"}
 
 
 def sha256(p: Path) -> str:

@@ -9,3 +9,14 @@ results/** text eol=lf
 # renormalized: rewriting a frozen 21D artifact is exactly what the no-rewrite rule forbids, and
 # its content is identical either way.
 results/stage21d_rewind_clone_table.tsv -text
+
+# Binary files are never line-ending converted. `results/** text eol=lf` above forces text handling on
+# everything under results/, binaries included: example_clone_expression.npy was committed under that
+# rule, and a .docx or .pdf rendered into results/manuscript/submission/ would be corrupted on commit.
+# Later lines win, so these override the rule above.
+*.npy binary
+*.npz binary
+*.docx binary
+*.pdf binary
+*.png binary
+*.zip binary
