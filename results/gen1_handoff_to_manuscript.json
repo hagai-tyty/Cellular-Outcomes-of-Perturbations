@@ -1,9 +1,9 @@
 {
-  "claim_digest": "c6895e963baf43b024b5701eb004b723ff95ef0de422d0d426ebe32403112e9a",
+  "claim_digest": "cdd652f74900b3336c2bf05bfd80bf41e964eb7db30c0150e7c3a131d4126786",
   "from_stage": "GEN-1 CLAIM LOCK",
   "to_stage": "MANUSCRIPT + REPRODUCIBILITY PACKAGE",
   "verdict": "GEN1_CLAIMS_LOCKED",
-  "evidence_lock_digest": "e467de64fd0cb0f9ca00d67db3c9ff99a2b04a3db4424a1207cf7eb53e01f71f",
+  "evidence_lock_digest": "ce77f340e6ae1a5ff4341952927fe49384f0a59254da09a13ad411e10ef2239b",
   "claims_document": "results/claim_lock/GEN1_CLAIMS.md",
   "manuscript_must": [
     "re-verify the evidence lock before submission: python experiments/run_gen1_evidence_lock.py --verify",

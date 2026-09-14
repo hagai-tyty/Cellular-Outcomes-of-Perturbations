@@ -15,8 +15,8 @@ Before reproducing anything, confirm the artifacts are the ones the manuscript w
 ```
 
 ```text
-  evidence lock digest   e467de64fd0cb0f9ca00d67db3c9ff99a2b04a3db4424a1207cf7eb53e01f71f
-  claim lock digest      c6895e963baf43b024b5701eb004b723ff95ef0de422d0d426ebe32403112e9a
+  evidence lock digest   ce77f340e6ae1a5ff4341952927fe49384f0a59254da09a13ad411e10ef2239b
+  claim lock digest      cdd652f74900b3336c2bf05bfd80bf41e964eb7db30c0150e7c3a131d4126786
   package digest         results/manuscript/GEN1_PACKAGE_DIGEST.json
 ```
 
@@ -219,7 +219,9 @@ Inputs, outputs and refusal semantics: `results/stage24/tool/io_schema.json` and
 ```
 
 Academic, educational, nonprofit and personal research need no permission request, registration or
-agreement. Commercial deployment needs a separate license: `COMMERCIAL-LICENSING.md`.
+agreement. Any commercial use needs a separate license — including developing or evaluating a
+commercial product or service before it has earned any revenue: `COMMERCIAL-LICENSING.md`. Where
+that notice and the licence differ, the licence governs.
 
 ## 7. Reading the record
 

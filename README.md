@@ -26,8 +26,8 @@ claimed.
 ```text
   GEN1_MANUSCRIPT_READY
 
-  evidence lock   e467de64fd0cb0f9ca00d67db3c9ff99a2b04a3db4424a1207cf7eb53e01f71f
-  claim lock      c6895e963baf43b024b5701eb004b723ff95ef0de422d0d426ebe32403112e9a
+  evidence lock   ce77f340e6ae1a5ff4341952927fe49384f0a59254da09a13ad411e10ef2239b
+  claim lock      cdd652f74900b3336c2bf05bfd80bf41e964eb7db30c0150e7c3a131d4126786
   package         results/manuscript/GEN1_PACKAGE_DIGEST.json
 ```
 
@@ -169,8 +169,10 @@ is required.**
 If you use CellFate-Rx in scholarly work, please cite the project using [`CITATION.cff`](CITATION.cff)
 and the archived Zenodo record, DOI <<FILL: 10.5281/zenodo.XXXXXXX>>.
 
-Use of CellFate-Rx as part of a revenue-generating product or paid service requires a separate
-commercial license — see [COMMERCIAL-LICENSING.md](COMMERCIAL-LICENSING.md).
+Any commercial use needs a separate commercial license — including developing or evaluating a
+commercial product or service before it has earned any revenue. See
+[COMMERCIAL-LICENSING.md](COMMERCIAL-LICENSING.md); where it and the [licence](LICENSE) differ, the
+licence governs.
 
 This is **source-available, not OSI "open source"**, because commercial use is restricted. That is
 deliberate. Manuscript text and figures are offered under CC BY 4.0; third-party datasets keep their

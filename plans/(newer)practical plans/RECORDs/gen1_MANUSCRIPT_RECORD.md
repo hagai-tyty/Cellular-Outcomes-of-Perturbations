@@ -1053,3 +1053,79 @@ verification. The flag is now required by the package document and by an MS-E ch
 
 The licensing wording, which waits on the author's choice; the FILL markers; the installs; rendering;
 and the Zenodo DOI.
+
+---
+
+## Phase 3a of the release: the author's details, and the licence wording aligned — 2026-09-14
+
+### What the author decided
+
+```text
+  name                  Hagai Aviv
+  affiliation           Independent researcher
+  correspondence        hagai.aviv.home@gmail.com
+  ORCID                 0009-0004-4503-6629
+  competing interests   holds the copyright and offers commercial licences; no income to date
+  funding               none
+  preprint licence      CC BY
+  AI tools              Claude Opus 5, Claude Opus 4.8, Claude Haiku 4.5, Gemini 3.1 Pro,
+                        GPT 5.6 sol, GPT 6 astra -- names confirmed by the author as written
+  AI role               the Opus models wrote most of the code and documentation; the other
+                        models checked that work; the logic and direction came mainly from the author
+  licensing             "just do the same" -- read as option A: make the wording match the licence
+```
+
+The licensing line is an interpretation of the author's words, not a quotation, and is recorded as
+one. Option A grants and removes nothing; it corrects text that described the licence inaccurately.
+
+### Checked before it was written
+
+- **ORCID.** The check digit is valid, and ORCID's public record for that iD gives the name
+  "hagai aviv".
+- **Email.** `LICENSE` and `COMMERCIAL-LICENSING.md` gave `hagay.aviv.home@gmail.com`, with a y. The
+  author was shown the difference and chose `hagai.aviv.home@gmail.com`, with an i. Both files now
+  carry that address; the previous one is recorded here as history.
+
+### What changed
+
+- **Author details** written into the manuscript's title page, `CITATION.cff` and `.zenodo.json`,
+  and the cover letter's signature.
+- **Declarations.** Competing interests disclose the copyright and the commercial-licence offer.
+  Funding: none. The acknowledgements placeholder was removed, since the author named no one else.
+- **Authors' contributions made consistent with the AI disclosure.** The single-author template said
+  the author implemented the analysis and wrote the manuscript. The disclosure says the Opus models
+  did most of the coding and documentation. The contribution statement now matches the disclosure.
+- **Use of AI assistance** now names every tool and its role, as the author gave them.
+- **The commercial boundary** now follows the licence in `COMMERCIAL-LICENSING.md`, the README,
+  the manuscript, `REPRODUCIBILITY.md` and `.zenodo.json`. Commercial use needs a separate licence
+  whether or not it has earned revenue yet, and every summary says the licence governs where the two
+  differ. The notice no longer says that evaluating the software needs no licence. The body of
+  `LICENSE` is unchanged; only its Required Notice line changed, for the email.
+- **`CITATION.cff`**: an abstract line left running long by the Phase 2A edit is re-wrapped, with
+  its content checked unchanged.
+
+### Deliberately left open
+
+Two confirmations the author can only give after reading the manuscript -- that he reviewed the work
+and takes full responsibility for it, and that he approved the final manuscript -- remain FILL
+markers, as do the Zenodo DOI and publication date. The release bundle refuses to build until all
+of them are filled.
+
+### Registered results
+
+```text
+  manuscript stage      GEN1_MANUSCRIPT_READY
+  compliance checks     20 of 20 pass
+  negative controls     13 of 13 fire
+  three --verify        EVIDENCE_INTACT, CLAIMS_INTACT, PACKAGE_INTACT
+  full test suite       pytest's own exit code 0, 2189 tests collected
+  FILL markers left     8
+```
+
+### Digests
+
+```text
+  evidence  ce77f340e6ae1a5ff4341952927fe49384f0a59254da09a13ad411e10ef2239b
+  claim     cdd652f74900b3336c2bf05bfd80bf41e964eb7db30c0150e7c3a131d4126786
+  package   67d604f26ac623793dcbdd010f37e4d9448f46a30ee2c647d414eaabf0296ecb
+```

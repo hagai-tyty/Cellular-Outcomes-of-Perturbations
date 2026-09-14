@@ -21,17 +21,27 @@ Zenodo DOI.
 
 ## When a commercial license is required
 
-A separate commercial license is required before CellFate-Rx software or its frozen model is used as
-a material part of a revenue-generating activity, including:
+The PolyForm Noncommercial License 1.0.0 permits, with no separate license:
 
-- a product that is sold or licensed;
-- a paid software service or hosted service;
-- a paid analytical, consulting, or decision-support service;
-- a proprietary commercial product incorporating the software or model; or
-- another offering for which customers or users are charged.
+- any noncommercial purpose;
+- personal use for research, experiment and testing for the benefit of public knowledge, personal
+  study, or hobby projects, without any anticipated commercial application; and
+- use by a charitable organization, educational institution, public research organization, public
+  safety or health organization, environmental protection organization, or government institution,
+  regardless of how it is funded.
 
-Simply reading the publication, evaluating the software, or conducting ordinary academic or
-nonprofit research does not require a commercial license.
+A separate commercial license is required for any other use of the CellFate-Rx software or its frozen
+model, **whether or not that use has earned any revenue yet**. For example:
+
+- developing, evaluating, testing or prototyping a product, service or internal tool for a for-profit
+  business;
+- a product that is sold or licensed, or a proprietary product incorporating the software or model;
+- a paid software, hosted, analytical, consulting, or decision-support service; or
+- any other offering for which customers or users are charged.
+
+Reading the publication, and academic or nonprofit research within the permitted purposes above, do
+not require a commercial license. This notice summarizes the licence and grants nothing beyond it;
+where the two differ, the licence governs.
 
 ## Commercial-license requests
 
@@ -41,7 +51,7 @@ Contact:
 
 ```text
 Hagai Aviv
-hagay.aviv.home@gmail.com
+hagai.aviv.home@gmail.com
 ```
 
 No commercial rights are granted by this notice. Commercial rights become effective only through a

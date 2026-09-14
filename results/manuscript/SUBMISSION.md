@@ -316,7 +316,7 @@ For a journal submission, if one is made. Paste it unchanged apart from the mark
 > `<<LATER: request an APC waiver here if one is needed -- it can only be requested at submission>>`
 >
 > Sincerely,
-> `<<FILL: full name, as on the manuscript title page>>`
+> Hagai Aviv
 
 ---
 

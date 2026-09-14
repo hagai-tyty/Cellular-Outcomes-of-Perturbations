@@ -2,15 +2,15 @@
 
 **CellFate-Rx, Generation 1.**
 
-**Author:** <<FILL: full name>> · ORCID <<FILL: 0000-0000-0000-0000>>
+**Author:** Hagai Aviv · ORCID [0009-0004-4503-6629](https://orcid.org/0009-0004-4503-6629)
 
-**Affiliation:** <<FILL: affiliation, city, country>>
+**Affiliation:** Independent researcher
 
-**Correspondence:** <<FILL: email address>>
+**Correspondence:** hagai.aviv.home@gmail.com
 
 ```text
-  evidence lock   e467de64fd0cb0f9ca00d67db3c9ff99a2b04a3db4424a1207cf7eb53e01f71f
-  claim lock      c6895e963baf43b024b5701eb004b723ff95ef0de422d0d426ebe32403112e9a
+  evidence lock   ce77f340e6ae1a5ff4341952927fe49384f0a59254da09a13ad411e10ef2239b
+  claim lock      cdd652f74900b3336c2bf05bfd80bf41e964eb7db30c0150e7c3a131d4126786
 ```
 
 Both digests are verifiable from the repository. See **Availability of data and materials**.
@@ -216,13 +216,13 @@ fitted models.
 
 ### Use of AI assistance
 
-Generative AI assistants (<<FILL: name each tool and version used>>) were used during this work,
-including for writing and checking analysis and verification code and for drafting text. <<FILL: in
-your own words, what the AI tools did and did not do in the study design, the code, the analysis and
-the writing>> Independently of who or what wrote them, each protocol was fixed by cryptographic
-digest before the statistics it governs were computed, and every number reported here is produced by
-the frozen code and traced mechanically to a locked artifact. <<FILL: confirm or edit — "The author
-reviewed the work and takes full responsibility for its content.">>
+Generative AI assistants were used throughout this work. Claude Opus 5 and Claude Opus 4.8
+(Anthropic) wrote most of the code and documentation. Gemini 3.1 Pro (Google), Claude Haiku 4.5
+(Anthropic), GPT 5.6 sol and GPT 6 astra (OpenAI) were used to check that work. The study's logic
+and direction came mainly from the author. Each protocol was fixed by cryptographic digest before
+the statistics it governs were computed, and every number reported here is produced by the frozen
+code and traced mechanically to a locked artifact. <<FILL: after reading the manuscript, confirm —
+"The author reviewed the work and takes full responsibility for its content.">>
 
 ---
 
@@ -460,8 +460,8 @@ third does the same for this manuscript and the package around it. All three als
 stage that produced the files did not pass.
 
 ```text
-  evidence lock digest   e467de64fd0cb0f9ca00d67db3c9ff99a2b04a3db4424a1207cf7eb53e01f71f
-  claim lock digest      c6895e963baf43b024b5701eb004b723ff95ef0de422d0d426ebe32403112e9a
+  evidence lock digest   ce77f340e6ae1a5ff4341952927fe49384f0a59254da09a13ad411e10ef2239b
+  claim lock digest      cdd652f74900b3336c2bf05bfd80bf41e964eb7db30c0150e7c3a131d4126786
 ```
 
 #### Licensing
@@ -474,10 +474,12 @@ stage that produced the files did not pass.
 ```
 
 Academic, educational, nonprofit and personal research use requires **no permission request,
-registration, payment or signed agreement**. Use as a material part of a revenue-generating product
-or paid service requires a separate commercial license (`COMMERCIAL-LICENSING.md`). This is
-source-available rather than OSI-approved open source, because commercial use is restricted; it is
-stated here rather than left to be discovered.
+registration, payment or signed agreement**. Any use outside the licence's permitted noncommercial
+purposes — including developing or evaluating a commercial product or service, before it has
+earned any revenue — requires a separate commercial license (`COMMERCIAL-LICENSING.md`); where that
+notice and the licence differ, the licence governs. This is source-available rather than
+OSI-approved open source, because commercial use is restricted; it is stated here rather than left
+to be discovered.
 
 #### What is in the repository
 
@@ -503,22 +505,23 @@ Full reproduction instructions, environment and runtimes: `results/manuscript/RE
 
 ### Competing interests
 
-<<FILL — do not default to none: the author holds the copyright in CellFate-Rx and offers commercial
-licences for it; state that, and whether any income has been received from it>>
+The author holds the copyright in CellFate-Rx and offers commercial licences for it. The author has
+received no income from it to date.
 
 ### Funding
 
-<<FILL — if none: "This research received no specific grant from any funding agency.">>
+This work received no external funding.
 
 ### Authors' contributions
 
-<<FILL — single-author template: "H.A. designed the evaluation, implemented the analysis and
-verification tooling, and wrote the manuscript.">>
+H.A. conceived the study, set its logic and direction, and directed the AI-assisted implementation
+and documentation described in Methods. <<FILL: after reading the manuscript, confirm — "H.A.
+reviewed the work and approved the final manuscript.">>
 
 ### Acknowledgements
 
 We thank Schaff et al. for generating and openly depositing GSE279162, without which this
-reanalysis would not be possible. <<FILL: anyone else to acknowledge — or delete this marker>>
+reanalysis would not be possible.
 
 ### Authors' information
 
