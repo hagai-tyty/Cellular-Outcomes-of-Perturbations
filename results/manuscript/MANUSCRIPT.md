@@ -26,6 +26,8 @@ it prospectively at clone level, in one BRAF-V600E melanoma cell line (WM989, GS
 a barcoded population was split across six observed experimental conditions: Acid, Cisplatin, CoCl2,
 Dabrafenib, Doxorubicin and Trametinib. Of the clones that experiment recovered, 1,401 carry a
 pretreatment profile and are therefore analysable prospectively; those are the clones used here.
+The ranking test uses the 892 of them detected under at least one condition and undetected under at
+least one other.
 
 **Results.**
 Within this system, pretreatment gene expression contains condition-specific information about
@@ -278,6 +280,8 @@ estimate. The number that carries weight is the separation: nothing the null pro
 
 Positive in all five folds and all five depth strata (**Figure 3A, 3B**). These were preregistered
 as descriptive and could not have rescued a failed primary gate; they were not asked to.
+The breakdown is by fold and by depth only; across the six conditions the interaction is not uniform
+(Limitation 3).
 
 ### Choosing the lowest-scoring condition
 
@@ -345,6 +349,17 @@ Carried verbatim from the preregistered verdict.
 Limitation 2 is the one most likely to be misread. This work does not show that state dominates
 outcome. It shows that state adds something specific, on top of an abundance term that is several
 times larger.
+
+Limitation 3 has a pattern that this experiment cannot interpret. Schaff et al. chose the six
+conditions as three pairs [1]: two targeted inhibitors, dabrafenib against BRAF and trametinib
+against MEK; two non-clinical stresses, CoCl2 mimicking hypoxia and acidic media mimicking acidosis;
+and two DNA-damaging agents, cisplatin cross-linking DNA and doxorubicin inhibiting topoisomerases.
+The four conditions that carry meaningful interaction are the first two pairs, and the two that do
+not are the DNA-damaging pair. The same four were also the ones applied continuously, and the same
+two were given for a treatment period followed by recovery (Methods), so class and treatment
+schedule divide the six conditions identically and cannot be told apart here. With two conditions in
+each class, and a grouping noticed only after the results, neither reading is a finding and neither
+is claimed. Separating them needs conditions in which class and schedule vary independently.
 
 Limitation 6 is the honest position on Role A. Its own gate failed, we audited our own power
 calculation and found it had been too generous, and we report the worse number.

@@ -65,6 +65,8 @@ us" page and BMC's article-processing-charge page.
 > a barcoded population was split across six observed experimental conditions: Acid, Cisplatin, CoCl2,
 > Dabrafenib, Doxorubicin and Trametinib. Of the clones that experiment recovered, 1,401 carry a
 > pretreatment profile and are therefore analysable prospectively; those are the clones used here.
+> The ranking test uses the 892 of them detected under at least one condition and undetected under at
+> least one other.
 >
 > **Results.**
 > Within this system, pretreatment gene expression contains condition-specific information about

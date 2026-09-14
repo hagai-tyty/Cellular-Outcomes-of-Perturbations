@@ -1129,3 +1129,143 @@ of them are filled.
   claim     cdd652f74900b3336c2bf05bfd80bf41e964eb7db30c0150e7c3a131d4126786
   package   67d604f26ac623793dcbdd010f37e4d9448f46a30ee2c647d414eaabf0296ecb
 ```
+
+---
+
+## Phase 3b of the release: an external manuscript review, checked before it was applied — 2026-09-14
+
+### What was proposed
+
+A review by another AI assistant, passed on by the author with the instruction to read it first and
+change only what held up (paraphrased), proposed:
+
+```text
+  A    fill the Zenodo DOI slots, the release date and the author's two sign-offs
+  B1   name the ranking test's evaluable population (892) in the abstract
+  B2   say, after the strata, that condition is not among them and the interaction is not uniform
+  B3   add to the abstract that pretreatment state "carries different information for different
+       perturbations, rather than indexing a single resistance axis"
+  C1   group the six conditions by mechanism in the Discussion: two MAPK-pathway inhibitors and two
+       microenvironmental stresses carry the interaction; the two genotoxic chemotherapeutics do not
+  D    an order of work, including: register C1 in the claim set first, because the claim lock
+       would otherwise refuse it
+```
+
+### What was checked, and against what
+
+- **The per-condition result (C1, B2).** Stage 23's treatment-level table (`stage_23_RECORD.md`),
+  C1 log-loss gain of W5 over W4: Trametinib +0.03326, Dabrafenib +0.02592, CoCl2 +0.01894, Acid
+  +0.01097, Cisplatin +0.00002, Doxorubicin -0.00332. The four that carry meaningful interaction are
+  Acid, CoCl2, Dabrafenib and Trametinib, as the locked permitted phrasing in `GEN1_CLAIMS.md` has it.
+- **The classes (C1).** Schaff et al. [1], full text through PubMed Central (PMC13261651), chose the
+  six as three pairs: two targeted inhibitors (dabrafenib against V600E BRAF, trametinib against
+  MEK), two agents simulating selective pressures (CoCl2 for hypoxia, acidic media for extracellular
+  acidosis), and two chemotherapeutics (cisplatin, DNA cross-linking and breaks; doxorubicin,
+  topoisomerase inhibition). ChEMBL agrees on each drug: B-raf V600E inhibitor, MEK1/2 inhibitor,
+  DNA inhibitor, DNA topoisomerase II alpha inhibitor.
+- **The schedule (C1).** The same paper gives dabrafenib, trametinib, CoCl2 and acidic media for four
+  weeks, and cisplatin and doxorubicin for a treatment period followed by untreated recovery. The
+  manuscript's own Methods says the same. **The class grouping and the schedule grouping are the same
+  split.** The review did not mention the schedule.
+- **The strata (B2).** Ship plan §8.9 lists the descriptive breakdowns as by outer fold and by
+  pretreatment-depth bin, alongside a pairwise condition-ranking matrix; condition is not a stratum.
+- **The single-axis clause (B3).** A single resistance axis whose effect differs by condition also
+  changes the within-clone order, so the result does not show that the state is not a single axis.
+  The manuscript already states that a clone-wide quantity contributes exactly zero to this metric by
+  construction, so the metric cannot test that alternative. "Different perturbations" also reaches
+  beyond the six observed conditions. The title and the first sentence of the abstract's Results
+  already say the information is condition-specific.
+- **The claim lock (D).** `run_gen1_claim_lock.py` does not read the manuscript. Its "FAILED STAGE"
+  wording concerns a sentence in the adversarial corpus that the scanner misses, not new prose in the
+  manuscript. And the lock cannot take a new claim: the ceiling may be lowered, never raised. New
+  prose is held by the manuscript stage's scan, with the same instrument.
+
+### What was decided
+
+```text
+  B1   APPLIED      one sentence added to the abstract's Background
+  B2   APPLIED      reworded: "The breakdown is by fold and by depth only", pointing to Limitation 3
+  C1   APPLIED      corrected: class and treatment schedule named together, as coinciding, and
+                    written as a non-claim, after the Limitation 2 paragraph
+  B3   NOT APPLIED
+  D    NOT FOLLOWED on registering a claim; the cascade ran the locks in order, as after any edit
+  A    NOT APPLIED  the author asked for the DOI slots to be left alone, and the two sign-offs wait
+                    until the author has read the manuscript
+```
+
+`SUBMISSION.md`'s abstract as submitted was regenerated from the manuscript. No existing manuscript
+line was altered: the edit script refused to write if one was, and it added 15 lines.
+
+### The instrument refused the first wording
+
+The first C1 draft called cisplatin and doxorubicin "chemotherapeutics". The scanner fired on it
+(`3_clinical_recommendation`, cue word "therapeutic") and the edit script refused to write. The pair
+is now described by mechanism, as "DNA-damaging agents". The refusal is recorded because it happened.
+
+### Noticed, not changed
+
+The source paper gives two different recovery lengths for the treat-then-recover arms of the barcoded
+experiment. One passage has cisplatin for two weeks then two untreated, and doxorubicin for 2.5 then
+1.5; another has both for two weeks then three untreated. The manuscript's "each arm spanning four
+weeks in total" matches the first. Both passages agree on which arms were continuous, which is all C1
+depends on.
+
+### Tools installed, as the author approved
+
+```text
+  pandoc      3.11     winget, JohnMacFarlane.Pandoc
+  svglib      2.2.0    pip, into the project environment
+  reportlab   5.0.1    pip
+  cffconvert  2.0.0    pip
+```
+
+### Draft render
+
+The first run of the renderer, now that its tools are installed.
+
+```text
+  command      python experiments/render_gen1_submission.py --draft
+  exit code    0
+  tools        pandoc 3.11; the PDF exported by Word 16.0
+  wrote        MANUSCRIPT_BMC.docx, MANUSCRIPT_bioRxiv.docx, MANUSCRIPT_bioRxiv.pdf (15 pages),
+               COVER_LETTER.docx, figure_1_design.pdf, figure_2_primary.pdf, figure_3_robustness.pdf
+  where        results/manuscript/submission/draft/, ignored by git; nothing from it entered the tree
+```
+
+Checked after rendering, not assumed from the exit code:
+
+- Each of the three new passages appears exactly once in the text of both manuscript .docx files, and
+  the manuscript's three FILL markers show in both, as a draft should.
+- The bioRxiv .docx embeds its three figures. The BMC .docx embeds none, as intended; its figures are
+  the separate PDFs.
+
+**A defect the render exposed.** On the PDF's title page each digest line wraps: the last 11
+characters of the 64-character digest fall onto a second line, so a code line holds 71 characters.
+Code blocks are set in Consolas 11 pt on a Letter page with one-inch margins, from pandoc's default
+styles; the renderer sets no smaller code style. 43 of the manuscript's 96 code-block lines are longer
+than 71 characters, in 12 of its 16 blocks, among them both digest blocks, the limitations, the
+tool's refusals and the references; at the observed capacity every one of them wraps. The draft
+outputs are not committed. The renderer is corrected in the next step rather than here, so that this
+entry records what the first render actually produced.
+
+Visual inspection was partial: the in-app browser drew the top of page 1 and then timed out, with the
+app window hidden. The count above does not depend on it.
+
+### Registered results
+
+```text
+  manuscript stage      GEN1_MANUSCRIPT_READY
+  compliance checks     20 of 20 pass
+  negative controls     13 of 13 fire
+  three --verify        EVIDENCE_INTACT, CLAIMS_INTACT, PACKAGE_INTACT
+  full test suite       pytest's own exit code 0, 2189 tests collected: 2188 passed, 1 skipped
+  FILL markers left     8
+```
+
+### Digests
+
+```text
+  evidence  ce77f340e6ae1a5ff4341952927fe49384f0a59254da09a13ad411e10ef2239b   unchanged
+  claim     cdd652f74900b3336c2bf05bfd80bf41e964eb7db30c0150e7c3a131d4126786   unchanged
+  package   2c3ee19613bba0e4a1a1633f0f6144692b4226373952c7ebcc415c4c6eb237dc
+```
