@@ -1269,3 +1269,91 @@ app window hidden. The count above does not depend on it.
   claim     cdd652f74900b3336c2bf05bfd80bf41e964eb7db30c0150e7c3a131d4126786   unchanged
   package   2c3ee19613bba0e4a1a1633f0f6144692b4226373952c7ebcc415c4c6eb237dc
 ```
+
+---
+
+## Phase 3c of the release: code blocks no longer wrap in the rendered documents — 2026-09-14
+
+### What the first render showed
+
+Phase 3b's draft render wrapped code blocks. Word, asked directly through COM about that render's
+`MANUSCRIPT_bioRxiv.docx`, reported the page and the damage:
+
+```text
+  page                 US Letter, 612 pt wide, side margins 90 pt (1.25 in): text width 432 pt
+  code style           Consolas 11 pt, from pandoc's default reference document
+  line capacity        71 characters, which is where both digest lines broke
+  code blocks wrapped  12 of 16, as text lines -> laid-out lines:
+                         title-page digests  2 -> 4     tool refusals    4 -> 6
+                         Data                2 -> 4     limitations     12 -> 21
+                         Models              3 -> 4     never-claims     9 -> 10
+                         the null            5 -> 6     Generation 2     8 -> 12
+                         verify digests      2 -> 4     licensing        4 -> 5
+                         what is not         7 -> 12    references      23 -> 36
+  not wrapped          the ranking scores, the strata table, delta_TOP1, the verify commands
+```
+
+Word's twelve are exactly the twelve blocks that a character count had found longer than 71.
+
+### What changed
+
+- `render_gen1_submission.py` sets the code character style to 8 pt in every .docx it writes, by
+  changing that one size in the document's `styles.xml`; every other part of the file is copied as it
+  is. At 8 pt a line holds 98 characters, and the manuscript's longest code line is 93. 8.5 pt would
+  hold 92, one short; 8 pt is the largest half-point size at which every line fits.
+- Before writing anything, the renderer refuses if a code line in the manuscript is longer than a
+  line holds.
+- Before exporting the PDF, Word counts the code blocks it lays out on more lines than they have. The
+  count goes into `RENDER_MANIFEST.json`, and the renderer exits 4 if the count is not zero, or if Word
+  did not report one: an unmeasured layout is not a pass.
+- Six tests: the capacity formula reproduces the 71 characters Word showed at 11 pt; every manuscript
+  code line fits at 8 pt; the style patch changes only the code size, and refuses when the style is
+  missing or has no single size; the renderer refuses an over-long code line before writing; and a
+  Word step that reports nothing is not read as zero. None of them needs pandoc or Word.
+
+The renderer is in the evidence inventory, so the locks were cascaded. The draft outputs remain
+uncommitted.
+
+### Draft render after the change
+
+```text
+  command      python experiments/render_gen1_submission.py --draft
+  exit code    0
+  manifest     code_point_size 8.0, code_blocks_wrapped_in_word 0, pdf_exported_by_word true
+  wrote        the same seven files as Phase 3b's render, into the same ignored folder
+```
+
+Measured separately through Word afterwards, not taken from the renderer's own report:
+
+```text
+                             code blocks   wrapped   code size   pages
+  MANUSCRIPT_BMC.docx             16           0        8 pt       13
+  MANUSCRIPT_bioRxiv.docx         16           0        8 pt       14
+  MANUSCRIPT_bioRxiv.pdf                                           14   (Phase 3b's render: 15)
+```
+
+The renderer's new check and the separate measurement agree. Before the cascade, the renderer's own
+tests ran on their own: 13 passed, 7 existing and 6 new.
+
+### Registered results
+
+```text
+  manuscript stage      GEN1_MANUSCRIPT_READY
+  compliance checks     20 of 20 pass
+  negative controls     13 of 13 fire
+  three --verify        EVIDENCE_INTACT, CLAIMS_INTACT, PACKAGE_INTACT
+  full test suite       pytest's own exit code 0, 2195 tests collected: 2194 passed, 1 skipped
+  lint, as CI runs it   ruff 0.16.0 check src/ tests/ scripts/ plan_tests/: all checks passed, exit 0
+  FILL markers left     8
+```
+
+### Digests
+
+```text
+  evidence  861fb144badb1a886bb7a76645bcca7f09db6e00d694f88b4515464af1101b3c
+       was  ce77f340e6ae1a5ff4341952927fe49384f0a59254da09a13ad411e10ef2239b
+  claim     36014402e26bec4f6af8da61d8ccc9509d4370379b82a805e7b4c81e1cd1bc81
+       was  cdd652f74900b3336c2bf05bfd80bf41e964eb7db30c0150e7c3a131d4126786
+  package   28ddd3968510aeb162197d5c056119912bfca6a2085156a6fba96d16013ce6d2
+       was  2c3ee19613bba0e4a1a1633f0f6144692b4226373952c7ebcc415c4c6eb237dc
+```

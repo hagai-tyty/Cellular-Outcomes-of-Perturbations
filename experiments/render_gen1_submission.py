@@ -18,6 +18,12 @@ wants one PDF with the figures in it. The Markdown manuscript is the single sour
 Why Word makes the PDF. Pandoc writes PDF through LaTeX by default, and no LaTeX is installed here.
 Word is -- Microsoft 365, which renders SVG -- so the figures stay vector all the way to the PDF.
 
+Why code is set at 8 pt. The digests, the limitations and the references are code blocks. At pandoc's
+11 pt a line of them holds 71 characters, and the first render wrapped 12 of the manuscript's 16 code
+blocks, splitting both digests across two lines. The renderer sets code at 8 pt, refuses before
+writing anything if a code line would still wrap, and has Word count wrapped code blocks before it
+exports the PDF.
+
 None of these outputs is byte-deterministic: .docx and .pdf carry timestamps. They are therefore not
 locked. The manifest's hashes identify exactly which files were submitted.
 """
@@ -34,6 +40,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -45,6 +52,15 @@ OUT = MANUSCRIPT_DIR / "submission"
 
 FIGURES = {1: "figure_1_design", 2: "figure_2_primary", 3: "figure_3_robustness"}
 FILL_MARKER = re.compile(r"<<FILL\b[^>]*>>")
+
+# The page Word gives pandoc's documents -- US Letter with 1.25-inch side margins, so a 432 pt text
+# width -- was measured through Word on 2026-09-14. Consolas advances 1126/2048 em per character. At
+# pandoc's 11 pt that is 71 characters a line, which is exactly where the first render broke both
+# digest lines. At 8 pt it is 98, and the manuscript's longest code line is 93.
+CODE_HALF_POINTS = 16
+TEXT_WIDTH_PT = 432.0
+CONSOLAS_ADVANCE_EM = 1126 / 2048
+FENCE = re.compile(r"^```[^\n]*\n(.*?)^```", re.M | re.S)
 
 
 def find_pandoc() -> str | None:
@@ -96,6 +112,46 @@ def cover_letter(submission: str) -> str:
     return re.sub(r"`([^`]*)`", r"\1", body) + "\n"
 
 
+def code_line_capacity(half_points: int) -> int:
+    """Characters of Consolas that fit on one line of the page's text width at this size."""
+    return int(TEXT_WIDTH_PT // (half_points / 2 * CONSOLAS_ADVANCE_EM))
+
+
+def longest_code_line(markdown: str) -> int:
+    """The length of the longest line inside any fenced code block."""
+    return max((len(line) for block in FENCE.findall(markdown) for line in block.splitlines()), default=0)
+
+
+def set_code_size(styles_xml: str, half_points: int) -> str:
+    """styles.xml with the code character style set to `half_points`. Refuses rather than guessing."""
+    blocks = re.findall(r'<w:style\b[^>]*w:styleId="VerbatimChar".*?</w:style>', styles_xml, re.S)
+    if len(blocks) != 1:
+        raise ValueError(f"expected one VerbatimChar style, found {len(blocks)}")
+    sizes = re.findall(r'<w:sz w:val="\d+"\s*/>', blocks[0])
+    if len(sizes) != 1:
+        raise ValueError(f"expected one size in the VerbatimChar style, found {len(sizes)}")
+    patched = blocks[0].replace(sizes[0], f'<w:sz w:val="{half_points}" />')
+    return styles_xml.replace(blocks[0], patched, 1)
+
+
+def wrapped_count(stdout: str) -> int | None:
+    """The WRAPPED=n line the Word step prints, or None when Word never reported a measurement."""
+    m = re.search(r"^WRAPPED=(\d+)\s*$", stdout or "", re.M)
+    return int(m.group(1)) if m else None
+
+
+def _shrink_code_font(docx: Path) -> None:
+    """Rewrite the .docx with its code style at CODE_HALF_POINTS; every other part is copied as is."""
+    tmp = docx.with_name(docx.name + ".tmp")
+    with zipfile.ZipFile(docx) as src, zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as dst:
+        for item in src.infolist():
+            data = src.read(item.filename)
+            if item.filename == "word/styles.xml":
+                data = set_code_size(data.decode("utf-8"), CODE_HALF_POINTS).encode("utf-8")
+            dst.writestr(item, data)
+    tmp.replace(docx)
+
+
 def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -117,21 +173,28 @@ def _svg_to_pdf(svg: Path, pdf: Path) -> None:
     renderPDF.drawToFile(drawing, str(pdf))
 
 
-def _word_pdf(docx: Path, pdf: Path) -> tuple[bool, str]:
-    """Export through Word by COM automation. Returns (ok, detail); never raises."""
+def _word_pdf(docx: Path, pdf: Path) -> tuple[bool, int | None, str]:
+    """Export through Word by COM automation, first counting the code blocks Word lays out on more
+    lines than they have. Returns (exported, wrapped code blocks or None if unmeasured, detail); never
+    raises.
+    """
     def quote(p: Path) -> str:
         return str(p.resolve()).replace("'", "''")
     script = ("$ErrorActionPreference = 'Stop'; "
               "$word = New-Object -ComObject Word.Application; $word.Visible = $false; "
-              f"try {{ $doc = $word.Documents.Open('{quote(docx)}', $false, $true); "
+              f"try {{ $doc = $word.Documents.Open('{quote(docx)}', $false, $true); $doc.Repaginate(); "
+              "$wrapped = 0; foreach ($p in $doc.Paragraphs) { if ($p.Style.NameLocal -eq 'Source Code') { "
+              "if ($p.Range.ComputeStatistics(1) -gt $p.Range.Text.Split([char]11).Count) { $wrapped++ } } }; "
+              "Write-Output ('WRAPPED=' + $wrapped); "
               f"$doc.ExportAsFixedFormat('{quote(pdf)}', 17); $doc.Close($false) }} "
               "finally { $word.Quit() }")
     try:
         r = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", script],
                            capture_output=True, text=True, timeout=300)
     except (OSError, subprocess.TimeoutExpired) as e:
-        return False, str(e)
-    return (r.returncode == 0 and pdf.is_file()), (r.stderr or r.stdout).strip()[:400]
+        return False, None, str(e)
+    return ((r.returncode == 0 and pdf.is_file()), wrapped_count(r.stdout),
+            (r.stderr or r.stdout).strip()[:400])
 
 
 def main(argv=None) -> int:
@@ -156,6 +219,10 @@ def main(argv=None) -> int:
     shape = {k: v for k, v in M.structure_problems(manuscript).items() if v}
     if shape:
         problems.append(f"the manuscript does not have the required structure: {shape}")
+    longest, capacity = longest_code_line(manuscript), code_line_capacity(CODE_HALF_POINTS)
+    if longest > capacity:
+        problems.append(f"a code-block line of {longest} characters would wrap; at "
+                        f"{CODE_HALF_POINTS / 2:g} pt a line holds {capacity}")
     missing_figures = [f"{stem}.svg" for stem in FIGURES.values() if not (FIGURE_DIR / f"{stem}.svg").is_file()]
     if missing_figures:
         problems.append(f"figures missing: {missing_figures}")
@@ -188,10 +255,11 @@ def main(argv=None) -> int:
                        ("MANUSCRIPT_bioRxiv.docx", biorxiv_text),
                        ("COVER_LETTER.docx", letter)):
         _pandoc_docx(pandoc, text, out_dir / name)
+        _shrink_code_font(out_dir / name)
         outputs[name] = out_dir / name
 
     pdf = out_dir / "MANUSCRIPT_bioRxiv.pdf"
-    word_ok, word_detail = _word_pdf(out_dir / "MANUSCRIPT_bioRxiv.docx", pdf)
+    word_ok, wrapped, word_detail = _word_pdf(out_dir / "MANUSCRIPT_bioRxiv.docx", pdf)
     if word_ok:
         outputs[pdf.name] = pdf
 
@@ -203,6 +271,8 @@ def main(argv=None) -> int:
             manuscript.replace("\r\n", "\n").encode("utf-8")).hexdigest(),
         "pandoc": version[0] if version else "unknown",
         "pdf_exported_by_word": word_ok,
+        "code_point_size": CODE_HALF_POINTS / 2,
+        "code_blocks_wrapped_in_word": wrapped,
         "word_detail": "" if word_ok else word_detail,
         "outputs": {name: sha256(path) for name, path in sorted(outputs.items())},
         "note": "Not byte-deterministic (.docx and .pdf carry timestamps), so not locked. These hashes "
@@ -218,6 +288,12 @@ def main(argv=None) -> int:
         print("  use File > Save As > PDF, into the same folder, then re-run this script.")
         print(f"  detail: {word_detail}")
         return 3
+    if wrapped != 0:
+        print()
+        print(f"  Word laid out {wrapped} code block(s) on more lines than they have." if wrapped else
+              "  Word exported the PDF but reported no code-block measurement; that is not a pass.")
+        print("  A wrapped code line splits a digest or a table. These files are not ready to submit.")
+        return 4
     return 0
 
 

@@ -1,6 +1,6 @@
 {
   "stage": "EL-A",
-  "lock_digest": "ce77f340e6ae1a5ff4341952927fe49384f0a59254da09a13ad411e10ef2239b",
+  "lock_digest": "861fb144badb1a886bb7a76645bcca7f09db6e00d694f88b4515464af1101b3c",
   "digest_definition": "SHA-256 over 'path  sha256' lines, sorted by path, LF-joined",
   "n_artifacts": 64,
   "by_class": {
@@ -457,9 +457,9 @@
     },
     "experiments/render_gen1_submission.py": {
       "class": "code",
-      "sha256": "3770bda34e6508afbb8f016599af7ed18d2d8b259a4a0e80fbad600663ebd3e8",
+      "sha256": "a0feab98897f785f562be9b11a5eca5c987ca2b513d64255df68fd7f0339cb71",
       "hashed": "canonical-lf",
-      "bytes": 9491,
+      "bytes": 13664,
       "git_tracked": true,
       "git_ignored": false
     },
