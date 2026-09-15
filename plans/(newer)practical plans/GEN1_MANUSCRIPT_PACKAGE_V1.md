@@ -6,8 +6,8 @@
 **Entry** `results/gen1_handoff_to_manuscript.json`, verdict `GEN1_CLAIMS_LOCKED`.
 
 ```text
-  evidence digest  861fb144badb1a886bb7a76645bcca7f09db6e00d694f88b4515464af1101b3c
-  claim digest     36014402e26bec4f6af8da61d8ccc9509d4370379b82a805e7b4c81e1cd1bc81
+  evidence digest  7ed8c8b12cd287ab830e8f1ea1a6f821e33d11b8da7481279e27ae00385fe245
+  claim digest     712d30837e1f416fa7dc108d78ab56d47ba27f4fa87e9825cd463cc817f2d296
 ```
 
 **Mandate** §9 of the frozen ship plan: `MANUSCRIPT + REPRODUCIBILITY PACKAGE -> PREPRINT /
@@ -202,7 +202,7 @@ never a Generation-1 gate.
 # Amendment V1.1 — 2026-09-04
 
 The Entry block above is re-pinned rather than quietly overwritten. V1 was written against
-evidence digest `861fb144badb1a886bb7a76645bcca7f09db6e00d694f88b4515464af1101b3c` and claim
+evidence digest `7ed8c8b12cd287ab830e8f1ea1a6f821e33d11b8da7481279e27ae00385fe245` and claim
 digest `a81ee43b07fae32f9bb45b4a4133de0b1f3979eeda3de7d700a7ca6897affb77`.
 
 Both moved during the release-verification pass: the evidence manifest had been recording each

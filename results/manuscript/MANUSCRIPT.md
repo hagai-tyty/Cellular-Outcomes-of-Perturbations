@@ -9,8 +9,8 @@
 **Correspondence:** hagai.aviv.home@gmail.com
 
 ```text
-  evidence lock   861fb144badb1a886bb7a76645bcca7f09db6e00d694f88b4515464af1101b3c
-  claim lock      36014402e26bec4f6af8da61d8ccc9509d4370379b82a805e7b4c81e1cd1bc81
+  evidence lock   7ed8c8b12cd287ab830e8f1ea1a6f821e33d11b8da7481279e27ae00385fe245
+  claim lock      712d30837e1f416fa7dc108d78ab56d47ba27f4fa87e9825cd463cc817f2d296
 ```
 
 Both digests are verifiable from the repository. See **Availability of data and materials**.
@@ -458,7 +458,7 @@ GSE279162, generated and deposited by Schaff et al. [1]. Supporting Role-A evide
 
 All analysis code, frozen protocols, stage records, out-of-fold predictions, the serialized
 predictor and the verification tooling are archived at Zenodo, DOI
-<<FILL: 10.5281/zenodo.XXXXXXX>>, and developed openly at
+[10.5281/zenodo.22769563](https://doi.org/10.5281/zenodo.22769563), and developed openly at
 https://github.com/hagai-tyty/Cellular-Outcomes-of-Perturbations.
 
 #### Verify before reading anything else
@@ -475,8 +475,8 @@ third does the same for this manuscript and the package around it. All three als
 stage that produced the files did not pass.
 
 ```text
-  evidence lock digest   861fb144badb1a886bb7a76645bcca7f09db6e00d694f88b4515464af1101b3c
-  claim lock digest      36014402e26bec4f6af8da61d8ccc9509d4370379b82a805e7b4c81e1cd1bc81
+  evidence lock digest   7ed8c8b12cd287ab830e8f1ea1a6f821e33d11b8da7481279e27ae00385fe245
+  claim lock digest      712d30837e1f416fa7dc108d78ab56d47ba27f4fa87e9825cd463cc817f2d296
 ```
 
 #### Licensing

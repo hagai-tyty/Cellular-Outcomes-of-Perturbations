@@ -26,8 +26,8 @@ claimed.
 ```text
   GEN1_MANUSCRIPT_READY
 
-  evidence lock   861fb144badb1a886bb7a76645bcca7f09db6e00d694f88b4515464af1101b3c
-  claim lock      36014402e26bec4f6af8da61d8ccc9509d4370379b82a805e7b4c81e1cd1bc81
+  evidence lock   7ed8c8b12cd287ab830e8f1ea1a6f821e33d11b8da7481279e27ae00385fe245
+  claim lock      712d30837e1f416fa7dc108d78ab56d47ba27f4fa87e9825cd463cc817f2d296
   package         results/manuscript/GEN1_PACKAGE_DIGEST.json
 ```
 
@@ -167,7 +167,7 @@ under the [PolyForm Noncommercial License 1.0.0](LICENSE). **No permission reque
 is required.**
 
 If you use CellFate-Rx in scholarly work, please cite the project using [`CITATION.cff`](CITATION.cff)
-and the archived Zenodo record, DOI <<FILL: 10.5281/zenodo.XXXXXXX>>.
+and the archived Zenodo record, DOI [10.5281/zenodo.22769563](https://doi.org/10.5281/zenodo.22769563).
 
 Any commercial use needs a separate commercial license — including developing or evaluating a
 commercial product or service before it has earned any revenue. See

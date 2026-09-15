@@ -302,7 +302,7 @@ For a journal submission, if one is made. Paste it unchanged apart from the mark
 >
 > The complete analysis, frozen protocols, stage-by-stage records including negative and failed
 > results, and a verification tool that refuses on any modified artifact are archived at Zenodo
-> `<<FILL: 10.5281/zenodo.XXXXXXX>>`.
+> under DOI `10.5281/zenodo.22769563`.
 >
 > **Preprint.** This manuscript was posted on bioRxiv, DOI `<<LATER: bioRxiv DOI>>`, under a CC BY
 > licence.
@@ -341,14 +341,14 @@ PHASE 2A -- review corrections, in the repository (Amendment V1.3)
 
 PHASE 2B -- human inputs and decisions
 [ ] the manuscript read and approved, including the new prose
-[ ] author block, declarations and the AI-use description filled -- competing interests disclose the
+[x] author block, declarations and the AI-use description filled -- competing interests disclose the
     copyright and the commercial-licence offer rather than "none"
-[ ] licensing: A (wording matches the licence) or B (an explicit additional permission, reviewed)
-[ ] installs approved: pandoc; svglib, reportlab, cffconvert
+[x] licensing: A (wording matches the licence) or B (an explicit additional permission, reviewed)
+[x] installs approved: pandoc; svglib, reportlab, cffconvert
 [ ] Zenodo: GitHub integration OFF for this repository; DOI reserved on a saved draft, draft kept
 
 PHASE 3 -- lock, render, build
-[ ] the licensing decision applied wherever the commercial boundary is described
+[x] the licensing decision applied wherever the commercial boundary is described
 [ ] every FILL marker filled; the DOI written into MANUSCRIPT.md, README.md, CITATION.cff, this file
 [ ] python experiments/export_gen1_source_data.py    -- the numbers still reproduce
 [ ] python experiments/cascade_gen1.py               -- locks in order, digests re-pinned

@@ -1357,3 +1357,94 @@ tests ran on their own: 13 passed, 7 existing and 6 new.
   package   28ddd3968510aeb162197d5c056119912bfca6a2085156a6fba96d16013ce6d2
        was  2c3ee19613bba0e4a1a1633f0f6144692b4226373952c7ebcc415c4c6eb237dc
 ```
+
+---
+
+## Phase 3d of the release: the reserved Zenodo DOI written in — 2026-09-15
+
+### What the author gave
+
+```text
+  DOI   10.5281/zenodo.22769563
+```
+
+### Checked before it was written
+
+- **Form.** Zenodo's prefix and a record number, `10.5281/zenodo.<n>`. `CITATION.cff` with the DOI
+  written in validates against the CFF 1.2.0 schema (cffconvert 2.0.0), checked on a scratch copy with
+  a stand-in release date, so that the still-open date could not hide another fault.
+- **Whether it is published.** Zenodo's public records API and doi.org's handle service both answer
+  404 for it. That is what a DOI reserved on a saved, unpublished draft returns: Zenodo registers the
+  DOI only when the record is published. It also means the number could not be confirmed from outside
+  the author's Zenodo account; it is written exactly as the author gave it, and resolves once the
+  record is published.
+- **Nothing else waited on the stub.** No test, plan test or script refers to it or to a count of
+  placeholders.
+
+### What changed
+
+```text
+  README.md       citation paragraph            the DOI, linked to doi.org
+  CITATION.cff    doi, identifiers[doi].value   the DOI
+  MANUSCRIPT.md   Availability of data          the DOI, linked to doi.org
+  SUBMISSION.md   cover letter                  "archived at Zenodo under DOI ..."
+```
+
+The pre-flight checklist in `SUBMISSION.md` now ticks four items that were already done and recorded:
+the author block and declarations, the licensing choice, and its application (Phase 3a), and the
+installs (Phase 3b). The Zenodo item stays unticked: that the repository's GitHub integration is off
+cannot be seen from here.
+
+The locks were cascaded: `README.md` and `CITATION.cff` are in the archived repository, and the
+manuscript changed.
+
+### Deliberately left open
+
+```text
+  CITATION.cff date-released   the Zenodo publication date; written when the bundle is cut
+  the two sign-offs            wait until the author has read the manuscript
+```
+
+The release bundle still refuses to build while these three remain.
+
+### Checks
+
+```text
+  placeholders, four files    FILL 8 -> 3: the date and the two sign-offs; LATER 2 -> 2
+  DOI occurrences             README 2 (text and link), CITATION.cff 2, manuscript 2 (text and
+                              link), SUBMISSION.md 1; the stub is gone everywhere
+  manuscript                  structure intact; no overstated freeze wording; the submitted
+                              abstract still matches; no number drift in README or SUBMISSION.md
+  lines replaced              README 1, CITATION.cff 2, MANUSCRIPT.md 1, SUBMISSION.md 5 (the DOI
+                              line and four checklist ticks); nothing else moved
+  cffconvert, as written      exit 1; the error names date-released, which is still FILL, and not doi
+  cffconvert, stand-in date   exit 0: valid against the CFF 1.2.0 schema
+  cascade                     exit 0, PINS_CURRENT
+  draft render                exit 0; Word counted 0 wrapped code blocks; the PDF exported
+  the rendered documents      both manuscript .docx files carry the DOI once, linked to
+                              https://doi.org/10.5281/zenodo.22769563; the cover letter carries it
+                              once; none carries the stub; the manuscripts show only the two
+                              sign-off markers
+```
+
+### Registered results
+
+```text
+  manuscript stage      GEN1_MANUSCRIPT_READY
+  compliance checks     20 of 20 pass
+  negative controls     13 of 13 fire
+  three --verify        EVIDENCE_INTACT, CLAIMS_INTACT, PACKAGE_INTACT
+  full test suite       pytest's own exit code 0, 2195 tests collected: 2194 passed, 1 skipped
+  FILL markers left     3
+```
+
+### Digests
+
+```text
+  evidence  7ed8c8b12cd287ab830e8f1ea1a6f821e33d11b8da7481279e27ae00385fe245
+       was  861fb144badb1a886bb7a76645bcca7f09db6e00d694f88b4515464af1101b3c
+  claim     712d30837e1f416fa7dc108d78ab56d47ba27f4fa87e9825cd463cc817f2d296
+       was  36014402e26bec4f6af8da61d8ccc9509d4370379b82a805e7b4c81e1cd1bc81
+  package   164c9c5b7947897df7c423ea1cc29b8982704b3fddb9ce7a41c028ab7452fb1a
+       was  28ddd3968510aeb162197d5c056119912bfca6a2085156a6fba96d16013ce6d2
+```
