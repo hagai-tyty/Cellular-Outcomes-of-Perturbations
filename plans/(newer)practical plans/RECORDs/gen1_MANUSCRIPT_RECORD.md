@@ -1448,3 +1448,143 @@ The release bundle still refuses to build while these three remain.
   package   164c9c5b7947897df7c423ea1cc29b8982704b3fddb9ce7a41c028ab7452fb1a
        was  28ddd3968510aeb162197d5c056119912bfca6a2085156a6fba96d16013ce6d2
 ```
+
+---
+
+## Phase 3e of the release: rebuilding from the public data, shown and written down — 2026-09-15
+
+### Why
+
+Reading the manuscript, the author objected that others still could not replicate the work. Its
+"What is not" section ended: "Naming a gap is not closing it. Both remain open." Checked: a GitHub
+checkout can verify the locks and run the predictor, but nothing told a reader how to get from the
+published data to the analysis inputs, and the Zenodo archive that carries the pseudobulk is not yet
+public. The author approved closing the gap by showing the rebuild and writing it down, using the
+data already on this machine and downloading nothing.
+
+### What a rebuild needs, established from the code and the sources
+
+- **Inputs.** Stage 22 reads, and records the size and SHA-256 of, 29 files for GSE279162 and 11 for
+  GSE227151, plus the authors' code: five Schaff et al. files and two Rewind R1 scripts.
+- **Both datasets, even for the primary result.** The Stage-22 builder reconstructs Role A before
+  Role B and stops if Role A fails; the Stage-23A input audit checks both and writes
+  `PROTOCOL_BLOCKED` if any file is missing or differs.
+- **Sources, from listings and metadata only.** GEO's file lists: GSE279162_RAW.tar holds exactly the
+  27 recorded sample files, at the recorded sizes; GSE227151_RAW.tar holds the six recorded GSM7092515
+  and GSM7092516 files among its 39. The three Rewind barcode tables are not on GEO; Jain et al. 2024
+  state that their processed data are deposited publicly and list the links in the paper's key
+  resources table, which the text extraction did not carry. The Rewind code is Zenodo record 7707418
+  (arjunrajlaboratory/iPSC_Rewind). Schaff et al. state that their code is on Zenodo; a search finds
+  dylanschaff/Schaff_manuscript, 10.5281/zenodo.13935305. The SHA-256 checks decide whether any
+  given copy is the recorded one.
+- **GEO metadata files.** The series matrix and family XML of both datasets are required and hashed,
+  and no stage reads their contents: searched across `experiments/`, `src/` and `scripts/`.
+
+### The rebuild, attempted twice
+
+**First attempt: refused.** A fresh clone of `8ccdbe1`, with `PYTHONPATH` on the clone's own `src`
+and no analysis cache. Stage 22 stopped after 13 s: `GSE227151: BENCHMARK_BLOCKED_LINKAGE`. The cause
+is not the code: the builder is byte-identical to the one that produced the committed outputs, whose
+manifests record its SHA-256 as `785b9811cee22fe6...`. On 2026-08-24 the three Rewind barcode tables
+were moved from `D:\GSE227151_Rewind\` into `r1\`, and the frozen loader reads them from the root.
+`stage_23_2G_step1_REOPENED_NEW_EVIDENCE.md` recorded that breakage then and left it unrepaired,
+because the loader is frozen; it is not repaired here either.
+
+**Before the second attempt, every input was hashed against the Stage-22 record.**
+
+```text
+  GSE227151   11 of 11 files and 2 of 2 author scripts byte-identical
+  GSE279162   29 of 29 files and 5 of 5 author scripts byte-identical
+```
+
+**Second attempt: passed.** The Rewind inputs were copied, not moved, into the loader's layout at
+`D:\cellfate-repro-data\GSE227151_Rewind\`; the originals were only read, and WM989's folder was used
+where it is. A new fresh clone of `8ccdbe1`, again with `PYTHONPATH` on its own `src` and no cache:
+
+```text
+  step   exit   time    last line
+  22     0      102 s   GSE227151 and GSE279162 BENCHMARK_READY_WITH_DECLARED_MISSINGNESS;
+                        gates: all pass; OVERALL: STAGE_23_READY
+  23a    0       74 s   OVERALL: PROTOCOL_FROZEN
+  23b    0       57 s   OVERALL: ROLE_A_SIGNAL_PASS
+  23c    0       80 s   OVERALL: ROLE_B_ADDITIVE_PASS
+  23d    0       69 s   OVERALL: INTERACTION_PASS_MULTI_TREATMENT
+  23f    0        3 s   next: STAGE 23R
+  24b    0      141 s   C1_W5 BYTE_IDENTICAL, R1-R3 true
+  24c    0       29 s
+  25a    0       10 s
+  total         591 s   including the copy and the clone
+```
+
+### What came back
+
+Six tracked files differ from the commit. Every other committed output is byte-identical, including
+all the Stage-22 tables and every Stage-23 manifest, result and out-of-fold file.
+
+```text
+  stage22_rewind_benchmark_manifest.json     local_source_path_used: the copy's folder
+  stage22_prospective_benchmark_results.json that manifest's recorded bytes and SHA-256
+  stage24/stage24b_reproduction.json         runtime_minutes only
+  stage24/stage24c_serialization.json        runtime_minutes only
+  stage25/stage25a_observed.json             runtime_minutes only
+  stage24/stage24_w5_artifact.json           line endings only (CRLF); identical once normalised
+```
+
+```text
+  WM989 clone pseudobulk   rebuilt c61b9fd1d429e071...  = the original
+  model artifact           rebuilt 954cef7cff296d99...  = its locked SHA-256
+  observed statistic       identical apart from runtime: delta_RANK 0.05160531888390629,
+                           R(W1) 0.692654, R(W4) 0.692176, R(W5) 0.743781, 892 clones
+```
+
+### Not re-run
+
+The 23E permutation nulls (about 5.6 h) and the 25b ranking null (10.7 h). Each is over the three-hour
+limit this project sets for runs made on the author's behalf, and both refit on the inputs shown
+identical above.
+
+### What changed
+
+- `REPRODUCIBILITY.md` gains §2.1, "Rebuilding from the public data": every input and where it comes
+  from, the folder layout the loaders read, the commands, and what this rebuild showed. §2 and §5 now
+  point to it; §5 keeps saying that the Zenodo archive includes the model and the pseudobulk.
+- The manuscript's "What is not" section describes the raw-data row as recorded and rebuildable, and
+  its closing line no longer says the gaps remain open, because they do not.
+
+The edit script refused its first dry run: one new line of §2.1 was 101 characters, over the
+100-character limit it enforces on new lines. The paragraph was rewrapped; nothing had been written.
+
+**The full suite failed once, and the test was right.** After the first apply it ran 1 failed,
+2,193 passed, 1 skipped, with pytest's own exit code 1:
+`test_the_package_names_what_it_does_not_contain` requires `REPRODUCIBILITY.md` to keep saying
+"Naming a gap is not closing it", and the §5 edit had rewritten the paragraph that opened with that
+sentence and dropped it. The sentence is the package's commitment to naming its gaps, and it is still
+true of the raw data, which stays outside every copy. It was restored in a form that says so ("Naming a gap
+is not closing it, so each one has a way through."), the test was not changed, and the locks were
+cascaded again before the suite was re-run.
+
+The draft render after the change exited 0; Word counted 0 wrapped code blocks and exported the PDF.
+
+The clone and the copied inputs on `D:\` were removed once these results were read.
+
+### Registered results
+
+```text
+  manuscript stage      GEN1_MANUSCRIPT_READY
+  compliance checks     20 of 20 pass
+  negative controls     13 of 13 fire
+  three --verify        EVIDENCE_INTACT, CLAIMS_INTACT, PACKAGE_INTACT
+  full test suite       pytest's own exit code 0, 2195 tests collected: 2194 passed, 1 skipped
+  FILL markers left     3
+```
+
+### Digests
+
+```text
+  evidence  7ed8c8b12cd287ab830e8f1ea1a6f821e33d11b8da7481279e27ae00385fe245
+       was  7ed8c8b12cd287ab830e8f1ea1a6f821e33d11b8da7481279e27ae00385fe245
+  claim     712d30837e1f416fa7dc108d78ab56d47ba27f4fa87e9825cd463cc817f2d296
+       was  712d30837e1f416fa7dc108d78ab56d47ba27f4fa87e9825cd463cc817f2d296
+  package   239b83389086ae4e717d38a9e55baea454c0fecd631297356f431cd7aafc95e8
+       was  164c9c5b7947897df7c423ea1cc29b8982704b3fddb9ce7a41c028ab7452fb1a
+```

@@ -510,11 +510,14 @@ and contract file. Full inventory and per-file hashes: `results/evidence_lock/`.
                               python experiments/run_stage24_gen1_tool.py --stage 24c
                             The Zenodo archive does include it, so an unpacked archive
                             verifies without a rebuild.
-  raw sequencing data       GSE279162, GSE227151. Accessions are locked; bytes are not
-                            vendored.
+  raw sequencing data       GSE279162, GSE227151. Not vendored. The size and SHA-256 of every
+                            input file are recorded, and the pipeline rebuilds from the public
+                            files, refusing on any byte that differs.
 ```
 
-Naming a gap is not closing it. Both remain open.
+Neither is a gap any longer. The artifact is one command away, and a fresh clone rebuilt the
+clone pseudobulk and the model byte for byte from the public files and recovered the observed
+statistic exactly (`REPRODUCIBILITY.md` §2.1).
 
 Full reproduction instructions, environment and runtimes: `results/manuscript/REPRODUCIBILITY.md`.
 

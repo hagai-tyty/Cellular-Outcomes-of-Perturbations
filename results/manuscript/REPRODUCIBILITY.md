@@ -66,7 +66,96 @@ Set `PYTHONUTF8=1` on Windows if the console codepage is not UTF-8, or the stage
 on non-ASCII output rather than on anything meaningful.
 
 No GPU. No network access is required by any stage; the raw data is not downloaded by these
-scripts.
+scripts. §2.1 says where each input file comes from and how to rebuild from it.
+
+## 2.1 Rebuilding from the public data
+
+§3 starts from the clone pseudobulk. This section builds that pseudobulk, and the benchmark tables
+before it, from the data the original authors published, so that no analysis input has to be taken
+from this repository on trust. The scripts download nothing; the files below are fetched by hand,
+once.
+
+**What is needed.** Both datasets, even for the primary result: the frozen Stage-22 builder
+reconstructs Role A before Role B, and the Stage-23 input audit checks both. The size and SHA-256 of
+every file below are recorded in the two Stage-22 manifests, and Stage 23A refuses unless each one
+matches, so a wrong or partial download is caught rather than analysed.
+
+```text
+  WM989, GSE279162 -- Role B, the primary result
+    GEO     GSE279162_RAW.tar (762,593,280 bytes): for each of the nine samples, its
+            filtered barcodes, features and matrix -- 27 files
+    GEO     GSE279162_series_matrix.txt.gz, and GSE279162_family.xml from the MINiML download
+    Zenodo  Schaff et al.'s analysis code, repository dylanschaff/Schaff_manuscript
+            (a Zenodo search finds 10.5281/zenodo.13935305): the five files listed under
+            author_code_files in results/stage22_wm989_benchmark_manifest.json
+
+  Rewind, GSE227151 -- Role A, supporting
+    GEO     from GSE227151_RAW.tar, only the six files of GSM7092515 and GSM7092516
+    GEO     GSE227151-GPL18573_series_matrix.txt.gz, and GSE227151_family.xml
+    paper   filtered10XCells.txt, stepThreeStarcodeShavedReads_BC_10X.txt and
+            stepThreeStarcodeShavedReads_BC_gDNA.txt, from the processed barcode data Jain et al.
+            (Cell Systems 2024, doi:10.1016/j.cels.2024.01.001) deposited; the links are in that
+            paper's key resources table
+    Zenodo  the Rewind authors' code, record 7707418 (arjunrajlaboratory/iPSC_Rewind): the two
+            R1 scripts listed under author_code_files in
+            results/stage22_rewind_benchmark_manifest.json
+```
+
+**Where they go.** The loaders read fixed paths under two folders:
+
+```text
+  <wm989-root>/                           <rewind-root>/
+    GSE279162_family.xml                    filtered10XCells.txt
+    GSE279162_series_matrix.txt.gz          stepThreeStarcodeShavedReads_BC_10X.txt
+    GSM8562999_Naive1_filtered_*.gz         stepThreeStarcodeShavedReads_BC_gDNA.txt
+      ... all 27 files side by side         GSE227151-GPL18573_series_matrix.txt.gz
+    author_code_Schaff_manuscript/          GSE227151_family.xml
+      the five files                        GSM7092515/GSM7092515_1_2_control_*.gz
+                                            GSM7092516/GSM7092516_1_1_control_*.gz
+                                            author_code_zenodo7707418/plotScripts/rewind10X/R1/
+                                              the two R1 scripts
+```
+
+Both roots default to the folders on the machine that produced the results, `D:\GSE279162` and
+`D:\GSE227151_Rewind`; anywhere else, pass them. The layout is not a formality. On that machine the
+three Rewind barcode tables were later moved into a subfolder, and the first rebuild attempt stopped
+at Stage 22 with `BENCHMARK_BLOCKED_LINKAGE` until it was given a copy with them at the root.
+
+**The commands**, with `R` and `W` the two roots:
+
+```text
+  python experiments/build_stage22_prospective_benchmarks.py --rewind-root R --wm989-root W
+  python experiments/run_stage23_learnability_gate.py --stage 23a --rewind-root R --wm989-root W
+  python experiments/run_stage23_learnability_gate.py --stage 23b --rewind-root R --wm989-root W
+  python experiments/run_stage23_learnability_gate.py --stage 23c --rewind-root R --wm989-root W
+  python experiments/run_stage23_learnability_gate.py --stage 23d --rewind-root R --wm989-root W
+  python experiments/run_stage23_learnability_gate.py --stage 23f --rewind-root R --wm989-root W
+  python experiments/run_stage24_gen1_tool.py --stage 24b --wm989-root W
+```
+
+Then §3, from `--stage 24c`.
+
+**What it was shown to do.** On 2026-09-15, in a fresh clone of commit `8ccdbe1` with no analysis
+cache, and with input files whose sizes and SHA-256 all match the record, this chain and §3 through
+`--stage 25a` ran in under ten minutes on the machine that produced the results:
+
+```text
+  22    102 s     23a    74 s     23b    57 s     23c    80 s     23d    69 s
+  23f     3 s     24b   141 s     24c    29 s     25a    10 s
+```
+
+Every committed output came back byte-identical except in three ways, none of them a number the
+analysis reports: the Rewind manifest records the folder it was read from, and the Stage-22 summary
+records that manifest's size and hash; three result files record their own runtime; and the model's
+metadata file was written with Windows line endings, identical once those are normalised. The clone
+pseudobulk came back byte-identical, the rebuilt model matches its locked SHA-256, and the observed
+statistic is the recorded one, ΔRANK +0.051605. The two permutation nulls, 23E and 25b, were not
+re-run: together they take about 16 hours, and they refit on the inputs shown identical here.
+
+The GEO series matrix and family XML are checked for presence, size and SHA-256 only; no stage
+reads their contents. GEO regenerates those two files when a record's metadata changes, so a fresh
+download may no longer match the recorded bytes. If so, Stage 23A refuses and names them, and the
+refusal concerns the record of those two files, not the data the analysis uses.
 
 ---
 
@@ -155,15 +244,16 @@ only in a gitignored shard cache — 10.7 h of compute on a single machine, summ
 
   _cc_cache/stage23/GSE279162_pseudobulk.npz
       the clone pseudobulk the permutation null refits on. Gitignored, so a fresh clone
-      lacks it too, and rebuilding it starts from the raw GEO data. The Zenodo archive includes it.
+      lacks it too; §2.1 rebuilds it from the public data. The Zenodo archive includes it.
 
   raw sequencing data
       GSE279162 (WM989, Role B primary) and GSE227151 (Rewind, Role A supporting) are in
       neither. Accessions are locked; bytes are not vendored.
 ```
 
-Naming a gap is not closing it. In a checkout the model is one command away and the pseudobulk a data
-download; in the archive only the raw sequencing data remains outside.
+Naming a gap is not closing it, so each one has a way through. In a checkout the model is one
+command away, and the pseudobulk is the §2.1 rebuild away. In the archive only the raw sequencing
+data remains outside, and §2.1 names where each file comes from and checks every byte of it.
 
 ## 5.1 Verifying the Zenodo archive
 
