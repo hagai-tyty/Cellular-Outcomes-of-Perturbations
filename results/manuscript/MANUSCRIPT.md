@@ -40,13 +40,13 @@ model improves clone-specific ordering of the six conditions over a non-interact
 +0.051605 in equal-clone-weighted within-clone AUROC, 95% CI [+0.037197, +0.065571], with 0 of 1000
 full-refit permutation draws reaching the observed value (p < 0.001).
 
-**Conclusions.**
-In WM989, part of what a clone's pretreatment state carries is specific to the condition: it bears
-on which of the six conditions the clone is still detected after, not only on how detectable it is
-overall, and an analysis that averages state across conditions cannot see it. The outcome is a
-detection proxy and is not death, sensitivity, resistance or clinical response. The design and every
-artifact behind the result are released, so that it can be reproduced from the public data and
-tested in other lineage-traced systems, where it has not yet been tested.
+**Conclusions.** A state contribution shared additively across all conditions cannot change their
+ordering within a clone. Allowing state effects to vary by condition improved that ordering in
+WM989: part of what a clone's pretreatment state carries bears on which of the six conditions it is
+still detected after, not only on how detectable it is overall. The outcome is a detection proxy and
+is not death, sensitivity, resistance or clinical response. The design and the artifacts behind it
+are released, so that the result can be reproduced from the public data and tested in other
+lineage-traced systems, where it has not yet been tested.
 
 ---
 
@@ -83,9 +83,10 @@ Two things make the ordering question hard to evaluate rather than merely to obs
 that clone abundance dominates: a clone that was large before treatment is more likely to be
 detected after it for reasons that have nothing to do with state, so any comparison that does not
 hold abundance fixed will find a signal that is really a headcount. The second is that
-clone-specific ordering is not something a model can produce by being generally right about a
-clone — it requires an explicit interaction between state and condition, because any effect that
-acts on a clone as a whole shifts all six of its scores together and leaves their order untouched.
+clone-specific ordering is not something a model can produce by being generally right about a clone
+— it requires an explicit interaction between state and condition, because a state contribution
+shared additively across the six conditions shifts all six of a clone's scores together and leaves
+their order untouched.
 
 This work evaluates exactly that, once, under a protocol frozen in advance.
 
@@ -108,9 +109,10 @@ clone-held-out, preregistered test of whether an explicit state-by-condition int
 clone-specific ORDERING** over a non-interactive additive model, with captured pretreatment
 abundance held fixed in every model including the null.
 
-The distinction the design turns on is not rhetorical. Any quantity acting on a clone as a whole — a
-general resistance propensity, a per-clone marker level — shifts all six of that clone's predicted
-scores together and therefore contributes **exactly zero** to a within-clone ordering metric. The
+The distinction the design turns on is not rhetorical. A state contribution shared additively across
+the six conditions — including whatever part of a general resistance propensity, or of a per-clone
+marker level, is the same for each of them — shifts all six of that clone's predicted scores
+together and therefore contributes **exactly zero** to a within-clone ordering metric. The
 comparator was chosen to enforce that separation before any ranking statistic was computed, and the
 outcome is that the additive state term contributes nothing to ordering while the interaction
 contributes all of the gain. The contribution is the evaluation and its preregistration, not the
@@ -247,13 +249,15 @@ code and traced mechanically to a locked artifact. <<FILL: after reading the man
 ordering, which is precisely why W4 was preregistered as the comparator. The entire ordering gain is
 the interaction.
 
-**This also settles what the result is not.** A general resistance-propensity axis — a clone
-detected after many conditions, the kind of signal CD44 marks in this system [1] — enters a
-model as an additive state term. That term is in W4, and here it adds nothing. The metric is
-stricter still: within-clone AUROC compares the six scores of a single clone, so any quantity
-acting on that clone as a whole shifts all six equally and cannot change their order. A purely
-clone-level propensity signal contributes **exactly zero** to this measurement, by construction.
-What is measured is the part that is specific to the condition.
+**This also says what the gain is not.** A state contribution shared additively across all six
+conditions cannot change their ordering within a clone: it moves all six of that clone's scores
+together, and within-clone AUROC compares those six scores, so such a contribution counts **exactly
+zero** here by construction. W4 carries exactly that contribution, and it adds nothing to the
+ordering. Allowing state effects to vary by condition, as W5 does, is what improved it. That does
+not rule out one shared biological programme behind those effects: a multi-condition signal of the
+kind CD44 marks in this system [1] would be such a programme, and one whose influence differs
+between conditions would appear as an interaction too. What this measurement locates is
+condition-dependent state effects, not the number of programmes behind them.
 
 ### The separation, not the p-value, is the result
 
@@ -415,20 +419,22 @@ ordering a clone's six conditions came from an explicit state-by-condition inter
 state term contributed nothing.
 
 What this means is that pre-existing state in this system is not only a matter of how detectable a
-clone is overall. Part of it bears on which condition the clone is still detected after, and that
-part is invisible to any analysis in which state acts on a clone as a whole, because such an effect
-shifts all of a clone's conditions together and cannot change their order. Studies that average a
-state effect across conditions can miss it, as the additive model here did.
+clone is overall. Part of it bears on which condition the clone is still detected after. A state
+contribution shared additively across all conditions cannot change their ordering within a clone, so
+an analysis that admits state only that way cannot see this part, as the additive model here could
+not; allowing state effects to vary by condition improved the ordering. That does not mean separate
+biology behind each condition: one programme whose effect differs between conditions would show the
+same pattern.
 
 This opens directions others can take. The interaction terms of the frozen model are a starting
-point for finding the pretreatment programmes that separate one condition from another. Any
-lineage-traced experiment that splits clones across several perturbations can ask the same question
-with the same design: ordering within a clone, abundance held fixed in every model, a null that
-refits the whole pipeline, and a protocol fixed before the statistic is computed. The most
-informative of these is a test in an independent lineage-traced system, which has not yet been done.
-If the result holds there, pretreatment profiling could help choose which perturbations to test on
-which subpopulations in experimental work. The outcome measured here is a detection proxy, not death
-or clinical response; that is where the result points, not what it shows.
+point for finding the pretreatment programmes behind these condition-dependent effects, whether one
+or several. Any lineage-traced experiment that splits clones across several perturbations can ask
+the same question with the same design: ordering within a clone, abundance held fixed in every
+model, a null that refits the whole pipeline, and a protocol fixed before the statistic is computed.
+The most informative of these is a test in an independent lineage-traced system, which has not yet
+been done. If the result holds there, pretreatment profiling could help choose which perturbations
+to test on which subpopulations in experimental work. The outcome measured here is a detection
+proxy, not death or clinical response; that is where the result points, not what it shows.
 
 Everything needed to reproduce the result from the public data, and to apply the design to new data,
 is released with this work.

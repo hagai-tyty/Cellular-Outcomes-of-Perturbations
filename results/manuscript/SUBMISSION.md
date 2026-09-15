@@ -79,13 +79,13 @@ us" page and BMC's article-processing-charge page.
 > +0.051605 in equal-clone-weighted within-clone AUROC, 95% CI [+0.037197, +0.065571], with 0 of 1000
 > full-refit permutation draws reaching the observed value (p < 0.001).
 >
-> **Conclusions.**
-> In WM989, part of what a clone's pretreatment state carries is specific to the condition: it bears
-> on which of the six conditions the clone is still detected after, not only on how detectable it is
-> overall, and an analysis that averages state across conditions cannot see it. The outcome is a
-> detection proxy and is not death, sensitivity, resistance or clinical response. The design and every
-> artifact behind the result are released, so that it can be reproduced from the public data and
-> tested in other lineage-traced systems, where it has not yet been tested.
+> **Conclusions.** A state contribution shared additively across all conditions cannot change their
+> ordering within a clone. Allowing state effects to vary by condition improved that ordering in
+> WM989: part of what a clone's pretreatment state carries bears on which of the six conditions it is
+> still detected after, not only on how detectable it is overall. The outcome is a detection proxy and
+> is not death, sensitivity, resistance or clinical response. The design and the artifacts behind it
+> are released, so that the result can be reproduced from the public data and tested in other
+> lineage-traced systems, where it has not yet been tested.
 >
 > ---
 
@@ -116,12 +116,14 @@ preregistered test of clone-specific *ordering* across conditions with abundance
 
 ### 3.2 The gap this addresses
 
-A clone-level propensity cannot, by construction, order conditions *within* a clone: any quantity
-acting on the clone as a whole shifts all of its predicted scores together and leaves their order
-unchanged. So "state predicts resistance" and "state predicts which condition" are separate claims
-requiring separate tests, and the second needs an explicit state-by-condition interaction. This work
-tests the second, with the first entering the model as an additive term so that it cannot supply the
-answer. Empirically it does not: the additive model scores *below* the no-state baseline on ordering.
+A state contribution shared additively across all conditions cannot, by construction, order
+conditions *within* a clone: it shifts all of that clone's predicted scores together and leaves
+their order unchanged. A single programme acting unequally across conditions is not excluded; it
+would appear as an interaction. So "state predicts resistance" and "state predicts which condition"
+are separate claims requiring separate tests, and the second needs an explicit state-by-condition
+interaction. This work tests the second, with the shared-across-conditions part of state entering
+the model as an additive term so that it cannot supply the answer. Empirically it does not: the
+additive model scores *below* the no-state baseline on ordering.
 
 ### 3.3 Confounding by capture depth
 
@@ -290,12 +292,12 @@ For a journal submission, if one is made. Paste it unchanged apart from the mark
 >
 > Prior work in this system has established that pre-existing single-cell state predicts *whether* a
 > clone resists treatment. We ask the adjacent question of *which* condition a clone is still
-> detected after — a clone-specific ordering claim that a general resistance propensity cannot, by
-> construction, satisfy. Using the publicly deposited six-condition clonal-tracing dataset of Schaff
-> et al. (GSE279162), and a ranking protocol frozen by cryptographic digest
-> before any ranking statistic was computed, we find that an explicit state-by-condition interaction
-> improves within-clone ordering over a non-interactive additive model, exceeding all 1,000
-> full-refit permutation draws.
+> detected after — an ordering within a clone that a state contribution shared additively across
+> conditions cannot, by construction, produce. Using the publicly deposited six-condition
+> clonal-tracing dataset of Schaff et al. (GSE279162), and a ranking protocol frozen by
+> cryptographic digest before any ranking statistic was computed, we find that an explicit
+> state-by-condition interaction improves within-clone ordering over a non-interactive additive
+> model, exceeding all 1,000 full-refit permutation draws.
 >
 > The work generates no new data and makes a deliberately bounded claim: one cell line, six observed
 > conditions, an observed detection proxy, and no independent biological replication. Those limits

@@ -1735,3 +1735,104 @@ Three numbers in `README.md`, one line each. Nothing else in the README moved.
   package   e2d9d0dc3ce906bf49552753b5bc15720bf8aa4a4e0341ac695dfbb47e1d2eec
        was  bc6166a1242e4df99fae0796d73c4364001b6bf0139ce577402a4be9b036344d
 ```
+
+---
+
+## Phase 3h of the release: what the ordering metric is blind to, stated narrowly — 2026-09-15
+
+### The correction, and why it is right
+
+An external reviewer, passed on by the author before final approval, objected to the Results claim
+that a general resistance-propensity axis "enters a model as an additive state term". That is too
+categorical, and it conflates two different things: a clone-level *quantity*, and a contribution
+*shared equally across conditions*. Only the second is what W4 carries and what a within-clone
+ordering metric cannot see. A single biological programme whose influence varies by condition would
+enter as an interaction, so this design cannot tell one programme from several.
+
+The objection was checked and accepted. It is the same reading this project used on 2026-09-14 to
+reject the opposite suggestion, that the result shows the state is "not a single resistance axis":
+both directions claim more than a within-clone ordering test can support. The wording the reviewer
+supplied is adopted:
+
+```text
+  A state contribution shared additively across all conditions cannot change their ordering within
+  a clone. Allowing state effects to vary by condition improved that ordering in WM989.
+```
+
+### Where the claim was made, and what it says now
+
+Eight passages made or implied the categorical version; all eight were changed in one pass, so the
+document says one thing.
+
+```text
+  MANUSCRIPT.md  Background                 "any effect that acts on a clone as a whole"
+                 Relation to prior work     "Any quantity acting on a clone as a whole"
+                 Results                    "A general resistance-propensity axis ... enters a
+                                            model as an additive state term"
+                 abstract, Conclusions      "an analysis that averages state across conditions"
+                 Conclusions, paragraph 2   "any analysis in which state acts on a clone as a whole"
+                 Conclusions, paragraph 3   "programmes that separate one condition from another",
+                                            which implied separate programmes
+  SUBMISSION.md  section 3.2                "A clone-level propensity cannot, by construction"
+                 cover letter               "a general resistance propensity cannot, by
+                                            construction, satisfy"
+```
+
+The Results paragraph now also states what is not excluded: one shared programme whose influence
+differs between conditions would appear as an interaction too, so the measurement locates
+condition-dependent state effects and not the number of programmes behind them. The figure note
+"R(W4) sits BELOW R(W1): the additive state term adds nothing to ordering" is unchanged: it was
+already about the additive term, not about propensity.
+
+Nothing here raises the claim ceiling. The locked ranking claim is an improvement over a
+non-interactive additive model, which is exactly what the narrow statement says.
+
+### Checked before it was written
+
+```text
+  claim scanner              clean on all nine new passages
+  old categorical wording    none of the seven phrasings survives in either document
+  the narrow statement       8 occurrences across the manuscript and the submission pack
+  abstract                   318 -> 325 words, within the 350 limit; still carries WM989, the six
+                             observed experimental conditions and "not death"
+  qualifiers                 every qualifier marker still present in the manuscript
+  Generation 2               still absent from both Conclusions
+  overstated wording         none; no number drift in the submission pack
+  submitted abstract         regenerated, and equal to the manuscript's
+  scope of the edit          manuscript paragraphs changed = the six targeted; submission-pack
+                             paragraphs changed = section 3.2, the cover letter and the regenerated
+                             abstract; no other paragraph moved, word for word
+  lines                      no new line over 100 characters, and none that would start markdown syntax
+  draft render               exit 0; Word counted 0 wrapped code blocks and exported the PDF
+```
+
+The first dry run refused on two points, and nothing was written. The claim scanner fired on the
+Background and Relation-to-prior-work sentences: "all six conditions" and "every condition" are its
+cue words for forbidden claim 7, uniform benefit across all six conditions. The same words passed in
+sentences carrying "cannot", which it reads as negated. Neither sentence claims uniform benefit, but
+the wording was changed rather than the instrument: "across the six conditions" and "is the same for
+each of them". The script's own line-length gate also fired, on two lines of the regenerated
+submitted abstract; those lines are manuscript abstract lines behind a "> " prefix, which the
+manuscript's own limit already holds, so the gate now exempts exact mirrors of manuscript lines.
+
+### Registered results
+
+```text
+  manuscript stage      GEN1_MANUSCRIPT_READY
+  compliance checks     20 of 20 pass
+  negative controls     13 of 13 fire
+  three --verify        EVIDENCE_INTACT, CLAIMS_INTACT, PACKAGE_INTACT
+  full test suite       pytest's own exit code 0, 2195 tests collected: 2194 passed, 1 skipped
+  FILL markers left     3
+```
+
+### Digests
+
+```text
+  evidence  7ed8c8b12cd287ab830e8f1ea1a6f821e33d11b8da7481279e27ae00385fe245
+       was  7ed8c8b12cd287ab830e8f1ea1a6f821e33d11b8da7481279e27ae00385fe245
+  claim     712d30837e1f416fa7dc108d78ab56d47ba27f4fa87e9825cd463cc817f2d296
+       was  712d30837e1f416fa7dc108d78ab56d47ba27f4fa87e9825cd463cc817f2d296
+  package   0b30b1444f37324d7cdc6b1ffae026aade9236f301bee13704cfea026307c91c
+       was  e2d9d0dc3ce906bf49552753b5bc15720bf8aa4a4e0341ac695dfbb47e1d2eec
+```
