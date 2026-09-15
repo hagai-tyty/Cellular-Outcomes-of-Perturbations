@@ -41,11 +41,12 @@ model improves clone-specific ordering of the six conditions over a non-interact
 full-refit permutation draws reaching the observed value (p < 0.001).
 
 **Conclusions.**
-The outcome is an observed post-treatment clone-detection proxy and is **not death**, sensitivity,
-resistance or clinical response. The six conditions are the entire supported vocabulary. We make no
-claim about unseen conditions, other cell lines, or patients, and the model emits no calibrated
-probability. Independent biological replication has not been performed and is Generation 2 work,
-not a gate on this result.
+In WM989, part of what a clone's pretreatment state carries is specific to the condition: it bears
+on which of the six conditions the clone is still detected after, not only on how detectable it is
+overall, and an analysis that averages state across conditions cannot see it. The outcome is a
+detection proxy and is not death, sensitivity, resistance or clinical response. The design and every
+artifact behind the result are released, so that it can be reproduced from the public data and
+tested in other lineage-traced systems, where it has not yet been tested.
 
 ---
 
@@ -406,18 +407,31 @@ system is one system however carefully it is evaluated.
 
 ## Conclusions
 
-Within the existing multi-condition WM989 lineage system, pretreatment gene expression carries
-condition-specific information about future clonal detection beyond condition identity and captured
-pretreatment clone abundance, under clone-held-out evaluation whose folds, features and exclusions
-were fixed before any model was fitted. Under a test preregistered in full, an explicit
-state-by-condition interaction improves clone-specific ordering of the
-six observed experimental conditions over a non-interactive additive model, and no full-refit
-permutation draw reached the observed value (p < 0.001).
+In the WM989 lineage-traced melanoma system, a clone's gene expression before treatment carries
+information about which of six observed experimental conditions it is still detected after:
+information specific to each condition, beyond condition identity and captured pretreatment clone
+abundance, under clone-held-out evaluation. Under a test preregistered in full, all of the gain in
+ordering a clone's six conditions came from an explicit state-by-condition interaction; an additive
+state term contributed nothing.
 
-The claim is bounded to one cell line, six observed experimental conditions and an observed detection
-proxy that is not death, sensitivity, resistance or clinical response, and captured pretreatment
-abundance remains the larger term. Independent biological replication has not been performed and is
-Generation 2 work.
+What this means is that pre-existing state in this system is not only a matter of how detectable a
+clone is overall. Part of it bears on which condition the clone is still detected after, and that
+part is invisible to any analysis in which state acts on a clone as a whole, because such an effect
+shifts all of a clone's conditions together and cannot change their order. Studies that average a
+state effect across conditions can miss it, as the additive model here did.
+
+This opens directions others can take. The interaction terms of the frozen model are a starting
+point for finding the pretreatment programmes that separate one condition from another. Any
+lineage-traced experiment that splits clones across several perturbations can ask the same question
+with the same design: ordering within a clone, abundance held fixed in every model, a null that
+refits the whole pipeline, and a protocol fixed before the statistic is computed. The most
+informative of these is a test in an independent lineage-traced system, which has not yet been done.
+If the result holds there, pretreatment profiling could help choose which perturbations to test on
+which subpopulations in experimental work. The outcome measured here is a detection proxy, not death
+or clinical response; that is where the result points, not what it shows.
+
+Everything needed to reproduce the result from the public data, and to apply the design to new data,
+is released with this work.
 
 ---
 

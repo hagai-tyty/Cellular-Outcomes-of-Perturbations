@@ -80,11 +80,12 @@ us" page and BMC's article-processing-charge page.
 > full-refit permutation draws reaching the observed value (p < 0.001).
 >
 > **Conclusions.**
-> The outcome is an observed post-treatment clone-detection proxy and is **not death**, sensitivity,
-> resistance or clinical response. The six conditions are the entire supported vocabulary. We make no
-> claim about unseen conditions, other cell lines, or patients, and the model emits no calibrated
-> probability. Independent biological replication has not been performed and is Generation 2 work,
-> not a gate on this result.
+> In WM989, part of what a clone's pretreatment state carries is specific to the condition: it bears
+> on which of the six conditions the clone is still detected after, not only on how detectable it is
+> overall, and an analysis that averages state across conditions cannot see it. The outcome is a
+> detection proxy and is not death, sensitivity, resistance or clinical response. The design and every
+> artifact behind the result are released, so that it can be reproduced from the public data and
+> tested in other lineage-traced systems, where it has not yet been tested.
 >
 > ---
 

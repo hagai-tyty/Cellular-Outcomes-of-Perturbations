@@ -298,3 +298,27 @@ run with `PYTHONPATH=src`. That flag is required: inside an unpacked archive, a 
 wrong code. MS-E gains a check for both points, with a negative control.
 
 No gate is loosened. MS-A to MS-F otherwise stand as written, with the structure of V1.2.
+
+---
+
+# Amendment V1.4 — 2026-09-15
+
+**What changes: the Conclusions say what the result means.** V1.2 said the Conclusions "may be
+assembled only from the locked claims and their qualifiers". Read that way, they had become a second
+list of limitations: the Discussion already carries the limitations in full, and the author asked for
+the Conclusions to say what was found, what it means and what others can do with it, and not to refer
+to Generation 2. From V1.4 the Conclusions state the locked result with its qualifiers, then its
+significance and the directions it opens; the abstract's Conclusions do the same in brief.
+
+Significance and directions are written as implication or possibility -- "what this means", "could",
+"if the result holds" -- and never as a finding.
+
+**What does not change.**
+
+```text
+the ceiling: nothing above the claim lock, and every new sentence is scanned by the same instrument
+the qualifiers travel with the finding -- WM989, the six observed experimental conditions, a detection
+  proxy that is not death, clone-held-out evaluation, and no independent replication yet
+LIMITATIONS, WHAT THIS DOES NOT SHOW and GENERATION 2 stay in the Discussion, in that order
+MS-A to MS-F are unchanged; no check is removed or loosened
+```

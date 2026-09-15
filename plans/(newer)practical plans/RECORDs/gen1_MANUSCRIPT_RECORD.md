@@ -1588,3 +1588,87 @@ The clone and the copied inputs on `D:\` were removed once these results were re
   package   239b83389086ae4e717d38a9e55baea454c0fecd631297356f431cd7aafc95e8
        was  164c9c5b7947897df7c423ea1cc29b8982704b3fddb9ce7a41c028ab7452fb1a
 ```
+
+---
+
+## Phase 3f of the release: the Conclusions say what the result means — 2026-09-15
+
+### Why
+
+Reading the manuscript, the author found that the Conclusions dwelt on what the work cannot do, when
+the Discussion already carries a whole section of limitations. The author asked for the Conclusions
+to say what was found, what it means and what it could mean, and how others could take it further,
+without referring to Generation 2. The replacement wording for the Conclusions section and for the
+abstract's Conclusions was shown to the author before anything was written, and approved on
+2026-09-15.
+
+### The plan rule, and the amendment
+
+Amendment V1.2 said the Conclusions "may be assembled only from the locked claims and their
+qualifiers". Amendment V1.4, appended to `GEN1_MANUSCRIPT_PACKAGE_V1.md`, lets them state the locked
+result with its qualifiers, then its significance and the directions it opens, written as implication
+or possibility and never as a finding. The claim ceiling, the qualifiers, the Discussion's three
+subsections and MS-A to MS-F are unchanged. V1.2 is not edited; V1.4 is added after it.
+
+### Checked before it was written
+
+```text
+  claim scanner              clean on all five new paragraphs: the finding, what it means, the
+                             directions, the release sentence, and the abstract's Conclusions
+  overstated wording         none in the manuscript, the submission pack or the new amendment
+  abstract                   284 -> 318 words, within the 350 limit; still carries WM989, the six
+                             observed experimental conditions and "not death"
+  qualifiers                 every qualifier marker is still present in the manuscript
+  Generation 2               absent from both Conclusions; still in the Discussion alongside
+                             "biological replication", so the replication check holds
+  submitted abstract         regenerated, and equal to the manuscript's
+  scope of the edit          16 manuscript lines replaced, all inside the two Conclusions blocks
+  the release sentences      the script refuses unless REPRODUCIBILITY.md already has §2.1, since
+                             two new sentences say the result can be reproduced from the public
+                             data; Phase 3e had added it
+  draft render               exit 0; Word counted 0 wrapped code blocks and exported the PDF
+```
+
+The edit script refused its first dry run on its own gate, not on the new text. It had run the
+overstated-freeze check over the whole package plan, and the plan quotes "before any result existed"
+on purpose: Amendment V1.3 records that wording as what it corrected. The manuscript stage holds only
+release documents to that rule, so the gate was narrowed to the manuscript, the submission pack and the
+new amendment text, and it now prints the plan's quotation as history. Nothing had been written.
+
+### What changed
+
+```text
+  MANUSCRIPT.md                    the abstract's Conclusions; the Conclusions section, now four
+                                   paragraphs: the finding, what it means, the directions it opens,
+                                   and what is released
+  SUBMISSION.md                    the abstract as submitted, regenerated from the manuscript
+  GEN1_MANUSCRIPT_PACKAGE_V1.md    Amendment V1.4
+```
+
+Moved out of the abstract, not out of the manuscript: that the six conditions are the whole supported
+vocabulary, that no claim is made about unseen conditions, other cell lines or patients, and that the
+model emits no calibrated probability. All three stay in "What this does not show". The abstract keeps
+the outcome qualifier, and both Conclusions say that the result has not yet been tested in an
+independent system.
+
+### Registered results
+
+```text
+  manuscript stage      GEN1_MANUSCRIPT_READY
+  compliance checks     20 of 20 pass
+  negative controls     13 of 13 fire
+  three --verify        EVIDENCE_INTACT, CLAIMS_INTACT, PACKAGE_INTACT
+  full test suite       pytest's own exit code 0, 2195 tests collected: 2194 passed, 1 skipped
+  FILL markers left     3
+```
+
+### Digests
+
+```text
+  evidence  7ed8c8b12cd287ab830e8f1ea1a6f821e33d11b8da7481279e27ae00385fe245
+       was  7ed8c8b12cd287ab830e8f1ea1a6f821e33d11b8da7481279e27ae00385fe245
+  claim     712d30837e1f416fa7dc108d78ab56d47ba27f4fa87e9825cd463cc817f2d296
+       was  712d30837e1f416fa7dc108d78ab56d47ba27f4fa87e9825cd463cc817f2d296
+  package   bc6166a1242e4df99fae0796d73c4364001b6bf0139ce577402a4be9b036344d
+       was  239b83389086ae4e717d38a9e55baea454c0fecd631297356f431cd7aafc95e8
+```
