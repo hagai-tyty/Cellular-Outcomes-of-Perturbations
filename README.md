@@ -26,8 +26,8 @@ claimed.
 ```text
   GEN1_MANUSCRIPT_READY
 
-  evidence lock   dd655cc7656b286f3a2d71ac3680264d31bfa2b4a1865b3864e300795fb824be
-  claim lock      a748a55e540a4652e00af27ec93acc601ae0b88b630cee0bdc0f43ea953b25af
+  evidence lock   60602531449079b8f86debea9ffd69753f8bfad033be4c476751d39da08c78aa
+  claim lock      fc6dc2f221acf1c7661e36071b9e377571c8f903d38398b55bedc164db7efa61
   package         results/manuscript/GEN1_PACKAGE_DIGEST.json
 ```
 

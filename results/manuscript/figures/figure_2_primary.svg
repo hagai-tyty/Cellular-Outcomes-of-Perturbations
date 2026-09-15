@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="760" height="476" viewBox="0 0 760 476" role="img" aria-labelledby="t d">
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="488" viewBox="0 0 760 488" role="img" aria-labelledby="t d">
 <title id="t">Preregistered ranking result</title><desc id="d">Ranking score for three models and the observed statistic against a 1,000-draw full-refit permutation null.</desc>
-<rect x="0.0" y="0.0" width="760.0" height="476.0" fill="#ffffff" stroke="none" rx="0"/>
+<rect x="0.0" y="0.0" width="760.0" height="488.0" fill="#ffffff" stroke="none" rx="0"/>
 <text x="24.0" y="30.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="13" fill="#1a1a1a" text-anchor="start" font-weight="bold" font-style="normal">Figure 2  Preregistered clone-specific ranking result</text>
 <text x="24.0" y="50.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10.5" fill="#6b6b6b" text-anchor="start" font-weight="normal" font-style="normal">Equal-clone-weighted within-clone AUROC. Every degree of freedom fixed before these numbers existed.</text>
 <text x="24.0" y="84.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="11.5" fill="#1a1a1a" text-anchor="start" font-weight="bold" font-style="normal">A   Ranking score by model</text>
@@ -49,12 +49,12 @@
 <line x1="250.2" y1="344.0" x2="250.2" y2="374.0" stroke="#6b6b6b" stroke-width="1" stroke-dasharray="3,2"/>
 <text x="250.2" y="410.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">p95 0.0087</text>
 <line x1="290.1" y1="344.0" x2="290.1" y2="374.0" stroke="#6b6b6b" stroke-width="1" stroke-dasharray="3,2"/>
-<text x="290.1" y="410.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">max of 1,000 0.0137</text>
+<text x="290.1" y="422.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="8.5" fill="#6b6b6b" text-anchor="middle" font-weight="normal" font-style="normal">max of 1,000 0.0137</text>
 <line x1="475.6" y1="359.0" x2="699.8" y2="359.0" stroke="#a33b20" stroke-width="2"/>
 <line x1="475.6" y1="353.0" x2="475.6" y2="365.0" stroke="#a33b20" stroke-width="2"/>
 <line x1="699.8" y1="353.0" x2="699.8" y2="365.0" stroke="#a33b20" stroke-width="2"/>
 <circle cx="589.5" cy="359.0" r="5" fill="#a33b20"/>
 <text x="589.5" y="336.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#a33b20" text-anchor="middle" font-weight="bold" font-style="normal">observed +0.051605</text>
-<text x="150.0" y="434.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#1a1a1a" text-anchor="start" font-weight="normal" font-style="normal">0 of 1000 draws reached the observed value  →  p &lt; 0.001.  6.0× the null p95; 11.8 SD above the null mean.</text>
-<text x="150.0" y="450.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9.5" fill="#6b6b6b" text-anchor="start" font-weight="normal" font-style="normal">Permutation refits the entire pipeline inside every draw; observed-data hyperparameters are never reused.</text>
+<text x="150.0" y="446.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="10" fill="#1a1a1a" text-anchor="start" font-weight="normal" font-style="normal">0 of 1000 draws reached the observed value  →  p &lt; 0.001.  6.0× the null p95; 11.8 SD above the null mean.</text>
+<text x="150.0" y="462.0" font-family="Helvetica Neue,Helvetica,Arial,sans-serif" font-size="9.5" fill="#6b6b6b" text-anchor="start" font-weight="normal" font-style="normal">Permutation refits the entire pipeline inside every draw; observed-data hyperparameters are never reused.</text>
 </svg>

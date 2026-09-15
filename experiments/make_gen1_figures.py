@@ -205,9 +205,12 @@ def figure_2(v25: dict) -> str:
     b.append(rect(nx(m - sd), ny0 + 18, nx(m + sd) - nx(m - sd), 22, NULLC, rx=2))
     b.append(line(nx(m), ny0 + 14, nx(m), ny0 + 44, MID, 1.4))
     b.append(txt(nx(m), ny0 + 8, "null mean ± SD", 9, "middle", fill=MID))
-    for val, lab in [(perm["null_p95"], "p95"), (perm["null_max"], "max of 1,000")]:
+    # The p95 and max markers sit about 0.005 apart, closer than their labels are wide, so the labels
+    # were drawn over each other on one baseline. Each now gets its own line, still centred under its
+    # own marker.
+    for k, (val, lab) in enumerate([(perm["null_p95"], "p95"), (perm["null_max"], "max of 1,000")]):
         b.append(line(nx(val), ny0 + 14, nx(val), ny0 + 44, MID, 1, "3,2"))
-        b.append(txt(nx(val), ny0 + 80, f"{lab} {val:.4f}", 8.5, "middle", fill=MID))
+        b.append(txt(nx(val), ny0 + 80 + 12 * k, f"{lab} {val:.4f}", 8.5, "middle", fill=MID))
 
     obs = p["delta_RANK"]
     ci = p["bootstrap_ci95"]
@@ -217,17 +220,17 @@ def figure_2(v25: dict) -> str:
     b.append(f'<circle cx="{nx(obs):.1f}" cy="{ny0+29:.1f}" r="5" fill="{ACC}"/>')
     b.append(txt(nx(obs), ny0 + 6, f"observed {obs:+.6f}", 10, "middle", fill=ACC, weight="bold"))
 
-    b.append(txt(150, ny0 + 104,
+    b.append(txt(150, ny0 + 116,
                  f"{perm['n_null_ge_observed']} of {perm['n_perm']} draws reached the observed "
                  f"value  →  p < 0.001.  "
                  f"{obs / perm['null_p95']:.1f}× the null p95; "
                  f"{(obs - perm['null_mean']) / perm['null_sd']:.1f} SD above the null mean.",
                  10))
-    b.append(txt(150, ny0 + 120,
+    b.append(txt(150, ny0 + 132,
                  "Permutation refits the entire pipeline inside every draw; observed-data "
                  "hyperparameters are never reused.", 9.5, fill=MID))
 
-    return svg(W, ny0 + 146, b, "Preregistered ranking result",
+    return svg(W, ny0 + 158, b, "Preregistered ranking result",
                "Ranking score for three models and the observed statistic against a 1,000-draw "
                "full-refit permutation null.")
 

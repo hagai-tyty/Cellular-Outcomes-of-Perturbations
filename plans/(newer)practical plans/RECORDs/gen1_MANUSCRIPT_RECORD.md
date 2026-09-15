@@ -2015,3 +2015,102 @@ release and bioRxiv were given to the author in `dist/UPLOAD_GUIDE.md`.
 
 No test suite was run for this record-only commit, since nothing but this file changed. The three
 `--verify` commands ran on it before the push, and CI ran after.
+
+---
+
+## Phase 3k of the release: Figure 2B's null labels no longer overlap — 2026-09-15
+
+### What the author found
+
+On page 14 of the rendered PDF, in Figure 2B, the labels "p95 0.0087" and "max of 1,000 0.0137" were
+drawn over each other. The author asked for them to be staggered onto separate lines and the PDF
+regenerated.
+
+### Measured before anything was changed
+
+The figure's own coordinates confirm it. Both labels sat on one baseline (y 410, 8.5 pt), centred at
+x 250.2 and x 290.1, under markers only 0.005 apart on the axis. A deliberately narrow width estimate
+(characters x size x 0.5, so that a reported overlap is a real one) puts the overlap at 21.7 px. The
+same measurement over all three figures found no other overlapping pair.
+
+### What changed
+
+`experiments/make_gen1_figures.py`, Figure 2 only. The "max of 1,000" label moves one line down, 12 px,
+still centred under its own marker; the two caption lines below it move down 12 px; the figure grows
+from 476 to 488 px tall. The patched builder was run in memory before it was written:
+
+```text
+  figure_1_design.svg       byte-identical to the committed file
+  figure_3_robustness.svg   byte-identical to the committed file
+  figure_2_primary.svg      5 lines changed -- the height, twice; the lower label; the two caption
+                            lines -- with every string and number unchanged
+  overlapping label pairs   Figure 2: 1 -> 0; Figures 1 and 3: 0
+```
+
+The builder is in the evidence inventory and the figures are in the package lock, so the locks were
+cascaded, and the final render was regenerated from the new figures.
+
+After the builder was written, `python experiments/make_gen1_figures.py` regenerated the three files
+on disk, and they were checked again there rather than trusted from the dry run:
+
+```text
+  builder diff              8 lines in, 5 out
+  figure_1_design.svg       unchanged (canonical-LF SHA-256 equal before and after)
+  figure_3_robustness.svg   unchanged
+  figure_2_primary.svg      changed
+  overlapping label pairs   0 in each of the three written figures
+  Figure 2B labels          "p95 0.0087" at x 250.2, y 410; "max of 1,000 0.0137" at x 290.1, y 422
+  cascade                   exit 0, PINS_CURRENT
+```
+
+### The Phase 3j bundle is superseded
+
+The bundle recorded in Phase 3j, cut from `e9f6184` with SHA-256 `679a0db6c716e9f0...`, carries the
+overlapping figure. It was never uploaded, and it is superseded: the bundle is rebuilt from this
+phase's commit in the next entry, and the GitHub release belongs on that commit, not on `e9f6184`. The
+Phase 3j entry stands as the record of what was built then.
+
+### The final render
+
+Regenerated after the cascade with `python experiments/render_gen1_submission.py`, not `--draft`, and
+committed in `results/manuscript/submission/`.
+
+```text
+  exit code        0
+  manifest         draft false; fill_markers_remaining 0; pdf_exported_by_word true;
+                   code_blocks_wrapped_in_word 0
+  PDF              14 pages
+```
+
+```text
+                            DOI   FILL   LATER   both confirmations   evidence digest   figures
+  MANUSCRIPT_bioRxiv.docx   yes   0      0       yes                  yes               3 embedded
+  MANUSCRIPT_BMC.docx       yes   0      0       yes                  yes               separate PDFs
+  COVER_LETTER.docx         yes   0      2       --                   --                --
+```
+
+The Figure 2 embedded in the bioRxiv document is the new one: its SVG carries the 488 px height. The
+two labels now sit on baselines 12 px apart at 8.5 pt, so they cannot meet whatever text metrics Word
+uses to draw them.
+
+### Registered results
+
+```text
+  manuscript stage      GEN1_MANUSCRIPT_READY
+  compliance checks     20 of 20 pass
+  negative controls     13 of 13 fire
+  three --verify        EVIDENCE_INTACT, CLAIMS_INTACT, PACKAGE_INTACT
+  full test suite       pytest's own exit code 0, 2195 tests collected: 2194 passed, 1 skipped
+  FILL markers left     0
+```
+
+### Digests
+
+```text
+  evidence  60602531449079b8f86debea9ffd69753f8bfad033be4c476751d39da08c78aa
+       was  dd655cc7656b286f3a2d71ac3680264d31bfa2b4a1865b3864e300795fb824be
+  claim     fc6dc2f221acf1c7661e36071b9e377571c8f903d38398b55bedc164db7efa61
+       was  a748a55e540a4652e00af27ec93acc601ae0b88b630cee0bdc0f43ea953b25af
+  package   fef252d4c2bbaf52dcb6f9755779a0f49af9b805f54dee282169c03eda343375
+       was  00ce90658a1e7d725e1312c9ef8ddb59eceb6c73dc551224780b6ff34b2abff7
+```

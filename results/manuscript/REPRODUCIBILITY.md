@@ -15,8 +15,8 @@ Before reproducing anything, confirm the artifacts are the ones the manuscript w
 ```
 
 ```text
-  evidence lock digest   dd655cc7656b286f3a2d71ac3680264d31bfa2b4a1865b3864e300795fb824be
-  claim lock digest      a748a55e540a4652e00af27ec93acc601ae0b88b630cee0bdc0f43ea953b25af
+  evidence lock digest   60602531449079b8f86debea9ffd69753f8bfad033be4c476751d39da08c78aa
+  claim lock digest      fc6dc2f221acf1c7661e36071b9e377571c8f903d38398b55bedc164db7efa61
   package digest         results/manuscript/GEN1_PACKAGE_DIGEST.json
 ```
 

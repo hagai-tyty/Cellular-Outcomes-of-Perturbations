@@ -1,7 +1,7 @@
 {
   "stage": "GEN-1 EVIDENCE LOCK",
   "verdict": "GEN1_EVIDENCE_LOCKED",
-  "lock_digest": "dd655cc7656b286f3a2d71ac3680264d31bfa2b4a1865b3864e300795fb824be",
+  "lock_digest": "60602531449079b8f86debea9ffd69753f8bfad033be4c476751d39da08c78aa",
   "substages": {
     "EL-A_inventory": true,
     "EL-B_chain_of_custody": true,
