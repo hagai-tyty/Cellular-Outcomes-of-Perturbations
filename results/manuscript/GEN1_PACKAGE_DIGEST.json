@@ -1,5 +1,5 @@
 {
-  "package_digest": "bc6166a1242e4df99fae0796d73c4364001b6bf0139ce577402a4be9b036344d",
+  "package_digest": "e2d9d0dc3ce906bf49552753b5bc15720bf8aa4a4e0341ac695dfbb47e1d2eec",
   "digest_definition": "SHA-256 over 'path  canonical-lf-sha256' lines, sorted by path",
   "covers": {
     "plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md": "daad3ac289ac9a94bb50dcc81bdc085ea5a0b6980fce87667be667526e248b51",
@@ -14,7 +14,7 @@
     "results/manuscript/figures/figure_source_data.json": "3664698efec05f36c461b53220c3aadf4d5ae027079821e36930fc7a42da273a",
     "plans/(newer)practical plans/RECORDs/gen1_EVIDENCE_LOCK_RECORD.md": "db8d668fa7184bcdaa91449c6ae1bc72c3aae7423a1b4df3f86ee27cd05a95d8",
     "plans/(newer)practical plans/RECORDs/gen1_CLAIM_LOCK_RECORD.md": "5a962f4295a439241454fd9e34ce603673dc64fa3afcaf8f282f1564b2de8691",
-    "README.md": "be27253cf793c5c0f706fc1d30d1eb0e6de94019c01fae2760e673425b4b836b"
+    "README.md": "58c05c644df8f4922e7849677020c89eb8fe4e9d5d2517ca575034b1f08c704c"
   },
   "verify": "python experiments/run_gen1_manuscript.py --verify",
   "module_sha256": "55a71a5edaf3611e84c4bb164cd892ca8eaee9f2a02d4bf7ef3d270638372a8c"

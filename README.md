@@ -11,9 +11,9 @@ claims did **not** survive being measured properly; its honest status is kept in
 and in [`ARCHITECTURE.md` §11](ARCHITECTURE.md#11-where-the-project-actually-stands--2026-08-18).
 Nothing there was deleted when Generation 1 shipped.
 
-The whole repository is heavily tested (2,259 tests). **Two different things are meant by
+The whole repository is heavily tested (2,195 tests). **Two different things are meant by
 "reproducible" here and they are not interchangeable.** Every locked artifact is *hash-verifiable*:
-three `--verify` commands re-hash 77 files and refuse on a single changed byte, and that holds on
+three `--verify` commands re-hash 82 files and refuse on a single changed byte, and that holds on
 any machine. Re-*fitting* the models is a weaker guarantee — it depends on BLAS, threading and
 library versions, and the environment that produced these results is recorded in
 `environment_lock.txt` rather than assumed. Bit-identical refitting across environments is not
@@ -59,7 +59,7 @@ it. Independent biological replication has not been performed and is Generation 
 | [`results/manuscript/MANUSCRIPT.md`](results/manuscript/MANUSCRIPT.md) | the write-up |
 | [`results/manuscript/REPRODUCIBILITY.md`](results/manuscript/REPRODUCIBILITY.md) | how to re-run it |
 | [`results/claim_lock/GEN1_CLAIMS.md`](results/claim_lock/GEN1_CLAIMS.md) | what may and may not be said |
-| [`results/evidence_lock/GEN1_EVIDENCE_LOCK.md`](results/evidence_lock/GEN1_EVIDENCE_LOCK.md) | the 54 locked artifacts |
+| [`results/evidence_lock/GEN1_EVIDENCE_LOCK.md`](results/evidence_lock/GEN1_EVIDENCE_LOCK.md) | the 64 locked artifacts |
 | `plans/(newer)practical plans/RECORDs/stage_25_RECORD.md` | the result itself |
 | [`results/manuscript/SUBMISSION.md`](results/manuscript/SUBMISSION.md) | related work, declarations, venue checklist |
 | [`results/manuscript/figures/`](results/manuscript/figures) | three figures, regenerated from locked results |

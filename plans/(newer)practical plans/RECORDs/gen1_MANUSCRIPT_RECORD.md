@@ -1672,3 +1672,66 @@ independent system.
   package   bc6166a1242e4df99fae0796d73c4364001b6bf0139ce577402a4be9b036344d
        was  239b83389086ae4e717d38a9e55baea454c0fecd631297356f431cd7aafc95e8
 ```
+
+---
+
+## Phase 3g of the release: the README's counts, corrected — 2026-09-15
+
+### What was stale
+
+The author asked for the README's counts to be corrected. Three were checked against the repository
+before anything was written; the fourth count in the README, 1,401 clones, is a traced headline number
+and is correct.
+
+```text
+  README said                 written                    now
+  2,259 tests                 1d2cb1d, 2026-08-28        2,195, as `pytest -q` collects them
+  re-hash 77 files            396b11c, 2026-09-03        82
+  the 54 locked artifacts     1d2cb1d, 2026-08-28        64
+```
+
+### How the new numbers were established
+
+- **Files re-hashed by the three `--verify` commands.** The evidence lock's artifacts, the claim
+  digest's `covers` and the package digest's `covers`. The three sets do not overlap, so the count of
+  distinct files equals their sum: 64 + 5 + 13 = 82. At `396b11c` the same computation gives
+  62 + 5 + 10 = 77, which is the number the README gave then; it was right when written and went stale
+  as the locks grew.
+- **Locked artifacts.** The evidence lock verifies 64 (`n_checked` in its `--verify` output). The
+  README's 54 was already stale by `396b11c`, when the lock held 62.
+- **Tests.** CI runs `pytest -q`, whose configured `testpaths` is `tests/`; it collects 2,195.
+  `plan_tests/` holds scripts, not pytest tests, and collects none. Since `1d2cb1d` the number of
+  test functions defined under `tests/` grew from 1,764 to 1,801 and no test file was deleted, so
+  2,259 is not a count of this suite as CI runs it now; how it was taken is not recorded, and no
+  explanation is invented here.
+
+The edit script derives all three numbers when it runs, from the lock manifests and from pytest's
+own collection, rather than taking them from this entry.
+
+### What changed
+
+Three numbers in `README.md`, one line each. Nothing else in the README moved.
+
+### Registered results
+
+```text
+  README edit, dry run  every gate passed: numbers derived as 2,195 / 82 / 64; 3 lines changed;
+                        no number drift; no overstated wording
+  manuscript stage      GEN1_MANUSCRIPT_READY
+  compliance checks     20 of 20 pass
+  negative controls     13 of 13 fire
+  three --verify        EVIDENCE_INTACT, CLAIMS_INTACT, PACKAGE_INTACT
+  full test suite       pytest's own exit code 0, 2195 tests collected: 2194 passed, 1 skipped
+  FILL markers left     3
+```
+
+### Digests
+
+```text
+  evidence  7ed8c8b12cd287ab830e8f1ea1a6f821e33d11b8da7481279e27ae00385fe245
+       was  7ed8c8b12cd287ab830e8f1ea1a6f821e33d11b8da7481279e27ae00385fe245
+  claim     712d30837e1f416fa7dc108d78ab56d47ba27f4fa87e9825cd463cc817f2d296
+       was  712d30837e1f416fa7dc108d78ab56d47ba27f4fa87e9825cd463cc817f2d296
+  package   e2d9d0dc3ce906bf49552753b5bc15720bf8aa4a4e0341ac695dfbb47e1d2eec
+       was  bc6166a1242e4df99fae0796d73c4364001b6bf0139ce577402a4be9b036344d
+```
