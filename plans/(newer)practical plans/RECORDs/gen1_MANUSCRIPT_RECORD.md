@@ -1960,3 +1960,58 @@ the checks above are what was verified mechanically.
   package   00ce90658a1e7d725e1312c9ef8ddb59eceb6c73dc551224780b6ff34b2abff7
        was  0b30b1444f37324d7cdc6b1ffae026aade9236f301bee13704cfea026307c91c
 ```
+
+---
+
+## Phase 3j of the release: the release bundle, built and verified — 2026-09-15
+
+### Built from the release commit
+
+```text
+  commit            e9f6184768d16ae2114eb9cf8befb9b0df1430ed   (Phase 3i, pushed; CI success)
+  bundle            dist/cellfate-rx-gen1-bundle.zip
+  files             401
+  size              81.7 MB uncompressed, 74.5 MB compressed
+  SHA-256           679a0db6c716e9f07f4a29e9b6e91d4f9e4a0e6ffd635f6ed47b1eb35e3d0b23
+  lock digests      evidence dd655cc7656b286f3a2d71ac3680264d31bfa2b4a1865b3864e300795fb824be
+                    claim    a748a55e540a4652e00af27ec93acc601ae0b88b630cee0bdc0f43ea953b25af
+                    package  00ce90658a1e7d725e1312c9ef8ddb59eceb6c73dc551224780b6ff34b2abff7
+  carries           results/stage24/stage24_w5_artifact.npz and
+                    _cc_cache/stage23/GSE279162_pseudobulk.npz, which git does not
+  pending LATER     the bioRxiv DOI and the APC-waiver line, both in the cover letter
+```
+
+`make_release_bundle.py` refused nothing: the tree was clean, no FILL marker remained, both gitignored
+files were present, and every file a lock hashes was in the archive. `make_release_bundle.py --check`
+then re-verified every member against `SHA256SUMS.txt`: BUNDLE_INTACT, 401 files checked, none changed, missing or mismatched, and the zip's hash equal to the recorded one. `BUNDLE_CONTENTS.json` records the
+commit it was cut from and the zip's SHA-256; both were re-read against the commit and a fresh hash of
+the zip, and matched.
+
+### The unpacked archive verifies with its own code
+
+As `REPRODUCIBILITY.md` §5.1 tells a downloader: unpacked into `D:\cellfate-bundle-verify\`, with no
+git metadata inside, and run from its root with `PYTHONPATH=src`, so that the archive's own `cellfate`
+is imported rather than the checkout's editable install.
+
+```text
+  git metadata inside the archive   absent
+  cellfate imported from            the archive's own src/cellfate
+  run_gen1_evidence_lock --verify   exit 0   EVIDENCE_INTACT
+  run_gen1_claim_lock --verify      exit 0   CLAIMS_INTACT
+  run_gen1_manuscript --verify      exit 0   PACKAGE_INTACT
+  predictor, cellfate.gen1_cli      exit 0   a score for each of the six conditions, all
+                                             SUPPORTED_KNOWN_CONDITION; ranking_status
+                                             NOT_SUPPORTED because no verdict file was
+                                             supplied, which is the tool working as specified
+```
+
+The unpacked copy was removed afterwards. `dist/` is gitignored, so the tree was unchanged.
+
+### For the uploads
+
+The GitHub release `gen1-v1.0.0` belongs on `e9f6184768d16ae2114eb9cf8befb9b0df1430ed`, the commit the bundle was cut from. This
+entry is committed after it and is not inside the archive. The exact steps for Zenodo, the GitHub
+release and bioRxiv were given to the author in `dist/UPLOAD_GUIDE.md`.
+
+No test suite was run for this record-only commit, since nothing but this file changed. The three
+`--verify` commands ran on it before the push, and CI ran after.
