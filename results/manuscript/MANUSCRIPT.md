@@ -9,8 +9,8 @@
 **Correspondence:** hagai.aviv.home@gmail.com
 
 ```text
-  evidence lock   7ed8c8b12cd287ab830e8f1ea1a6f821e33d11b8da7481279e27ae00385fe245
-  claim lock      712d30837e1f416fa7dc108d78ab56d47ba27f4fa87e9825cd463cc817f2d296
+  evidence lock   dd655cc7656b286f3a2d71ac3680264d31bfa2b4a1865b3864e300795fb824be
+  claim lock      a748a55e540a4652e00af27ec93acc601ae0b88b630cee0bdc0f43ea953b25af
 ```
 
 Both digests are verifiable from the repository. See **Availability of data and materials**.
@@ -40,13 +40,14 @@ model improves clone-specific ordering of the six conditions over a non-interact
 +0.051605 in equal-clone-weighted within-clone AUROC, 95% CI [+0.037197, +0.065571], with 0 of 1000
 full-refit permutation draws reaching the observed value (p < 0.001).
 
-**Conclusions.** A state contribution shared additively across all conditions cannot change their
-ordering within a clone. Allowing state effects to vary by condition improved that ordering in
-WM989: part of what a clone's pretreatment state carries bears on which of the six conditions it is
-still detected after, not only on how detectable it is overall. The outcome is a detection proxy and
-is not death, sensitivity, resistance or clinical response. The design and the artifacts behind it
-are released, so that the result can be reproduced from the public data and tested in other
-lineage-traced systems, where it has not yet been tested.
+**Conclusions.**
+A state contribution shared additively across all conditions cannot change their ordering within a
+clone. Allowing state effects to vary by condition improved that ordering in WM989: part of what a
+clone's pretreatment state carries bears on which of the six conditions it is still detected after,
+not only on how detectable it is overall. The outcome is a detection proxy and is not death,
+sensitivity, resistance or clinical response. The design and the artifacts behind it are released,
+so that the result can be reproduced from the public data and tested in other lineage-traced
+systems, where it has not yet been tested.
 
 ---
 
@@ -226,8 +227,8 @@ Generative AI assistants were used throughout this work. Claude Opus 5 and Claud
 (Anthropic), GPT 5.6 sol and GPT 6 astra (OpenAI) were used to check that work. The study's logic
 and direction came mainly from the author. Each protocol was fixed by cryptographic digest before
 the statistics it governs were computed, and every number reported here is produced by the frozen
-code and traced mechanically to a locked artifact. <<FILL: after reading the manuscript, confirm —
-"The author reviewed the work and takes full responsibility for its content.">>
+code and traced mechanically to a locked artifact. The author reviewed the work and takes full
+responsibility for its content.
 
 ---
 
@@ -495,8 +496,8 @@ third does the same for this manuscript and the package around it. All three als
 stage that produced the files did not pass.
 
 ```text
-  evidence lock digest   7ed8c8b12cd287ab830e8f1ea1a6f821e33d11b8da7481279e27ae00385fe245
-  claim lock digest      712d30837e1f416fa7dc108d78ab56d47ba27f4fa87e9825cd463cc817f2d296
+  evidence lock digest   dd655cc7656b286f3a2d71ac3680264d31bfa2b4a1865b3864e300795fb824be
+  claim lock digest      a748a55e540a4652e00af27ec93acc601ae0b88b630cee0bdc0f43ea953b25af
 ```
 
 #### Licensing
@@ -553,8 +554,7 @@ This work received no external funding.
 ### Authors' contributions
 
 H.A. conceived the study, set its logic and direction, and directed the AI-assisted implementation
-and documentation described in Methods. <<FILL: after reading the manuscript, confirm — "H.A.
-reviewed the work and approved the final manuscript.">>
+and documentation described in Methods. H.A. reviewed the work and approved the final manuscript.
 
 ### Acknowledgements
 

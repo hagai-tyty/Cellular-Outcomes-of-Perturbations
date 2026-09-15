@@ -1,0 +1,20 @@
+{
+  "draft": false,
+  "fill_markers_remaining": 0,
+  "manuscript_canonical_lf_sha256": "4d081fd19143a0bca7c1ed642d8bb4a360f38df72d3598fd561b40cf38c32b27",
+  "pandoc": "pandoc 3.11",
+  "pdf_exported_by_word": true,
+  "code_point_size": 8.0,
+  "code_blocks_wrapped_in_word": 0,
+  "word_detail": "",
+  "outputs": {
+    "COVER_LETTER.docx": "fcde85b180151c80886bc761d040cfd991ad5eccf7403eeaed5a04bdc30427e3",
+    "MANUSCRIPT_BMC.docx": "09bbcaaadbccb196dceaddf7c041d1808e5a2b43b5d4627b530d3fdc0913ecab",
+    "MANUSCRIPT_bioRxiv.docx": "d436b5391678c16d41967acc903ce3058606e5b1bc1db7f58c71c872d0a86945",
+    "MANUSCRIPT_bioRxiv.pdf": "3855cf36599469668206b7735a8f208aafe8a642ee8aa6fa8a9fffb905afe2f0",
+    "figure_1_design.pdf": "6ba520ceb83ba659852bdc65f08601eaf1780e377fd46b2622ebd0fe356f1e32",
+    "figure_2_primary.pdf": "4990ee9212e750d0d8aa698df2017f4a6b581211d150c3a8bbb9a22e29b095d7",
+    "figure_3_robustness.pdf": "0a4fc510602f6b9f0bbc07cbaa16b840fb6ebbde0a8fba17f7c4778adb8dc51c"
+  },
+  "note": "Not byte-deterministic (.docx and .pdf carry timestamps), so not locked. These hashes identify the exact files that were submitted."
+}

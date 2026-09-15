@@ -3,7 +3,7 @@
 ```text
   GEN1_EVIDENCE_LOCKED
 
-  lock digest   7ed8c8b12cd287ab830e8f1ea1a6f821e33d11b8da7481279e27ae00385fe245
+  lock digest   dd655cc7656b286f3a2d71ac3680264d31bfa2b4a1865b3864e300795fb824be
   artifacts     64
   ship plan     8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48
 ```
@@ -20,7 +20,7 @@ has one identity on every platform. The ship plan therefore carries `59f22e9a...
 ## What is locked
 
 ```text
-  protocol      4ae92baf872993fdcd32450319bd2b6b20a5e15b5bb46d77b0e9ec866c345b29  CITATION.cff
+  protocol      999052a19de3de691c22e5eaeaa2731707ae74a80577252c5737889b4696cb4b  CITATION.cff
   protocol      fcaf661314768f30a01f7ed9fb16e2493eb1e39f88a04114280bdb2c0d3bdcc6  environment_lock.txt
   code          dfd047eff9fb82d0303c24743416d5a3ddc524076976074adceb435cb5d704a7  experiments/build_stage22_prospective_benchmarks.py
   code          094e069bd93371be8c842c0fa987fb03ae6dc6a961e63750a76bae6ab1c2f06c  experiments/cascade_gen1.py

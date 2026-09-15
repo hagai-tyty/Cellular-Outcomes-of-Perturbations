@@ -29,7 +29,7 @@ authors:
     affiliation: "Independent researcher"
 
 version: "gen1-v1.0.0"
-date-released: "<<FILL: YYYY-MM-DD, the Zenodo publication date>>"
+date-released: "2026-09-16"
 
 # Reserve the DOI in Zenodo FIRST, write it here, then re-run the three locks.
 # Editing this file after locking changes the evidence digest, because CITATION.cff

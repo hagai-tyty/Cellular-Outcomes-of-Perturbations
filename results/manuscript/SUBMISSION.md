@@ -79,13 +79,14 @@ us" page and BMC's article-processing-charge page.
 > +0.051605 in equal-clone-weighted within-clone AUROC, 95% CI [+0.037197, +0.065571], with 0 of 1000
 > full-refit permutation draws reaching the observed value (p < 0.001).
 >
-> **Conclusions.** A state contribution shared additively across all conditions cannot change their
-> ordering within a clone. Allowing state effects to vary by condition improved that ordering in
-> WM989: part of what a clone's pretreatment state carries bears on which of the six conditions it is
-> still detected after, not only on how detectable it is overall. The outcome is a detection proxy and
-> is not death, sensitivity, resistance or clinical response. The design and the artifacts behind it
-> are released, so that the result can be reproduced from the public data and tested in other
-> lineage-traced systems, where it has not yet been tested.
+> **Conclusions.**
+> A state contribution shared additively across all conditions cannot change their ordering within a
+> clone. Allowing state effects to vary by condition improved that ordering in WM989: part of what a
+> clone's pretreatment state carries bears on which of the six conditions it is still detected after,
+> not only on how detectable it is overall. The outcome is a detection proxy and is not death,
+> sensitivity, resistance or clinical response. The design and the artifacts behind it are released,
+> so that the result can be reproduced from the public data and tested in other lineage-traced
+> systems, where it has not yet been tested.
 >
 > ---
 
@@ -343,7 +344,7 @@ PHASE 2A -- review corrections, in the repository (Amendment V1.3)
     from line-ending conversion; draft renders kept out of git and out of the archive
 
 PHASE 2B -- human inputs and decisions
-[ ] the manuscript read and approved, including the new prose
+[x] the manuscript read and approved, including the new prose
 [x] author block, declarations and the AI-use description filled -- competing interests disclose the
     copyright and the commercial-licence offer rather than "none"
 [x] licensing: A (wording matches the licence) or B (an explicit additional permission, reviewed)
@@ -352,11 +353,11 @@ PHASE 2B -- human inputs and decisions
 
 PHASE 3 -- lock, render, build
 [x] the licensing decision applied wherever the commercial boundary is described
-[ ] every FILL marker filled; the DOI written into MANUSCRIPT.md, README.md, CITATION.cff, this file
+[x] every FILL marker filled; the DOI written into MANUSCRIPT.md, README.md, CITATION.cff, this file
 [ ] python experiments/export_gen1_source_data.py    -- the numbers still reproduce
 [ ] python experiments/cascade_gen1.py               -- locks in order, digests re-pinned
 [ ] the three --verify commands; the full test suite read by pytest's own exit code
-[ ] CITATION.cff validated
+[x] CITATION.cff validated
 [ ] python experiments/render_gen1_submission.py; every page of the PDF inspected: three figures,
     their legends, the DOI, no placeholder
 [ ] commit, push, green CI on that exact commit

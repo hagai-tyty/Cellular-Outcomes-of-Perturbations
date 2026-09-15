@@ -1,6 +1,6 @@
 {
   "stage": "EL-A",
-  "lock_digest": "7ed8c8b12cd287ab830e8f1ea1a6f821e33d11b8da7481279e27ae00385fe245",
+  "lock_digest": "dd655cc7656b286f3a2d71ac3680264d31bfa2b4a1865b3864e300795fb824be",
   "digest_definition": "SHA-256 over 'path  sha256' lines, sorted by path, LF-joined",
   "n_artifacts": 64,
   "by_class": {
@@ -297,9 +297,9 @@
     },
     "CITATION.cff": {
       "class": "protocol",
-      "sha256": "4ae92baf872993fdcd32450319bd2b6b20a5e15b5bb46d77b0e9ec866c345b29",
+      "sha256": "999052a19de3de691c22e5eaeaa2731707ae74a80577252c5737889b4696cb4b",
       "hashed": "canonical-lf",
-      "bytes": 2986,
+      "bytes": 2947,
       "git_tracked": true,
       "git_ignored": false
     },

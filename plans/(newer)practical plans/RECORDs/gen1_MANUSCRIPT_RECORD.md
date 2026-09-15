@@ -1836,3 +1836,127 @@ manuscript's own limit already holds, so the gate now exempts exact mirrors of m
   package   0b30b1444f37324d7cdc6b1ffae026aade9236f301bee13704cfea026307c91c
        was  e2d9d0dc3ce906bf49552753b5bc15720bf8aa4a4e0341ac695dfbb47e1d2eec
 ```
+
+---
+
+## Phase 3i of the release: the last placeholders filled, and the final render — 2026-09-15
+
+### What the author decided
+
+On 2026-09-15 the author approved the manuscript and set the release date, in these words: "date
+tomorrow / manuscript approved fill every single placeholder left".
+
+```text
+  release date   2026-09-16, the Zenodo publication date
+  manuscript     approved
+```
+
+### What was filled
+
+```text
+  CITATION.cff    date-released            "2026-09-16"
+  MANUSCRIPT.md   Use of AI assistance     "The author reviewed the work and takes full
+                                           responsibility for its content."
+                  Authors' contributions   "H.A. reviewed the work and approved the final
+                                           manuscript."
+```
+
+Each confirmation is the sentence its placeholder had quoted since Phase 3a; the edit script refused
+to write any other. It also refused unless 2026-09-16 was the day after the day it ran, since the
+author's word was "tomorrow".
+
+The submission checklist ticks three items that are now true: the manuscript read and approved; every
+FILL marker filled; `CITATION.cff` validated (cffconvert 2.0.0, exit 0, CFF schema 1.2.0).
+
+### Not filled, and why
+
+```text
+  SUBMISSION.md   <<LATER: bioRxiv DOI>>             exists only once the preprint is posted
+  SUBMISSION.md   <<LATER: request an APC waiver>>   belongs to a journal submission, which is
+                                                     deferred
+```
+
+Filling either now would mean writing something untrue. Both sit in the cover letter, which is for a
+later journal submission; the release bundle allows LATER markers and lists them in its contents.
+
+### The numbers still reproduce, checked without rewriting the environment lock
+
+The checklist's `python experiments/export_gen1_source_data.py` was not run as a script, because its
+last export rewrites `environment_lock.txt` from the current interpreter. Since that lock was written,
+20 packages were installed for rendering and validation on 2026-09-14 -- cffconvert, reportlab,
+svglib and their dependencies -- and no existing package changed version. Rewriting the lock now
+would enter those into the record of the environment that produced the results, and change a locked
+artifact to do it.
+
+Its three data exports were run instead, each of which refuses unless it reproduces the recorded
+verdict, with their output sent to the gitignored `dist/export_check/`:
+
+```text
+  1,000 null draws             reproduce the verdict; identical to the committed file
+  2,000 bootstrap replicates   reproduce CI95 [0.037197, 0.065571]; identical to the committed file
+  figure source data           identical to the committed file
+```
+
+Compared after normalising line endings. The repository tree was unchanged by the check. That checklist
+item is left unticked, because the script it names was not the thing that ran.
+
+### A formatting slip from Phase 3h, corrected before the release commit
+
+Reading the abstract back for the upload guide showed "**Conclusions.**" joined to the first line of its
+text, while Background and Results keep their labels on their own lines. The cause was the Phase 3h
+edit script: it flattened the paragraph before rewrapping it, so its check for a label on its own line
+never saw the line break. The structure checks passed throughout, because they look for the labels in
+order, not for their line breaks; and the rendered documents were unaffected, since a single line
+break renders as a space. The label was put back on its own line, with the abstract's words proven
+unchanged and the submitted abstract regenerated, and the cascade and the render below were run after
+that correction.
+
+### The final render
+
+Rendered after the cascade, so the title page carries the final digests, with
+`python experiments/render_gen1_submission.py`, not `--draft`. The files are committed in
+`results/manuscript/submission/`.
+
+```text
+  exit code        0
+  manifest         draft false; fill_markers_remaining 0; pdf_exported_by_word true;
+                   code set at 8 pt; code_blocks_wrapped_in_word 0; pandoc 3.11
+  outputs          MANUSCRIPT_bioRxiv.pdf (14 pages), MANUSCRIPT_bioRxiv.docx, MANUSCRIPT_BMC.docx,
+                   COVER_LETTER.docx, figure_1_design.pdf, figure_2_primary.pdf,
+                   figure_3_robustness.pdf, RENDER_MANIFEST.json
+```
+
+Checked in the text of each file, not assumed from the exit code:
+
+```text
+                            DOI   FILL   LATER   both confirmations   evidence digest   figures
+  MANUSCRIPT_bioRxiv.docx   yes   0      0       yes                  yes               3 embedded
+  MANUSCRIPT_BMC.docx       yes   0      0       yes                  yes               separate PDFs
+  COVER_LETTER.docx         yes   0      2       --                   --                --
+```
+
+The two LATER markers in the cover letter are the bioRxiv DOI and the APC-waiver line, as intended.
+The PDF's pages were not inspected visually here; the author read and approved the manuscript, and
+the checks above are what was verified mechanically.
+
+### Registered results
+
+```text
+  manuscript stage      GEN1_MANUSCRIPT_READY
+  compliance checks     20 of 20 pass
+  negative controls     13 of 13 fire
+  three --verify        EVIDENCE_INTACT, CLAIMS_INTACT, PACKAGE_INTACT
+  full test suite       pytest's own exit code 0, 2195 tests collected: 2194 passed, 1 skipped (run after the label fix and the re-render)
+  FILL markers left     0
+```
+
+### Digests
+
+```text
+  evidence  dd655cc7656b286f3a2d71ac3680264d31bfa2b4a1865b3864e300795fb824be
+       was  7ed8c8b12cd287ab830e8f1ea1a6f821e33d11b8da7481279e27ae00385fe245
+  claim     a748a55e540a4652e00af27ec93acc601ae0b88b630cee0bdc0f43ea953b25af
+       was  712d30837e1f416fa7dc108d78ab56d47ba27f4fa87e9825cd463cc817f2d296
+  package   00ce90658a1e7d725e1312c9ef8ddb59eceb6c73dc551224780b6ff34b2abff7
+       was  0b30b1444f37324d7cdc6b1ffae026aade9236f301bee13704cfea026307c91c
+```
