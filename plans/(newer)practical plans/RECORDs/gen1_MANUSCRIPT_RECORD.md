@@ -2114,3 +2114,63 @@ uses to draw them.
   package   fef252d4c2bbaf52dcb6f9755779a0f49af9b805f54dee282169c03eda343375
        was  00ce90658a1e7d725e1312c9ef8ddb59eceb6c73dc551224780b6ff34b2abff7
 ```
+
+---
+
+## Phase 3l of the release: the release bundle, rebuilt and verified — 2026-09-15
+
+The Phase 3j bundle was superseded by the Figure 2B correction in Phase 3k before anything was
+uploaded. This entry records its replacement; the Phase 3j entry stands as the record of what was built
+then.
+
+### Built from the Phase 3k commit
+
+```text
+  commit            65ac157785db4bed4547e996158eca79e7ee6be1   (Phase 3k, pushed; CI success)
+  bundle            dist/cellfate-rx-gen1-bundle.zip
+  files             401
+  size              81.7 MB uncompressed, 74.5 MB compressed
+  SHA-256           1b32277604ffefa47c582e6ad83f612c103418c8c054ea235cbf455103f3b0b6
+  replaces          the Phase 3j bundle from e9f6184, SHA-256 679a0db6c716e9f0..., never uploaded
+  lock digests      evidence 60602531449079b8f86debea9ffd69753f8bfad033be4c476751d39da08c78aa
+                    claim    fc6dc2f221acf1c7661e36071b9e377571c8f903d38398b55bedc164db7efa61
+                    package  fef252d4c2bbaf52dcb6f9755779a0f49af9b805f54dee282169c03eda343375
+  carries           results/stage24/stage24_w5_artifact.npz and
+                    _cc_cache/stage23/GSE279162_pseudobulk.npz, which git does not
+  pending LATER     the bioRxiv DOI and the APC-waiver line, both in the cover letter
+```
+
+`make_release_bundle.py` refused nothing: the tree was clean, no FILL marker remained, both gitignored
+files were present, and every file a lock hashes was in the archive. `make_release_bundle.py --check`
+then re-verified every member against `SHA256SUMS.txt`: BUNDLE_INTACT, 401 files checked, none changed, missing or mismatched, and the zip's hash equal to the recorded one. `BUNDLE_CONTENTS.json` records the
+commit it was cut from and the zip's SHA-256; both were re-read against the commit and a fresh hash of
+the zip, and matched.
+
+### The unpacked archive verifies with its own code
+
+As `REPRODUCIBILITY.md` §5.1 tells a downloader: unpacked into `D:\cellfate-bundle-verify\`, with no
+git metadata inside, and run from its root with `PYTHONPATH=src`, so that the archive's own `cellfate`
+is imported rather than the checkout's editable install.
+
+```text
+  git metadata inside the archive   absent
+  cellfate imported from            the archive's own src/cellfate
+  run_gen1_evidence_lock --verify   exit 0   EVIDENCE_INTACT
+  run_gen1_claim_lock --verify      exit 0   CLAIMS_INTACT
+  run_gen1_manuscript --verify      exit 0   PACKAGE_INTACT
+  predictor, cellfate.gen1_cli      exit 0   a score for each of the six conditions, all
+                                             SUPPORTED_KNOWN_CONDITION, identical to the Phase 3j
+                                             bundle's; ranking_status NOT_SUPPORTED because no
+                                             verdict file was supplied, the tool as specified
+```
+
+The unpacked copy was removed afterwards. `dist/` is gitignored, so the tree was unchanged.
+
+### For the uploads
+
+The GitHub release `gen1-v1.0.0` belongs on `65ac157785db4bed4547e996158eca79e7ee6be1`, the commit this bundle was cut from, and
+no longer on `e9f6184`. The upload guide in `dist/UPLOAD_GUIDE.md` was regenerated with this bundle's
+commit, size and SHA-256, and sent to the author again.
+
+No test suite was run for this record-only commit, since nothing but this file changed. The three
+`--verify` commands ran on it before the push, and CI ran after.
