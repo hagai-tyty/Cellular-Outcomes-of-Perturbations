@@ -2280,3 +2280,104 @@ bioRxiv DOI, so that the locks are cascaded once, not twice.
 
 No test suite was run for this record-only commit, since nothing but this file changed. The three
 `--verify` commands ran on it before the push, and CI ran after.
+
+---
+
+## Phase 4b of the release: the bioRxiv submission — 2026-09-16
+
+The author submitted the preprint and approved it. It is BIORXIV/2026/752106, version 1, and is
+waiting for bioRxiv's screening, so it has no DOI yet. The form was reviewed from the author's
+screenshots before approval. This entry records what was checked, what was corrected, and one
+difference between the web abstract and the manuscript.
+
+### The Phase 4a commit's CI
+
+The Phase 4a commit, `1276bc35dcf3c63d35a790f468899085e8d01206`, was still running CI at the first
+check. A second check, delayed by two and a half minutes, was stopped by the author; it printed
+nothing. A single request afterwards found it `completed / success`.
+
+### Zenodo: one open item closed
+
+On the published Zenodo record, the author confirmed that the related work for GSE227151 reads
+"References". The Phase 4a entry had left this unconfirmed. The published record's file checksums,
+and a download of the ZIP checked against `BUNDLE_CONTENTS.json`, are still open.
+
+### Corrected on the form before approval
+
+```text
+  author dialog         last name "aviv" -> "Aviv"; institution "none" -> "Independent researcher",
+                        the manuscript's affiliation; "Mark as Corresponding Author" ticked
+  title                 entered without "carries" and with "condition specific" unhyphenated;
+                        replaced with the manuscript's exact title
+  competing interests   "no competing interest" was selected; changed to "details given below",
+                        with the manuscript's statement word for word
+  external data         three links added: the Zenodo DOI, the GitHub repository, GSE279162
+```
+
+Every one of these was then read back on bioRxiv's own pages: the author list showed "Hagai Aviv
+(Corresponding Author), Independent researcher" with the ORCID linked. The proofing page showed the
+exact title, the three links, "Yes" with the competing-interests statement, funders "None", CC BY
+4.0, and one file, `MANUSCRIPT_bioRxiv.pdf`, as the main manuscript file.
+
+### The PDF bioRxiv built is ours, byte for byte
+
+Before uploading, the page size was checked, because bioRxiv asks for US Letter: all 14 page objects
+of `MANUSCRIPT_bioRxiv.pdf` have MediaBox 612 x 792 pt, which is 8.5 x 11 in. After uploading, the
+author downloaded the PDF bioRxiv generated, `BIORXIV-2026-752106v1-Aviv.pdf`:
+
+```text
+  bioRxiv's PDF       386757 bytes  d215bd2bdce37e5a104dbd948887adf981109a93b9e87fa814c7d7a9baabc8f2
+  ours, from 65ac157  386757 bytes  d215bd2bdce37e5a104dbd948887adf981109a93b9e87fa814c7d7a9baabc8f2
+  cmp                 byte-identical
+```
+
+bioRxiv passed the file through unchanged. Every check recorded for that file in Phases 3k and 3l
+therefore holds for the preprint: 14 pages, three embedded figures, Figure 2B with its labels
+staggered, no placeholder left, and no code line wrapped.
+
+### The web abstract uses brackets where the manuscript uses dashes
+
+The abstract was pasted into the form as written in the upload guide. When the author viewed it,
+bioRxiv had lost both em dashes in the Results paragraph: the first was shown as a line break in the
+middle of a sentence, and the second as a semicolon. Neither was visible from the form itself.
+
+A version using the HTML entity for the dash was prepared first, and discarded before it was given
+to the author. The author pointed out that bioRxiv's own lists of accented and special characters do
+not include the long dash, and asked why it was needed at all. It is not: there it only marks off an
+aside, and brackets do the same. The sentence was rewritten:
+
+```text
+  before   ... preregistered in full — the metric, ... of the same data — a frozen ...
+  after    ... preregistered in full (the metric, ... of the same data), a frozen ...
+```
+
+Proof, against the abstract in the upload guide, which is the manuscript's own:
+
+```text
+  ASCII only                       yes
+  words, in the same order         324, identical
+  every character-level change     "— " -> "(" and " —" -> "),", nothing else
+```
+
+The first run of that proof reported the words as different. The fault was in the check, not the
+text: it compared against the guide's lines with their `>` quote markers still attached. With the
+markers removed, it reported them identical, as shown. The author then viewed the abstract again on
+bioRxiv: three paragraphs, the Results one unbroken, the brackets in place, and every number as in
+the manuscript.
+
+The PDF and `MANUSCRIPT.md` keep their dashes, which display correctly there. So the abstract on
+bioRxiv's web page differs from the manuscript's, and from the "abstract as submitted" in
+`SUBMISSION.md`, by exactly those two punctuation marks. `SUBMISSION.md` is not changed here.
+
+### Still open
+
+```text
+  bioRxiv     screening; the preprint's DOI once it is posted
+  afterwards  the bioRxiv DOI into the Zenodo record's related works (author), and into the cover
+              letter's LATER field in a new commit, with the pre-flight checklist ticked
+  Zenodo      the published record's file checksums, and the downloaded ZIP's SHA-256
+  LATER       the APC-waiver line stays until a journal submission is actually made
+```
+
+No test suite was run for this record-only commit, since nothing but this file changed. The three
+`--verify` commands ran on it before the push, and CI ran after.
