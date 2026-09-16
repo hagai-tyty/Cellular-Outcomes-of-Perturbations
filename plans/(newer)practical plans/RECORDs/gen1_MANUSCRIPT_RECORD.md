@@ -2174,3 +2174,109 @@ commit, size and SHA-256, and sent to the author again.
 
 No test suite was run for this record-only commit, since nothing but this file changed. The three
 `--verify` commands ran on it before the push, and CI ran after.
+
+---
+
+## Phase 4a of the release: the Zenodo record and the GitHub release, published — 2026-09-16
+
+Both uploads were made by the author, from `dist/` as built in Phase 3l. This entry records what was
+checked around them, what went wrong once, and what is still open.
+
+### Zenodo, before publishing
+
+The files were compared, not assumed. Zenodo shows an MD5 for each file it received; each was
+compared with the file on this machine:
+
+```text
+  file                          bytes      MD5 on Zenodo's draft               MD5 here
+  cellfate-rx-gen1-bundle.zip   74546611   d6de0f183ca43a4d1d464297d26c40a7   equal
+  SHA256SUMS.txt                   42689   f4186ac658dd3c49aef76bb5aebabb46   equal
+  BUNDLE_CONTENTS.json             47960   8b2bfaec177942278be06285dfcf7cae   equal
+```
+
+So the draft held the Phase 3l bundle, with the Figure 2B correction, SHA-256
+`1b32277604ffefa47c582e6ad83f612c103418c8c054ea235cbf455103f3b0b6`, and not the superseded Phase 3j
+one.
+
+The form was reviewed field by field from the author's screenshots. The draft was the one holding
+the reserved DOI, `10.5281/zenodo.22769563`, and not a new upload. The licence was PolyForm
+Noncommercial License 1.0.0, chosen from Zenodo's own list. One field was wrong: the related work
+for GSE227151 was entered as "Is derived from" instead of "References". The author was asked to
+change it before publishing. The published metadata has not been read back, so that change is not
+confirmed here.
+
+### Zenodo, after publishing
+
+```text
+  doi.org handle API     200, responseCode 1
+  10.5281/zenodo.22769563  -> https://zenodo.org/doi/10.5281/zenodo.22769563
+  Zenodo record API      one request: 504
+```
+
+DataCite registers a Zenodo DOI only when the record is published, so the resolving handle confirms
+the publication. The record itself could not be read: Zenodo was timing out, and its site warned of
+outages caused by automated traffic.
+
+**A mistake, recorded as it happened.** After that 504, a background check was started that would
+have retried Zenodo every 30 seconds for up to 10 minutes. The author stopped it, rightly: against a
+service struggling with bots and scrapers, that is the traffic it is trying to block. It had sent
+one request, also answered 504, before it was stopped. The rule since then: one request per check to
+a service that is not ours, never a timed loop, and the author decides when to try again.
+
+**Zenodo's GitHub integration.** With Zenodo down, this was checked from GitHub's side. The author
+opened the repository's Settings, then Webhooks, and found no `zenodo.org` webhook. Without that
+webhook, publishing a GitHub release cannot create a second Zenodo record with a different DOI. The
+setting on Zenodo's account page itself was not seen.
+
+### The GitHub release
+
+Published by the author with the three files attached. Checked with a single request to GitHub's
+public releases API and a single `git ls-remote`:
+
+```text
+  tag                   gen1-v1.0.0
+  remote tag points to  65ac157785db4bed4547e996158eca79e7ee6be1   the bundle's commit
+  target_commitish      65ac157785db4bed4547e996158eca79e7ee6be1
+  title                 CellFate-Rx Generation 1 (gen1-v1.0.0)
+  draft / prerelease    false / false
+  published             2026-09-16T16:56:58Z
+  notes                 carry the DOI 10.5281/zenodo.22769563
+
+  asset                         bytes      state      SHA-256 reported by GitHub
+  BUNDLE_CONTENTS.json             47960   uploaded   equal to the file in dist/
+      bc0030b333f384401474608f63f1e607b76837a753e1ec467aaca08562a1ba1b
+  cellfate-rx-gen1-bundle.zip   74546611   uploaded   equal to the file in dist/
+      1b32277604ffefa47c582e6ad83f612c103418c8c054ea235cbf455103f3b0b6
+  SHA256SUMS.txt                   42689   uploaded   equal to the file in dist/
+      a1895c68aac54c02485594dc47cde18127e5351cddd070b0bcd2bde755debc41
+```
+
+GitHub computes those digests itself from what it received, so the release's copy of the bundle is
+confirmed byte-identical to the verified one. The tag is on `65ac157`, not on the tip of `main`: the
+one commit after it, `efcd791`, only adds the Phase 3l entry to this record.
+
+### The pre-flight checklist is not ticked in this commit
+
+`SUBMISSION.md` is in the manuscript package lock, so ticking a box changes the package digest and
+means cascading the locks again. Several boxes describe work that is done and recorded but not
+ticked: the Phase 3 steps from Phases 3i to 3l, with the note in Phase 3i that the source-data
+exports were run in-process instead of through `export_gen1_source_data.py`; the Zenodo line in
+Phase 2B; and the GitHub release above. They will be ticked in the one new commit that fills the
+bioRxiv DOI, so that the locks are cascaded once, not twice.
+
+### Still open
+
+```text
+  Zenodo      read the published record back: its metadata, including the GSE227151 relation, and
+              its files' checksums
+  Zenodo      download the ZIP from the published record; its SHA-256 must equal the one in
+              BUNDLE_CONTENTS.json (checklist, Phase 4, first line)
+  bioRxiv     the submission, by the author: MANUSCRIPT_bioRxiv.pdf, New Results, Bioinformatics,
+              CC BY
+  afterwards  the bioRxiv DOI into the Zenodo record's related works (author), and into the cover
+              letter's LATER field in a new commit
+  LATER       the APC-waiver line stays until a journal submission is actually made
+```
+
+No test suite was run for this record-only commit, since nothing but this file changed. The three
+`--verify` commands ran on it before the push, and CI ran after.
