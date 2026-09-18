@@ -189,8 +189,9 @@ Form-entry notes:
 - **BMC** asks during submission for the organisations that funded the work, with any grant
   numbers. Copy them from the manuscript's Funding declaration. Zenodo has a funding field too, and
   it stays empty for the same reason.
-- **AI use** is documented in the manuscript's Methods, under *Use of AI assistance* — where Springer
-  Nature's editorial policy asks for it. No AI tool is listed as an author.
+- **AI use** is documented in the manuscript's Methods, under *AI use disclosure* — where Springer
+  Nature's editorial policy asks for it: in the Methods, and in another part only if there is no
+  Methods section. No AI tool is listed as an author.
 - **Competing interests.** Do not default to "none". The author holds the copyright in
   CellFate-Rx and offers commercial licences for it, which is the kind of financial interest BMC
   asks authors to declare. Disclose it, and say whether any income has been received from it.

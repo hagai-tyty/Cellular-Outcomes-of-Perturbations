@@ -220,7 +220,7 @@ null rather than silently reporting a smaller one.
 Uncertainty on the observed statistic is a 2,000-replicate clone bootstrap, conditional on the
 fitted models.
 
-### Use of AI assistance
+### AI use disclosure
 
 Generative AI assistants were used throughout this work. Claude Opus 5 and Claude Opus 4.8
 (Anthropic) wrote most of the code and documentation. Gemini 3.1 Pro (Google), Claude Haiku 4.5

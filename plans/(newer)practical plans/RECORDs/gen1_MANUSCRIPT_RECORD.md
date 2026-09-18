@@ -2496,3 +2496,91 @@ copy on Zenodo and on the GitHub release.
   BMC         the submission, with the APC waiver requested at submission
   Zenodo      the published archive's ZIP downloaded back and its SHA-256 compared
 ```
+
+---
+
+## Phase 4d of the release: the AI disclosure is renamed, and stays in the Methods — 2026-09-18
+
+### What the author asked, and what was checked
+
+The author asked why the AI section sits so early in the PDF, whether it should move much further
+down, and whether it could be renamed "AI use disclosure".
+
+It was already the last subsection of the Methods, on page 6 of 14; it reads as early only because the
+Methods themselves are early. Springer Nature's policy, which BMC follows, says that use of a large
+language model should be documented in the Methods section, and in a suitable alternative part only
+where there is no Methods section. Moving the disclosure to the end of the paper would therefore be the
+first thing a screener could query. That was put to the author with the alternative — a pointer line in
+the Methods and the full text in the Declarations — and the author chose to rename only and keep it in
+place.
+
+### The edit
+
+```text
+  MANUSCRIPT.md    "### Use of AI assistance" -> "### AI use disclosure"   one line
+  SUBMISSION.md    the form-entry note now names the new heading, and says where the policy asks for
+                   the disclosure: in the Methods, another part only if there is no Methods section
+```
+
+Nothing in the locks, the checks or the tests names that heading: it is not in `REQUIRED_SECTIONS`,
+and the only references to it anywhere were the two prose lines in `SUBMISSION.md`. The dry run proved
+the rest:
+
+```text
+  matches per edit             exactly one
+  the disclosure's own text    unchanged, byte for byte
+  its neighbours               still "### The preregistered ranking test" before, "## Results" after
+  lines out / in               1 / 1 in MANUSCRIPT.md, 2 / 3 in SUBMISSION.md, all from the edits
+  claim scanner                no hit on any added line
+  old heading name left        0 mentions anywhere
+```
+
+### Re-rendered, and what that costs
+
+The manuscript changed, so the submission files were rebuilt with
+`python experiments/render_gen1_submission.py`, not `--draft`.
+
+```text
+  exit code                     0
+  draft                         false
+  fill_markers_remaining        0
+  pdf_exported_by_word          true
+  code_blocks_wrapped_in_word   0
+  PDF                           14 pages, every page US Letter, 612 x 792 pt
+  the heading in the PDF        "AI use disclosure", page 6; the old name appears nowhere
+  MANUSCRIPT_bioRxiv.pdf        386758 bytes
+                                009ea3c4aa6cb90cfd577007ec1e50c3268d13077a8caef0f139d060fc6f00be
+                          was   386757 bytes, d215bd2b...c8f2, the copy on Zenodo and the release
+```
+
+So the repository's PDF is no longer the one archived at Zenodo and attached to the GitHub release.
+That is expected for a correction made after a release: the archive is the frozen v1.0.0 snapshot and
+does not change, while the checkout moves on. The preprint, when it goes up, carries this newer PDF.
+The three figure PDFs were rewritten too, but only in their timestamps: 74 bytes differ, all inside
+`/CreationDate`, `/ModDate` and the `/ID` reportlab derives from them.
+
+### Registered results
+
+```text
+  manuscript stage      GEN1_MANUSCRIPT_READY
+  compliance checks     20 / 20
+  negative controls     13 / 13
+  three --verify        EVIDENCE_INTACT, CLAIMS_INTACT, PACKAGE_INTACT
+  full test suite       pytest's own exit code 0; 2,195 results: 2,194 passed, 1 skipped
+  FILL markers left     0
+  LATER markers left    2: the Zenodo preprint DOI, and the APC-waiver line
+```
+
+### Digests
+
+```text
+  evidence  60602531449079b8f86debea9ffd69753f8bfad033be4c476751d39da08c78aa   unchanged
+  claim     fc6dc2f221acf1c7661e36071b9e377571c8f903d38398b55bedc164db7efa61   unchanged
+  package   5641c0f6d136c01e1c0f03abeb59cd818c5de881702c826068ef81850fc213d6
+       was  c4e62ecd27a860d5a7bca2c5b34890036f2cd8907b180978f60aaeec7cc2046b
+  manuscript, canonical LF   51eba6f5ffaeabaf518b7da493599afeebcd51269fe3e5fe1b521649a6d0797a
+                       was   c5bba1ce73d4671b6dc43da1067d16cc42b023402ea9aec6a61573d92bbcc972
+```
+
+The claim digest is unchanged, as it must be: a heading's name is not a claim, and no sentence of the
+disclosure moved.
