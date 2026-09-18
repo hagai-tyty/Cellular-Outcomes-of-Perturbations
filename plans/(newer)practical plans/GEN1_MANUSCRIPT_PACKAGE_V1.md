@@ -322,3 +322,29 @@ the qualifiers travel with the finding -- WM989, the six observed experimental c
 LIMITATIONS, WHAT THIS DOES NOT SHOW and GENERATION 2 stay in the Discussion, in that order
 MS-A to MS-F are unchanged; no check is removed or loosened
 ```
+
+
+---
+
+# Amendment V1.5 — 2026-09-18
+
+**What changes: the preprint venue.** V1.2 and the plan's release section named bioRxiv as the
+preprint server. On 2026-09-18 bioRxiv declined the submission, BIORXIV/2026/752106, because it
+requires authors to hold an organisational affiliation that can adjudicate ethical disputes. The
+manuscript was not read on its merits, and nothing in it was questioned. An independent researcher
+cannot meet that requirement without joining an organisation.
+
+From V1.5 the preprint is a Zenodo record of its own, separate from the archive record, carrying the
+same `MANUSCRIPT_bioRxiv.pdf` under CC BY, with its own DOI and a related-works link to the archive.
+The journal route stays BMC Bioinformatics, whose policy states that a posted preprint is not prior
+publication and is not counted against the advance a study provides. The preprint DOI is disclosed
+at submission, and the APC waiver is requested there too, since it cannot be requested later.
+
+**What does not change.**
+
+```text
+the manuscript, the figures and the locks: nothing here touches a claim or a number
+the archived PDF keeps its file name, so the Zenodo archive, the GitHub release and this checkout
+  continue to name the same file
+the release order: archive first, preprint second, journal third
+```

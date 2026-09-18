@@ -24,9 +24,13 @@ AFFILIATION        as on the MANUSCRIPT.md title page
 CORRESPONDING      as on the MANUSCRIPT.md title page
 
 ARTICLE TYPE       Research Article
-PREPRINT SERVER    bioRxiv
-bioRxiv CATEGORY   Bioinformatics   (secondary: Cancer Biology)
-RELEASE            Zenodo archive and bioRxiv preprint; journal submission deferred (2026-09-12)
+PREPRINT SERVER    Zenodo, as a preprint record of its own, separate from the archive record
+                   bioRxiv declined the submission on 2026-09-18: it requires an organisational
+                   affiliation that can adjudicate ethical disputes, which an independent
+                   researcher does not have
+RELEASE            Zenodo archive, then a Zenodo preprint, then BMC Bioinformatics with the APC
+                   waiver requested at submission (2026-09-18; the 2026-09-12 plan was Zenodo and
+                   bioRxiv, with the journal deferred)
 FORMATTED FOR      BMC Bioinformatics Research article, ready if a journal is chosen later
 LICENCE            manuscript + figures  CC BY 4.0
                    software + model      PolyForm-Noncommercial-1.0.0
@@ -182,12 +186,11 @@ out of date.
 
 Form-entry notes:
 
-- **bioRxiv** asks during submission for the organisations that funded the work, with any grant
-  numbers. Copy them from the manuscript's Funding declaration.
+- **BMC** asks during submission for the organisations that funded the work, with any grant
+  numbers. Copy them from the manuscript's Funding declaration. Zenodo has a funding field too, and
+  it stays empty for the same reason.
 - **AI use** is documented in the manuscript's Methods, under *Use of AI assistance* — where Springer
-  Nature's editorial policy asks for it. bioRxiv's guidance holds authors responsible for content
-  produced with generative AI and says AI tools cannot be authors; it does not ask for a separate
-  disclosure. No AI tool is listed as an author.
+  Nature's editorial policy asks for it. No AI tool is listed as an author.
 - **Competing interests.** Do not default to "none". The author holds the copyright in
   CellFate-Rx and offers commercial licences for it, which is the kind of financial interest BMC
   asks authors to declare. Disclose it, and say whether any income has been received from it.
@@ -212,7 +215,9 @@ the manuscript's `## Figure legends` section.
 
 For submission, `python experiments/render_gen1_submission.py` builds two manuscript files from the
 one Markdown source. `MANUSCRIPT_bioRxiv.pdf` has the three figures embedded above their legends,
-because bioRxiv takes a single PDF and its conversion engine does not list SVG.
+because a preprint server takes a single PDF and its conversion engine does not list SVG. It keeps
+that name although bioRxiv is no longer the venue: the same file is archived at Zenodo and attached
+to the GitHub release, and renaming it here would make those copies disagree with this one.
 `MANUSCRIPT_BMC.docx` keeps the legends in the text and ships the figures as separate PDF files,
 which Springer Nature accepts. The PDF is exported through Word, since pandoc's own PDF route needs
 LaTeX. Every page is inspected before it is approved.
@@ -308,8 +313,8 @@ For a journal submission, if one is made. Paste it unchanged apart from the mark
 > results, and a verification tool that refuses on any modified artifact are archived at Zenodo
 > under DOI `10.5281/zenodo.22769563`.
 >
-> **Preprint.** This manuscript was posted on bioRxiv, DOI `<<LATER: bioRxiv DOI>>`, under a CC BY
-> licence.
+> **Preprint.** This manuscript is posted as a preprint at Zenodo, DOI
+> `<<LATER: Zenodo preprint DOI>>`, under a CC BY licence.
 >
 > **Software licence.** The software and frozen model are released under the PolyForm Noncommercial
 > License 1.0.0. They are free for any non-commercial use without registration or agreement, which
@@ -340,7 +345,7 @@ PHASE 2A -- review corrections, in the repository (Amendment V1.3)
     frozen before any ranking statistic, after earlier predictive analyses; checked
 [x] REPRODUCIBILITY.md separates a checkout from the Zenodo archive, and verifies the archive with
     its own code (PYTHONPATH=src)
-[x] render script for the bioRxiv PDF, the BMC .docx and the figure files; binary outputs protected
+[x] render script for the preprint PDF, the BMC .docx and the figure files; binary outputs protected
     from line-ending conversion; draft renders kept out of git and out of the archive
 
 PHASE 2B -- human inputs and decisions
@@ -349,26 +354,32 @@ PHASE 2B -- human inputs and decisions
     copyright and the commercial-licence offer rather than "none"
 [x] licensing: A (wording matches the licence) or B (an explicit additional permission, reviewed)
 [x] installs approved: pandoc; svglib, reportlab, cffconvert
-[ ] Zenodo: GitHub integration OFF for this repository; DOI reserved on a saved draft, draft kept
+[x] Zenodo: GitHub integration OFF for this repository; DOI reserved on a saved draft, draft kept
 
 PHASE 3 -- lock, render, build
 [x] the licensing decision applied wherever the commercial boundary is described
 [x] every FILL marker filled; the DOI written into MANUSCRIPT.md, README.md, CITATION.cff, this file
-[ ] python experiments/export_gen1_source_data.py    -- the numbers still reproduce
-[ ] python experiments/cascade_gen1.py               -- locks in order, digests re-pinned
-[ ] the three --verify commands; the full test suite read by pytest's own exit code
+[x] python experiments/export_gen1_source_data.py    -- the numbers still reproduce; its three
+    exports were run in-process instead, leaving the environment lock unrewritten (record, Phase 3i)
+[x] python experiments/cascade_gen1.py               -- locks in order, digests re-pinned
+[x] the three --verify commands; the full test suite read by pytest's own exit code
 [x] CITATION.cff validated
-[ ] python experiments/render_gen1_submission.py; every page of the PDF inspected: three figures,
+[x] python experiments/render_gen1_submission.py; every page of the PDF inspected: three figures,
     their legends, the DOI, no placeholder
-[ ] commit, push, green CI on that exact commit
-[ ] python experiments/make_release_bundle.py, then --check
-[ ] the unpacked archive passes the three --verify commands and the PYTHONPATH=src predictor
+[x] commit, push, green CI on that exact commit
+[x] python experiments/make_release_bundle.py, then --check
+[x] the unpacked archive passes the three --verify commands and the PYTHONPATH=src predictor
 
 PHASE 4 -- publish, in this order
-[ ] Zenodo record published; the downloaded ZIP's SHA-256 matches BUNDLE_CONTENTS.json
-[ ] GitHub release gen1-v1.0.0 on the archived commit, linking the DOI -- the tag never moves
-[ ] bioRxiv: MANUSCRIPT_bioRxiv.pdf, CC BY, category Bioinformatics
-[ ] the bioRxiv DOI added to the Zenodo record's metadata and, in a NEW commit, to the LATER fields
+[x] Zenodo record published; its DOI resolves at doi.org, and the three files' MD5s matched this
+    machine before publishing
+[ ] the ZIP downloaded back from the published record; its SHA-256 matches BUNDLE_CONTENTS.json
+[x] GitHub release gen1-v1.0.0 on the archived commit, linking the DOI -- the tag never moves
+[ ] a Zenodo preprint record: MANUSCRIPT_bioRxiv.pdf, type Preprint, CC BY, linked to the archive
+    record -- bioRxiv declined on 2026-09-18 for want of an organisational affiliation
+[ ] the preprint DOI added to the archive record's related works and, in a NEW commit, to the LATER
+    field in the cover letter
+[ ] BMC Bioinformatics: the APC waiver requested at submission, and the preprint DOI disclosed
 ```
 
 **Order matters in Phase 3.** The DOI and every FILL field must be written before the locks are

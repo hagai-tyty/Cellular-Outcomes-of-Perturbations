@@ -10,7 +10,7 @@
   "failing": [],
   "evidence_digest": "60602531449079b8f86debea9ffd69753f8bfad033be4c476751d39da08c78aa",
   "claim_digest": "fc6dc2f221acf1c7661e36071b9e377571c8f903d38398b55bedc164db7efa61",
-  "plan_canonical_lf_sha256": "eb01e60be9c51299490f627a0ab5d656e41f44b97c11bde81d06f4d6c26f0f39",
+  "plan_canonical_lf_sha256": "6f82e9bbcefa61c50bd53339ca37a2386922f47abe2f74d67148a84c1692792c",
   "manuscript": "results/manuscript/MANUSCRIPT.md",
   "package": "results/manuscript/REPRODUCIBILITY.md",
   "numbers_traced": 17,

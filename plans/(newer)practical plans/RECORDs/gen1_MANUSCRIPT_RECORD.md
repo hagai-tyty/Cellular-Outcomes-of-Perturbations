@@ -2381,3 +2381,118 @@ bioRxiv's web page differs from the manuscript's, and from the "abstract as subm
 
 No test suite was run for this record-only commit, since nothing but this file changed. The three
 `--verify` commands ran on it before the push, and CI ran after.
+
+---
+
+## Phase 4c of the release: bioRxiv declined, and the preprint moves to Zenodo — 2026-09-18
+
+### What bioRxiv decided
+
+bioRxiv declined BIORXIV/2026/752106 during screening. The reason given is that it requires authors to
+have an organisational affiliation: an organisation that provides oversight of research activities and
+can adjudicate ethical issues or disputes. Nothing in the manuscript was questioned, and no scientific
+objection was raised. The submission had been accepted, converted and acknowledged two days earlier,
+as Phase 4b records; the decline is about affiliation only, and an independent researcher cannot meet
+it without joining an organisation.
+
+### What was checked before choosing a new route
+
+```text
+  BMC preprint policy      a posted preprint is not prior publication, is not counted against the
+                           advance a study provides, and its DOI is disclosed at submission
+  BMC fees                 no submission fee; the APC falls due only after editorial acceptance
+  BMC waivers              discretionary waivers must be requested at submission; requests during
+                           review or after acceptance cannot be considered. The submission-form tick
+                           is not the request: a separate form follows within 14 days, and the
+                           decision usually comes within two working days
+  arXiv q-bio              no affiliation requirement, but a first submission needs an endorsement
+                           from an established arXiv author in that area
+  affiliation route        the Ronin Institute takes applications from independent scholars, about
+                           $100 a year; IGDORE has suspended applications since 2024
+```
+
+Checked on 2026-09-18 against the servers' own support pages. Springer Nature's main pages now redirect
+automated requests to a login, so the APC amount was not re-read today; it stands as recorded on
+2026-09-12, £2,290 / $3,090 / €2,590 plus tax.
+
+The author chose: a Zenodo preprint record now, then BMC Bioinformatics with the waiver requested at
+submission. The preprint comes first because review takes months, a preprint costs nothing, and BMC
+does not hold it against the submission.
+
+### What changed in the repository
+
+`SUBMISSION.md`, eight edits, and Amendment V1.5 appended to the package plan:
+
+```text
+  header block        PREPRINT SERVER is Zenodo, with the reason bioRxiv declined; RELEASE is the
+                      new order, dated, and says what the 2026-09-12 plan had been
+  form-entry notes    the bioRxiv funding note becomes BMC's; the bioRxiv AI-policy sentence goes
+  render section      why the single-file PDF exists, and why it keeps the name MANUSCRIPT_bioRxiv.pdf
+  cover letter        the preprint line now names Zenodo, with <<LATER: Zenodo preprint DOI>>
+  checklist, 2B       the Zenodo line ticked: no webhook, DOI reserved on the kept draft
+  checklist, 3        all eight steps ticked, with the note that the source-data exports were run
+                      in-process so the environment lock was not rewritten
+  checklist, 4        Zenodo published and the GitHub release ticked; the download check left open;
+                      bioRxiv replaced by the Zenodo preprint, the preprint DOI, and the BMC line
+```
+
+The manuscript, the figures and every number are untouched. The published copies are untouched: the
+PDF keeps its file name, so the Zenodo archive, the GitHub release and this checkout still name the
+same file.
+
+### The edit script's gates, including one that was wrong
+
+The edit ran as a dry run first. Its first line-length gate flagged 21 lines, of which only one was
+ours: it measured every line in both files rather than the lines the edit adds, and both files already
+contained longer lines from before. The gate was corrected to measure only added lines, and the one
+real offender, a new line of 102 characters, was rewrapped. A second gate demanded that the number of
+changed hunks equal the number of edits; that was wrong too, since one edit can leave unchanged lines
+inside it. It was replaced by a stronger proof: every line that leaves must belong to some edit's old
+text, and every line that arrives to its new text.
+
+```text
+  lines out / in           24 / 35, all accounted for by the eight edits
+  claim scanner            no hit on any added line
+  line length, added only  none over 100
+  the plan                 appended to, not edited: the new text starts after the old file, whole
+```
+
+### Registered results
+
+```text
+  manuscript stage      GEN1_MANUSCRIPT_READY
+  compliance checks     20 / 20
+  negative controls     13 / 13
+  three --verify        EVIDENCE_INTACT, CLAIMS_INTACT, PACKAGE_INTACT
+  full test suite       pytest's own exit code 0; 2,195 results: 2,194 passed, 1 skipped
+  FILL markers left     0
+  LATER markers left    2: the Zenodo preprint DOI, and the APC-waiver line
+```
+
+### Digests
+
+```text
+  evidence  60602531449079b8f86debea9ffd69753f8bfad033be4c476751d39da08c78aa   unchanged
+  claim     fc6dc2f221acf1c7661e36071b9e377571c8f903d38398b55bedc164db7efa61   unchanged
+  package   c4e62ecd27a860d5a7bca2c5b34890036f2cd8907b180978f60aaeec7cc2046b
+       was  fef252d4c2bbaf52dcb6f9755779a0f49af9b805f54dee282169c03eda343375
+```
+
+### The committed render is one file behind, deliberately
+
+`COVER_LETTER.docx` in `results/manuscript/submission/` still carries the bioRxiv sentence, because the
+cover letter will change again when the preprint DOI arrives. It is regenerated then, once, rather than
+twice. The manuscript outputs are unaffected: `MANUSCRIPT.md` did not change, and `RENDER_MANIFEST.json`
+records its digest `c5bba1ce...`, still current, so `MANUSCRIPT_bioRxiv.pdf` stays byte-identical to the
+copy on Zenodo and on the GitHub release.
+
+### Still open
+
+```text
+  Zenodo      the preprint record: MANUSCRIPT_bioRxiv.pdf, type Preprint, CC BY, linked to the
+              archive record, by the author
+  then        the preprint DOI into the cover letter's LATER field, the cover letter re-rendered,
+              and the DOI added to the archive record's related works
+  BMC         the submission, with the APC waiver requested at submission
+  Zenodo      the published archive's ZIP downloaded back and its SHA-256 compared
+```
