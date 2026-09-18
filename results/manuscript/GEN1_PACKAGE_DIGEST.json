@@ -1,21 +1,21 @@
 {
-  "package_digest": "c48419e9eecf0d37398a39546f0710e290f43632571811c8a5518ea12f81cc1d",
+  "package_digest": "4d08ef4a6d3aa61e744949acee84098ef11ecaf08a6d68ff5658f79a835b0f19",
   "digest_definition": "SHA-256 over 'path  canonical-lf-sha256' lines, sorted by path",
   "covers": {
-    "plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md": "6f82e9bbcefa61c50bd53339ca37a2386922f47abe2f74d67148a84c1692792c",
-    "experiments/run_gen1_manuscript.py": "545f84ad279e15ad3bab00231d739cc3e53e86101b677a2ee6ac26d8bd4f61da",
+    "plans/(newer)practical plans/GEN1_MANUSCRIPT_PACKAGE_V1.md": "aec4cc80d7cf7c9bfa81f7af4559178b519a76dc9511234f66d3b74b1360e2f7",
+    "experiments/run_gen1_manuscript.py": "a76125a5bdd9b409ada36c2928e35f83ca90ba9fe05f992ed1e7149fd69922dd",
     "tests/test_gen1_manuscript.py": "58e02bb3f08fa5d7e70af9acff5e7b71f5d876ca4be94162c644da26999c6823",
-    "results/manuscript/MANUSCRIPT.md": "099cde8b001a256e31de7f6f3c4a2871eb1a19460b9f4660e219d9cbd7c4e953",
-    "results/manuscript/REPRODUCIBILITY.md": "fe2562c7df924343067ba0366f87eb1f4b747f66ab3069ca41df6cd5cdd89b88",
-    "results/manuscript/SUBMISSION.md": "de39708427cf5095843bbf0eece6e13a8f028d6dfb39ae298d83f17768ef4fbe",
+    "results/manuscript/MANUSCRIPT.md": "3de5a2910f4f0b092cfbb84a8fda3b71379fad4330bff54be9ffc9cb389b7ce4",
+    "results/manuscript/REPRODUCIBILITY.md": "43cd841463a0d81210c30a2f286aeb08d3aad69032e123c9c34f7b766722a287",
+    "results/manuscript/SUBMISSION.md": "82b184d275eb5280d3fb898e4411ed41cfe6637c8121a4294858a4e83b2de629",
     "results/manuscript/figures/figure_1_design.svg": "12cce5e16a6e40958808c44311d4156e0eb56949c1ac52e6cfefc57c98ef1ed7",
     "results/manuscript/figures/figure_2_primary.svg": "210711bf69ce94770df1527f3822fb5ea4acfc8e4c6a981a85bb6c1c139494f5",
     "results/manuscript/figures/figure_3_robustness.svg": "5d9914a4d43e00d67a2e0b319e2fb1e7fbc22626379724cabaee853518fbe01e",
     "results/manuscript/figures/figure_source_data.json": "3664698efec05f36c461b53220c3aadf4d5ae027079821e36930fc7a42da273a",
     "plans/(newer)practical plans/RECORDs/gen1_EVIDENCE_LOCK_RECORD.md": "db8d668fa7184bcdaa91449c6ae1bc72c3aae7423a1b4df3f86ee27cd05a95d8",
     "plans/(newer)practical plans/RECORDs/gen1_CLAIM_LOCK_RECORD.md": "5a962f4295a439241454fd9e34ce603673dc64fa3afcaf8f282f1564b2de8691",
-    "README.md": "9fd9b61118e123cfb1fb904fd47e87ff6fac5817e62b25be4d4aef63c706d0a4"
+    "README.md": "5d934e80b9f8cc2e3018121d15208a246ab1e35434c10f7d5bd6983a0a098ac0"
   },
   "verify": "python experiments/run_gen1_manuscript.py --verify",
-  "module_sha256": "55a71a5edaf3611e84c4bb164cd892ca8eaee9f2a02d4bf7ef3d270638372a8c"
+  "module_sha256": "a76125a5bdd9b409ada36c2928e35f83ca90ba9fe05f992ed1e7149fd69922dd"
 }

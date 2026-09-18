@@ -1,5 +1,5 @@
 {
-  "claim_digest": "fc6dc2f221acf1c7661e36071b9e377571c8f903d38398b55bedc164db7efa61",
+  "claim_digest": "8c820412ba325cd053f0bc9d907d65ef1fd8e1a82aa93e0f947e85957be69796",
   "digest_definition": "SHA-256 over 'path  content-sha256' lines, sorted by path, LF-joined. JSON members are normalised -- volatile timing fields removed, keys sorted -- so the digest reflects content rather than when the stage last ran; other text uses canonical-LF.",
   "volatile_keys_excluded": [
     "runtime_minutes",
@@ -7,11 +7,11 @@
     "total_runtime_seconds"
   ],
   "covers": {
-    "plans/(newer)practical plans/GEN1_CLAIM_LOCK_V1.md": "336b7ace479982185f6706e69d7d8c4b8537b3ad4ae7f5dcbe0d708a82caa31c",
+    "plans/(newer)practical plans/GEN1_CLAIM_LOCK_V1.md": "fdf6fc7575eccf20781069c44d6de2b23d91e289918575c1859e956b833f99f6",
     "experiments/run_gen1_claim_lock.py": "1462b5fdafd22dd6a19c40eb58f7e7d054d186f5cf9f33a4d22f86a9ece16be9",
     "tests/test_gen1_claim_lock.py": "2404d7e23115c3af72113b41049c9e82eac0a399154a9c88f3248309c1214fdf",
-    "results/claim_lock/GEN1_CLAIMS.md": "f442f26d02e82bd6bf407d48533375dade5c7b54017ef34f467010d9772d1b7c",
-    "results/claim_lock/GEN1_CLAIM_LOCK.json": "7439e93d1a51495786cc9f5cdf78407d682f59447f3bb58415253e9d44f90b70"
+    "results/claim_lock/GEN1_CLAIMS.md": "4ab88027ee1bfeba4346a004983940939653311714db23a58ae8fa855e35bcf7",
+    "results/claim_lock/GEN1_CLAIM_LOCK.json": "c7d431d72632024f44a2ea43f7fbc26786f656592556e0e586b6774c4c0b656e"
   },
   "why_it_lives_outside_the_verdict": "a digest stored inside the file it covers would hash itself",
   "verify": "python experiments/run_gen1_claim_lock.py --verify",

@@ -6,11 +6,18 @@
   "reference_block_problems": [],
   "exempt_title_lines": [
     "Pre-existing cell states predict resistance to multiple treatments.",
-    "pluripotency potential in rare somatic cells (scRNA-seq), human hiF-T fibroblasts.",
     "Rare cell variability and drug-induced reprogramming as a mode of cancer drug resistance.",
     "Variability within rare cell states enables multiple paths toward drug resistance.",
     "Diverse clonal fates emerge upon drug treatment of homogeneous cancer cells.",
-    "Leakage and the reproducibility crisis in machine-learning-based science."
+    "Leakage and the reproducibility crisis in machine-learning-based science.",
+    "Retrospective identification of cell-intrinsic factors that mark pluripotency potential",
+    "Pre-existing cell states predict resistance to multiple treatments [dataset].",
+    "dylanschaff/Schaff_manuscript: Schaff_manuscript_first_submission [software].",
+    "Processed barcode data for iPSC Rewind, GSE227151 [data package].",
+    "Retrospective identification of cell-intrinsic factors that mark pluripotency potential",
+    "arjunrajlaboratory/iPSC_Rewind: Final Release [software].",
+    "CellFate-Rx Gen-1: frozen model and reproducibility artifacts, version 1.0.0 [software].",
+    "CellFate-Rx: cellular outcomes of perturbations [software repository]."
   ],
   "package_forbidden_hits": [],
   "missing_sections": [],
@@ -50,5 +57,5 @@
     "every number traces to a locked artifact": true
   },
   "all_passed": true,
-  "module_sha256": "55a71a5edaf3611e84c4bb164cd892ca8eaee9f2a02d4bf7ef3d270638372a8c"
+  "module_sha256": "a76125a5bdd9b409ada36c2928e35f83ca90ba9fe05f992ed1e7149fd69922dd"
 }

@@ -4,13 +4,13 @@
 
 **Author:** Hagai Aviv · ORCID [0009-0004-4503-6629](https://orcid.org/0009-0004-4503-6629)
 
-**Affiliation:** Independent researcher
+**Affiliation:** Independent researcher, Ma'ale Adumim, Israel
 
 **Correspondence:** hagai.aviv.home@gmail.com
 
 ```text
-  evidence lock   60602531449079b8f86debea9ffd69753f8bfad033be4c476751d39da08c78aa
-  claim lock      fc6dc2f221acf1c7661e36071b9e377571c8f903d38398b55bedc164db7efa61
+  evidence lock   c84a4d7a2e2d254ed92e43ccf1f91d74da0ab57c8328b1be822d73e5c62ec350
+  claim lock      8c820412ba325cd053f0bc9d907d65ef1fd8e1a82aa93e0f947e85957be69796
 ```
 
 Both digests are verifiable from the repository. See **Availability of data and materials**.
@@ -38,9 +38,9 @@ comparator, null and verdict rule all fixed by digest before any ranking statist
 though after earlier predictive analyses of the same data — a frozen state-by-condition interaction
 model improves clone-specific ordering of the six conditions over a non-interactive additive model:
 +0.051605 in equal-clone-weighted within-clone AUROC, 95% CI [+0.037197, +0.065571], with 0 of 1000
-full-refit permutation draws reaching the observed value (p < 0.001). An additive
-expression term did not improve ordering over condition identity alone (R(W4) 0.692176,
-R(W1) 0.692654): the gain is the interaction.
+full-refit permutation draws reaching the observed value (p < 0.001). The additive model did not
+itself improve that ordering over condition identity alone (0.692176 against 0.692654): the gain
+is the interaction.
 
 **Conclusions.**
 A state contribution shared additively across all conditions cannot change their ordering within a
@@ -97,10 +97,10 @@ This work evaluates exactly that, once, under a protocol frozen in advance.
 
 The finding that pre-existing, non-genetic single-cell state predicts which cells resist therapy is
 established in this system and is not claimed here. Shaffer et al. showed that rare transcriptional
-states in WM989 predict which cells resist vemurafenib and are stabilised by drug exposure [3];
+states in WM989 predict which cells resist vemurafenib and are stabilised by drug exposure [2];
 Emert et al. resolved substructure within those rare states and linked it to distinct resistant
-outcomes [4]; Goyal et al. showed that clonal fates after drug are largely predetermined by
-pre-treatment molecular differences and are diverse rather than binary [5]; and Schaff et al.
+outcomes [3]; Goyal et al. showed that clonal fates after drug are largely predetermined by
+pre-treatment molecular differences and are diverse rather than binary [4]; and Schaff et al.
 extended clonal tracing to six conditions in parallel, reporting cross-condition resistance
 correlation and CD44 as a marker of resistance across several of them [1].
 
@@ -123,7 +123,7 @@ observation that state carries condition-relevant information.
 
 The methodological posture is borrowed rather than invented. Kapoor and Narayanan catalogue eight
 kinds of leakage across 294 papers in seventeen fields, and observe that complex models frequently
-fail to beat logistic regression once the leakage is corrected [6]. That is the failure mode this
+fail to beat logistic regression once the leakage is corrected [5]. That is the failure mode this
 design is built against: the comparator is a simpler model of the same family, every preprocessing
 step is refitted inside the training fold, the permutation null refits the whole pipeline rather
 than shuffling labels, and the metric, population, comparator and verdict rule were fixed in a
@@ -155,7 +155,7 @@ trametinib, CoCl2 and acidic media were applied continuously; cisplatin and doxo
 for a treatment period followed by a recovery period, each arm spanning four weeks in total. Exact
 concentrations and schedules are in [1].
 
-Role A is a separately reconstructed reprogramming system [2]. It contributes one supporting
+Role A is a separately reconstructed reprogramming system [6]. It contributes one supporting
 sentence and nothing else; its own confirmation gate failed. It is not a replication of Role B, and
 it does not provide the same multi-condition task or the same outcome.
 
@@ -179,11 +179,13 @@ evaluated.
 
 ### Models
 
-```text
-  W1   B + U                nuisance and condition identity only
-  W4   X + B + U            plus an additive expression term
-  W5   X + B + U + X*U      plus an explicit state-by-condition interaction
-```
+**Table 1** The three preregistered model specifications.
+
+| Model | Terms | What it adds |
+|---|---|---|
+| W1 | B + U | nuisance and condition identity only |
+| W4 | X + B + U | plus an additive expression term |
+| W5 | X + B + U + X*U | plus an explicit state-by-condition interaction |
 
 `X` is the clone expression profile reduced to 50 principal components on a train-only basis. `B`
 is the captured-abundance nuisance block: `log1p` cell counts, total and per pretreatment library.
@@ -238,13 +240,15 @@ responsibility for its content.
 
 ### The interaction improves clone-specific ordering
 
-```text
-  R(W1)   0.692654      nuisance + condition
-  R(W4)   0.692176      + additive X
-  R(W5)   0.743781      + explicit X x U
+**Table 2** Ranking score by model, and the preregistered difference; **Table 1** defines the
+models.
 
-  delta_RANK   +0.051605     CI95 [+0.037197, +0.065571]
-```
+| Model | Ranking score R | Terms |
+|---|---|---|
+| W1 | 0.692654 | nuisance + condition |
+| W4 | 0.692176 | + additive X |
+| W5 | 0.743781 | + explicit X x U |
+| delta_RANK | +0.051605 | W5 minus W4; CI95 [+0.037197, +0.065571] |
 
 **Figure 2** shows the three models and the observed statistic against its null.
 
@@ -264,27 +268,30 @@ condition-dependent state effects, not the number of programmes behind them.
 
 ### The separation, not the p-value, is the result
 
-```text
-  null p95                    0.008672
-  observed / null p95         6.0x
-  observed vs null mean       11.8 null standard deviations above it
-  largest of 1,000 draws      0.013722      -- the observed value exceeds EVERY null draw
-  draws reaching observed     0 of 1000 full-refit permutations
-```
+**Table 3** The observed statistic against its permutation null.
+
+| Quantity | Value |
+|---|---|
+| null p95 | 0.008672 |
+| observed / null p95 | 6.0x |
+| observed vs null mean | 11.8 null standard deviations above it |
+| largest of 1,000 draws | 0.013722 -- the observed value exceeds EVERY null draw |
+| draws reaching observed | 0 of 1000 full-refit permutations |
 
 `p < 0.001` is the floor of a 1,000-draw permutation test and is reported as such, never as a point
 estimate. The number that carries weight is the separation: nothing the null produced came close.
 
 ### It holds in every stratum it was broken down by
 
-```text
-  BY OUTER FOLD                     BY PRETREATMENT DEPTH
-    fold 0   +0.0435                  1 cell     +0.0535
-    fold 1   +0.0548                  2 cells    +0.0528
-    fold 2   +0.0658                  3-4        +0.0314
-    fold 3   +0.0506                  5-9        +0.0462
-    fold 4   +0.0435                  10+        +0.0779
-```
+**Table 4** delta_RANK within each stratum, by outer fold and by pretreatment depth.
+
+| Outer fold | delta_RANK | Pretreatment depth | delta_RANK |
+|---|---|---|---|
+| fold 0 | +0.0435 | 1 cell | +0.0535 |
+| fold 1 | +0.0548 | 2 cells | +0.0528 |
+| fold 2 | +0.0658 | 3-4 | +0.0314 |
+| fold 3 | +0.0506 | 5-9 | +0.0462 |
+| fold 4 | +0.0435 | 10+ | +0.0779 |
 
 Positive in all five folds and all five depth strata (**Figure 3A, 3B**). These were preregistered
 as descriptive and could not have rescued a failed primary gate; they were not asked to.
@@ -293,9 +300,11 @@ The breakdown is by fold and by depth only; across the six conditions the intera
 
 ### Choosing the lowest-scoring condition
 
-```text
-  delta_TOP1   +0.115471    CI95 [+0.082960, +0.145740]
-```
+**Table 5** The top-choice diagnostic, preregistered as a directional-consistency check.
+
+| Diagnostic | Value | 95% CI |
+|---|---|---|
+| delta_TOP1 | +0.115471 | [+0.082960, +0.145740] |
 
 Selecting each clone's lowest predicted detection score finds a genuine zero for 82.8% of evaluable
 clones under W5 against 71.3% under W4 (**Figure 3C**). This was preregistered as a directional-consistency check,
@@ -475,14 +484,31 @@ Not applicable.
 
 ### Availability of data and materials
 
-The dataset analysed here is publicly available from the Gene Expression Omnibus under accession
-GSE279162, generated and deposited by Schaff et al. [1]. Supporting Role-A evidence uses GSE227151.
-**No new data were generated for this study.**
+The datasets analysed during the current study are all public, but they are not all in one
+archive. **No new data were generated for this study.**
+
+Role B, which carries the primary result, is in the Gene Expression Omnibus under accession
+GSE279162 [7], generated and deposited by Schaff et al. [1]. Five files of
+their own analysis code, read to reconstruct their preprocessing rules rather than guess at them,
+are archived at Zenodo [8].
+
+Role A is split between two places. The sequencing data of the two samples used here are in GEO
+under accession GSE227151 [6]. The three processed barcode tables the reconstruction
+needs -- `filtered10XCells.txt`, `stepThreeStarcodeShavedReads_BC_10X.txt` and
+`stepThreeStarcodeShavedReads_BC_gDNA.txt` -- are **not part of that GEO deposit**, whose only
+supplementary file is `GSE227151_RAW.tar`. The original authors published them in a shared data
+package [9], linked from the key resources table of Jain et al. [10], and they
+were taken from there on 21 August 2026. The Rewind authors' two R1 scripts are archived at Zenodo
+[11].
+
+A shared folder is not a persistent identifier and may move. The size and SHA-256 of every input
+file are recorded in the two Stage-22 manifests inside this study's archive, and the pipeline
+refuses any file whose bytes differ, so a reader can check whatever copy they obtain against what
+was analysed here. Those files belong to the original authors and are not redistributed here.
 
 All analysis code, frozen protocols, stage records, out-of-fold predictions, the serialized
-predictor and the verification tooling are archived at Zenodo, DOI
-[10.5281/zenodo.22769563](https://doi.org/10.5281/zenodo.22769563), and developed openly at
-https://github.com/hagai-tyty/Cellular-Outcomes-of-Perturbations.
+predictor and the verification tooling are archived at Zenodo [12] and developed openly on
+GitHub [13].
 
 #### Verify before reading anything else
 
@@ -498,8 +524,8 @@ third does the same for this manuscript and the package around it. All three als
 stage that produced the files did not pass.
 
 ```text
-  evidence lock digest   60602531449079b8f86debea9ffd69753f8bfad033be4c476751d39da08c78aa
-  claim lock digest      fc6dc2f221acf1c7661e36071b9e377571c8f903d38398b55bedc164db7efa61
+  evidence lock digest   c84a4d7a2e2d254ed92e43ccf1f91d74da0ab57c8328b1be822d73e5c62ec350
+  claim lock digest      8c820412ba325cd053f0bc9d907d65ef1fd8e1a82aa93e0f947e85957be69796
 ```
 
 #### Licensing
@@ -546,8 +572,8 @@ Full reproduction instructions, environment and runtimes: `results/manuscript/RE
 
 ### Competing interests
 
-The author holds the copyright in CellFate-Rx and offers commercial licences for it. The author has
-received no income from it to date.
+HA holds the copyright in CellFate-Rx and offers commercial licences for it. HA has received no
+income from it to date.
 
 ### Funding
 
@@ -555,8 +581,8 @@ This work received no external funding.
 
 ### Authors' contributions
 
-H.A. conceived the study, set its logic and direction, and directed the AI-assisted implementation
-and documentation described in Methods. H.A. reviewed the work and approved the final manuscript.
+HA conceived the study, set its logic and direction, and directed the AI-assisted implementation
+and documentation described in Methods. The author read and approved the final manuscript.
 
 ### Acknowledgements
 
@@ -572,29 +598,67 @@ Not applicable.
 ## References
 
 ```text
-[1] Schaff DL, White PE, Cote CJ, Watterson GE, Lin KZ, Fasse AJ, Zhang NR, Shaffer SM.
+[1] Schaff DL, White PE, Cote CJ, Watterson GE, Lin KZ, Fasse AJ, et al.
     Pre-existing cell states predict resistance to multiple treatments.
-    Cell Genomics 6(6):101191, 2026.  doi:10.1016/j.xgen.2026.101191   PMID 41916275
-    Data: GEO GSE279162
+    Cell Genomics. 2026;6(6):101191. doi:10.1016/j.xgen.2026.101191
 
-[2] GEO GSE227151 -- Retrospective identification of cell-intrinsic factors that mark
-    pluripotency potential in rare somatic cells (scRNA-seq), human hiF-T fibroblasts.
-
-[3] Shaffer SM, Dunagin MC, Torborg SR, Torre EA, Emert B, et al.
+[2] Shaffer SM, Dunagin MC, Torborg SR, Torre EA, Emert B, et al.
     Rare cell variability and drug-induced reprogramming as a mode of cancer drug resistance.
-    Nature 546(7658):431-435, 2017.  doi:10.1038/nature22794   PMID 28607484
+    Nature. 2017;546(7658):431-5. doi:10.1038/nature22794
 
-[4] Emert BL, Cote CJ, Torre EA, Dardani IP, Jiang CL, Jain N, Shaffer SM, Raj A.
+[3] Emert BL, Cote CJ, Torre EA, Dardani IP, Jiang CL, Jain N, et al.
     Variability within rare cell states enables multiple paths toward drug resistance.
-    Nature Biotechnology 39(7):865-876, 2021.  doi:10.1038/s41587-021-00837-3   PMID 33619394
+    Nat Biotechnol. 2021;39(7):865-76. doi:10.1038/s41587-021-00837-3
 
-[5] Goyal Y, Busch GT, Pillai M, Li J, Boe RH, et al.
+[4] Goyal Y, Busch GT, Pillai M, Li J, Boe RH, et al.
     Diverse clonal fates emerge upon drug treatment of homogeneous cancer cells.
-    Nature 620(7974):651-659, 2023.  doi:10.1038/s41586-023-06342-8   PMID 37468627
+    Nature. 2023;620(7974):651-9. doi:10.1038/s41586-023-06342-8
 
-[6] Kapoor S, Narayanan A.
+[5] Kapoor S, Narayanan A.
     Leakage and the reproducibility crisis in machine-learning-based science.
-    Patterns 4(9):100804, 2023.  doi:10.1016/j.patter.2023.100804   PMID 37720327
+    Patterns. 2023;4(9):100804. doi:10.1016/j.patter.2023.100804
+
+[6] Jain N, Goyal Y, Dunagin MC, Cote CJ, Mellis IA, Emert B, et al.
+    Retrospective identification of cell-intrinsic factors that mark pluripotency potential
+    in rare somatic cells [dataset]. Gene Expression Omnibus, GSE227151. 2023.
+    https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE227151  Accessed 21 Aug 2026.
+
+[7] Schaff DL, White PE, Cote CJ, Watterson GE, Lin KZ, Fasse AJ, et al.
+    Pre-existing cell states predict resistance to multiple treatments [dataset].
+    Gene Expression Omnibus, GSE279162. 2024.
+    https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE279162  Accessed 12 Jul 2026.
+
+[8] Schaff DL (dylanschaff).
+    dylanschaff/Schaff_manuscript: Schaff_manuscript_first_submission [software].
+    Zenodo. 2024. doi:10.5281/zenodo.13935305
+    https://doi.org/10.5281/zenodo.13935305  Accessed 21 Aug 2026.
+
+[9] Jain N, Goyal Y, Dunagin MC, Cote CJ, Mellis IA, Emert B, et al.
+    Processed barcode data for iPSC Rewind, GSE227151 [data package].
+    filtered10XCells.txt, stepThreeStarcodeShavedReads_BC_10X.txt and
+    stepThreeStarcodeShavedReads_BC_gDNA.txt for GSE227151. Dropbox. 2024.
+    https://www.dropbox.com/sh/ulu6728tcp49dv2/AAAPwLYQiVLloH_JL38lvTj6a?dl=0
+    Accessed 21 Aug 2026. Linked from the key resources table of Jain et al.
+
+[10] Jain N, Goyal Y, Dunagin MC, Cote CJ, Mellis IA, Emert B, et al.
+    Retrospective identification of cell-intrinsic factors that mark pluripotency potential
+    in rare somatic cells. Cell Syst. 2024;15(2):109-133.e10.
+    doi:10.1016/j.cels.2024.01.001
+
+[11] Jain N, et al. (goldengopherforlife).
+    arjunrajlaboratory/iPSC_Rewind: Final Release [software].
+    Zenodo. 2024. doi:10.5281/zenodo.7707418
+    https://doi.org/10.5281/zenodo.7707418  Accessed 21 Aug 2026.
+
+[12] Aviv H.
+    CellFate-Rx Gen-1: frozen model and reproducibility artifacts, version 1.0.0 [software].
+    Zenodo. 2026. doi:10.5281/zenodo.22769563
+    https://doi.org/10.5281/zenodo.22769563  Accessed 16 Sep 2026.
+
+[13] Aviv H.
+    CellFate-Rx: cellular outcomes of perturbations [software repository].
+    GitHub. 2026. Archived at doi:10.5281/zenodo.22769563
+    https://github.com/hagai-tyty/Cellular-Outcomes-of-Perturbations  Accessed 18 Sep 2026.
 ```
 
 ---

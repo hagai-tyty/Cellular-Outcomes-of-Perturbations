@@ -15,8 +15,8 @@ Before reproducing anything, confirm the artifacts are the ones the manuscript w
 ```
 
 ```text
-  evidence lock digest   60602531449079b8f86debea9ffd69753f8bfad033be4c476751d39da08c78aa
-  claim lock digest      fc6dc2f221acf1c7661e36071b9e377571c8f903d38398b55bedc164db7efa61
+  evidence lock digest   c84a4d7a2e2d254ed92e43ccf1f91d74da0ab57c8328b1be822d73e5c62ec350
+  claim lock digest      8c820412ba325cd053f0bc9d907d65ef1fd8e1a82aa93e0f947e85957be69796
   package digest         results/manuscript/GEN1_PACKAGE_DIGEST.json
 ```
 
@@ -92,14 +92,28 @@ matches, so a wrong or partial download is caught rather than analysed.
   Rewind, GSE227151 -- Role A, supporting
     GEO     from GSE227151_RAW.tar, only the six files of GSM7092515 and GSM7092516
     GEO     GSE227151-GPL18573_series_matrix.txt.gz, and GSE227151_family.xml
-    paper   filtered10XCells.txt, stepThreeStarcodeShavedReads_BC_10X.txt and
-            stepThreeStarcodeShavedReads_BC_gDNA.txt, from the processed barcode data Jain et al.
-            (Cell Systems 2024, doi:10.1016/j.cels.2024.01.001) deposited; the links are in that
-            paper's key resources table
+    authors filtered10XCells.txt, stepThreeStarcodeShavedReads_BC_10X.txt and
+            stepThreeStarcodeShavedReads_BC_gDNA.txt. These three are NOT in the GEO deposit,
+            whose only supplementary file is GSE227151_RAW.tar. They are in the authors' shared
+            data package, linked from the key resources table of Jain et al. (Cell Systems 2024,
+            doi:10.1016/j.cels.2024.01.001):
+              https://www.dropbox.com/sh/ulu6728tcp49dv2/AAAPwLYQiVLloH_JL38lvTj6a?dl=0
+            taken from there on 2026-08-21
     Zenodo  the Rewind authors' code, record 7707418 (arjunrajlaboratory/iPSC_Rewind): the two
             R1 scripts listed under author_code_files in
             results/stage22_rewind_benchmark_manifest.json
 ```
+
+**A second package exists, and the frozen results do not use it.** The outcome materials for
+replicates 2 and 3 were never deposited in GEO either; they are in a second shared package,
+
+```text
+  https://www.dropbox.com/sh/zz958910t4fkj9w/AAAgTVwO5yAKZ1TpSQVfV6Qga?dl=0   taken 2026-08-24
+```
+
+which supplied the R2 and R3 folders used in the re-examination recorded in
+`stage_23_2G_step1_REOPENED_NEW_EVIDENCE.md`. No file from it appears in either Stage-22 manifest,
+so nothing reported in the manuscript rests on it. A rebuild does not need it.
 
 **Where they go.** The loaders read fixed paths under two folders:
 

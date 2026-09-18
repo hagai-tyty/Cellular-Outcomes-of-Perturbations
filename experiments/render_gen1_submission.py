@@ -97,6 +97,42 @@ def embed_figures(text: str) -> str:
     return head + sep + legends
 
 
+REFERENCE_ENTRY = re.compile(r"^\[(\d+)\]\s+(.*)$")
+
+
+def references_as_list(md: str) -> str:
+    """Turn the fenced reference block into a numbered list for the rendered documents.
+
+    The block is fenced in MANUSCRIPT.md because `_partition_references` needs that shape to exempt
+    a cited paper's title from the claim scan. A journal wants a reference list, not a monospace
+    block, so the documents that leave this repository get one. Nothing but the fence and the
+    indentation changes: every entry keeps its words, in order.
+    """
+    m = re.search(r"^## References[ \t]*$", md, re.M)
+    if not m:
+        return md
+    head, tail = md[:m.end()], md[m.end():]
+    parts = tail.split("```")
+    if len(parts) < 3:
+        return md
+    fenced = parts[1].split("\n", 1)[1] if "\n" in parts[1] else ""
+    rest = "```".join([parts[0]] + parts[2:])
+
+    entries: list[str] = []
+    for line in fenced.splitlines():
+        if not line.strip():
+            continue
+        hit = REFERENCE_ENTRY.match(line.strip())
+        if hit:
+            entries.append(f"{hit.group(1)}. {hit.group(2).strip()}")
+        elif entries:
+            entries[-1] += " " + line.strip()
+    if not entries:
+        return md
+    del rest  # the block is rebuilt from its entries; what follows the closing fence is kept as is
+    return head + parts[0] + "\n\n".join(entries) + "\n" + "```".join(parts[2:])
+
+
 def cover_letter(submission: str) -> str:
     """Section 6 of the submission pack, unquoted, with inline-code marks removed."""
     if "## 6. Cover letter" not in submission:
@@ -251,8 +287,8 @@ def main(argv=None) -> int:
         _svg_to_pdf(FIGURE_DIR / f"{stem}.svg", pdf)
         outputs[pdf.name] = pdf
 
-    for name, text in (("MANUSCRIPT_BMC.docx", manuscript),
-                       ("MANUSCRIPT_bioRxiv.docx", biorxiv_text),
+    for name, text in (("MANUSCRIPT_BMC.docx", references_as_list(manuscript)),
+                       ("MANUSCRIPT_bioRxiv.docx", references_as_list(biorxiv_text)),
                        ("COVER_LETTER.docx", letter)):
         _pandoc_docx(pandoc, text, out_dir / name)
         _shrink_code_font(out_dir / name)

@@ -2704,3 +2704,165 @@ artifacts, and the sentence adds no claim above the lock.
   BMC         the submission, with the APC waiver requested at submission and the preprint DOI
               disclosed
 ```
+
+---
+
+## Phase 4f of the release: audited against BMC's own rules, and the data sources named — 2026-09-19
+
+Before preparing a journal submission, the manuscript was checked against BMC Bioinformatics' current
+instructions, read from the journal's own pages rather than from memory. Seven things would have been
+flagged. All seven are fixed here. The author also raised the one that matters most.
+
+### What the journal requires, and where the manuscript stood
+
+```text
+  abstract        350 words max, no citations, Background/Results/Conclusions   PASSED (345, none)
+  keywords        three to ten                                                  PASSED (9)
+  sections        Background, Methods, Results, Discussion, Conclusions,
+                  List of abbreviations, Declarations, References              PASSED
+  declarations    all eight subheadings, "Not applicable" where it does not
+                  apply                                                        PASSED
+  figures         separate files, an accepted format, numbered in order of
+                  mention; titles <= 15 words, legends <= 300 words            PASSED (PDF; 6-9
+                                                                               and 22-40 words)
+  LLM use         documented in the Methods                                     PASSED
+  manuscript file editable, not a PDF                                           PASSED (.docx)
+  abstract        minimise abbreviations                                        FAILED -- R(W4)
+  references      Vancouver, numbered in order of first citation                FAILED -- both
+  URLs            every web link gets a reference number and an access date     FAILED
+  tables          numbered Table 1..n and cited in sequence                     FAILED -- none
+  competing       use the author's initials                                     FAILED
+  contributions   initials, and "read and approved the final manuscript"        FAILED
+  title page      institutional address                                         no city or country
+  data            where the data actually came from                             INCOMPLETE
+```
+
+### The data statement was wrong by omission, and the author caught it
+
+The availability statement said the analysed data are in GEO. Not all of them are. Checked against the
+frozen Stage-22 manifests and the GEO family XML itself:
+
+```text
+  GSE279162, Role B    all 29 analysed files are from GEO
+  Schaff et al. code   five preprocessing files, from Zenodo 10.5281/zenodo.13935305, not GEO
+  GSE227151, Role A    the two GSM sample sets and the series files are from GEO
+  three tables         filtered10XCells.txt, stepThreeStarcodeShavedReads_BC_10X.txt and
+                       stepThreeStarcodeShavedReads_BC_gDNA.txt are NOT in the GEO deposit: the
+                       series' only supplementary file is GSE227151_RAW.tar, and neither name
+                       appears anywhere in GSE227151_family.xml. They come from the authors' shared
+                       data package, linked from the key resources table of Jain et al., taken on
+                       2026-08-21
+  Rewind code          two R1 scripts, from Zenodo 10.5281/zenodo.7707418, not GEO
+```
+
+A second shared package, taken on 2026-08-24, supplied the R2 and R3 folders for the re-examination
+recorded in `stage_23_2G_step1_REOPENED_NEW_EVIDENCE.md`. No file from it appears in either Stage-22
+manifest, so nothing in the manuscript rests on it. Both packages are now named, with their URLs and
+dates, in `REPRODUCIBILITY.md` §2.1; the manuscript's availability statement names the first, because
+that is the data the findings rest on, and says plainly that a shared folder is not a persistent
+identifier: what protects a reader is the recorded size and SHA-256 of every input file, which the
+pipeline refuses to proceed without.
+
+### What changed
+
+```text
+  title page      "Independent researcher, Ma'ale Adumim, Israel"
+  abstract        the model labels R(W4) and R(W1) are gone: "The additive model did not itself
+                  improve that ordering over condition identity alone (0.692176 against 0.692654)"
+  Tables 1-5      model specifications; ranking scores; the null; the strata; the top-choice
+                  diagnostic -- each captioned and cited in the text
+  competing       "HA holds the copyright ... HA has received no income from it to date"
+  contributions   "HA conceived ... The author read and approved the final manuscript."
+  availability    rewritten: every source, in GEO or not, each with a reference
+  references      6 entries -> 13, in Vancouver style, renumbered in order of first citation
+```
+
+The old numbering was not in citation order either: reference [2] was first cited in the Methods,
+after [6] in the Background. Renumbering was done by replacing each citation with its key, ordering
+the keys by first appearance and numbering them from there, with a gate that every key's citation
+count survives the edit and that the numbers rise with position.
+
+### The reference list stays fenced in the source, and leaves as a list
+
+`_partition_references` needs the fenced block to exempt a cited paper's title from the claim scan --
+"cancer drug resistance" in a title is not a claim this manuscript makes -- and its loophole control
+depends on that shape. Rewriting the block as a Markdown list in the source would have disabled that
+exemption. So the source keeps the fence and the renderer converts the block to a numbered list on
+the way out, which is what a journal sees:
+
+```text
+  MANUSCRIPT_BMC.docx   5 real Word tables; no reference sits in a monospace paragraph
+  the transform         every entry reappears whole, its words in order
+```
+
+Two tests were added for it. The first one failed on the real manuscript and was right to: the
+transform left the closing fence behind. That is a bug the dry run could not have caught, because the
+dry run never ran the transform. Two further iterations were the tests' own fault, not the code's --
+a normalisation that stripped the brackets from "[software]" as if they were citation brackets, and a
+comparison that did not collapse double spaces. Both were corrected before the code was trusted.
+
+### One checker pattern was loosened, deliberately
+
+The null table puts " | " between a label and its value, which the old pattern's `\s+` cannot cross:
+
+```text
+  before   ("null max", r"largest of [\d,]+ draws\s+@@")
+  after    ("null max", r"largest of [\d,]+ draws\D{0,12}@@")
+```
+
+`\D{0,12}` is the same form the R(W1), R(W4), R(W5) and delta_TOP1 patterns already use, so the number
+still has to sit next to its own label. The control that a changed number is caught still fires; all
+13 negative controls pass.
+
+### The machine ran out of disk, and the cascade refused
+
+The first cascade after these edits failed with `OSError: [Errno 28] No space left on device`: drive
+C: had 3.7 MB free, and the evidence lock's negative controls copy files into the temp directory.
+Nothing was written in a half state -- the lock refused and the cascade stopped before anything
+downstream ran. Re-run with `TMP`, `TEMP` and `TMPDIR` set to `D:\tmp-cellfate`, it passed. The
+author's standing rule, that large temporary data belongs on D:, now applies to these runs too.
+
+### Registered results
+
+```text
+  manuscript stage      GEN1_MANUSCRIPT_READY
+  compliance checks     20 / 20
+  negative controls     13 / 13
+  numbers traced        17
+  abstract              345 words, limit 350; the mirrored copy identical
+  three --verify        EVIDENCE_INTACT, CLAIMS_INTACT, PACKAGE_INTACT
+  full test suite       pytest's own exit code 0; 2,197 results: 2,196 passed, 1 skipped
+                        (two more than Phase 4e: the two new renderer tests)
+  render                exit 0; draft false; 0 FILL; Word export true; 0 code blocks wrapped
+  PDF                   16 pages, up from 14, the tables taking the space
+                        403199 bytes
+                        45d0abd55f7a0ec423701ce9f8d398b1ad0e25706e8918d1b002a878c3cb012a
+  LATER markers left    1: the APC-waiver line
+```
+
+### Digests
+
+```text
+  evidence  c84a4d7a2e2d254ed92e43ccf1f91d74da0ab57c8328b1be822d73e5c62ec350
+       was  60602531449079b8f86debea9ffd69753f8bfad033be4c476751d39da08c78aa
+  claim     8c820412ba325cd053f0bc9d907d65ef1fd8e1a82aa93e0f947e85957be69796
+       was  fc6dc2f221acf1c7661e36071b9e377571c8f903d38398b55bedc164db7efa61
+  package   4d08ef4a6d3aa61e744949acee84098ef11ecaf08a6d68ff5658f79a835b0f19
+       was  c48419e9eecf0d37398a39546f0710e290f43632571811c8a5518ea12f81cc1d
+```
+
+The evidence digest moves because the renderer and the manuscript checker are in its inventory, and
+the claim digest follows it. No claim changed: the claim lock's allowed set is untouched, and the
+scanner is clean.
+
+### Still open
+
+```text
+  Zenodo      the published preprint is v1, without any of this. A new version carries it: v1
+              stays, v2 gets its own DOI, and the concept DOI keeps resolving to the newest
+  Zenodo      on the archive record, add the related work: Is supplement to, the preprint DOI
+  BMC         the submission itself, with the APC waiver requested at submission
+  venue        the scope question stands: BMC Bioinformatics asks for computational methods, models
+              and tools, so the cover letter has to lead with the method and the frozen tool, not
+              with the reanalysis. The fallbacks named in SUBMISSION.md are unchanged
+```

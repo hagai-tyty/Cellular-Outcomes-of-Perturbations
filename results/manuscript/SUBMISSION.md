@@ -82,9 +82,9 @@ us" page and BMC's article-processing-charge page.
 > though after earlier predictive analyses of the same data — a frozen state-by-condition interaction
 > model improves clone-specific ordering of the six conditions over a non-interactive additive model:
 > +0.051605 in equal-clone-weighted within-clone AUROC, 95% CI [+0.037197, +0.065571], with 0 of 1000
-> full-refit permutation draws reaching the observed value (p < 0.001). An additive
-> expression term did not improve ordering over condition identity alone
-> (R(W4) 0.692176, R(W1) 0.692654): the gain is the interaction.
+> full-refit permutation draws reaching the observed value (p < 0.001). The additive model did
+> not itself improve that ordering over condition identity alone (0.692176 against 0.692654):
+> the gain is the interaction.
 >
 > **Conclusions.**
 > A state contribution shared additively across all conditions cannot change their ordering within a

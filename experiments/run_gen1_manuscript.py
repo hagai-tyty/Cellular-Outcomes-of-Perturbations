@@ -184,7 +184,7 @@ def _numbers() -> list[tuple[str, str, str]]:
         ("R(W5)", r"W5\D{0,12}@@", f"{h['R_W5']:.6f}"),
         ("null p95", r"p95\D{0,30}@@", f"{h['null_p95']:.6f}"),
         # `\D` cannot cross "1,000", so this one spells out the digits it is allowed to skip
-        ("null max", r"largest of [\d,]+ draws\s+@@", f"{v25['permutation']['null_max']:.6f}"),
+        ("null max", r"largest of [\d,]+ draws\D{0,12}@@", f"{v25['permutation']['null_max']:.6f}"),
         ("delta_TOP1", r"TOP1\D{0,12}@@", f"{h['delta_TOP1']:+.6f}"),
         ("eligible clones", r"@@ (?:of 1,401|eligible)", str(h["eligible_clones"])),
         ("excluded all-zero", r"@@ (?:clones )?(?:were )?(?:all-zero|never detected)",
