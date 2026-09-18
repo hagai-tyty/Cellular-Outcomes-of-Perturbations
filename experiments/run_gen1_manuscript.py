@@ -184,7 +184,9 @@ def _numbers() -> list[tuple[str, str, str]]:
         ("R(W5)", r"W5\D{0,12}@@", f"{h['R_W5']:.6f}"),
         ("null p95", r"p95\D{0,30}@@", f"{h['null_p95']:.6f}"),
         # `\D` cannot cross "1,000", so this one spells out the digits it is allowed to skip
-        ("null max", r"largest of [\d,]+ draws\D{0,12}@@", f"{v25['permutation']['null_max']:.6f}"),
+        # a table cell may separate the label from its value, so whitespace and one separator are
+        # allowed -- and nothing else, which is narrower than the \D{0,12} the others use
+        ("null max", r"largest of [\d,]+ draws[\s|]*@@", f"{v25['permutation']['null_max']:.6f}"),
         ("delta_TOP1", r"TOP1\D{0,12}@@", f"{h['delta_TOP1']:+.6f}"),
         ("eligible clones", r"@@ (?:of 1,401|eligible)", str(h["eligible_clones"])),
         ("excluded all-zero", r"@@ (?:clones )?(?:were )?(?:all-zero|never detected)",
@@ -321,10 +323,17 @@ def _partition_references(text: str) -> tuple[str, list[str], list[str]]:
     category error, and `Rare cell variability ... as a mode of cancer drug resistance` tripped the
     cross-cell-line pattern on `cancer` in a title we must reproduce verbatim.
 
-    So exactly ONE line per entry is exempt: the line immediately after the `[n] Authors` line.
+    So exactly ONE line per entry is exempt: the line immediately after the entry's author line.
     Everything else in the block is still scanned, and any line that is neither an entry opener nor
     an indented continuation is reported. A first attempt exempted the whole block and absorbed a
     planted sentence as a continuation -- the loophole test caught it, which is why the test exists.
+
+    Two block shapes are accepted, and both are read line by line, which is what keeps the exemption
+    precise. Amendment V1.6 made the list the manuscript's own form, so that what a journal reads is
+    what this checker reads; the fenced form stays supported because earlier documents use it.
+
+        fenced      ```text  /  [n] Authors  /      Title  /      Journal ...
+        list        n. Authors  /      Title  /      Journal ...
     """
     # V1 kept the references as `### References` inside Data. Amendment V1.2 moved them to the end
     # as a top-level `## References` section. Either heading level opens the block.
@@ -332,14 +341,21 @@ def _partition_references(text: str) -> tuple[str, list[str], list[str]]:
     if not m:
         return text, [], []
     head, heading, tail = text[:m.start()], m.group(0), text[m.end():]
-    parts = tail.split("```")
-    if len(parts) < 3:
-        return text, [], []
-    refs = parts[1]
-    # the fence carries a language tag (```text); its first line is not a citation. The claim lock
-    # hit this same bug and counted "text" as a forbidden claim.
-    refs = refs.split("\n", 1)[1] if "\n" in refs else refs
-    rest = "```".join([parts[0]] + parts[2:])
+    if tail.lstrip("\n").startswith("```"):
+        parts = tail.split("```")
+        if len(parts) < 3:
+            return text, [], []
+        refs = parts[1]
+        # the fence carries a language tag (```text); its first line is not a citation. The claim
+        # lock hit this same bug and counted "text" as a forbidden claim.
+        refs = refs.split("\n", 1)[1] if "\n" in refs else refs
+        rest = "```".join([parts[0]] + parts[2:])
+        opener = re.compile(r"^\s*\[\d+\]")
+    else:
+        # the list runs to the horizontal rule or heading that ends the section
+        end = re.search(r"^(---[ \t]*$|#{2,3} )", tail, re.M)
+        refs, rest = (tail[:end.start()], tail[end.start():]) if end else (tail, "")
+        opener = re.compile(r"^\d+\.\s")
 
     titles: list[str] = []
     scannable: list[str] = []
@@ -351,7 +367,7 @@ def _partition_references(text: str) -> tuple[str, list[str], list[str]]:
         if not ln.strip():
             expect_title = False
             continue
-        if re.match(r"^\s*\[\d+\]", ln):
+        if opener.match(ln):
             entries.append(ln.strip())
             expect_title = True
             scannable.append(ln)
@@ -362,7 +378,7 @@ def _partition_references(text: str) -> tuple[str, list[str], list[str]]:
                 problems.append("over-long title line: " + ln.strip()[:60])
             titles.append(ln.strip())
             continue
-        if not ln.startswith(("    ", "	")):
+        if not ln[:1].isspace():
             problems.append("unindented non-entry line: " + ln.strip()[:60])
         entries[-1] = entries[-1] + " " + ln.strip() if entries else ln.strip()
         scannable.append(ln)

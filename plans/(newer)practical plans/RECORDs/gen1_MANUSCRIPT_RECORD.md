@@ -2866,3 +2866,97 @@ scanner is clean.
               and tools, so the cover letter has to lead with the method and the frozen tool, not
               with the reanalysis. The fallbacks named in SUBMISSION.md are unchanged
 ```
+
+---
+
+## Phase 4g of the release: the reference list is fixed at the source, not at the exit — 2026-09-19
+
+Phase 4f left two compromises, and the author asked for neither. Both are replaced here by the fix
+that should have been made first.
+
+### The block is a list in the manuscript itself
+
+Phase 4f kept the reference block fenced in `MANUSCRIPT.md` and had the renderer convert it to a list
+on the way out, because `_partition_references` needed the fenced shape to exempt one title line per
+entry. That made the archived manuscript and the submitted document disagree in form, for the
+convenience of a checker. The checker is ours; it can read a list.
+
+`_partition_references` now accepts either shape and reads both line by line, which is what keeps the
+exemption precise:
+
+```text
+  fenced    ```text / [n] Authors / <indented title> / <indented continuation>
+  list      n. Authors / <indented title> / <indented continuation>
+```
+
+The list form ends at the horizontal rule or heading that closes the section. The indentation test is
+now "the line begins with whitespace" rather than "with four spaces", because a numbered list indents
+its continuations by three. Everything else is unchanged: exactly one exempt line per entry, every
+other line scanned, each entry required to carry a resolvable identifier.
+
+`MANUSCRIPT.md`'s own block was converted, and proved unchanged in substance:
+
+```text
+  entries                  13
+  entry words, in order    355 before, 355 after, identical
+  outside the block        byte-identical
+  parser                   13 titles exempted, no problems
+  claim scan               clean
+  planted before entry 2   caught
+  planted before entry 5   caught
+```
+
+The renderer's `references_as_list` and its two tests are gone -- 36 lines removed, both call sites
+restored -- and four tests take their place: the manuscript's list parses with one exempt title per
+entry; a sentence planted inside the block is still scanned; the legacy fenced form still parses; an
+entry without an identifier is still reported.
+
+### The loosened pattern is narrowed, past where it started
+
+Phase 4f widened the null-maximum pattern to `\D{0,12}` to match its neighbours. That was broader than
+the problem: what a table introduces between a label and its value is whitespace and one separator.
+
+```text
+  V1.2      r"largest of [\d,]+ draws\s+@@"        whitespace only; a table cell breaks it
+  4f        r"largest of [\d,]+ draws\D{0,12}@@"   any twelve non-digits
+  now       r"largest of [\d,]+ draws[\s|]*@@"     whitespace and a separator, nothing else
+```
+
+This is narrower than the `\D{0,12}` the R(W1), R(W4), R(W5) and delta_TOP1 patterns still use. The
+control that a changed number is caught fires as before.
+
+### Registered results
+
+```text
+  manuscript stage      GEN1_MANUSCRIPT_READY
+  compliance checks     20 / 20
+  negative controls     13 / 13
+  numbers traced        17
+  reference block       no problems reported
+  three --verify        EVIDENCE_INTACT, CLAIMS_INTACT, PACKAGE_INTACT
+  full test suite       pytest's own exit code 0; 2,199 results: 2,198 passed, 1 skipped
+                        (four parser tests in, two renderer tests out)
+  render                exit 0; 16 pages; 0 FILL; 0 code blocks wrapped; the references render as a
+                        numbered list with hanging indents, and no reference sits in a monospace
+                        paragraph; 5 Word tables
+  PDF                   403056 bytes
+                        e02bfd62e9d9567f6be98a9d6619fe9cbbec132823af3ca545e7fc3126a57979
+```
+
+### Digests
+
+```text
+  evidence  60602531449079b8f86debea9ffd69753f8bfad033be4c476751d39da08c78aa
+       was  c84a4d7a2e2d254ed92e43ccf1f91d74da0ab57c8328b1be822d73e5c62ec350
+  claim     fc6dc2f221acf1c7661e36071b9e377571c8f903d38398b55bedc164db7efa61
+       was  8c820412ba325cd053f0bc9d907d65ef1fd8e1a82aa93e0f947e85957be69796
+  package   52a538d4076483337f489297dfdb1be9995fc438a89ef8f2e94270e72fd73c3b
+       was  4d08ef4a6d3aa61e744949acee84098ef11ecaf08a6d68ff5658f79a835b0f19
+```
+
+The evidence digest returns to the value it had in Phase 4e, and the claim digest with it. That is
+not a stale reading: removing `references_as_list` and restoring both call sites leaves
+`render_gen1_submission.py` byte-identical to what it was before Phase 4f, and the renderer is what
+the evidence lock hashes. The manuscript checker, which also changed here, lives in the package lock
+rather than the evidence inventory, which is why only the package digest moved. Both digests are
+quoted on the manuscript's title page, re-pinned by the cascade and confirmed by `--verify`.

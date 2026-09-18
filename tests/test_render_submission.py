@@ -140,28 +140,3 @@ def test_an_unmeasured_word_step_is_not_read_as_no_wrapping():
     assert R.wrapped_count("") is None
     assert R.wrapped_count("the export failed") is None
 
-
-def test_the_reference_block_leaves_as_a_numbered_list():
-    """The block is fenced in the source, because the claim scanner's parser needs that shape to
-    exempt a cited paper's title. A journal wants a list, so the rendered documents get one."""
-    text = MANUSCRIPT.read_text(encoding="utf-8")
-    listed = R.references_as_list(text)
-    source_refs = text.split("## References", 1)[1].split("```")[1]
-    n = len([ln for ln in source_refs.splitlines() if ln.strip().startswith("[")])
-    assert n >= 6
-    block = listed.split("## References", 1)[1].split("\n---", 1)[0]
-    assert "```" not in block, "the fence must be gone"
-    assert len([ln for ln in block.splitlines() if ln[:1].isdigit()]) == n
-
-    # each source entry reappears whole: its number, then its words in order, nothing dropped
-    for raw in [b for b in source_refs.split("\n\n") if b.strip().startswith("[")]:
-        num, rest = raw.strip().split("]", 1)
-        expected = f"{num.lstrip('[')}. " + " ".join(rest.split())
-        assert expected in " ".join(block.split()), expected[:60]
-    assert listed.split("## References")[0] == text.split("## References")[0]
-
-
-def test_a_document_without_a_reference_block_is_untouched():
-    assert R.references_as_list("## Results\n\nnothing to see\n") == "## Results\n\nnothing to see\n"
-    unfenced = "## References\n\n1. Already a list.\n"
-    assert R.references_as_list(unfenced) == unfenced

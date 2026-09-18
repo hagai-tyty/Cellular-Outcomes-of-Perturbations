@@ -478,3 +478,47 @@ def test_the_archive_is_verified_with_its_own_code_not_an_installed_copy(mod):
         assert command in section, command
     broken = text.replace("PYTHONPATH=src python -m cellfate.gen1_cli", "python -m cellfate.gen1_cli")
     assert mod.archive_problems(broken)
+
+
+# ---- the reference block, as a list (Amendment V1.6) --------------------------------------------
+def test_the_reference_list_exempts_one_title_per_entry(mod):
+    """The manuscript's own block is a numbered list now, so that a journal reads what the scanner
+    reads. The exemption must stay line-precise: one title per entry, nothing else."""
+    text = MANUSCRIPT.read_text(encoding="utf-8")
+    block = text.split("## References", 1)[1].split("\n---", 1)[0]
+    assert "```" not in block, "the block is a list, not a fenced listing"
+    openers = [ln for ln in block.splitlines() if re.match(r"^\d+\.\s", ln)]
+    prose, titles, problems = mod._partition_references(text)
+    assert problems == []
+    assert len(titles) == len(openers) >= 6
+    for t in titles:
+        assert t in block and not re.match(r"^\d+\.\s", t)
+
+
+def test_a_sentence_planted_inside_the_reference_block_is_still_scanned(mod):
+    """The loophole that started this: exempting too much absorbs a planted claim."""
+    import run_gen1_claim_lock as CL
+    full = CL.combined_patterns()
+    text = MANUSCRIPT.read_text(encoding="utf-8")
+    prose, _titles, _problems = mod._partition_references(text)
+    assert CL.scan(prose, full) == []
+    planted = "    The model generalises to new treatments.\n"
+    for anchor in ("\n2. ", "\n5. "):
+        doctored = text.replace(anchor, "\n" + planted + anchor[1:], 1)
+        p, _t, _pr = mod._partition_references(doctored)
+        assert CL.scan(p, full), f"a claim planted before {anchor.strip()} escaped the scan"
+
+
+def test_the_reference_parser_still_reads_the_fenced_form(mod):
+    """Documents written before V1.6 keep their fenced block; both forms parse the same way."""
+    fenced = ("## References\n\n```text\n[1] Doe J.\n    A title about cancer drug resistance.\n"
+              "    Journal. 2020;1:1. doi:10.0000/x\n```\n\n---\n")
+    prose, titles, problems = mod._partition_references(fenced)
+    assert titles == ["A title about cancer drug resistance."] and problems == []
+    assert "A title about cancer" not in prose
+
+
+def test_an_entry_without_an_identifier_is_reported(mod):
+    listed = ("## References\n\n1. Doe J.\n    A title.\n    Journal. 2020;1:1.\n\n---\n")
+    _prose, _titles, problems = mod._partition_references(listed)
+    assert any("without a resolvable identifier" in p for p in problems)

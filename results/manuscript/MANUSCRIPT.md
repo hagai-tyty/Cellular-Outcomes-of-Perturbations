@@ -9,8 +9,8 @@
 **Correspondence:** hagai.aviv.home@gmail.com
 
 ```text
-  evidence lock   c84a4d7a2e2d254ed92e43ccf1f91d74da0ab57c8328b1be822d73e5c62ec350
-  claim lock      8c820412ba325cd053f0bc9d907d65ef1fd8e1a82aa93e0f947e85957be69796
+  evidence lock   60602531449079b8f86debea9ffd69753f8bfad033be4c476751d39da08c78aa
+  claim lock      fc6dc2f221acf1c7661e36071b9e377571c8f903d38398b55bedc164db7efa61
 ```
 
 Both digests are verifiable from the repository. See **Availability of data and materials**.
@@ -524,8 +524,8 @@ third does the same for this manuscript and the package around it. All three als
 stage that produced the files did not pass.
 
 ```text
-  evidence lock digest   c84a4d7a2e2d254ed92e43ccf1f91d74da0ab57c8328b1be822d73e5c62ec350
-  claim lock digest      8c820412ba325cd053f0bc9d907d65ef1fd8e1a82aa93e0f947e85957be69796
+  evidence lock digest   60602531449079b8f86debea9ffd69753f8bfad033be4c476751d39da08c78aa
+  claim lock digest      fc6dc2f221acf1c7661e36071b9e377571c8f903d38398b55bedc164db7efa61
 ```
 
 #### Licensing
@@ -597,69 +597,67 @@ Not applicable.
 
 ## References
 
-```text
-[1] Schaff DL, White PE, Cote CJ, Watterson GE, Lin KZ, Fasse AJ, et al.
+1. Schaff DL, White PE, Cote CJ, Watterson GE, Lin KZ, Fasse AJ, et al.
     Pre-existing cell states predict resistance to multiple treatments.
     Cell Genomics. 2026;6(6):101191. doi:10.1016/j.xgen.2026.101191
 
-[2] Shaffer SM, Dunagin MC, Torborg SR, Torre EA, Emert B, et al.
+2. Shaffer SM, Dunagin MC, Torborg SR, Torre EA, Emert B, et al.
     Rare cell variability and drug-induced reprogramming as a mode of cancer drug resistance.
     Nature. 2017;546(7658):431-5. doi:10.1038/nature22794
 
-[3] Emert BL, Cote CJ, Torre EA, Dardani IP, Jiang CL, Jain N, et al.
+3. Emert BL, Cote CJ, Torre EA, Dardani IP, Jiang CL, Jain N, et al.
     Variability within rare cell states enables multiple paths toward drug resistance.
     Nat Biotechnol. 2021;39(7):865-76. doi:10.1038/s41587-021-00837-3
 
-[4] Goyal Y, Busch GT, Pillai M, Li J, Boe RH, et al.
+4. Goyal Y, Busch GT, Pillai M, Li J, Boe RH, et al.
     Diverse clonal fates emerge upon drug treatment of homogeneous cancer cells.
     Nature. 2023;620(7974):651-9. doi:10.1038/s41586-023-06342-8
 
-[5] Kapoor S, Narayanan A.
+5. Kapoor S, Narayanan A.
     Leakage and the reproducibility crisis in machine-learning-based science.
     Patterns. 2023;4(9):100804. doi:10.1016/j.patter.2023.100804
 
-[6] Jain N, Goyal Y, Dunagin MC, Cote CJ, Mellis IA, Emert B, et al.
+6. Jain N, Goyal Y, Dunagin MC, Cote CJ, Mellis IA, Emert B, et al.
     Retrospective identification of cell-intrinsic factors that mark pluripotency potential
     in rare somatic cells [dataset]. Gene Expression Omnibus, GSE227151. 2023.
     https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE227151  Accessed 21 Aug 2026.
 
-[7] Schaff DL, White PE, Cote CJ, Watterson GE, Lin KZ, Fasse AJ, et al.
+7. Schaff DL, White PE, Cote CJ, Watterson GE, Lin KZ, Fasse AJ, et al.
     Pre-existing cell states predict resistance to multiple treatments [dataset].
     Gene Expression Omnibus, GSE279162. 2024.
     https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE279162  Accessed 12 Jul 2026.
 
-[8] Schaff DL (dylanschaff).
+8. Schaff DL (dylanschaff).
     dylanschaff/Schaff_manuscript: Schaff_manuscript_first_submission [software].
     Zenodo. 2024. doi:10.5281/zenodo.13935305
     https://doi.org/10.5281/zenodo.13935305  Accessed 21 Aug 2026.
 
-[9] Jain N, Goyal Y, Dunagin MC, Cote CJ, Mellis IA, Emert B, et al.
+9. Jain N, Goyal Y, Dunagin MC, Cote CJ, Mellis IA, Emert B, et al.
     Processed barcode data for iPSC Rewind, GSE227151 [data package].
     filtered10XCells.txt, stepThreeStarcodeShavedReads_BC_10X.txt and
     stepThreeStarcodeShavedReads_BC_gDNA.txt for GSE227151. Dropbox. 2024.
     https://www.dropbox.com/sh/ulu6728tcp49dv2/AAAPwLYQiVLloH_JL38lvTj6a?dl=0
     Accessed 21 Aug 2026. Linked from the key resources table of Jain et al.
 
-[10] Jain N, Goyal Y, Dunagin MC, Cote CJ, Mellis IA, Emert B, et al.
+10. Jain N, Goyal Y, Dunagin MC, Cote CJ, Mellis IA, Emert B, et al.
     Retrospective identification of cell-intrinsic factors that mark pluripotency potential
     in rare somatic cells. Cell Syst. 2024;15(2):109-133.e10.
     doi:10.1016/j.cels.2024.01.001
 
-[11] Jain N, et al. (goldengopherforlife).
+11. Jain N, et al. (goldengopherforlife).
     arjunrajlaboratory/iPSC_Rewind: Final Release [software].
     Zenodo. 2024. doi:10.5281/zenodo.7707418
     https://doi.org/10.5281/zenodo.7707418  Accessed 21 Aug 2026.
 
-[12] Aviv H.
+12. Aviv H.
     CellFate-Rx Gen-1: frozen model and reproducibility artifacts, version 1.0.0 [software].
     Zenodo. 2026. doi:10.5281/zenodo.22769563
     https://doi.org/10.5281/zenodo.22769563  Accessed 16 Sep 2026.
 
-[13] Aviv H.
+13. Aviv H.
     CellFate-Rx: cellular outcomes of perturbations [software repository].
     GitHub. 2026. Archived at doi:10.5281/zenodo.22769563
     https://github.com/hagai-tyty/Cellular-Outcomes-of-Perturbations  Accessed 18 Sep 2026.
-```
 
 ---
 
