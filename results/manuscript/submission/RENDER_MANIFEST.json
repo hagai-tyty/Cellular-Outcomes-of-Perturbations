@@ -1,20 +1,20 @@
 {
   "draft": false,
   "fill_markers_remaining": 0,
-  "manuscript_canonical_lf_sha256": "51eba6f5ffaeabaf518b7da493599afeebcd51269fe3e5fe1b521649a6d0797a",
+  "manuscript_canonical_lf_sha256": "099cde8b001a256e31de7f6f3c4a2871eb1a19460b9f4660e219d9cbd7c4e953",
   "pandoc": "pandoc 3.11",
   "pdf_exported_by_word": true,
   "code_point_size": 8.0,
   "code_blocks_wrapped_in_word": 0,
   "word_detail": "",
   "outputs": {
-    "COVER_LETTER.docx": "2d1b2309a6cb397f26b2def35e143ab8ea06ab301b9d1d3eaef8b8ebb8428014",
-    "MANUSCRIPT_BMC.docx": "bb0c00d634e3bb88b564e48decf6b5904e4733ba7bb981efdd6d3fc904955b3a",
-    "MANUSCRIPT_bioRxiv.docx": "b408ead757b14b4120c9de66862ccca4e6e9cbc19a753e224cb83971e3d3628f",
-    "MANUSCRIPT_bioRxiv.pdf": "009ea3c4aa6cb90cfd577007ec1e50c3268d13077a8caef0f139d060fc6f00be",
-    "figure_1_design.pdf": "85cd68ac4a4de73abac6060d6c24ca3c329b8850ee99691d40d28df1fa52a82d",
-    "figure_2_primary.pdf": "f9ee95f27ff209c5b7d98682869a4a18364668aa7e46e4c13cbc57bfdc8c5d8d",
-    "figure_3_robustness.pdf": "1e141a8eace1def0e772f487e3058813dbd1f9e7e70b69cc7bcaa773e95a3ebb"
+    "COVER_LETTER.docx": "23a55ae1de3ae974b9a0ec2a2854dd4e8e1ff7de43ae1b840b814878f10d7ebe",
+    "MANUSCRIPT_BMC.docx": "2f35750c9cbf104c2f2c142eff3da73d9de9183ecd65deed7fd9e8c9cfd3b482",
+    "MANUSCRIPT_bioRxiv.docx": "5d33f6607bf0efea23c092fb7956ebd01d4111da83a792b0e4c0231046dd441f",
+    "MANUSCRIPT_bioRxiv.pdf": "43a99da0aa0e8f1cfe49f02774116307c138ed6299a08f8ba18b3ef4bf4dd076",
+    "figure_1_design.pdf": "260567d823fe64e5965e3eb002840482680426c8d395d0f0c6c935defc06a54e",
+    "figure_2_primary.pdf": "5ca904a078aed82be7133fdddae79544de177ddf6891dcdf972489b655e4b21d",
+    "figure_3_robustness.pdf": "219f58cd39be49958ebe97c6d3126ff86549431900b95c9b3c805844afe89e6e"
   },
   "note": "Not byte-deterministic (.docx and .pdf carry timestamps), so not locked. These hashes identify the exact files that were submitted."
 }

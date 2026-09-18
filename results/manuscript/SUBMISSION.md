@@ -24,7 +24,8 @@ AFFILIATION        as on the MANUSCRIPT.md title page
 CORRESPONDING      as on the MANUSCRIPT.md title page
 
 ARTICLE TYPE       Research Article
-PREPRINT SERVER    Zenodo, as a preprint record of its own, separate from the archive record
+PREPRINT           Zenodo, a repository rather than a preprint server: a record of its own,
+                   separate from the archive record
                    bioRxiv declined the submission on 2026-09-18: it requires an organisational
                    affiliation that can adjudicate ethical disputes, which an independent
                    researcher does not have
@@ -81,7 +82,9 @@ us" page and BMC's article-processing-charge page.
 > though after earlier predictive analyses of the same data — a frozen state-by-condition interaction
 > model improves clone-specific ordering of the six conditions over a non-interactive additive model:
 > +0.051605 in equal-clone-weighted within-clone AUROC, 95% CI [+0.037197, +0.065571], with 0 of 1000
-> full-refit permutation draws reaching the observed value (p < 0.001).
+> full-refit permutation draws reaching the observed value (p < 0.001). An additive
+> expression term did not improve ordering over condition identity alone
+> (R(W4) 0.692176, R(W1) 0.692654): the gain is the interaction.
 >
 > **Conclusions.**
 > A state contribution shared additively across all conditions cannot change their ordering within a
@@ -216,7 +219,8 @@ the manuscript's `## Figure legends` section.
 
 For submission, `python experiments/render_gen1_submission.py` builds two manuscript files from the
 one Markdown source. `MANUSCRIPT_bioRxiv.pdf` has the three figures embedded above their legends,
-because a preprint server takes a single PDF and its conversion engine does not list SVG. It keeps
+because a preprint is distributed as one PDF, and the servers that take one do not accept SVG.
+Zenodo converts nothing: it stores the file as uploaded. The name is kept
 that name although bioRxiv is no longer the venue: the same file is archived at Zenodo and attached
 to the GitHub release, and renaming it here would make those copies disagree with this one.
 `MANUSCRIPT_BMC.docx` keeps the legends in the text and ships the figures as separate PDF files,
@@ -315,7 +319,8 @@ For a journal submission, if one is made. Paste it unchanged apart from the mark
 > under DOI `10.5281/zenodo.22769563`.
 >
 > **Preprint.** This manuscript is posted as a preprint at Zenodo, DOI
-> `<<LATER: Zenodo preprint DOI>>`, under a CC BY licence.
+> `10.5281/zenodo.22829747`, under a CC BY licence. That DOI resolves to the newest version
+> of the record; the version submitted here is `10.5281/zenodo.22829748`.
 >
 > **Software licence.** The software and frozen model are released under the PolyForm Noncommercial
 > License 1.0.0. They are free for any non-commercial use without registration or agreement, which
@@ -374,12 +379,13 @@ PHASE 3 -- lock, render, build
 PHASE 4 -- publish, in this order
 [x] Zenodo record published; its DOI resolves at doi.org, and the three files' MD5s matched this
     machine before publishing
-[ ] the ZIP downloaded back from the published record; its SHA-256 matches BUNDLE_CONTENTS.json
+[x] the published archive record read back: Zenodo's own MD5 for each of the three files
+    equals this machine's, so the stored files are the verified ones
 [x] GitHub release gen1-v1.0.0 on the archived commit, linking the DOI -- the tag never moves
-[ ] a Zenodo preprint record: MANUSCRIPT_bioRxiv.pdf, type Preprint, CC BY, linked to the archive
-    record -- bioRxiv declined on 2026-09-18 for want of an organisational affiliation
-[ ] the preprint DOI added to the archive record's related works and, in a NEW commit, to the LATER
-    field in the cover letter
+[x] a Zenodo preprint record: 10.5281/zenodo.22829748, type Preprint, CC BY, linked to the
+    archive record -- bioRxiv declined on 2026-09-18 for want of an organisational affiliation
+[x] the preprint DOI written into the cover letter
+[ ] the preprint DOI added to the archive record's related works: Is supplement to
 [ ] BMC Bioinformatics: the APC waiver requested at submission, and the preprint DOI disclosed
 ```
 

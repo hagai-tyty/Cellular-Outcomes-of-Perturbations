@@ -2584,3 +2584,123 @@ The three figure PDFs were rewritten too, but only in their timestamps: 74 bytes
 
 The claim digest is unchanged, as it must be: a heading's name is not a claim, and no sentence of the
 disclosure moved.
+
+---
+
+## Phase 4e of the release: the preprint is published, and the abstract states the measured half — 2026-09-18
+
+### The Zenodo preprint record
+
+The author published it. Read back with one request to Zenodo's public API:
+
+```text
+  version DOI     10.5281/zenodo.22829748          published, state done
+  concept DOI     10.5281/zenodo.22829747          resolves to the newest version
+  type / version  Preprint / v1        language eng        CC BY 4.0        open
+  creator         Aviv, Hagai, Independent researcher, ORCID 0009-0004-4503-6629
+  keywords        9, the same as the archive record
+  related works   isSupplementedBy 10.5281/zenodo.22769563 (software)
+                  isSupplementedBy the GitHub repository (software)
+                  isDerivedFrom 10.1016/j.xgen.2026.101191 (journal article)
+                  references GSE279162, references GSE227151 (datasets)
+  file            CellFate-Rx-Gen1-preprint.pdf, 386758 bytes
+                  Zenodo's MD5 fd8fbb27f7d73a5d882566188ca48aef equals this machine's
+```
+
+Before publishing, the draft had the file under its repository name, `MANUSCRIPT_bioRxiv.pdf`, on a
+record that has nothing to do with bioRxiv. The content was right -- the MD5 matched -- but the name
+would have been public and permanent, so it was replaced with the identical bytes under the name
+above.
+
+The same request closed an older item. The **archive** record, 10.5281/zenodo.22769563, was read back
+in full: its metadata is as intended, and Zenodo's own MD5 for each of the three archived files equals
+this machine's. The checklist line asking for a re-download of the ZIP is replaced by that check,
+which tests the stored bytes rather than the transfer.
+
+### What the author's reviewer proposed, and what was verified
+
+Two additions to the abstract were proposed, plus a wording fix. Each was checked against the locked
+results before any edit.
+
+```text
+  W4 below W1      TRUE.  R(W1) 0.692654, R(W4) 0.692176, R(W5) 0.743781. The Results body already
+                   says the additive term contributes nothing and the whole gain is the interaction
+  delta_TOP1       TRUE.  +0.115471, CI95 [+0.082960, +0.145740]; 82.8% of evaluable clones against
+                   71.3%. But it was preregistered as a directional-consistency check that could
+                   withhold support and never grant it
+  abstract limit   324 words against the checked limit of 350: 26 words of headroom
+```
+
+The W4 sentence was added, in 21 words. The abstract already carried the argument's theoretical half
+-- an additively shared state contribution cannot change within-clone ordering -- and now carries the
+measured half beside it. The top-choice number was not added: honestly qualified it costs about 24
+more words, which would have meant cutting qualifiers to fit, and putting a check that cannot grant
+support in the abstract would misstate its status. It keeps its own Results subsection and Figure 3C.
+
+### The edit
+
+```text
+  MANUSCRIPT.md    one sentence at the end of the abstract's Results paragraph
+  SUBMISSION.md    the mirrored "abstract as submitted", kept word for word identical
+  SUBMISSION.md    Zenodo is a repository, not a preprint server: the header label, and the sentence
+                   that explained the single-file PDF by bioRxiv's conversion engine
+  SUBMISSION.md    the cover letter's <<LATER: Zenodo preprint DOI>> filled with the concept DOI,
+                   10.5281/zenodo.22829747, which stays right across versions, naming the submitted
+                   version 10.5281/zenodo.22829748 beside it
+  SUBMISSION.md    checklist: the preprint published, the DOI written, the archive read back
+```
+
+The new sentence:
+
+> An additive expression term did not improve ordering over condition identity alone (R(W4) 0.692176,
+> R(W1) 0.692654): the gain is the interaction.
+
+### A gate that was wrong again
+
+The dry run refused, reporting that the mirrored abstract no longer matched the manuscript's. The text
+was fine; the check was not. Its extractor for the mirrored copy stopped at the next `---`, but the
+mirrored block ends with its own quoted `> ---`, so it read on into the KEYWORDS line below and
+compared 335 words against 324. The extractor was corrected to stop at the quoted rule, and then
+validated on the **unedited** files first, where it must report the two copies identical: it did, 324
+words each. Only then was the edit re-run. This is the second gate in two phases to be wrong in the
+same way -- measuring more than the thing under test -- and the lesson is the same: prove a new check
+against the unchanged file before trusting its refusal.
+
+### Registered results
+
+```text
+  manuscript stage      GEN1_MANUSCRIPT_READY
+  compliance checks     20 / 20
+  negative controls     13 / 13
+  numbers traced        17
+  abstract              345 words, limit 350; the two copies identical word for word
+  three --verify        EVIDENCE_INTACT, CLAIMS_INTACT, PACKAGE_INTACT
+  full test suite       pytest's own exit code 0; 2,195 results: 2,194 passed, 1 skipped
+  render                exit 0; draft false; 0 FILL; Word export true; 0 code blocks wrapped
+  PDF                   14 pages; the new sentence present; 386917 bytes
+                        43a99da0aa0e8f1cfe49f02774116307c138ed6299a08f8ba18b3ef4bf4dd076
+  LATER markers left    1: the APC-waiver line
+```
+
+### Digests
+
+```text
+  evidence  60602531449079b8f86debea9ffd69753f8bfad033be4c476751d39da08c78aa   unchanged
+  claim     fc6dc2f221acf1c7661e36071b9e377571c8f903d38398b55bedc164db7efa61   unchanged
+  package   c48419e9eecf0d37398a39546f0710e290f43632571811c8a5518ea12f81cc1d
+       was  5641c0f6d136c01e1c0f03abeb59cd818c5de881702c826068ef81850fc213d6
+```
+
+The claim digest does not move: both numbers were already reported in the Results, traced to locked
+artifacts, and the sentence adds no claim above the lock.
+
+### Still open
+
+```text
+  Zenodo      the published v1 carries the abstract without this sentence. The record can take a new
+              version, which keeps v1 and gives v2 its own DOI, with the concept DOI resolving to the
+              newest. The author decides whether to publish v2 with the PDF rendered here
+  Zenodo      on the archive record, add the related work: Is supplement to, the preprint DOI
+  BMC         the submission, with the APC waiver requested at submission and the preprint DOI
+              disclosed
+```
