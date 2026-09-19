@@ -28,8 +28,8 @@ authors:
     orcid: "https://orcid.org/0009-0004-4503-6629"
     affiliation: "Independent researcher"
 
-version: "gen1-v1.0.1"
-date-released: "2026-09-19"
+version: "gen1-v1.0.2"
+date-released: "2026-09-20"
 
 # This is the CONCEPT DOI. It resolves to whichever version is newest, so it does
 # NOT change when a new archive version is published, and must not be replaced

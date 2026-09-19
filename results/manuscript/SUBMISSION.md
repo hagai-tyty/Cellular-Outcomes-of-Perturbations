@@ -320,7 +320,7 @@ For a journal submission, if one is made. Paste it unchanged apart from the mark
 >
 > **Preprint.** This manuscript is posted as a preprint at Zenodo, DOI
 > `10.5281/zenodo.22829747`, under a CC BY licence. That DOI resolves to the newest version
-> of the record; the version submitted here is `10.5281/zenodo.22849626`.
+> of the record, which is the version submitted here.
 >
 > **Software licence.** The software and frozen model are released under the PolyForm Noncommercial
 > License 1.0.0. They are free for any non-commercial use without registration or agreement, which

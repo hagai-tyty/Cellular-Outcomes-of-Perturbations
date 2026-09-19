@@ -9,8 +9,8 @@
 **Correspondence:** hagai.aviv.home@gmail.com
 
 ```text
-  evidence lock   4581fce568a8733d53f2e9c5e011b0c2cafc8e0aff5a2b65487b8055eff3a3c2
-  claim lock      fcd25d3eb37aa9e4b4c973975a54565db0c49dfb60b7cdfea9be6821b4d051de
+  evidence lock   924202ce1ceecad95365d584e6aac5f7419ae0bea0e65a3c322e44be7dee254a
+  claim lock      87ce74beba6f80a6dde2c44d6ca3cee6ec79bebe35ac24da438c6ce34acfb199
 ```
 
 Both digests are verifiable from the repository. See **Availability of data and materials**.
@@ -524,8 +524,8 @@ third does the same for this manuscript and the package around it. All three als
 stage that produced the files did not pass.
 
 ```text
-  evidence lock digest   4581fce568a8733d53f2e9c5e011b0c2cafc8e0aff5a2b65487b8055eff3a3c2
-  claim lock digest      fcd25d3eb37aa9e4b4c973975a54565db0c49dfb60b7cdfea9be6821b4d051de
+  evidence lock digest   924202ce1ceecad95365d584e6aac5f7419ae0bea0e65a3c322e44be7dee254a
+  claim lock digest      87ce74beba6f80a6dde2c44d6ca3cee6ec79bebe35ac24da438c6ce34acfb199
 ```
 
 #### Licensing
@@ -650,14 +650,14 @@ Not applicable.
     https://doi.org/10.5281/zenodo.7707418  Accessed 21 Aug 2026.
 
 12. Aviv H.
-    CellFate-Rx Gen-1: frozen model and reproducibility artifacts, version 1.0.1 [software].
+    CellFate-Rx Gen-1: frozen model and reproducibility artifacts, version 1.0.2 [software].
     Zenodo. 2026. doi:10.5281/zenodo.22769562
-    https://doi.org/10.5281/zenodo.22769562  Accessed 19 Sep 2026.
+    https://doi.org/10.5281/zenodo.22769562  Accessed 20 Sep 2026.
 
 13. Aviv H.
     CellFate-Rx: cellular outcomes of perturbations [software repository].
     GitHub. 2026. Archived at doi:10.5281/zenodo.22769562
-    https://github.com/hagai-tyty/Cellular-Outcomes-of-Perturbations  Accessed 18 Sep 2026.
+    https://github.com/hagai-tyty/Cellular-Outcomes-of-Perturbations  Accessed 20 Sep 2026.
 
 ---
 

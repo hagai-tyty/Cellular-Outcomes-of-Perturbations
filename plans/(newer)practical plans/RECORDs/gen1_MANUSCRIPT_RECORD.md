@@ -3405,3 +3405,57 @@ its own example, now states the real reason it sits outside both lists.
 
 A digest is only reported as unchanged if it was read after the change. Anything else is a guess
 wearing the clothes of a check.
+
+## The archive goes to gen1-v1.0.2, and the preprint follows it — 2026-09-20
+
+### Why a bump and not a second deposit under the same label
+
+The proposal made to the author was to correct the defective `gen1-v1.0.1` deposit by publishing a new
+deposit under the SAME version string, on the grounds that it avoided moving the digests and so avoided
+a second preprint version. The author rejected it: two deposits with different contents and different
+checksums must not share a version label, because distinguishing them is what the label is for. That is
+correct, and the earlier recommendation was wrong.
+
+### The coupling that makes a version bump expensive, stated plainly
+
+`CITATION.cff` carries the version string and is one of the 64 artifacts in the evidence lock. So:
+
+```text
+  CITATION.cff changes -> evidence digest changes -> the claim plan pins it, so the claim digest
+  changes -> the manuscript title page prints both -> the manuscript changes -> the preprint IS the
+  manuscript, so the preprint must be republished
+```
+
+In this design "bump the archive version" and "reprint the paper" are one action. It is not that any
+science moved: the model, the data, the out-of-fold predictions and the permutation draws are
+untouched. The version label simply lives inside the set being hashed. The same mechanism forced
+preprint v2 when 1.0.0 became 1.0.1 yesterday; it was not named at the time.
+
+### What changed
+
+```text
+  CITATION.cff          gen1-v1.0.1 -> gen1-v1.0.2, date-released 2026-09-20
+  .zenodo.json          title and version to 1.0.2; the deposit note reworded
+  MANUSCRIPT.md         reference [12] version 1.0.2, accessed 20 Sep 2026
+                        reference [13] accessed 20 Sep 2026
+  SUBMISSION.md         the cover letter no longer names a specific preprint version. It named
+                        10.5281/zenodo.22849626, which is why the preprint DOI kept needing an
+                        update on every republish. It now names the concept DOI alone, which
+                        resolves to the newest version and therefore never goes stale
+```
+
+### Digests, read from the files after the cascade rather than carried forward
+
+```text
+  evidence   924202ce1ceecad95365d584e6aac5f7419ae0bea0e65a3c322e44be7dee254a
+  claim      87ce74beba6f80a6dde2c44d6ca3cee6ec79bebe35ac24da438c6ce34acfb199
+  package    4e911270c44dfacc337cd016d593ca137e519e5cacfa772f4b54feb32cbd0946
+```
+
+`EVIDENCE_INTACT`, `CLAIMS_INTACT`, `PACKAGE_INTACT`; full test suite exit 0. The rendered `.docx` was
+read directly and prints the two digests above, reference [12] at version 1.0.2, no trace of the
+superseded evidence digest or of "version 1.0.1", the archive by its concept DOI, and a cover letter
+carrying the preprint's concept DOI and no pinned version DOI.
+
+Both digests were read out of the lock files and compared against the rendered document, rather than
+copied from the previous entry. That is the specific failure recorded twice yesterday.

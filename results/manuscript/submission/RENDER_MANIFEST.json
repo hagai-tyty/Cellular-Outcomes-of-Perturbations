@@ -1,20 +1,20 @@
 {
   "draft": false,
   "fill_markers_remaining": 0,
-  "manuscript_canonical_lf_sha256": "6a3669e54467701184d5cf55170f92f9e3c98168c4613138e7a538a9d4e1dec5",
+  "manuscript_canonical_lf_sha256": "8ae13ebfc4f71f59e11f070b6fdeff85b046227191140be8531e0b3614154fee",
   "pandoc": "pandoc 3.11",
   "pdf_exported_by_word": true,
   "code_point_size": 8.0,
   "code_blocks_wrapped_in_word": 0,
   "word_detail": "",
   "outputs": {
-    "COVER_LETTER.docx": "e704607f63a79fb48367ab0dd62c548ca50f94a7a977784976669198823ef8db",
-    "MANUSCRIPT_BMC.docx": "76e0a1d9630da6acb4832b386d0a6e90037a097498d78fcc2ce8224ffa757a2b",
-    "MANUSCRIPT_bioRxiv.docx": "4e19630705e46cc049a3910409ff7aebef7bb2b68d39fc3813c5b406f800b94b",
-    "MANUSCRIPT_bioRxiv.pdf": "5cc8e8699475be744fe059f88234faf53fddf2a7a94ca76f989b1d356b915a68",
-    "figure_1_design.pdf": "52b429ac381c5f7717915577455175507e3407226d85b07997edc40837867c6f",
-    "figure_2_primary.pdf": "9298729dd52096d9e727b7c14bfde3b6c870b646e34aa25da4df353f82ee3947",
-    "figure_3_robustness.pdf": "051a8256e7414b9c48208978635ce50b91a9c46132a22342f260a0b333cea3b5"
+    "COVER_LETTER.docx": "a9310eac197b665dec93aa2b940db62a24b80a173022f7606f28b9972a403616",
+    "MANUSCRIPT_BMC.docx": "2c8d38f55d80937266df747b6de806d03dac264878e73ac50d4af4c23c7ae6f5",
+    "MANUSCRIPT_bioRxiv.docx": "5201a8bf880441249ba66e4fc3f9a42a0c6f3534e4f63eb8350f6b2ff8074bb5",
+    "MANUSCRIPT_bioRxiv.pdf": "b2af2aa2b3382c20c91672e657fc375160ad35a909ab8915b90e4ece122103ad",
+    "figure_1_design.pdf": "893c3999eee1dcfced3780034dc303774cdcf84f2e0d84bddd2c7af613ed27cb",
+    "figure_2_primary.pdf": "74208dfaaba8f07d07178af982b40b8e35663caeedc42a34313b35b4f516ace1",
+    "figure_3_robustness.pdf": "061a7eb8d8b11c5567c7a800a4967b1ad07eeb8eb9a95777bdd10f76c6856b5e"
   },
   "note": "Not byte-deterministic (.docx and .pdf carry timestamps), so not locked. These hashes identify the exact files that were submitted."
 }
