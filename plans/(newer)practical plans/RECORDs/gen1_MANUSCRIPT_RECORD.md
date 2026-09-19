@@ -3312,3 +3312,43 @@ exactly one file: the cover letter's preprint sentence.
 
 Not yet decided: whether to publish a corrected archive version, and under what version string. Left
 to the author.
+
+## The pre-flight checklist is taken out of the frozen digest — 2026-09-19
+
+### Why, stated as the design fault it is
+
+`SUBMISSION.md` was in `PACKAGE_FILES` for a good reason -- `COVER_LETTER.docx` is generated from its
+section 6, and pinning the file stops the letter drifting from what was archived. But the same file
+carried the pre-flight checklist, which exists to change: every tick records progress through the
+release. A frozen hash was covering a document whose job is to move.
+
+That is what broke today, and it was going to break again. The next tick is already written:
+`BMC Bioinformatics: the APC waiver requested at submission`. Ticking it would have moved the package
+digest, failed CI, and -- if it happened after an upload, as it did this morning -- left another
+published archive reporting `PACKAGE_MOVED`.
+
+### The split
+
+```text
+  SUBMISSION.md              sections 1-6 and the cover letter; still in PACKAGE_FILES
+                             still holds the one <<LATER>> marker, the APC waiver, in section 6
+  SUBMISSION_CHECKLIST.md    section 7, the pre-flight checklist; NOT in PACKAGE_FILES
+                             added to RELEASE_DOCUMENTS in make_release_bundle.py, so a <<FILL>>
+                             marker in it is still refused before a release
+```
+
+Neither marker moved across the boundary: the checklist contained none, and the APC waiver stayed
+with the cover letter. `PACKAGE_FILES` now carries a comment saying why the checklist is absent, so
+the exclusion is a stated decision rather than an omission someone later 'fixes'.
+
+### After the cascade
+
+```text
+  evidence   4581fce568a8733d53f2e9c5e011b0c2cafc8e0aff5a2b65487b8055eff3a3c2   unchanged
+  claim      fcd25d3eb37aa9e4b4c973975a54565db0c49dfb60b7cdfea9be6821b4d051de   unchanged
+  package    47ca75916fa0e9fc2d3d67dced89fd79c0c3030ba0894282f33cef8671ad05f6
+  EVIDENCE_INTACT, CLAIMS_INTACT, PACKAGE_INTACT; full test suite exit 0
+```
+
+The evidence and claim digests have not moved since `53c0056`, which is what keeps the published
+preprint's title page correct through all of this.

@@ -648,6 +648,10 @@ PACKAGE_FILES = [
     "tests/test_gen1_manuscript.py",
     "results/manuscript/MANUSCRIPT.md",
     "results/manuscript/REPRODUCIBILITY.md",
+    # SUBMISSION.md is here for its cover letter, which COVER_LETTER.docx is generated from:
+    # pinning it stops the letter drifting from what was archived. Its pre-flight checklist
+    # used to live here too, and ticking a box moved this digest -- a frozen hash over a file
+    # whose job is to change. The checklist is now SUBMISSION_CHECKLIST.md and is NOT listed.
     "results/manuscript/SUBMISSION.md",
     "results/manuscript/figures/figure_1_design.svg",
     "results/manuscript/figures/figure_2_primary.svg",
