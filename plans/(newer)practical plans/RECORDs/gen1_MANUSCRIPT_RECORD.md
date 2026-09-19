@@ -3520,3 +3520,50 @@ rebuilding would replace the published bytes with bytes nobody can download.
   GitHub release   gen1-v1.0.2 on 94ca278, attaching the three files now in dist/
   BMC              submission, with the APC waiver requested in the system itself
 ```
+
+## The GitHub release gen1-v1.0.2 is published — 2026-09-20
+
+Checked with one `git ls-remote` and one request to GitHub's public releases API:
+
+```text
+  tag                   gen1-v1.0.2
+  remote tag points to  94ca2782020208092f614bcd7753512952f09c0c   the bundle's commit
+  target_commitish      94ca2782020208092f614bcd7753512952f09c0c
+  title                 CellFate-Rx Generation 1 (gen1-v1.0.2)
+  draft / prerelease    false / false
+  published             2026-09-19T22:32:13Z   (UTC; 2026-09-20 locally)
+  notes                 carry 10.5281/zenodo.22849793 and the concept 10.5281/zenodo.22769562
+
+  asset                         bytes      state      SHA-256 reported by GitHub
+  cellfate-rx-gen1-bundle.zip   74588697   uploaded   equal to dist/ and to Zenodo
+      c28280b28b586c65d6134c26f03ae2359ba4c9e4bd51aa57b758dac6ac36b7f2
+  SHA256SUMS.txt                   42799   uploaded   equal to dist/ and to Zenodo
+      963d6e1134eac6dbd3e7f4e96bf7873c929a20ed650548219302ba06575a82b0
+  BUNDLE_CONTENTS.json             48014   uploaded   equal to dist/ and to Zenodo
+      c17a9115f8455eddea348210ce7bd370cb19ffd50b3320feb97e469bf7e1809c
+```
+
+The same three files now exist in three places -- this machine, Zenodo `10.5281/zenodo.22849793`, and
+this release -- and all three agree byte for byte. The tag points at the commit the bundle records
+itself as cut from, so the release, the archive and the repository state are one thing.
+
+The target had to be set to `94ca278` by hand rather than taken from the branch head, which had already
+moved to `679caed`. A release drafted against the default branch would have tagged a tree that no
+longer matches what Zenodo stores.
+
+### Everything published for Generation 1
+
+```text
+  archive    10.5281/zenodo.22769562   concept, resolving to
+             10.5281/zenodo.22849793   gen1-v1.0.2, 2026-09-20
+  preprint   10.5281/zenodo.22829747   concept, resolving to
+             10.5281/zenodo.22850050   v3, 2026-09-20
+  release    gen1-v1.0.2 on 94ca278
+```
+
+### Still open
+
+```text
+  BMC Bioinformatics   the submission itself, with the APC waiver requested in the system.
+                       That is the last <<LATER>> marker standing
+```

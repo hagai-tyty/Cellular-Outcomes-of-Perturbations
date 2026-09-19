@@ -64,7 +64,8 @@ PHASE 4 -- publish, in this order
 [x] archive v1.0.2 published: 10.5281/zenodo.22849793 (2026-09-20), concept unchanged, read back
     with all three MD5s equal to this machine's and PACKAGE_INTACT in the tree it was cut from
 [x] GitHub release gen1-v1.0.0 on the archived commit, linking the DOI -- the tag never moves
-[ ] GitHub release gen1-v1.0.2 on 94ca278, the commit the 1.0.2 bundle was cut from
+[x] GitHub release gen1-v1.0.2 on 94ca278, the commit the 1.0.2 bundle was cut from --
+    read back: tag on that commit, three assets whose SHA-256 equal dist/ and Zenodo
 [x] a Zenodo preprint record: concept 10.5281/zenodo.22829747, newest version v3
     10.5281/zenodo.22850050 (2026-09-20); type Preprint, CC BY, linked to the
     archive record -- bioRxiv declined on 2026-09-18 for want of an organisational affiliation
