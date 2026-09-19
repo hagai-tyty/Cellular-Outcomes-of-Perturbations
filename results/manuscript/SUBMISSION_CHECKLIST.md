@@ -60,13 +60,16 @@ PHASE 4 -- publish, in this order
 [x] the published archive record read back: Zenodo's own MD5 for each of the three files
     equals this machine's, so the stored files are the verified ones
 [x] archive v1.0.1 published: 10.5281/zenodo.22849702, concept 10.5281/zenodo.22769562, read back
-    with all three MD5s equal to this machine's
+    with all three MD5s equal to this machine's -- superseded: its package digest was stale
+[x] archive v1.0.2 published: 10.5281/zenodo.22849793 (2026-09-20), concept unchanged, read back
+    with all three MD5s equal to this machine's and PACKAGE_INTACT in the tree it was cut from
 [x] GitHub release gen1-v1.0.0 on the archived commit, linking the DOI -- the tag never moves
-[ ] GitHub release gen1-v1.0.1 on fddb0cc, the commit the 1.0.1 bundle was cut from
-[x] a Zenodo preprint record: concept 10.5281/zenodo.22829747, newest version v2
-    10.5281/zenodo.22849626 (2026-09-19); type Preprint, CC BY, linked to the
+[ ] GitHub release gen1-v1.0.2 on 94ca278, the commit the 1.0.2 bundle was cut from
+[x] a Zenodo preprint record: concept 10.5281/zenodo.22829747, newest version v3
+    10.5281/zenodo.22850050 (2026-09-20); type Preprint, CC BY, linked to the
     archive record -- bioRxiv declined on 2026-09-18 for want of an organisational affiliation
-[x] the preprint DOI written into the cover letter
+[x] the preprint DOI written into the cover letter -- by concept DOI only, so republishing the
+    preprint no longer requires editing the letter
 [x] the preprint DOI added to the archive record's related works: Is supplement to
     10.5281/zenodo.22829747, the preprint's concept DOI, so it follows the newest version
 [ ] BMC Bioinformatics: the APC waiver requested at submission, and the preprint DOI disclosed

@@ -3459,3 +3459,64 @@ carrying the preprint's concept DOI and no pinned version DOI.
 
 Both digests were read out of the lock files and compared against the rendered document, rather than
 copied from the previous entry. That is the specific failure recorded twice yesterday.
+
+## Both records published at 1.0.2 / v3, and read back — 2026-09-20
+
+```text
+  archive    10.5281/zenodo.22849793   gen1-v1.0.2   2026-09-20   state done
+             concept 10.5281/zenodo.22769562, resolving to it
+             cellfate-rx-gen1-bundle.zip   74,588,697   md5 04c967fb0a959e8e2f0d515d50ef5f79   equal
+             SHA256SUMS.txt                    42,799   md5 0fce8f6ee73df9868ae6aab7c142dda4   equal
+             BUNDLE_CONTENTS.json              48,014   md5 91d1a3def9b2da4dfd5477f2089ab52c   equal
+             title carries "version 1.0.2"; licence polyform-noncommercial-1.0.0
+             isSupplementTo 10.5281/zenodo.22829747; no 22769563 anywhere in the metadata
+
+  preprint   10.5281/zenodo.22850050   v3   2026-09-20   state done
+             concept 10.5281/zenodo.22829747, resolving to it
+             CellFate-Rx-Gen1-preprint.pdf   403,036   md5 9edbe3c300a4350650b9fcfd392003bd   equal
+             isSupplementedBy 10.5281/zenodo.22769562
+             no 22769563 and no 22849702 anywhere in the metadata
+```
+
+Each record now references the other by concept DOI, and both concept DOIs resolve to these versions.
+Neither document has to be edited when a further version is published.
+
+### The split, tested by using it
+
+Five checklist items were ticked after both records were published -- the archive v1.0.2 line, the
+preprint v3 line, the release line, and two amendments. All three locks were then verified:
+
+```text
+  EVIDENCE_INTACT, CLAIMS_INTACT, PACKAGE_INTACT
+```
+
+Under yesterday's layout, with the checklist inside `SUBMISSION.md`, those five ticks would have moved
+the package digest and failed CI, exactly as the cover-letter edit did. This is the first evidence that
+the split does what it was made for.
+
+### Two decisions taken, and why
+
+**The deposit note was not pasted into the published 1.0.2 description**, and the author decided
+against adding one to the superseded 1.0.1 record. The reasoning is sound and is recorded rather than
+argued with: nothing links to `22849702`. The manuscript cites the archive by concept DOI, the
+preprint's related work cites the concept DOI, and Zenodo banners a superseded record by itself, so the
+population of readers who would reach 1.0.1 and run the verification is effectively nobody.
+
+`.zenodo.json` in the repository still carries that note, and the bundle inside the published 1.0.2
+archive therefore carries it too, while the live record does not display it. Left as is, deliberately:
+there is no `zenodo.org` webhook, so `.zenodo.json` is documentation of intended metadata rather than
+anything Zenodo reads, and what it says is true.
+
+### dist/ is left matching the published archive
+
+`dist/` holds the bundle built from `94ca278`, which is what Zenodo stores and what the GitHub release
+must attach. It is not rebuilt after this commit, so `--check` will report `BUNDLE_MISMATCH` against
+the tree by exactly one file, the ticked checklist. Intended, for the same reason as yesterday:
+rebuilding would replace the published bytes with bytes nobody can download.
+
+### Still open
+
+```text
+  GitHub release   gen1-v1.0.2 on 94ca278, attaching the three files now in dist/
+  BMC              submission, with the APC waiver requested in the system itself
+```
