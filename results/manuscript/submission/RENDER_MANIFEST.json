@@ -8,13 +8,13 @@
   "code_blocks_wrapped_in_word": 0,
   "word_detail": "",
   "outputs": {
-    "COVER_LETTER.docx": "61718c45efb22cafb4416738b74876bb8c990163b0e72ab2b78dceed4a94eb35",
-    "MANUSCRIPT_BMC.docx": "fb5d80bef961e89686af35b3e639e248c1d3f1633b64fc5e78fd530713c07ae7",
-    "MANUSCRIPT_bioRxiv.docx": "830cfeca9e442ee1070a4f750fa9d87e5146ca65886354d48d35a89b650dbeec",
-    "MANUSCRIPT_bioRxiv.pdf": "1b727159861e6e6eed2eef46ac1a615f66e3f88140420768ff6e792a2903f935",
-    "figure_1_design.pdf": "b6f8dab54217462ab2414deb913c6d2a75d5fe7635f553498ceb0e17d4391615",
-    "figure_2_primary.pdf": "55ee4a021ea26a240eeebb53f734ce5ae9a6ddfb43ab37ae8ef4f030eda8ab9d",
-    "figure_3_robustness.pdf": "048bc537cb27da2a7e5fafcdc962e2125d777547098e2d79c54ae520f15963db"
+    "COVER_LETTER.docx": "e704607f63a79fb48367ab0dd62c548ca50f94a7a977784976669198823ef8db",
+    "MANUSCRIPT_BMC.docx": "76e0a1d9630da6acb4832b386d0a6e90037a097498d78fcc2ce8224ffa757a2b",
+    "MANUSCRIPT_bioRxiv.docx": "4e19630705e46cc049a3910409ff7aebef7bb2b68d39fc3813c5b406f800b94b",
+    "MANUSCRIPT_bioRxiv.pdf": "5cc8e8699475be744fe059f88234faf53fddf2a7a94ca76f989b1d356b915a68",
+    "figure_1_design.pdf": "52b429ac381c5f7717915577455175507e3407226d85b07997edc40837867c6f",
+    "figure_2_primary.pdf": "9298729dd52096d9e727b7c14bfde3b6c870b646e34aa25da4df353f82ee3947",
+    "figure_3_robustness.pdf": "051a8256e7414b9c48208978635ce50b91a9c46132a22342f260a0b333cea3b5"
   },
   "note": "Not byte-deterministic (.docx and .pdf carry timestamps), so not locked. These hashes identify the exact files that were submitted."
 }

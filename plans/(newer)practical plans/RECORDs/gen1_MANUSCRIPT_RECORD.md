@@ -3153,3 +3153,54 @@ are on the title page, the superseded one is gone, and the PolyForm licence vers
                            gh CLI is not installed on this machine; the API answers without it
   drive C:                 602 MB free. Word completed both renders on it
 ```
+
+## The preprint's second version is published — 2026-09-19
+
+`10.5281/zenodo.22849626`, v2, published 2026-09-19. Read back with one request to Zenodo's public
+API:
+
+```text
+  version DOI     10.5281/zenodo.22849626          state done, version v2
+  concept DOI     10.5281/zenodo.22829747          unchanged, now resolves to v2
+  file            CellFate-Rx-Gen1-preprint.pdf, 403,047 bytes
+                  Zenodo's MD5 9bbbe18cef9cdffdb3dff6aed152e83a equals this machine's
+  related works   isSupplementedBy 10.5281/zenodo.22769562   <- the concept DOI, corrected
+                  isSupplementedBy the GitHub repository
+                  isDerivedFrom 10.1016/j.xgen.2026.101191
+                  references GSE279162, references GSE227151
+```
+
+Two corrections were made in the draft, both found from the author's screenshots rather than from the
+repository. The description's fourth paragraph -- Zenodo-specific prose that does not exist in the
+manuscript, and so is not in `_preprint_abstract.txt` -- still linked the archive's 1.0.0 version DOI;
+it was changed to the concept DOI. The related work `isSupplementedBy` carried the same stale DOI and
+was changed likewise. The guide had said to keep that paragraph unchanged, which was wrong: the
+concept-DOI sweep had covered the repository's files and not the live record's text.
+
+An empty `Dates` row, with `Date` and `Type` both required and both blank, would have failed
+validation at publish. It was removed.
+
+### The cover letter was already correct, and the checklist was not
+
+Several messages in this session said the cover letter still carried `<<LATER: Zenodo preprint DOI>>`.
+It did not: Phase 4e filled it with the preprint's CONCEPT DOI, which is why it needed no change when
+v2 published. What did need changing was the sentence naming the version submitted, which still read
+`22829748`, and the pre-flight checklist line naming the preprint record. Both now name v2.
+
+```text
+  evidence / claim / package digests   unchanged: SUBMISSION.md is in no lock
+  cover letter, re-rendered            concept 22829747, submitted version 22849626,
+                                       archive concept 22769562; no stale DOI of either record
+```
+
+`results/manuscript/MANUSCRIPT_bioRxiv.pdf` was re-rendered and its bytes differ from the published
+file by timestamps alone; `dist/` was deliberately NOT refreshed, so the copy there still matches the
+published record byte for byte.
+
+### Still open
+
+```text
+  archive record   not yet uploaded. Its related works still need "Is supplement to" the preprint --
+                   checklist line 388, still unticked
+  APC waiver       the one remaining LATER marker; it can only be requested at submission
+```

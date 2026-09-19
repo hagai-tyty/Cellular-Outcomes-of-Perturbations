@@ -320,7 +320,7 @@ For a journal submission, if one is made. Paste it unchanged apart from the mark
 >
 > **Preprint.** This manuscript is posted as a preprint at Zenodo, DOI
 > `10.5281/zenodo.22829747`, under a CC BY licence. That DOI resolves to the newest version
-> of the record; the version submitted here is `10.5281/zenodo.22829748`.
+> of the record; the version submitted here is `10.5281/zenodo.22849626`.
 >
 > **Software licence.** The software and frozen model are released under the PolyForm Noncommercial
 > License 1.0.0. They are free for any non-commercial use without registration or agreement, which
@@ -382,7 +382,8 @@ PHASE 4 -- publish, in this order
 [x] the published archive record read back: Zenodo's own MD5 for each of the three files
     equals this machine's, so the stored files are the verified ones
 [x] GitHub release gen1-v1.0.0 on the archived commit, linking the DOI -- the tag never moves
-[x] a Zenodo preprint record: 10.5281/zenodo.22829748, type Preprint, CC BY, linked to the
+[x] a Zenodo preprint record: concept 10.5281/zenodo.22829747, newest version v2
+    10.5281/zenodo.22849626 (2026-09-19); type Preprint, CC BY, linked to the
     archive record -- bioRxiv declined on 2026-09-18 for want of an organisational affiliation
 [x] the preprint DOI written into the cover letter
 [ ] the preprint DOI added to the archive record's related works: Is supplement to
