@@ -157,9 +157,6 @@ RELEASE_DOCUMENTS = [
     "README.md", "CITATION.cff", ".zenodo.json",
     "results/manuscript/MANUSCRIPT.md", "results/manuscript/REPRODUCIBILITY.md",
     "results/manuscript/SUBMISSION.md",
-    # Not in the package digest -- it is meant to change -- but a FILL marker published in it
-    # would be just as permanent as one anywhere else, so it is scanned here.
-    "results/manuscript/SUBMISSION_CHECKLIST.md",
 ]
 FILL_MARKER = re.compile(r"<<FILL\b[^>]*>>")
 # A field that can only exist after archiving -- the preprint DOI is the case. Allowed, and listed.

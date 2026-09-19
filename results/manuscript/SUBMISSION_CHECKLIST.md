@@ -7,8 +7,11 @@ here that is MEANT to change: every tick records progress through the release an
 box moved a digest that is supposed to be frozen, and the next stage run or `--verify` would report
 `PACKAGE_MOVED`. That happened: the archive published on 2026-09-19 carries a package digest one
 cover-letter edit out of date. This file is deliberately NOT in `PACKAGE_FILES`, so ticking a box
-costs nothing. It IS scanned for unfilled placeholder markers before a release -- the FILL kind, written
-with doubled angle brackets -- because a placeholder published by accident cannot be taken back.
+costs nothing. It is deliberately NOT added to `RELEASE_DOCUMENTS` in `make_release_bundle.py` either: that
+module is itself inside the evidence lock, so editing it to scan this file would move the two
+digests printed on the manuscript's title page -- which is the very churn this split exists to
+stop. This file is an internal progress tracker, not a document a reader of the archive meets
+first, so it stays outside both.
 
 ---
 

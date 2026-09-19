@@ -4,7 +4,7 @@
 **Parent** `STAGE_23_5_GEN1_ROLE_B_SHIP_PLAN_V1.md`, canonical-LF SHA-256
 `8da16fca0f84b5664f4668f86ed21530242be89020059d1c7ba98f22d7bced48`, FROZEN.
 **Entry** `results/gen1_handoff_to_claim_lock.json`, verdict `GEN1_EVIDENCE_LOCKED`,
-lock digest `338bff1073130f9a237a409a86920357749bc12b6c6405f03633c57bb71185c5`.
+lock digest `4581fce568a8733d53f2e9c5e011b0c2cafc8e0aff5a2b65487b8055eff3a3c2`.
 
 **Mandate** §9 of the frozen ship plan, verbatim:
 
@@ -64,7 +64,7 @@ The very first thing, before a single sentence is written:
 
 ```text
 re-run the evidence-lock verifier over every locked artifact
-the lock digest must equal 338bff1073130f9a237a409a86920357749bc12b6c6405f03633c57bb71185c5
+the lock digest must equal 4581fce568a8733d53f2e9c5e011b0c2cafc8e0aff5a2b65487b8055eff3a3c2
 ```
 
 A moved artifact is `GEN1_CLAIM_LOCK_REFUSED`. Writing claims against evidence that has shifted is
@@ -296,7 +296,7 @@ V1 said stays visible.
 
 **Entry lock digest.** V1 was written against evidence lock digest
 `e206bfd37c5a93998a773b8bd058eac5e5e144cd2a8ee5d78e9907911a956bc5`.
-It is now `338bff1073130f9a237a409a86920357749bc12b6c6405f03633c57bb71185c5`.
+It is now `4581fce568a8733d53f2e9c5e011b0c2cafc8e0aff5a2b65487b8055eff3a3c2`.
 Nothing about the evidence changed: the digest moved because the lock's own manifest recorded
 each artifact's `st_size`, which counts a CRLF as two bytes. `results/**` is `text eol=lf`, so a
 file written by a stage on Windows and the same file in a fresh checkout have identical content

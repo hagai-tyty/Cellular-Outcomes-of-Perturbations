@@ -3352,3 +3352,56 @@ the exclusion is a stated decision rather than an omission someone later 'fixes'
 
 The evidence and claim digests have not moved since `53c0056`, which is what keeps the published
 preprint's title page correct through all of this.
+
+## Correction to the entry above: the split DID move the evidence and claim digests — 2026-09-19
+
+### What that entry got wrong
+
+The entry "The pre-flight checklist is taken out of the frozen digest" states:
+
+```text
+  evidence   4581fce5...   unchanged
+  claim      fcd25d3e...   unchanged
+```
+
+That was not read from the files. The package digest in the same block was computed and is correct;
+the two above it were copied from the previous entry on the assumption that nothing had touched them.
+They had moved:
+
+```text
+  evidence   4581fce568a8... -> 338bff1073130f9a237a409a86920357749bc12b6c6405f03633c57bb71185c5
+  claim      fcd25d3eb37a... -> 489d0f20f57b86d98e85e80667253d62ba16437629cd01f33f7fec4db2f1aeef
+```
+
+This is the same error as the `PACKAGE_MOVED` failure earlier today, in a worse place: a verification
+asserted rather than run. The first time it was caught by CI. This time it was caught only because the
+bundle build printed a claim digest that did not match the one being quoted in conversation.
+
+### The cause, and why the split caused the churn it was meant to prevent
+
+`experiments/make_release_bundle.py` is one of the 64 artifacts in the EVIDENCE lock. The split added
+`SUBMISSION_CHECKLIST.md` to that module's `RELEASE_DOCUMENTS`, so the module's bytes changed, so the
+evidence digest changed, and the claim digest with it -- the two digests printed on the manuscript's
+title page, and therefore the two printed in the preprint published hours earlier.
+
+### Reverted, and the reasoning that says it should never have been there
+
+The `RELEASE_DOCUMENTS` addition is reverted. Its own docstring says the list is "documents a reader
+of the archive meets first"; the pre-flight checklist is an internal progress tracker and is not one.
+Scanning it bought very little and cost the title page.
+
+```text
+  evidence   4581fce568a8733d53f2e9c5e011b0c2cafc8e0aff5a2b65487b8055eff3a3c2   restored, verified
+  claim      fcd25d3eb37aa9e4b4c973975a54565db0c49dfb60b7cdfea9be6821b4d051de   restored, verified
+  package    8f339cf3b01a27885c78ef90ba8f1df7452e75044fb02107be8a548cfa3af0f9
+  EVIDENCE_INTACT, CLAIMS_INTACT, PACKAGE_INTACT; full suite exit 0
+  rendered .docx carries both restored digests; dist/ preprint PDF still equals the published record
+```
+
+The checklist's header, which had been reworded once already after it tripped the FILL scanner with
+its own example, now states the real reason it sits outside both lists.
+
+### The general lesson, recorded because it has now cost two mistakes in one day
+
+A digest is only reported as unchanged if it was read after the change. Anything else is a guess
+wearing the clothes of a check.
