@@ -3257,3 +3257,58 @@ anyone can download. Rebuild only when something is about to be uploaded again.
   BMC              submission, with the APC waiver requested in the system itself -- the one
                    remaining LATER marker
 ```
+
+## CI caught a stale package digest, after the archive was published — 2026-09-19
+
+### The mistake
+
+`SUBMISSION.md` is line 651 of `run_gen1_manuscript.py`: it is one of the documents hashed into the
+PACKAGE digest. It is not in the evidence lock. When the cover letter was updated to name the
+published preprint v2, only the evidence lock's membership was checked, and the conclusion drawn --
+reported to the author as fact -- was "no digest moved: SUBMISSION.md is in none of the locks".
+
+The check used to support that was `cascade_gen1.py --check`, which cannot support it. `--check`
+compares documents against the STORED digests; it does not recompute the package digest. The full
+cascade does, and was not run. So `fddb0cc` was committed, and the bundle built and published from
+it, with a package digest recording the state before the cover letter changed.
+
+```text
+  run 370, fddb0cc   FAILED, python 3.11 and 3.12, step "Verify the Generation-1 locks"
+  reproduced locally:
+    run_gen1_evidence_lock.py --verify    EVIDENCE_INTACT
+    run_gen1_claim_lock.py    --verify    CLAIMS_INTACT
+    run_gen1_manuscript.py    --verify    PACKAGE_MOVED
+                                          computes 133144bd..., recorded 68bc4015...
+```
+
+CI had been run and confirmed green for `b5ad467` and `53c0056` earlier in the session. Run 370 was
+started but was still `in_progress` when last looked at, and its result was not checked again before
+the archive was uploaded. It was caught only when checking run 371.
+
+### The repository, repaired
+
+The full cascade was run. Evidence and claim digests did not move, which matters: the manuscript's
+title page carries those two and nothing else, so the published preprint PDF and the manuscript
+inside the published archive both remain correct on their face.
+
+```text
+  evidence   4581fce568a8733d53f2e9c5e011b0c2cafc8e0aff5a2b65487b8055eff3a3c2   unchanged
+  claim      fcd25d3eb37aa9e4b4c973975a54565db0c49dfb60b7cdfea9be6821b4d051de   unchanged
+  package    68bc4015... -> 133144bd275f2d4f243f326e7e2d89772857b4303a4cf93d08b5b20f411a1f4a
+  all three --verify: EVIDENCE_INTACT, CLAIMS_INTACT, PACKAGE_INTACT; 39 tests passed
+```
+
+### What is wrong with the published archive, precisely
+
+`10.5281/zenodo.22849702` holds the bundle cut from `fddb0cc`. Inside it, `GEN1_PACKAGE_DIGEST.json`
+records `68bc4015...` while the package's own documents hash to `133144bd...`. A reader who unpacks
+it and runs the three commands the record's own description advertises gets two INTACT and one
+`PACKAGE_MOVED` -- exit 0 and `stage_passed: true`, so a report rather than a refusal, but it reads
+as though the archive had been altered.
+
+The evidence and claim locks, which cover the model, the data and every claim, are INTACT in that
+archive. What is stale is the digest over the manuscript package documents, and it is stale by
+exactly one file: the cover letter's preprint sentence.
+
+Not yet decided: whether to publish a corrected archive version, and under what version string. Left
+to the author.
