@@ -3204,3 +3204,56 @@ published record byte for byte.
                    checklist line 388, still unticked
   APC waiver       the one remaining LATER marker; it can only be requested at submission
 ```
+
+## Both records are published, and they point at each other — 2026-09-19
+
+The archive's second version published as `10.5281/zenodo.22849702`. The author's message gave a
+link whose text and target disagreed -- `22849912` against `22849702` -- so neither was trusted.
+The concept DOI was asked instead, which is authoritative by construction: one request to
+`/api/records/22769562/versions/latest` names whichever record is newest.
+
+```text
+  version DOI     10.5281/zenodo.22849702       record id 22849702
+  concept DOI     10.5281/zenodo.22769562       state done
+  version         gen1-v1.0.1                   date 2026-09-19
+  title           ... reproducibility artifacts, version 1.0.1
+
+  cellfate-rx-gen1-bundle.zip   74,582,757   md5 531a96539f243a1e86094d2a60dc36e9   equal
+  SHA256SUMS.txt                    42,689   md5 c29b03f28412023d6b289918f1a4e48c   equal
+  BUNDLE_CONTENTS.json              47,895   md5 96997c8c1430ac4216d863b13c49b953   equal
+
+  related works   isDerivedFrom 10.1016/j.xgen.2026.101191
+                  references GSE279162, references GSE227151
+                  isSupplementTo the GitHub repository
+                  isSupplementTo 10.5281/zenodo.22829747      <- the preprint, by concept DOI
+```
+
+All three MD5s equal this machine's, so the 74 MB transferred intact despite Zenodo's degraded
+service. Both records now reference each other by concept DOI, so neither link can go stale as
+versions accumulate.
+
+### The state of the two published records
+
+```text
+  archive    concept 10.5281/zenodo.22769562   newest 10.5281/zenodo.22849702  gen1-v1.0.1
+  preprint   concept 10.5281/zenodo.22829747   newest 10.5281/zenodo.22849626  v2
+```
+
+The manuscript cites the archive at `22769562` and the cover letter cites the preprint at
+`22829747`, both concept DOIs, so neither document needs editing when a further version is published.
+
+### dist/ is deliberately left behind the tree
+
+`dist/` still holds the bundle built from `fddb0cc`, which is what Zenodo now stores and what the
+GitHub release must attach. It is NOT rebuilt after this commit, so `make_release_bundle.py --check`
+will report `BUNDLE_MISMATCH` against the working tree. That is intended, not a fault: the files in
+`dist/` are the published ones, and rebuilding would replace them with bytes that match nothing
+anyone can download. Rebuild only when something is about to be uploaded again.
+
+### Still open
+
+```text
+  GitHub release   gen1-v1.0.1 on fddb0cc, attaching the three files now in dist/
+  BMC              submission, with the APC waiver requested in the system itself -- the one
+                   remaining LATER marker
+```
