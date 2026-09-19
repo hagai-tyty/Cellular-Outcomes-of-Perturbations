@@ -28,8 +28,8 @@ authors:
     orcid: "https://orcid.org/0009-0004-4503-6629"
     affiliation: "Independent researcher"
 
-version: "gen1-v1.0.0"
-date-released: "2026-09-16"
+version: "gen1-v1.0.1"
+date-released: "2026-09-19"
 
 # Reserve the DOI in Zenodo FIRST, write it here, then re-run the three locks.
 # Editing this file after locking changes the evidence digest, because CITATION.cff

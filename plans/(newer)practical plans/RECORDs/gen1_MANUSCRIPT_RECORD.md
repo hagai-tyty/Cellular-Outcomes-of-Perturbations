@@ -3020,3 +3020,68 @@ records the second round field by field.
                   and nothing was deleted
   CITATION.cff    still gen1-v1.0.0, dated 2026-09-16; a new archive version needs it bumped
 ```
+
+## The archive version is bumped to gen1-v1.0.1 — 2026-09-19
+
+### The decision, and the reasoning that was corrected
+
+The first recommendation on this question was to leave `CITATION.cff` at `gen1-v1.0.0` and move only
+Zenodo's own version label, on two premises. Both were wrong, and checking them reversed the answer.
+
+The first premise was that re-locking is expensive and risky. It is not: `cascade_gen1.py` exists for
+exactly this move, and the one slow step, the source-data exporter, is deliberately outside it and was
+not needed, because no number changed. The second was that the digests are frozen in a published PDF.
+They are frozen in the published one, which stands; but the preprint is being replaced with v2 in this
+same round, so the new PDF simply carries the new digests.
+
+What decided it: without the bump, the archive of record would contradict itself. A reader who
+downloads `gen1-v1.0.1` from Zenodo, opens `CITATION.cff` and cites what it says would cite 1.0.0, and
+reference [12] of the manuscript inside that same archive would cite the archive as "version 1.0.0 ...
+Accessed 16 Sep 2026". Preserving a true digest by shipping a false version number is the wrong trade.
+
+### Edited by hand
+
+```text
+  CITATION.cff                version gen1-v1.0.0 -> gen1-v1.0.1, date-released 2026-09-16 -> 2026-09-19
+  .zenodo.json                title "version 1.0.0" -> "1.0.1", version field likewise
+  results/manuscript/
+    MANUSCRIPT.md             reference [12]: version 1.0.1, Accessed 19 Sep 2026
+```
+
+`SUBMISSION.md` line 384, `[x] GitHub release gen1-v1.0.0 on the archived commit`, was left as it
+stands: it records something that did happen. `manuscript_compliance.json` mirrors reference [12] and
+was left to the stage that generates it. Only `CITATION.cff` of the three is inside the evidence lock.
+
+### The cascade, predicted and then confirmed
+
+The new evidence digest was predicted before running anything, by recomputing the lock over the
+manifest with `CITATION.cff`'s hash replaced -- a reconstruction first validated by reproducing the
+current digest exactly. The cascade then produced that value:
+
+```text
+  CITATION.cff       999052a1... -> ef755ca9...
+  evidence digest    60602531449079b8f86debea9ffd69753f8bfad033be4c476751d39da08c78aa
+                  -> 93c24611898c4d265573b7c4e39d4cb6cc4ba78a0ae54139e24d87fcebe70304   (predicted, confirmed)
+  claim digest       fc6dc2f2... -> 116b628a5e1846ebfe630ab42d8769b3a8420744bc0b15521567954de1d6175c
+  package digest     52a538d4... -> 2771b565ebdc40896cf8907b43ae07b332c362e13ed1cc7e9eaba3f9688d47f0
+```
+
+Five documents re-pinned; all three locks clean: `GEN1_CLAIMS_LOCKED`, `GEN1_MANUSCRIPT_READY`,
+`PINS_CURRENT`, no stale pins. `tests/test_gen1_manuscript.py` 39 passed.
+
+### Rendered, and checked
+
+`render_gen1_submission.py` rewrote all seven submission outputs. Word completed the PDF export with
+602 MB free on drive C:. The rendered `.docx` was read directly and carries the new evidence and claim
+digests, no trace of the superseded evidence digest, reference [12] at version 1.0.1, no remaining
+"version 1.0.0", and the PolyForm licence version untouched.
+
+### Still open
+
+```text
+  drive C:        602 MB free of 238 GB. The render survived it; it is not fixed
+  Zenodo API      still unconfirmed from the earlier 504s. The guide is written from the
+                  repository's own metadata, not from the live records
+  cover letter    COVER_LETTER.docx still carries <<LATER>> where the new preprint DOI goes.
+                  It is filled, and the submission re-rendered, once that DOI exists
+```

@@ -1,10 +1,10 @@
 {
-  "title": "CellFate-Rx Gen-1: frozen model and reproducibility artifacts, version 1.0.0",
+  "title": "CellFate-Rx Gen-1: frozen model and reproducibility artifacts, version 1.0.1",
   "upload_type": "software",
   "description": "<p>Archived reproducibility bundle for CellFate-Rx Generation 1: a preregistered reanalysis of the six-condition clonal-tracing dataset GEO GSE279162 (generated and deposited by Schaff et al., <a href=\"https://doi.org/10.1016/j.xgen.2026.101191\">doi:10.1016/j.xgen.2026.101191</a>). <strong>No new data were generated.</strong></p><p>Tests whether pretreatment transcriptional state carries condition-specific information about future clonal detection, beyond condition identity and captured pretreatment clone abundance, under clone-held-out evaluation, with the ranking test frozen by digest before any ranking statistic was computed.</p><p>The archive contains the frozen model artifact, the derived clone pseudobulk cache needed to re-run the permutation null, all out-of-fold predictions, the 1,000 per-draw permutation values and 2,000 bootstrap replicates, every stage protocol and record including failed and negative results, the environment lock, and three verification tools that refuse on any modified artifact. A SHA256SUMS manifest accompanies the bundle.</p><p><strong>Licensing.</strong> Software and the frozen model are source-available under the PolyForm Noncommercial License 1.0.0: free for academic, educational, nonprofit and other noncommercial use with no permission request. Any commercial use, including developing or evaluating a commercial product or service before it has earned any revenue, requires a separate license (see COMMERCIAL-LICENSING.md); where that notice and the licence differ, the licence governs. Manuscript text and figures are CC BY 4.0. Third-party datasets retain their original terms.</p>",
   "license": "PolyForm-Noncommercial-1.0.0",
   "access_right": "open",
-  "version": "gen1-v1.0.0",
+  "version": "gen1-v1.0.1",
   "language": "eng",
   "creators": [
     {
