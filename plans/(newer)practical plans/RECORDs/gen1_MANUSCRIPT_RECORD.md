@@ -3085,3 +3085,71 @@ digests, no trace of the superseded evidence digest, reference [12] at version 1
   cover letter    COVER_LETTER.docx still carries <<LATER>> where the new preprint DOI goes.
                   It is filled, and the submission re-rendered, once that DOI exists
 ```
+
+## The archive was cited by its version DOI, not its concept DOI — 2026-09-19
+
+### Found by questioning the upload order
+
+The author asked whether the GitHub release comes before or after the Zenodo uploads, and noted that
+the first round did the archive before the preprint. Checking why that order had been necessary --
+the PDF could not be rendered until the archive DOI existed to put in reference [12] -- exposed a
+different problem, in the bump made earlier today.
+
+For the preprint, this record names two DOIs: concept 22829747, version 22829748. For the archive it
+only ever names 22769563, described as a *reserved* DOI, and Zenodo reserves the VERSION DOI on a
+draft. One request to Zenodo's public API settled it:
+
+```text
+  https://zenodo.org/api/records/22769563   HTTP 200
+    doi           10.5281/zenodo.22769563     <- the version DOI of gen1-v1.0.0
+    conceptdoi    10.5281/zenodo.22769562     <- resolves to the newest version
+    conceptrecid  22769562
+    version       gen1-v1.0.0
+```
+
+So `10.5281/zenodo.22769563` permanently resolves to the 1.0.0 snapshot. Before the bump, reference
+[12] read "version 1.0.0" beside it and was correct. The bump changed the version string and left the
+DOI, which made the reference name one version and link another. The error was introduced in
+`b5ad467` and never uploaded.
+
+### Fixed by moving to the concept DOI
+
+The author chose the concept DOI over reserving a version DOI for each release. It is knowable before
+publishing, so it removes the reserve-then-lock dance that the comment at the top of `CITATION.cff`
+used to mandate -- and that comment was itself what sent the first round down this path, so it was
+rewritten to say the opposite. Eight occurrences across four files:
+
+```text
+  CITATION.cff                       doi, identifiers[0].value, and the instruction comment
+  README.md                          the citation paragraph, link text and href
+  results/manuscript/SUBMISSION.md   the cover letter's archive line
+  results/manuscript/MANUSCRIPT.md   reference [12] twice, reference [13] once
+```
+
+What is lost is that reference [12] resolves to the newest version rather than to the exact snapshot
+the paper was built against. That costs nothing here: the title page carries the evidence and claim
+digests, which pin the artifacts far more tightly than any DOI, and the reference still names the
+version in its text.
+
+### The cascade, and the checks
+
+```text
+  evidence digest    93c24611... -> 4581fce568a8733d53f2e9c5e011b0c2cafc8e0aff5a2b65487b8055eff3a3c2
+  claim digest       116b628a... -> fcd25d3eb37aa9e4b4c973975a54565db0c49dfb60b7cdfea9be6821b4d051de
+  package digest     2771b565... -> 68bc4015756c0885a8d4ef99a00dbeb7ec4d3ee8f3b47fd8d5d756e12adb8953
+```
+
+Locks clean, `PINS_CURRENT`, 39 tests passed, all seven submission outputs re-rendered. The rendered
+`.docx` was read directly: the concept DOI is present, `22769563` appears nowhere, both new digests
+are on the title page, the superseded one is gone, and the PolyForm licence version is untouched.
+
+### Still open
+
+```text
+  Zenodo preprint record   its related work isSupplementedBy still points at 10.5281/zenodo.22769563,
+                           the 1.0.0 version DOI. It should point at the concept DOI 22769562. This
+                           is an edit on the live record, not in the repository
+  CI                       confirmed green from the public GitHub API for b5ad467, run 368. The
+                           gh CLI is not installed on this machine; the API answers without it
+  drive C:                 602 MB free. Word completed both renders on it
+```

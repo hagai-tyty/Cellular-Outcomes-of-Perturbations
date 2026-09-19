@@ -31,14 +31,16 @@ authors:
 version: "gen1-v1.0.1"
 date-released: "2026-09-19"
 
-# Reserve the DOI in Zenodo FIRST, write it here, then re-run the three locks.
+# This is the CONCEPT DOI. It resolves to whichever version is newest, so it does
+# NOT change when a new archive version is published, and must not be replaced
+# with a version-specific DOI.
 # Editing this file after locking changes the evidence digest, because CITATION.cff
 # sits in the repository the bundle archives.
-doi: "10.5281/zenodo.22769563"
+doi: "10.5281/zenodo.22769562"
 
 identifiers:
   - type: doi
-    value: "10.5281/zenodo.22769563"
+    value: "10.5281/zenodo.22769562"
     description: Archived reproducibility bundle for Generation 1
 
 keywords:

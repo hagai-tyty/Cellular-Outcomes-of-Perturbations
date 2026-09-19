@@ -316,7 +316,7 @@ For a journal submission, if one is made. Paste it unchanged apart from the mark
 >
 > The complete analysis, frozen protocols, stage-by-stage records including negative and failed
 > results, and a verification tool that refuses on any modified artifact are archived at Zenodo
-> under DOI `10.5281/zenodo.22769563`.
+> under DOI `10.5281/zenodo.22769562`.
 >
 > **Preprint.** This manuscript is posted as a preprint at Zenodo, DOI
 > `10.5281/zenodo.22829747`, under a CC BY licence. That DOI resolves to the newest version
