@@ -2960,3 +2960,63 @@ not a stale reading: removing `references_as_list` and restoring both call sites
 the evidence lock hashes. The manuscript checker, which also changed here, lives in the package lock
 rather than the evidence inventory, which is why only the package digest moved. Both digests are
 quoted on the manuscript's title page, re-pinned by the cascade and confirmed by `--verify`.
+
+---
+
+## Final check before the second upload — 2026-09-19
+
+An end-to-end pass over the release at commit `1022e3e`, run because the manuscript changed in seven
+phases after the archive was published and the author is about to upload again.
+
+### Clean
+
+```text
+  working tree            clean; HEAD == origin/main == 1022e3e
+  CI                      green on 1022e3e and on 68b2d4f
+  locks                   EVIDENCE_INTACT, CLAIMS_INTACT, PACKAGE_INTACT
+  tests                   pytest's own exit code 0; 2,199 results: 2,198 passed, 1 skipped
+  compliance              20 / 20 checks, 13 / 13 negative controls, 17 numbers traced
+  abstract                346 words against a 350 limit; no citations in it
+  references              13 entries, numbered 1..13 in order of first mention, every one cited,
+                          every one carrying a resolvable identifier
+  tables                  Tables 1-5, each cited at or before its caption
+  declarations            all eight BMC subheadings present
+  markers                 no FILL anywhere; one LATER, the APC waiver, as intended
+  render                  manifest matches the manuscript; 16 pages; no wrapped code block
+  PDF text                affiliation, initials in the declarations, the contributions sentence and
+                          the null-maximum row all present in the rendered PDF
+  dist copy               byte-identical to the rendered PDF
+```
+
+### Found, and acted on
+
+The release bundle in `dist/` was built on 2026-09-15 and had fallen 21 files behind the tree --
+`--check` reported `BUNDLE_MISMATCH`, with nothing missing or corrupt inside it. Rebuilt from
+`1022e3e` and re-verified:
+
+```text
+  verdict    BUNDLE_INTACT, 401 files, nothing changed since build
+  bundle     74,578,244 bytes
+             e7c12a10167fd3395e490e10e7dc12c0bdb2fa5164471441e5f49d2ce4efde82
+```
+
+The published archive (Zenodo 10.5281/zenodo.22769563, GitHub gen1-v1.0.0) therefore holds the
+manuscript as of 2026-09-16: no tables, and no record of the non-GEO data sources. Its evidence and
+claim digests are identical to today's, so the new preprint's title page still matches it; the package
+digest differs, fef252d4 -> 52a538d4. A new archive version is recommended and not yet made.
+
+`dist/_preprint_abstract.txt`, the Zenodo description text, was regenerated from the current abstract:
+one sentence differs from what was uploaded for v1, the additive-model line. `dist/UPLOAD_GUIDE_V2.md`
+records the second round field by field.
+
+### Not resolved
+
+```text
+  Zenodo API      two requests, one per record, both 504 Gateway Time-out. Not retried, per the
+                  standing rule. The live state of both records is unconfirmed; the guide was
+                  written from the repository's own copies of the metadata
+  drive C:        0 bytes free, 238 GB of 238 GB used. A cascade refused on it earlier today, and
+                  two commands in this check died writing to it. Nothing in the project is on C:
+                  and nothing was deleted
+  CITATION.cff    still gen1-v1.0.0, dated 2026-09-16; a new archive version needs it bumped
+```
