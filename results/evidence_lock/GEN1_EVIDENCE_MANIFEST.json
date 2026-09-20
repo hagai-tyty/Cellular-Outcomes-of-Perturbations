@@ -534,9 +534,7 @@
   ],
   "clone_portability": {
     "drifted": [],
-    "skipped_uncommitted_edits": [
-      "CITATION.cff"
-    ]
+    "skipped_uncommitted_edits": []
   },
   "hashing_rule": {
     "binary": [

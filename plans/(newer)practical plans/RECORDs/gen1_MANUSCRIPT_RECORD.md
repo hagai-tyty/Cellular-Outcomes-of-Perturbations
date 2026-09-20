@@ -3567,3 +3567,50 @@ longer matches what Zenodo stores.
   BMC Bioinformatics   the submission itself, with the APC waiver requested in the system.
                        That is the last <<LATER>> marker standing
 ```
+
+## The last LATER marker is removed, not filled — 2026-09-20
+
+### What the marker was doing, and the check that missed it
+
+`SUBMISSION.md` section 6 carried `<<LATER: request an APC waiver here if one is needed>>` in the
+cover letter. An earlier check in this session reported the marker "still there" and moved on, without
+noticing that it renders as VISIBLE TEXT in `COVER_LETTER.docx`, two lines above the signature. The
+check had searched the extracted XML for the literal `<<`, which is stored escaped as `&lt;&lt;`, so it
+answered False. Unescaping first shows it plainly. An editor opening the letter would have read a note
+to self.
+
+### Why it was deleted rather than filled
+
+BMC's own submission page, read from the author's screenshot of the expander:
+
+```text
+  "I want to apply for an APC discount or waiver."         a checkbox on the Declarations tab
+  "the opportunity to request a discount immediately after you complete your submission"
+  "Discount and waiver requests must be made at the point of submission."
+  "The journal's editorial team will not have access to your discount request and it will not
+   play any part in the editorial decision made on your article."
+  "The corresponding author will be asked to provide evidence to support their request,
+   including details of any funding to date."
+```
+
+The waiver is a checkbox plus a separate post-submission flow, deliberately firewalled from the
+editors. The recommendation made before that panel was read -- put the request in the cover letter
+anyway -- was wrong, and would have sent a waiver plea to the one audience BMC keeps it away from. The
+letter is read by editors; the request is not handled by them.
+
+### Cost, and what did not move
+
+```text
+  evidence   924202ce...   unchanged, read from the file after the cascade
+  claim      87ce74be...   unchanged, read from the file after the cascade
+  package    4e911270... -> d5c204e1128be6430c5bba7c36bf06f909cb2387f3309311c764aaee9bf1a856
+```
+
+`SUBMISSION.md` is in `PACKAGE_FILES` but not in the evidence lock, so the two digests printed on the
+manuscript's title page did not move. **Neither Zenodo record needs republishing.** The published
+preprint v3 and archive v1.0.2 remain correct, and `dist/CellFate-Rx-Gen1-preprint.pdf` still equals
+the published v3 byte for byte.
+
+`EVIDENCE_INTACT`, `CLAIMS_INTACT`, `PACKAGE_INTACT`; full suite exit 0. The re-rendered cover letter
+was read with XML entities unescaped: no `<<` of any kind, no LATER, no FILL, no mention of the APC,
+and both concept DOIs present. No placeholder now remains in any release document.

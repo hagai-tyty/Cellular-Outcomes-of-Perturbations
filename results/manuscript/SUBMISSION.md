@@ -330,8 +330,6 @@ For a journal submission, if one is made. Paste it unchanged apart from the mark
 >
 > **Use of AI.** Generative AI assistance is disclosed in the Methods section.
 >
-> `<<LATER: request an APC waiver here if one is needed -- it can only be requested at submission>>`
->
 > Sincerely,
 > Hagai Aviv
 
