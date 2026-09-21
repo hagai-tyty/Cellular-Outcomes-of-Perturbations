@@ -73,7 +73,9 @@ PHASE 4 -- publish, in this order
     preprint no longer requires editing the letter
 [x] the preprint DOI added to the archive record's related works: Is supplement to
     10.5281/zenodo.22829747, the preprint's concept DOI, so it follows the newest version
-[ ] BMC Bioinformatics: the APC waiver requested at submission, and the preprint DOI disclosed
+[x] Springer Nature asked, before submitting, whether the waiver can be decided first and whether
+    withdrawal is free if it is refused -- enquiry sent 2026-09-21, reply awaited
+[ ] BMC Bioinformatics: submit ONLY once that reply is in; waiver checkbox ticked; preprint disclosed
 ```
 
 **Order matters in Phase 3.** The DOI and every FILL field must be written before the locks are

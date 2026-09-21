@@ -3614,3 +3614,57 @@ the published v3 byte for byte.
 `EVIDENCE_INTACT`, `CLAIMS_INTACT`, `PACKAGE_INTACT`; full suite exit 0. The re-rendered cover letter
 was read with XML entities unescaped: no `<<` of any kind, no LATER, no FILL, no mention of the APC,
 and both concept DOIs present. No placeholder now remains in any release document.
+
+## The BMC submission is paused on the APC — 2026-09-21
+
+### What the submission form commits an author to
+
+BMC Bioinformatics is fully open access, with no subscription route. Its Declarations tab requires
+ticking "By submitting my article I agree to pay the APC in full if my article is accepted for
+publication (unless it is covered by an institutional agreement or journal partner, or a full waiver
+has been granted)". The charge, from the submission pack: GBP 2,290 / USD 3,090 / EUR 2,590 plus VAT or
+local taxes, payable on editorial acceptance and before publication.
+
+The author cannot pay it. That turns the waiver from a formality into the whole question.
+
+### What the policy says, read at source
+
+Springer Nature's journal policy, which BMC follows, read from its own page on 2026-09-21:
+
+```text
+  "Requests from other authors for APC waivers and discounts will be considered on a case-by-case
+   basis and may be granted in cases of financial need."
+  "All applications for discretionary APC waivers and discounts should be made at the point of
+   manuscript submission; requests made during the review process or after acceptance are unable
+   to be considered."
+  "We are unable to grant requests to waive APCs ... where there is no evidence of a financial need."
+```
+
+BMC's page adds that the APC "is payable when your manuscript is editorially accepted and before
+publication" and "prompt payment is required for publication". Neither page says when the waiver
+decision is communicated, or whether an author may withdraw without charge if it is refused. Those
+two facts decide whether submitting is safe, so they were asked rather than assumed.
+
+### The enquiry
+
+Sent by the author on 2026-09-21 through Springer Nature's Discounts and Waivers Enquiry Form: an
+independent, unfunded author, unable to pay, asking (1) whether the waiver can be applied for and
+decided BEFORE submitting, and (2) if it can only accompany a submission, whether the article can be
+withdrawn without owing anything if the waiver is refused. The published policy suggests the likely
+answer to the first is no, which is why the second was asked as well.
+
+### Two corrections to the submission guide made on the way
+
+The waiver request text had avoided the words "financial need", on the view that whether to claim it
+was the author's call. The policy makes it the literal criterion, so a request saying only "unfunded"
+risks refusal on the stated grounds. Once the author said plainly that they cannot pay, the text in
+`dist/BMC_SUBMISSION_GUIDE.md` was rewritten to say so.
+
+### Status
+
+```text
+  BMC submission    ON HOLD. Not to be submitted until Springer Nature answers the enquiry
+  if the answer is  "withdrawal is free if refused" -> submit with the waiver checkbox ticked
+                    anything else                  -> reconsider before agreeing to pay
+  unaffected        archive 1.0.2 and preprint v3 are published and stay valid either way
+```
