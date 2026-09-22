@@ -74,7 +74,9 @@ PHASE 4 -- publish, in this order
 [x] the preprint DOI added to the archive record's related works: Is supplement to
     10.5281/zenodo.22829747, the preprint's concept DOI, so it follows the newest version
 [x] Springer Nature asked, before submitting, whether the waiver can be decided first and whether
-    withdrawal is free if it is refused -- enquiry sent 2026-09-21, reply awaited
+    withdrawal is free if it is refused -- enquiry sent 2026-09-21; replied 2026-09-22 (ticket
+    #11812190): no pre-submission route, decision within 1-2 weeks, the checkbox alone does
+    NOT apply -- follow the link. The withdrawal question was not answered
 [ ] BMC Bioinformatics: submit ONLY once that reply is in; waiver checkbox ticked; preprint disclosed
 ```
 

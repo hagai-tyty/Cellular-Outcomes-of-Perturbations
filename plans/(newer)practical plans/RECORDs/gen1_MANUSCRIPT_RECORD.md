@@ -3668,3 +3668,46 @@ risks refusal on the stated grounds. Once the author said plainly that they cann
                     anything else                  -> reconsider before agreeing to pay
   unaffected        archive 1.0.2 and preprint v3 are published and stay valid either way
 ```
+
+## Springer Nature's reply on the APC waiver — 2026-09-22
+
+Ticket #11812190, received by the author and read from their screenshot.
+
+### Answered
+
+```text
+  criterion   "Individual discount requests will be considered on a case-by-case basis and may be
+              granted in cases of lack of funds."
+  mechanism   "you may select a check box in the Declarations/Additional Information section that
+              will direct you to the discount request screen. Be advised that this does not
+              in-and-of-itself enter the request, you will need to later follow the link provided
+              at the end of the submission process (and separately via email) to submit the request
+              itself."
+  timing      "A decision on the discount will normally be made within 1-2 weeks."
+```
+
+Question 1 -- whether the waiver can be decided BEFORE submitting -- is answered by implication: the
+request is made "during the submission process". As the published policy suggested, there is no
+pre-submission route.
+
+### Not answered
+
+Question 2 -- whether the article can be withdrawn without owing anything if the waiver is refused --
+was skipped entirely.
+
+### What the answer means
+
+The timing largely settles question 2 without it being answered. The waiver decision normally comes
+within one to two weeks of submission; peer review of a Research Article takes far longer; and BMC's
+own page makes the APC "payable when your manuscript is editorially accepted". So a refused waiver is
+learned while the paper is still under review, before the only event that makes anything payable.
+That is an inference from the two stated policies, not something Springer Nature wrote, and it is
+recorded as an inference. A follow-up on the same ticket was drafted for the author, asking question 2
+again in one line.
+
+### A correction to the submission guide, found in the reply
+
+`dist/BMC_SUBMISSION_GUIDE.md` said the waiver checkbox was "the entire mechanism". It is not: the
+checkbox only opens the request screen, and the request exists only once the link shown at the end of
+submission, and emailed separately, has been followed. An author relying on the old wording could
+have ticked the box and never applied. Both places in the guide are corrected.
