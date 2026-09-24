@@ -3769,3 +3769,95 @@ The test file was confirmed to be in neither the evidence lock nor the package d
 `dist/CellFate-Rx-Gen1-preprint.pdf` still equals the published v3. `EVIDENCE_INTACT`,
 `CLAIMS_INTACT`, `PACKAGE_INTACT`; full suite exit 0. `dist/CellFate-Rx-Gen1-cover-letter.docx`
 refreshed and byte-identical to the rendered source.
+
+## Submitted to BMC Bioinformatics, and the APC waiver requested — 2026-09-24
+
+### The submission
+
+```text
+  journal            BMC Bioinformatics
+  article type       Research
+  peer review        single anonymous, transparent (reviewer reports published with the article)
+  submission ID      728d46a9-7f3c-426d-9a86-fc37f22f968b
+  version            v.1.0
+  status             Technical check
+  corresponding      Hagai Aviv, hagai.aviv.home@gmail.com, ORCID 0009-0004-4503-6629
+  editorial office   bmcbioinformatics@biomedcentral.com
+```
+
+The files uploaded, from `dist/`, built at `315d919`:
+
+```text
+  CellFate-Rx-Gen1-manuscript-figures-embedded.docx   33,350
+      sha256 1d9924297739167049bc4454070d0b1ae12e2aeb4ed1b9aa16e687b66580e690
+      byte-identical to results/manuscript/submission/MANUSCRIPT_bioRxiv.docx
+  CellFate-Rx-Gen1-cover-letter.docx                  12,044
+      sha256 829a1b5093ce2fd6e0e1064d972984ddbaf611ddb6396474c341213e3bcfb2f9
+      byte-identical to results/manuscript/submission/COVER_LETTER.docx
+```
+
+The single-file manuscript was chosen over `MANUSCRIPT_BMC.docx` plus separate figures because BMC
+asks twice -- on its start page and on the Files tab -- for "one editable file" with the figures in
+the body, and needs separate high-resolution figures only on acceptance. That the bytes BMC holds are
+these was not independently confirmed; the author was asked to open the uploaded cover letter from
+the form, and no discrepancy was reported.
+
+### The declarations as submitted
+
+```text
+  competing interests   Yes: "HA holds the copyright in CellFate-Rx and offers commercial licences
+                        for it. HA has received no income from it to date."
+  dual publication      No -- the Zenodo preprint is not prior publication under BMC policy, and the
+                        cover letter discloses it
+  authorship            confirmed
+  third-party material  No -- the figures are generated from locked result files
+  data availability     Yes, with a statement naming both GEO accessions, the three non-GEO barcode
+                        tables and their provenance, the hash manifests, and the Zenodo archive and
+                        repository. It replaces the manuscript's longer statement in the published
+                        article
+  funding               none
+  acknowledgements      blank -- BMC requires permission from anyone named, and none was sought
+                        from Schaff et al., who are credited in the references and the data statement
+  author contributions  "HA is the sole author. All authors reviewed the manuscript." The author's
+                        own wording, kept at their decision after a fuller alternative was offered
+  Research Square       No -- the Zenodo preprint already exists; a second would split the record
+```
+
+Competing interests was first set to "No", on the reading that the question concerned the
+manuscript rather than the author. It was changed to "Yes" after the form's own framing was pointed
+out -- "authors ... in relation to the work described" -- and that the manuscript file and the public
+preprint v3 both already declare the interest, so "No" would have published a contradiction of both.
+
+### The APC waiver
+
+Both boxes were ticked: "I want to apply for an APC discount or waiver" and the agreement to pay in
+full "unless ... a full waiver has been granted". The request itself was then made through "Apply for
+a discount" on the submission-received page, as Springer Nature's ticket #11812190 said it must be:
+
+```text
+  reason     "I am an independent researcher with no institutional affiliation, research funding,
+             or institutional open-access agreement, so the article processing charge would have to
+             be paid entirely from my personal funds, which I cannot afford. I have no funding
+             available for publication, and there is no institutional or funder support applicable
+             to this manuscript. I therefore request a full APC waiver on the basis of financial
+             need."
+  funding    "None. This research received no external funding. I conducted the work
+             independently, without an employer, institution, grant, or research funder. There is
+             therefore no funding source available to support publication costs, and no funder
+             documentation applies to this manuscript."
+  evidence   none uploaded -- every listed document comes from a funder or an institution
+  response   "We aim to respond by email as soon as we can."
+```
+
+Two lines drafted for the request were deliberately left out by the author: an offer to accept any
+available discount, which would have implied an ability to pay part, and a sentence on the commercial
+licences having earned nothing. The request is complete and accurate without either.
+
+### What happens next
+
+```text
+  technical check    BMC emails if anything is needed; otherwise the paper goes to peer review
+  waiver decision    normally within 1-2 weeks (ticket #11812190), long before any acceptance
+  if refused         withdraw before acceptance -- the APC is payable only on acceptance. That
+                     withdrawal is free was never confirmed in writing
+```

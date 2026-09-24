@@ -77,7 +77,10 @@ PHASE 4 -- publish, in this order
     withdrawal is free if it is refused -- enquiry sent 2026-09-21; replied 2026-09-22 (ticket
     #11812190): no pre-submission route, decision within 1-2 weeks, the checkbox alone does
     NOT apply -- follow the link. The withdrawal question was not answered
-[ ] BMC Bioinformatics: submit ONLY once that reply is in; waiver checkbox ticked; preprint disclosed
+[x] BMC Bioinformatics: submitted 2026-09-24, submission ID 728d46a9-7f3c-426d-9a86-fc37f22f968b,
+    in technical check; preprint disclosed in the cover letter
+[x] APC waiver: both boxes ticked, and the request itself made through "Apply for a discount"
+[ ] waiver decision (1-2 weeks). If refused: withdraw before acceptance
 ```
 
 **Order matters in Phase 3.** The DOI and every FILL field must be written before the locks are
