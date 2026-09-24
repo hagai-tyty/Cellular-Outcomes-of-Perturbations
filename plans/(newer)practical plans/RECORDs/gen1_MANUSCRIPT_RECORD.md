@@ -3711,3 +3711,61 @@ again in one line.
 checkbox only opens the request screen, and the request exists only once the link shown at the end of
 submission, and emailed separately, has been followed. An author relying on the old wording could
 have ticked the box and never applied. Both places in the guide are corrected.
+
+## The cover letter is rewritten to do what BMC asks — 2026-09-24
+
+### What was wrong with it
+
+BMC's upload field asks that the letter "briefly discuss the context and importance of the submitted
+work and why it is appropriate for the journal". Read against that, the letter gave context, gave
+importance only thinly, and said nothing at all about why BMC Bioinformatics. It also contradicted the
+submission pack's own decision that the letter "has to lead with the method and the frozen, refusing
+tool, because BMC Bioinformatics asks for computational methods, models and tools": it led with the
+biology and mentioned the tool as an archive note. And it said "We" for a single-author paper.
+
+### How the final text was reached
+
+The author drafted with a second AI reviewer alongside; the drafts were compared point by point.
+Kept from that reviewer: a "Contribution and journal fit" section, naming the journal in the first
+line, "Scope" as a heading, "under which condition a clone remains detectable", "reject modified
+files", "central contribution", and the title in quotation marks. Restored from the pack against the
+reviewer's trims: "fixed by cryptographic digest", the tools' rejection of modified files rather than
+generic "integrity checks", and the licence paragraph's statement that it meets the journal's
+software-availability policy. First person singular throughout.
+
+One reviewer claim was checked at source and found wrong: that the non-commercial licence risked
+breaching BMC policy for a Research Article. BMC's editorial policy requires software to be "readily
+available to any scientist wishing to use it for non-commercial purposes, without restrictions (such
+as the need for a material transfer agreement)", and BMC Bioinformatics' own availability template
+lists "Any restrictions to use by non-academics: e.g. licence needed". Both anticipate exactly this
+licence. The letter's compliance sentence was kept as written.
+
+### Signature
+
+Ends "Sincerely," then name, "Independent researcher, Ma'ale Adumim, Israel", and
+hagai.aviv.home@gmail.com, matching the manuscript title page. The three lines use trailing-backslash
+hard breaks in the Markdown source: consecutive quoted lines otherwise merge into one paragraph, which
+is why the old letter rendered "Sincerely, Hagai Aviv" on a single line. The rendered XML was inspected
+and carries two `<w:br />` breaks. A first check reported the signature run together; that check's
+pattern looked for `<w:br/>` without the space, and was wrong, not the document.
+
+### A test that pinned the old wording
+
+`tests/test_render_submission.py::test_the_cover_letter_comes_out_unquoted_and_without_code_marks`
+failed: it asserted the presence of `**Preprint.**` and `**Software licence.**`, two headings the final
+letter no longer has. Those strings were a probe that bold markup survives extraction, not a
+requirement of the letter, so the probe now uses `**Contribution and journal fit.**` and `**Scope.**`.
+The test file was confirmed to be in neither the evidence lock nor the package digest before editing.
+
+### Cost
+
+```text
+  evidence   924202ce...   unchanged, read from the file
+  claim      87ce74be...   unchanged, read from the file
+  package    -> a2243b5cc52b16317be40f7bb0413b7a0f762b57c40aa1a39ed77029004ca116
+```
+
+`SUBMISSION.md` is in the package digest only, so neither Zenodo record needs republishing and
+`dist/CellFate-Rx-Gen1-preprint.pdf` still equals the published v3. `EVIDENCE_INTACT`,
+`CLAIMS_INTACT`, `PACKAGE_INTACT`; full suite exit 0. `dist/CellFate-Rx-Gen1-cover-letter.docx`
+refreshed and byte-identical to the rendered source.

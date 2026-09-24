@@ -57,7 +57,8 @@ def test_the_cover_letter_comes_out_unquoted_and_without_code_marks():
     assert letter.startswith("Dear Editor,")
     assert not any(line.startswith(">") for line in letter.splitlines())
     assert "`" not in letter
-    assert "**Preprint.**" in letter and "**Software licence.**" in letter
+    # Bold run-in heads must survive extraction, unlike the code marks stripped above.
+    assert "**Contribution and journal fit.**" in letter and "**Scope.**" in letter
 
 
 def test_the_renderer_refuses_and_writes_nothing_without_its_tools(tmp_path, monkeypatch, capsys):

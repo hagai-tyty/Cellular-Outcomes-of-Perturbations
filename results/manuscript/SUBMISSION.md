@@ -294,44 +294,60 @@ environment lock. Both are in the manuscript.
 
 ## 6. Cover letter
 
-For a journal submission, if one is made. Paste it unchanged apart from the marked fields.
+For the journal submission. Rendered to `COVER_LETTER.docx`; there are no fields left to fill.
 
 > Dear Editor,
 >
-> We submit *Pretreatment transcriptional state carries condition-specific information about future
-> clonal detection in a lineage-traced melanoma line* for consideration as a Research Article.
+> I submit "Pretreatment transcriptional state carries condition-specific information about future
+> clonal detection in a lineage-traced melanoma line" for consideration as a Research Article in BMC
+> Bioinformatics.
 >
-> Prior work in this system has established that pre-existing single-cell state predicts *whether* a
-> clone resists treatment. We ask the adjacent question of *which* condition a clone is still
-> detected after — an ordering within a clone that a state contribution shared additively across
-> conditions cannot, by construction, produce. Using the publicly deposited six-condition
-> clonal-tracing dataset of Schaff et al. (GSE279162), and a ranking protocol frozen by
-> cryptographic digest before any ranking statistic was computed, we find that an explicit
-> state-by-condition interaction improves within-clone ordering over a non-interactive additive
-> model, exceeding all 1,000 full-refit permutation draws.
+> **Contribution and journal fit.** This work presents a reproducible evaluation framework for testing
+> whether pretreatment transcriptional state contains condition-specific information about a future
+> clonal outcome. The evaluation protocol — ranking metric, population, weighting, comparator, null
+> and verdict rule — was fixed by cryptographic digest before any ranking statistic was computed, and
+> the released artifacts include verification tools that reject modified files, so a reader can
+> confirm that what is reported is what was run. The study therefore contributes not only a biological
+> reanalysis, but a methods framework for auditable computational evaluation.
 >
-> The work generates no new data and makes a deliberately bounded claim: one cell line, six observed
-> conditions, an observed detection proxy, and no independent biological replication. Those limits
-> are stated in the abstract, not only the discussion.
+> **Context and result.** Prior work in this system established that pre-existing single-cell state
+> predicts whether a clone resists treatment. I ask the adjacent question of under which condition a
+> clone remains detectable. Using the publicly deposited six-condition clonal-tracing dataset of
+> Schaff et al. (GSE279162), an explicit state-by-condition interaction improves within-clone
+> condition ordering over a non-interactive additive model, exceeding all 1,000 full-refit permutation
+> draws.
+>
+> **Why it matters.** The central contribution is methodological: clone-level, condition-specific
+> information can be separated from overall detectability and detected under a protocol fixed in
+> advance. An additive, condition-independent state contribution cannot represent this interaction.
+> The evaluation design is applicable to other lineage-traced systems with pretreatment profiles and
+> multiple conditions.
+>
+> **Scope.** No new data were generated. The claims are deliberately bounded to one cell line, six
+> observed conditions, an observed clonal-detection proxy rather than death or clinical response, and
+> no independent biological replication. These limitations are stated explicitly in the abstract and
+> the manuscript.
 >
 > The complete analysis, frozen protocols, stage-by-stage records including negative and failed
-> results, and a verification tool that refuses on any modified artifact are archived at Zenodo
-> under DOI `10.5281/zenodo.22769562`.
+> results, and the verification tools are archived at Zenodo (DOI: 10.5281/zenodo.22769562).
 >
-> **Preprint.** This manuscript is posted as a preprint at Zenodo, DOI
-> `10.5281/zenodo.22829747`, under a CC BY licence. That DOI resolves to the newest version
-> of the record, which is the version submitted here.
+> The manuscript is also available as a preprint at Zenodo (DOI: 10.5281/zenodo.22829747) under a CC
+> BY licence. That DOI resolves to the newest version of the record, which is the version submitted
+> here.
 >
-> **Software licence.** The software and frozen model are released under the PolyForm Noncommercial
-> License 1.0.0. They are free for any non-commercial use without registration or agreement, which
-> meets the journal's software-availability policy, but the licence is source-available rather
-> than OSI-approved open source, because commercial use is restricted. We say so here rather than
-> leave it to be discovered in review.
+> The software and frozen model are released under the PolyForm Noncommercial License 1.0.0. They are
+> free for any non-commercial use without registration or agreement, which meets the journal's
+> software-availability policy. The licence is source-available rather than OSI-approved open source,
+> because commercial use is restricted; I state that here rather than leave it to be discovered in
+> review.
 >
-> **Use of AI.** Generative AI assistance is disclosed in the Methods section.
+> Generative AI assistance is disclosed in the Methods section.
 >
 > Sincerely,
-> Hagai Aviv
+>
+> Hagai Aviv\
+> Independent researcher, Ma'ale Adumim, Israel\
+> hagai.aviv.home@gmail.com
 
 ---
 
