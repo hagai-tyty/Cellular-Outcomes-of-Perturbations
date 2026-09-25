@@ -3938,3 +3938,19 @@ order; its problem was absence. That test was then shown to fail on a planted ou
 ```
 
 `EVIDENCE_INTACT`, `CLAIMS_INTACT`, `PACKAGE_INTACT`; full suite exit 0.
+
+### Addendum: CI failed on the fix commit, on lint -- 2026-09-25
+
+Run 385 on `ed7244e` failed at "Lint (ruff)", on both Python versions, though the full test suite and
+all three locks had passed locally. CI lints `src/ tests/ scripts/ plan_tests/`; the local runs had not
+included ruff at all. Three errors, all in the new `tests/test_manuscript_citations.py`, none
+elsewhere: two E741 (a loop variable named `l`) and one B905 (`zip()` without `strict=`). Fixed by
+renaming the variable and passing `strict=True`, which is correct by construction -- `re.split` with
+one capturing group alternates number and separator, so both slices are always the same length.
+
+The guard was re-proven after the edit: it passes on the revision and still fails on the returned
+file, naming references [7-13] and tables [1-5]. The manuscript and the file to upload are untouched
+by this; it concerns a test only, and the test is in no digest.
+
+Lesson for release checks here: "the tests pass" is not "CI passes". CI also lints, and the lint must
+be run locally, with CI's own paths, before a commit is called ready.

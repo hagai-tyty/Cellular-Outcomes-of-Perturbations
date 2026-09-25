@@ -42,7 +42,7 @@ def _cited_in_order(text: str) -> list[int]:
     for m in CITATION.finditer(text):
         parts = re.split(r"\s*([,–-])\s*", m.group(1))
         nums = [int(parts[0])]
-        for sep, n in zip(parts[1::2], parts[2::2]):
+        for sep, n in zip(parts[1::2], parts[2::2], strict=True):
             nums += list(range(nums[-1] + 1, int(n) + 1)) if sep != "," else [int(n)]
         seen += [n for n in nums if n not in seen]
     return seen
@@ -63,7 +63,7 @@ def test_references_are_numbered_in_order_of_first_citation():
 
 def test_every_table_is_cited_in_the_prose_in_order():
     lines = _body().splitlines()
-    captions = [int(m.group(1)) for l in lines if (m := CAPTION.match(l))]
+    captions = [int(m.group(1)) for line in lines if (m := CAPTION.match(line))]
     assert captions == list(range(1, len(captions) + 1)), f"tables not numbered 1..N: {captions}"
     first: dict[int, int] = {}
     for i, line in enumerate(lines):
@@ -76,6 +76,6 @@ def test_every_table_is_cited_in_the_prose_in_order():
     order = sorted(captions, key=first.get)
     assert order == captions, f"tables first cited out of order: {order}"
     late = [n for n in captions
-            if first[n] > next(i for i, l in enumerate(lines) if CAPTION.match(l)
-                               and int(CAPTION.match(l).group(1)) == n)]
+            if first[n] > next(i for i, line in enumerate(lines) if CAPTION.match(line)
+                               and int(CAPTION.match(line).group(1)) == n)]
     assert not late, f"tables whose first citation comes after the table itself: {late}"
