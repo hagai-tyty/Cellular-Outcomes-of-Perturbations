@@ -160,8 +160,12 @@ sentence and nothing else; its own confirmation gate failed. It is not a replica
 it does not provide the same multi-condition task or the same outcome.
 
 No additional dataset was searched, downloaded, qualified or used. Raw sequencing data is not
-vendored; accessions are given above. **Figure 1** summarises the design and the evaluable
-population.
+vendored. Role B's data are in GEO under GSE279162 [7], and the original authors' analysis code,
+read to reconstruct their preprocessing rules, is archived at Zenodo [8]. For Role A, three
+processed barcode tables that are not part of its GEO deposit were taken from the original authors'
+shared data package [9], linked from the key resources table of Jain et al. [10]; their scripts are
+archived at Zenodo [11]. The code, protocols and records of this study are archived at Zenodo [12]
+and developed on GitHub [13]. **Figure 1** summarises the design and the evaluable population.
 
 ### Benchmark construction
 
@@ -178,6 +182,8 @@ already-normalised cells, produces a different feature space and a model the ben
 evaluated.
 
 ### Models
+
+The three preregistered models are specified in **Table 1**.
 
 **Table 1** The three preregistered model specifications.
 
@@ -240,6 +246,8 @@ responsibility for its content.
 
 ### The interaction improves clone-specific ordering
 
+The ranking score of each model and the preregistered difference are given in **Table 2**.
+
 **Table 2** Ranking score by model, and the preregistered difference; **Table 1** defines the
 models.
 
@@ -268,6 +276,8 @@ condition-dependent state effects, not the number of programmes behind them.
 
 ### The separation, not the p-value, is the result
 
+The observed statistic is set against its permutation null in **Table 3**.
+
 **Table 3** The observed statistic against its permutation null.
 
 | Quantity | Value |
@@ -282,6 +292,9 @@ condition-dependent state effects, not the number of programmes behind them.
 estimate. The number that carries weight is the separation: nothing the null produced came close.
 
 ### It holds in every stratum it was broken down by
+
+The preregistered difference within each stratum, by outer fold and by pretreatment depth, is given
+in **Table 4**.
 
 **Table 4** delta_RANK within each stratum, by outer fold and by pretreatment depth.
 
@@ -299,6 +312,8 @@ The breakdown is by fold and by depth only; across the six conditions the intera
 (Limitation 3).
 
 ### Choosing the lowest-scoring condition
+
+The top-choice diagnostic is given in **Table 5**.
 
 **Table 5** The top-choice diagnostic, preregistered as a directional-consistency check.
 

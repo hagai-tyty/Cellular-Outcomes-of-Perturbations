@@ -3861,3 +3861,80 @@ licences having earned nothing. The request is complete and accurate without eit
   if refused         withdraw before acceptance -- the APC is payable only on acceptance. That
                      withdrawal is free was never confirmed in writing
 ```
+
+## BMC's technical check returned the manuscript, and it is fixed — 2026-09-25
+
+### What BMC asked for
+
+Editorial Support (Arvin Austria), manuscript 728d46a9-7f3c-426d-9a86-fc37f22f968b v1.0, ten points,
+revision requested within two days, with the instruction "Do not change anything else in your
+manuscript":
+
+```text
+  1-4    "The location of Table Citation (Table N) is not clear" -- Tables 2, 3, 4, 5
+  5-10   "Citation(s) for Reference number(s) (N) missing in the manuscript" -- 7, 8, 9, 11, 12, 13
+```
+
+### Why both happened, and why this repository did not catch them
+
+Tables. Every table sat directly under its section heading with a caption and nothing in the prose
+citing it. Figures were cited in the prose ("**Figure 2** shows ..."); tables never were. Table 1 was
+not flagged, almost certainly because Table 2's caption mentions it -- but a caption is not a
+citation, and Table 1 was uncited in exactly the same way.
+
+References. References 7 to 13 were cited ONLY under "Availability of data and materials". That
+section is replaced in the published article by the statement entered in the submission form, which
+carries no reference numbers, so all seven would have been cited nowhere. Reference 10 was not
+flagged, though its situation was identical.
+
+Neither was caught here because no check existed. The manuscript tests cover wording, structure,
+the reference list's shape and the limitations; none asked whether each reference and table is cited
+in the body, in order.
+
+### The fix, and the evidence that nothing else changed
+
+A pointer sentence before each of the five tables ("... are given in **Table 2**."), none beginning
+with "**Table" so it cannot be mistaken for a caption; and in the Methods Data section, the sentence
+"accessions are given above" replaced by one that cites references 7 to 13 in order, after [6], with
+wording taken from the Availability section it restates. All seven are fixed, not only the six named,
+and all five tables, not only the four.
+
+The rendered manuscript was compared paragraph by paragraph against the file BMC holds:
+
+```text
+  paragraphs          228 submitted, 233 revised, 227 identical
+  changed             1 -- the Data paragraph, now citing [7]-[13]
+  added               5 -- one table citation each
+  figures             unchanged
+  evidence digest     924202ce... unchanged, still printed on the title page
+  claim digest        87ce74be... unchanged, still printed on the title page
+  package digest   -> 679e3a46f1aea025eea4dcaaf4c32382fd7864004f3f76c88371ec26d601cfb8
+```
+
+`MANUSCRIPT.md` is in the package digest but not the evidence lock, so neither Zenodo record is
+invalidated. The revised manuscript now differs from preprint v3 by those six paragraphs of citation
+pointers and no substance; whether to publish a preprint v4 is left for the next substantive
+revision.
+
+### The guard
+
+`tests/test_manuscript_citations.py`, outside every digest: every reference cited in the body (before
+"## Declarations"); references first-cited in ascending order; every table cited in the prose, in
+order, and before the table itself. Its citation pattern excludes the ORCID link, which an earlier
+quick scan in this session misread as citations [4] and [9].
+
+It was proven, not assumed. Against the file BMC returned, the reference test fails naming
+[7, 8, 9, 10, 11, 12, 13] and the table test fails naming [1, 2, 3, 4, 5] -- BMC's points plus the two
+it missed. The ordering test passes on that file, correctly: its body citations [1]-[6] were in
+order; its problem was absence. That test was then shown to fail on a planted out-of-order citation.
+
+### Files
+
+```text
+  dist/submitted-v1.0/CellFate-Rx-Gen1-manuscript-figures-embedded.docx   the bytes BMC holds
+      sha256 1d9924297739167049bc4454070d0b1ae12e2aeb4ed1b9aa16e687b66580e690
+  dist/CellFate-Rx-Gen1-manuscript-figures-embedded.docx                  the revision, to upload
+      sha256 f7780e2d13d7c050bffac9f324871636f3dd2dafd953fe83b6471e091bfa0c56
+```
+
+`EVIDENCE_INTACT`, `CLAIMS_INTACT`, `PACKAGE_INTACT`; full suite exit 0.
