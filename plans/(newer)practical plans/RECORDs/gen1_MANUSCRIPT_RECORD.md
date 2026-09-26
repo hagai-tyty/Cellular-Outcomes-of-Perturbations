@@ -3954,3 +3954,43 @@ by this; it concerns a test only, and the test is in no digest.
 
 Lesson for release checks here: "the tests pass" is not "CI passes". CI also lints, and the lint must
 be run locally, with CI's own paths, before a commit is called ready.
+
+## The APC decision: a 50% discount, not a full waiver — 2026-09-25
+
+Springer Nature's APC Discount and Waiver Service first asked for documentation of the lack of funds
+-- grant papers, or a signed letter on institutional headed paper -- and closed its message "If you
+are not affiliated to any institution, please let us know." The author replied in the ticket on
+2026-09-24 that they are unaffiliated and hold no research or institutional funding, so neither
+document exists. The decision followed on 2026-09-25:
+
+```text
+  "Given that you are an independent researcher at present we understand that it would be
+   difficult for you to provide documentation of your lack of funds."
+  "We have reviewed your request and have approved a discount of 50.00%."
+  "If your article is accepted for publication, we will apply the discount automatically at the
+   payment stage. You do not need to take any further action."
+  "APCs are determined at the date of acceptance and will be subject to administration charges
+   and local taxes where applicable."
+```
+
+### What it leaves
+
+At the list price in the submission pack, half the APC is about GBP 1,145 / USD 1,545 / EUR 1,295,
+plus local taxes and any administration charge, fixed only at acceptance. Nothing is owed before
+acceptance or on rejection.
+
+The author has said they cannot personally afford the APC. A 50% discount is neither the full waiver
+requested nor a refusal, so the decision planned for a refusal -- withdraw before acceptance -- now
+turns on whether half is affordable, which only the author can answer. Three courses were set out:
+accept the discount if half is affordable; ask once, in the same ticket, for reconsideration toward a
+full waiver (drafted); or, failing both, withdraw before acceptance. Noted alongside: if the author
+becomes certain they will not pay, withdrawing early is fairer to reviewers than withdrawing after
+review.
+
+### Status
+
+```text
+  manuscript   technical-check revision prepared (the file to upload verified byte-identical to
+               the fixed build); resubmission by the author pending
+  APC          50% discount approved; the author's decision on the remainder pending
+```
